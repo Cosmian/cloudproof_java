@@ -1,0 +1,10 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "cSpell.words": [
+        "Deserialization",
+        "deserializers",
+        "Kmip",
+        "serializers"
+    ],
+    "java.format.settings.url": ".vscode/eclipse-codestyle.xml"
+}

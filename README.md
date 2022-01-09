@@ -1,21 +1,21 @@
 # Cosmian Java Lib
 
 
-The library provides a Java friendly API to Cosmian Ubiquitous Encryption:
+The library provides a Java friendly API to the Cosmian Ubiquitous Encryption platform:
 
  - perform [Confidential Data Access](#confidential-data-access) advanced encryption routines 
- - build and run [Confidential Micro Services](#confidential-micro-services) on Cosmian platform 
- - managed keys with the [Cosmian Confidential Key Management Services (KMS)](#confidential-kms) 
+ - build and run [Confidential Micro Services](#confidential-micro-services) on the Cosmian Confidential Cloud 
+ - managed keys with the [Cosmian Confidential Key Management Service (KMS)](#confidential-kms) 
 
 
-:warning: This is an early release of the java library for Cosmian Ubiquitous Encryption. Only a limited set of the operations are publicly  supported.
+:warning: This is an early release of the java library for Cosmian Ubiquitous Encryption. Only a limited set of the operations is publicly supported.
 
 
 ## Confidential Data Access
 
 Cosmian Ubiquitous Encryption provides the ability to encrypt data - locally or inside the KMS -  using policy attributes. The only users able to decrypt the data are those possessing a key holding the correct access policy.
 
-This allows building secure data lakes, repositories, directories... of data in zero trust environments, such as the cloud, where users and client applications directly read the only data they are allowed to access.
+Attributes Based Encryption (ABE) allows building secure data lakes, repositories, directories... of data in zero trust environments, such as the cloud, where users and client applications can only read the data they are allowed to access.
 
 In addition, Cosmian Confidential Data Access allows building secure indexes on the data, to efficiently search the encrypted data, without the cloud learning anything about the search query, the response or the underlying data itself.
 
@@ -36,9 +36,9 @@ A user is able to decrypt data only if it possesses a key with an access policy 
 
 *Not publicly available yet. Call Cosmian for early access*
 
-Cosmian Confidential Micro Services allows building micro services in Python (soon Java) that can be deployed on the Cosmian Confidential SaaS Platform. 
+Cosmian Confidential Micro Services allows building micro services in Python (soon Java) that can be deployed on the Cosmian Confidential Cloud. 
 
-The code, the data and the results are encrypted at all times, so the Cosmian platform does not learn anything about the data or the algorithm. 
+The code, the data and the results are encrypted at all times, so the Cosmian Cloud does not learn anything about the data or the algorithm. 
 
 Immediate benefits:
 
@@ -53,10 +53,10 @@ Also, data sources, code and results can be encrypted under different keys enabl
 
 ## Confidential KMS
 
-Cosmian offers a confidential KMS in the cloud. The KMS operations are protected with the same technology used for the Confidential Micro Services, so Cosmian never learns anything about the keys stored in the KMS or the operations performed with those keys inside the KMS (encryption, decryption, signature,...).
+Cosmian offers a confidential KMS in the Cosmian Confidential Cloud. The KMS operations are protected with the same technology used for the Confidential Micro Services, so Cosmian never learns anything about the keys stored in the KMS or the operations performed with those keys inside the KMS (encryption, decryption, signature,...).
 
 Use of Cosmian KMS is included with the services above.
 
 The KMS offers a KMIP 2.1 interface.
 
-*only the operations required to enable the Confidential Data Access and Confidential Micro Services are publicly available for now. Contact Cosmian for full KMS access*
+*only the KMS operations required to enable the Confidential Data Access and Confidential Micro Services are publicly available for now. Contact Cosmian for full KMS access*

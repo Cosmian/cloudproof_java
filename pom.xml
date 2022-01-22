@@ -8,6 +8,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <jna.version>5.10.0</jna.version>
     </properties>
     <dependencies>
         <dependency>
@@ -29,6 +30,18 @@
             <groupId>com.fasterxml</groupId>
             <artifactId>classmate</artifactId>
             <version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <!-- JNA dependency -->
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>${jna.version}</version>
+        </dependency>
+        <dependency>
+            <!-- JNA platform dependency -->
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>${jna.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

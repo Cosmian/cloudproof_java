@@ -59,7 +59,7 @@ public class Kmip {
         logger.finer(() -> "Create " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
-            String json_resp = this.rest_client.json_post("/kmip", json_req);
+            String json_resp = this.rest_client.json_post("/kmip/2_1", json_req);
             logger.finer(() -> json_resp);
             return this.mapper.readValue(json_resp, CreateResponse.class);
         } catch (Exception e) {
@@ -91,7 +91,8 @@ public class Kmip {
     public CreateKeyPairResponse createKeyPair(CreateKeyPair request) throws CosmianException {
         logger.finer(() -> "CreateKeyPair " + request.toString());
         try {
-            return this.mapper.readValue(this.rest_client.json_post("/kmip", this.mapper.writeValueAsString(request)),
+            return this.mapper.readValue(
+                    this.rest_client.json_post("/kmip/2_1", this.mapper.writeValueAsString(request)),
                     CreateKeyPairResponse.class);
         } catch (Exception e) {
             String err = "KMIP: CreateKeyPair failed: " + e.getMessage() + "  " + e.getClass();
@@ -122,7 +123,7 @@ public class Kmip {
         logger.finer(() -> "Decrypt " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
-            String json_resp = this.rest_client.json_post("/kmip", json_req);
+            String json_resp = this.rest_client.json_post("/kmip/2_1", json_req);
             logger.finer(() -> json_resp);
             return this.mapper.readValue(json_resp, DecryptResponse.class);
         } catch (Exception e) {
@@ -142,7 +143,7 @@ public class Kmip {
         logger.finer(() -> "Destroy " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
-            String json_resp = this.rest_client.json_post("/kmip", json_req);
+            String json_resp = this.rest_client.json_post("/kmip/2_1", json_req);
             logger.finer(() -> json_resp);
             return this.mapper.readValue(json_resp, DestroyResponse.class);
         } catch (Exception e) {
@@ -182,7 +183,7 @@ public class Kmip {
         logger.finer(() -> "Encrypt " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
-            String json_resp = this.rest_client.json_post("/kmip", json_req);
+            String json_resp = this.rest_client.json_post("/kmip/2_1", json_req);
             logger.finer(() -> json_resp);
             return this.mapper.readValue(json_resp, EncryptResponse.class);
         } catch (Exception e) {
@@ -225,7 +226,7 @@ public class Kmip {
     public GetResponse get(Get request) throws CosmianException {
         logger.finer(() -> "Get " + request.toString());
         try {
-            String json = this.rest_client.json_post("/kmip", this.mapper.writeValueAsString(request));
+            String json = this.rest_client.json_post("/kmip/2_1", this.mapper.writeValueAsString(request));
             logger.finer(() -> json);
             return this.mapper.readValue(json, GetResponse.class);
         } catch (Exception e) {
@@ -251,7 +252,7 @@ public class Kmip {
         logger.finer(() -> "Import " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
-            String json_resp = this.rest_client.json_post("/kmip", json_req);
+            String json_resp = this.rest_client.json_post("/kmip/2_1", json_req);
             logger.finer(() -> json_resp);
             return this.mapper.readValue(json_resp, ImportResponse.class);
         } catch (Exception e) {
@@ -350,7 +351,7 @@ public class Kmip {
         logger.finer(() -> "Locate " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
-            String json_resp = this.rest_client.json_post("/kmip", json_req);
+            String json_resp = this.rest_client.json_post("/kmip/2_1", json_req);
             logger.finer(() -> json_resp);
             return this.mapper.readValue(json_resp, LocateResponse.class);
         } catch (Exception e) {
@@ -391,7 +392,7 @@ public class Kmip {
         logger.finer(() -> "ReKeyKeypair " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
-            String json_resp = this.rest_client.json_post("/kmip", json_req);
+            String json_resp = this.rest_client.json_post("/kmip/2_1", json_req);
             logger.finer(() -> json_resp);
             return this.mapper.readValue(json_resp, ReKeyKeyPairResponse.class);
         } catch (Exception e) {
@@ -422,7 +423,7 @@ public class Kmip {
         logger.finer(() -> "Revoke " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
-            String json_resp = this.rest_client.json_post("/kmip", json_req);
+            String json_resp = this.rest_client.json_post("/kmip/2_1", json_req);
             logger.finer(() -> json_resp);
             return this.mapper.readValue(json_resp, RevokeResponse.class);
         } catch (Exception e) {

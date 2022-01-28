@@ -10,6 +10,7 @@ import com.cosmian.CosmianException;
 import com.cosmian.rest.kmip.types.VendorAttribute;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
@@ -17,7 +18,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  * element for each policy axis attribute a fixed number of revocation /
  * addition of attributes is allowed
  */
-@JsonSerialize(using = PolicyGroupSerializer.class)
+@JsonSerialize(using = PolicySerializer.class)
+@JsonDeserialize(using = PolicyDeserializer.class)
 public class Policy {
     private int lastAttributeValue = 0;
     private final int maxNumberOfRevocations;
@@ -25,6 +27,14 @@ public class Policy {
     private HashMap<String, PolicyAxis> store = new HashMap<>();
     // mapping between (policy_name, policy_attribute) -> integer
     private HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt = new HashMap<>();
+
+    public Policy(int lastAttributeValue, int maxNumberOfRevocations, HashMap<String, PolicyAxis> store,
+            HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt) {
+        this.lastAttributeValue = lastAttributeValue;
+        this.maxNumberOfRevocations = maxNumberOfRevocations;
+        this.store = store;
+        this.attributeToInt = attributeToInt;
+    }
 
     /**
      * Instantiate an empty policy allowing the given max number of revocations of

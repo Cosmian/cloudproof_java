@@ -1,9 +1,12 @@
 package com.cosmian.rest.abe;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import com.cosmian.CosmianException;
 import com.cosmian.rest.abe.acccess_policy.Attr;
+import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.VendorAttribute;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +21,7 @@ public class VendorAttributes {
     public static final String VENDOR_ATTR_ABE_MASTER_PRIV_KEY_ID = "abe_master_private_key_id";
     public static final String VENDOR_ATTR_ABE_MASTER_PUB_KEY_ID = "abe_master_public_key_id";
 
-    public static VendorAttribute abe_attributes_as_vendor_attribute(Attr[] abePolicyAttributes)
+    public static VendorAttribute abeAttributesAsVendorAttribute(Attr[] abePolicyAttributes)
             throws CosmianException {
         // The value must be the JSON array of the String representation of the Attrs
         ArrayList<String> array = new ArrayList<String>();
@@ -34,5 +37,29 @@ public class VendorAttributes {
                     e);
         }
         return new VendorAttribute(VENDOR_ID_COSMIAN, VENDOR_ATTR_ABE_ATTR, value);
+    }
+
+    public static Policy policyFromVendorAttributes(Attributes attributes) throws CosmianException {
+        VendorAttribute[] vas;
+        if (attributes.getVendorAttributes().isPresent()) {
+            vas = attributes.getVendorAttributes().get();
+        } else {
+            throw new CosmianException("No policy available in the attributes: no vendor attributes");
+        }
+        for (VendorAttribute va : vas) {
+            if (va.getVendor_identification().equals(VENDOR_ID_COSMIAN)) {
+                if (va.getAttribute_name().equals(VENDOR_ATTR_ABE_POLICY)) {
+                    String policyJson = new String(va.getAttribute_value(), StandardCharsets.UTF_8);
+                    ObjectMapper mapper = new ObjectMapper();
+                    try {
+                        Policy policy = mapper.readValue(policyJson, Policy.class);
+                        return policy;
+                    } catch (Exception e) {
+                        throw new CosmianException("Invalid policy JSON: " + policyJson);
+                    }
+                }
+            }
+        }
+        throw new CosmianException("No policy available in the vendor attributes");
     }
 }

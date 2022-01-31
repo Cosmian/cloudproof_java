@@ -9,7 +9,6 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 import com.cosmian.rest.abe.Abe;
-import com.cosmian.rest.abe.VendorAttributes;
 import com.cosmian.rest.abe.acccess_policy.AccessPolicy;
 import com.cosmian.rest.abe.acccess_policy.And;
 import com.cosmian.rest.abe.acccess_policy.Attr;
@@ -73,7 +72,7 @@ public class TestAbe {
 		Attributes attributes = new Attributes(ObjectType.Private_Key, Optional.of(CryptographicAlgorithm.ABE));
 		attributes.keyFormatType(Optional.of(KeyFormatType.AbeMasterSecretKey));
 		attributes.vendorAttributes(Optional.of(new VendorAttribute[] {
-				VendorAttributes.abeAttributesAsVendorAttribute(new Attr[] { new Attr("Department", "MKG") }) }));
+				Attr.toVendorAttribute(new Attr[] { new Attr("Department", "MKG") }) }));
 		ObjectMapper mapper = new ObjectMapper();
 		String str = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(attributes);
 		logger.info(str);

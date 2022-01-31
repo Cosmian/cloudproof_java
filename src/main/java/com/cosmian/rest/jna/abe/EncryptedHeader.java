@@ -3,19 +3,19 @@ package com.cosmian.rest.jna.abe;
 public class EncryptedHeader {
 
     private final byte[] symmetricKey;
-    private final byte[] headerBytes;
+    private final byte[] encryptedHeaderBytes;
 
     public EncryptedHeader(byte[] symmetricKey, byte[] headerBytes) {
         this.symmetricKey = symmetricKey;
-        this.headerBytes = headerBytes;
+        this.encryptedHeaderBytes = headerBytes;
     }
 
     public byte[] getSymmetricKey() {
         return this.symmetricKey;
     }
 
-    public byte[] getHeaderBytes() {
-        return this.headerBytes;
+    public byte[] getEncryptedHeaderBytes() {
+        return this.encryptedHeaderBytes;
     }
 
 }

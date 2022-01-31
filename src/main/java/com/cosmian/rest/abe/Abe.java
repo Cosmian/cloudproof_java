@@ -380,8 +380,8 @@ public class Abe {
         try {
             Attributes attributes = new Attributes(ObjectType.Private_Key, Optional.of(CryptographicAlgorithm.ABE));
             attributes.keyFormatType(Optional.of(KeyFormatType.AbeMasterSecretKey));
-            attributes.vendorAttributes(Optional.of(new VendorAttribute[] {
-                    VendorAttributes.abeAttributesAsVendorAttribute(abePolicyAttributes) }));
+            attributes.vendorAttributes(
+                    Optional.of(new VendorAttribute[] { Attr.toVendorAttribute(abePolicyAttributes) }));
             ReKeyKeyPair request = new ReKeyKeyPair(
                     Optional.of(privateMasterKeyUniqueIdentifier),
                     Optional.empty(),

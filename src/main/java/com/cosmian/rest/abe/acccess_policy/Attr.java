@@ -1,8 +1,12 @@
 package com.cosmian.rest.abe.acccess_policy;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 import com.cosmian.CosmianException;
+import com.cosmian.rest.kmip.types.VendorAttribute;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(using = AttrSerializer.class)
@@ -94,4 +98,21 @@ public class Attr extends AccessPolicy {
         return new Attr(axis, name);
     }
 
+    public static VendorAttribute toVendorAttribute(Attr[] abePolicyAttributes)
+            throws CosmianException {
+        // The value must be the JSON array of the String representation of the Attrs
+        ArrayList<String> array = new ArrayList<String>();
+        for (Attr attr : abePolicyAttributes) {
+            array.add(attr.toString());
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        byte[] value;
+        try {
+            value = mapper.writeValueAsBytes(array.toArray());
+        } catch (JsonProcessingException e) {
+            throw new CosmianException("Failed serializing to JSON the  ABE attributes: " + e.getMessage(),
+                    e);
+        }
+        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN, VendorAttribute.VENDOR_ATTR_ABE_ATTR, value);
+    }
 }

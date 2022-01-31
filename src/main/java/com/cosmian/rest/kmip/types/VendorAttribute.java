@@ -23,6 +23,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class VendorAttribute implements KmipStruct {
 
+    public static final String VENDOR_ID_COSMIAN = "cosmian";
+    public static final String VENDOR_ATTR_ABE_ATTR = "abe_attributes";
+    public static final String VENDOR_ATTR_ABE_POLICY = "abe_policy";
+    public static final String VENDOR_ATTR_ABE_ACCESS_POLICY = "abe_access_policy";
+    public static final String VENDOR_ATTR_ABE_HEADER_UID = "abe_header_uid";
+    public static final String VENDOR_ATTR_ABE_MASTER_PRIV_KEY_ID = "abe_master_private_key_id";
+    public static final String VENDOR_ATTR_ABE_MASTER_PUB_KEY_ID = "abe_master_public_key_id";
+
     /**
      * Text String (with usage limited to alphanumeric, underscore and period – i.e.
      * [A-Za-z0-9_.])

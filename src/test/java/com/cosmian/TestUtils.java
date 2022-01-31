@@ -18,10 +18,10 @@ public final class TestUtils {
         logger.fine("Logger was setup");
     }
 
-    public static String cosmianServerUrl() {
+    public static String kmsServerUrl() {
         String v = System.getenv("COSMIAN_SERVER_URL");
         if (v == null) {
-            return "http://localhost:9999";
+            return "http://localhost:9998";
         }
         return v;
     }

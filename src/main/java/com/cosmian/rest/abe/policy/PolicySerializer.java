@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-public class PolicyGroupSerializer extends JsonSerializer<Policy> {
+public class PolicySerializer extends JsonSerializer<Policy> {
 
     @Override
     public void serialize(Policy policyGroup, JsonGenerator generator, SerializerProvider serializers)
@@ -49,9 +49,3 @@ public class PolicyGroupSerializer extends JsonSerializer<Policy> {
     }
 
 }
-/**
- * VendorAttribute { vendor_identification: "cosmian".to_owned(),
- * attribute_name: "abe_policy".to_owned(), attribute_value:
- * serde_json::to_vec(pg) .context("failed serializing the ABE policy group
- * value") .reason(ErrorReason::Invalid_Attribute_Value)?, }
- */

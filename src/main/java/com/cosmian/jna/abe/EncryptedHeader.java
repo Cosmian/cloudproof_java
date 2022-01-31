@@ -1,4 +1,4 @@
-package com.cosmian.rest.jna.abe;
+package com.cosmian.jna.abe;
 
 public class EncryptedHeader {
 

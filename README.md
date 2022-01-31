@@ -11,6 +11,14 @@ The library provides a Java friendly API to the Cosmian Ubiquitous Encryption pl
 :warning: This is an early release of the java library for Cosmian Ubiquitous Encryption. Only a limited set of the operations is publicly supported.
 
 
+  - [Confidential Data Access](#confidential-data-access)
+    - [Quick Start](#quick-start)
+    - [Local encryption and decryption](#local-encryption-and-decryption)
+  - [Confidential Micro Services](#confidential-micro-services)
+  - [Confidential KMS](#confidential-kms)
+
+
+
 ## Confidential Data Access
 
 Cosmian Ubiquitous Encryption provides the ability to encrypt data - locally or inside the KMS -  using policy attributes. The only users able to decrypt the data are those possessing a key holding the correct access policy.
@@ -31,6 +39,15 @@ This demo creates a Policy which combines two policy axes,
 Data is encrypted with two values, one from each axis, say: `[MKG, Low Secret]`
 
 A user is able to decrypt data only if it possesses a key with an access policy with sufficient security level and the code for the department, say ` Top Secret && ( MKG || FIN )`
+
+
+### Local encryption and decryption
+
+In addition to KMS encryption and decryption, the library offers the ability to perform and hybrid encryption ABE+AES. This requires having the native dynamic library [abe_gpsw](https://github.com/Cosmian/abe_gpsw) deployed on your system.
+
+The native library can also be packaged as part of the jar package by placing a copy in the `src/main/resources/{OS}-{ARCH}` folder (`linux-amd64` for linux) and running `mvn package`.
+
+To learn how to use the local ABE+AES hybrid encryption facilities, check [the Hybrid ABE AES tests](src/test/java/com/cosmian/TestLocalABE_AES.java)
 
 ## Confidential Micro Services
 
@@ -59,4 +76,4 @@ Use of Cosmian KMS is included with the services above.
 
 The KMS offers a KMIP 2.1 interface.
 
-*only the KMS operations required to enable the Confidential Data Access and Confidential Micro Services are publicly available for now. Contact Cosmian for full KMS access*
+*Only the KMS operations required to enable the Confidential Data Access and Confidential Micro Services are publicly available for now. Contact Cosmian for full KMS access*

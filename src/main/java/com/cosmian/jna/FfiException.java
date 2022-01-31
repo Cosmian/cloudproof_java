@@ -1,4 +1,4 @@
-package com.cosmian.rest.jna;
+package com.cosmian.jna;
 
 public class FfiException extends Exception {
 

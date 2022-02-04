@@ -38,6 +38,9 @@ public class KeyBlock implements KmipStruct {
     /**
      * Return {@link KeyBlock} {@link Attributes} or a set of empty
      * {@link Attributes} for the given {@link ObjectType}
+     * 
+     * @param objectType the {@link ObjectType}
+     * @return the {@link Attributes}
      */
     public Attributes attributes(ObjectType objectType) {
         Object kv = this.keyValue.get();

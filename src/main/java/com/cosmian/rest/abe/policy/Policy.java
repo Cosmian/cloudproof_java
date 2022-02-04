@@ -41,7 +41,7 @@ public class Policy {
      * Instantiate an empty policy allowing the given max number of revocations of
      * attributes
      * 
-     * @param maxNumberOfRevocations
+     * @param maxNumberOfRevocations the maximum number of attributes revocations
      */
     public Policy(int maxNumberOfRevocations) {
         this.maxNumberOfRevocations = maxNumberOfRevocations;
@@ -49,6 +49,12 @@ public class Policy {
 
     /**
      * Add the given Axis to this policy and return the policy
+     * 
+     * @param name         axis name
+     * @param attributes   policy attributes of the axis
+     * @param hierarchical whether the axis is hierarchical
+     * @return the update Policy
+     * @throws CosmianException if the addition fails
      */
     public Policy addAxis(String name, String[] attributes, boolean hierarchical) throws CosmianException {
         PolicyAxis axis = new PolicyAxis(name, attributes, hierarchical);
@@ -72,7 +78,7 @@ public class Policy {
      * Object
      * 
      * @return the {@link VendorAttribute}
-     * @throws CosmianException
+     * @throws CosmianException if the JSON cannot be serialized
      */
     public VendorAttribute toVendorAttribute() throws CosmianException {
         String json;
@@ -111,13 +117,14 @@ public class Policy {
      * The last attribute value that was assigned. This value is usually incremented
      * as attributes are revoked. The value should therefore no exceed the value
      * returned by {@link #getMaxNumberOfRevocations()}
+     * 
+     * @return the last attribute value
      */
     public int getLastAttributeValue() {
         return this.lastAttributeValue;
     }
 
     /**
-     * @see
      * @param lastAttributeValue
      */
     void setLastAttributeValue(int lastAttributeValue) {

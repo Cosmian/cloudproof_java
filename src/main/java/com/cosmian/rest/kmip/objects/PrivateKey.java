@@ -66,7 +66,12 @@ public class PrivateKey extends KmipObject {
     /**
      * 
      * Deserialize an instance from its Json representation obtained using
-     * {@link toJson()}
+     * toJson()
+     * 
+     * @param json the JSON string
+     * @return the {@link PrivateKey}
+     * @throws CosmianException if the parsing fails
+     * 
      */
     public static PrivateKey fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, PrivateKey.class);
@@ -74,7 +79,8 @@ public class PrivateKey extends KmipObject {
 
     /**
      * Return the {@link Attributes} or a set of empty
-     * {@link Attributes}
+     * 
+     * @return the {@link Attributes}
      */
     public Attributes attributes() {
         return this.keyBlock.attributes(ObjectType.Private_Key);

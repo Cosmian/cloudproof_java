@@ -19,8 +19,8 @@ public abstract class KmipObject implements KmipStruct {
     /**
      * This method is mostly used for local tests and serialization.
      * 
-     * @return
-     * @throws CosmianException
+     * @return the JSON string
+     * @throws CosmianException if the serialization fails
      */
     public String toJson() throws CosmianException {
         ObjectMapper mapper = new ObjectMapper();
@@ -48,6 +48,10 @@ public abstract class KmipObject implements KmipStruct {
 
     /**
      * Helper function to retrieve the KMIP Object class from its {@link ObjectType}
+     * 
+     * @param objectType the {@link ObjectType}
+     * @param <C>        the {@link KmipObject}
+     * @return the Class of the object
      */
     @SuppressWarnings("unchecked")
     public static <C extends KmipObject> Class<C> getObjectClass(ObjectType objectType) {

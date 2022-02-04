@@ -18,7 +18,7 @@ import java.util.Objects;
  * 
  * Heaps are extremely efficient in extracting the least or greatest element.
  * 
- * @see https://www.edureka.co/blog/binary-heap-in-java/
+ * Check"https://www.edureka.co/blog/binary-heap-in-java/" for details
  */
 public class BinaryHeap {
 
@@ -28,6 +28,8 @@ public class BinaryHeap {
 
     /**
      * This will initialize our heap with default size.
+     * 
+     * @param capacity the capacity of the heap
      */
     public BinaryHeap(int capacity) {
         heapSize = 0;
@@ -38,6 +40,8 @@ public class BinaryHeap {
 
     /**
      * This will check if the heap is empty or not Complexity: O(1)
+     * 
+     * @return true if empty
      */
     public boolean isEmpty() {
         return heapSize == 0;
@@ -45,6 +49,8 @@ public class BinaryHeap {
 
     /**
      * This will check if the heap is full or not Complexity: O(1)
+     * 
+     * @return true if full
      */
     public boolean isFull() {
         return heapSize == heap.length;
@@ -61,6 +67,8 @@ public class BinaryHeap {
     /**
      * This will insert new element in to heap Complexity: O(log N) As worst case
      * scenario, we need to traverse till the root
+     * 
+     * @param x the value to insert
      */
     public void insert(int x) {
         if (isFull())
@@ -71,6 +79,9 @@ public class BinaryHeap {
 
     /**
      * This will delete element at index x Complexity: O(log N)
+     * 
+     * @param x the value to delete
+     * @return the key
      * 
      */
     public int delete(int x) {
@@ -133,6 +144,8 @@ public class BinaryHeap {
 
     /**
      * This method returns the max element of the heap. complexity: O(1)
+     * 
+     * @return the max element of the heap
      */
     public int findMax() {
         if (isEmpty())

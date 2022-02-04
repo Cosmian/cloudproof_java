@@ -56,7 +56,7 @@ public class Abe {
      * @param policy the Key Policy
      * @return a tuple containing the master private key UID and the master public
      *         key UID
-     * @throws CosmianException
+     * @throws CosmianException if the creation fails
      */
     public String[] createMasterKeyPair(Policy policy) throws CosmianException {
         try {
@@ -85,7 +85,7 @@ public class Abe {
      * 
      * @param privateMasterKeyUniqueIdentifier the key UID
      * @return the Private Key
-     * @throws CosmianException
+     * @throws CosmianException if the retrieval fails
      */
     public PrivateKey retrievePrivateMasterKey(String privateMasterKeyUniqueIdentifier) throws CosmianException {
         try {
@@ -120,7 +120,7 @@ public class Abe {
      * @param privateMasterKey the key
      * @param replaceExisting  if a key exists under this UID, replace it
      * @return the UID of the imported key
-     * @throws CosmianException
+     * @throws CosmianException if the import fails
      */
     public String importPrivateMasterKey(String uniqueIdentifier, PrivateKey privateMasterKey,
             boolean replaceExisting) throws CosmianException {
@@ -144,7 +144,7 @@ public class Abe {
      * 
      * @param publicMasterKeyUniqueIdentifier the key UID
      * @return the Public Key
-     * @throws CosmianException
+     * @throws CosmianException if the retrieval fails
      */
     public PublicKey RetrievePublicMasterKey(String publicMasterKeyUniqueIdentifier) throws CosmianException {
         try {
@@ -177,7 +177,7 @@ public class Abe {
      * @param publicMasterKey  the key
      * @param replaceExisting  if a key exists under this UID, replace it
      * @return the UID of the imported key
-     * @throws CosmianException
+     * @throws CosmianException if the import fails
      */
     public String importPublicMasterKey(String uniqueIdentifier, PublicKey publicMasterKey, boolean replaceExisting)
             throws CosmianException {
@@ -202,7 +202,7 @@ public class Abe {
      * @param accessPolicy                     the {@link AccessPolicy}
      * @param privateMasterKeyUniqueIdentifier the UID of the Master Private Key
      * @return the UID of the newly created key
-     * @throws CosmianException
+     * @throws CosmianException if the creation fails
      */
     public String createUserDecryptionKey(AccessPolicy accessPolicy, String privateMasterKeyUniqueIdentifier)
             throws CosmianException {
@@ -236,7 +236,7 @@ public class Abe {
      * 
      * @param userDecryptionKeyUniqueIdentifier the key UID
      * @return the User Decryption Key
-     * @throws CosmianException
+     * @throws CosmianException if the retrieval fails
      */
     public PrivateKey retrieveUserDecryptionKey(String userDecryptionKeyUniqueIdentifier) throws CosmianException {
         try {
@@ -271,7 +271,7 @@ public class Abe {
      * @param userDecryptionKey the key
      * @param replaceExisting   if a key exists under this UID, replace it
      * @return the UID of the imported key
-     * @throws CosmianException
+     * @throws CosmianException if the import fails
      */
     public String importUserDecryptionKey(String uniqueIdentifier, PrivateKey userDecryptionKey,
             boolean replaceExisting)
@@ -300,7 +300,7 @@ public class Abe {
      * @param data                            the data to encrypt
      * @param attributes                      the Policy Attributes
      * @return the encrypted data
-     * @throws CosmianException
+     * @throws CosmianException if the encryption fails
      */
     public byte[] kmsEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes)
             throws CosmianException {
@@ -329,7 +329,7 @@ public class Abe {
      * @param userDecryptionKeyUniqueIdentifier the key UID
      * @param encryptedData                     the cipher text
      * @return the clear text data
-     * @throws CosmianException
+     * @throws CosmianException if the decryption fails
      */
     public byte[] kmsDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData) throws CosmianException {
         try {
@@ -361,19 +361,17 @@ public class Abe {
      * Non Rekeyed User Decryption Keys cannot decrypt ata encrypted with the
      * rekeyed Master Public
      * Key and the given attributes.
-     * <br/>
-     * <br/>
+     * <br>
      * Rekeyed User Decryption Keys however will be able to decrypt data encrypted
      * by the previous Master Public Key and the rekeyed one.
-     * <br/>
-     * <br/>
+     * <br>
      * Note: there is a limit on the number of revocations that can be performed
      * which is set in the {@link Policy} when Master Keys are created
      * 
-     * @param privateMasterKeyUniqueIdentifier
-     * @param abePolicyAttributes
+     * @param privateMasterKeyUniqueIdentifier the UID of the private master key
+     * @param abePolicyAttributes              the array of {@link Attr}
      * @return the Master Public Key UID
-     * @throws CosmianException
+     * @throws CosmianException if the revocation fails
      */
     public String revokeAttributes(String privateMasterKeyUniqueIdentifier,
             Attr[] abePolicyAttributes) throws CosmianException {
@@ -406,19 +404,19 @@ public class Abe {
      * Revoke a key in the KMS which makes it unavailable to use in the KMS to
      * perform {@link #kmsEncrypt(String, byte[], Attr[])} or
      * {@link #kmsDecrypt(String, byte[])} operations.
-     * <br/>
-     * <br/>
+     * <br>
+     * <br>
      * If this key is a User Decryption Key, it will not be rekeyed in case of
      * attribute revocation.
-     * <br/>
-     * <br/>
+     * <br>
+     * <br>
      * Note: this revokes the key **inside** the KMS: it does not prevent an user
      * who has a local copy of a User Decryption Key to perform decryption
      * operations.
      * 
      * @param keyUniqueIdentifier the UID of the key to revoke
      * @return the UID of the revoked key
-     * @throws CosmianException
+     * @throws CosmianException if the revocation fails
      */
     public String revokeKey(String keyUniqueIdentifier) throws CosmianException {
         try {

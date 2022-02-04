@@ -54,6 +54,11 @@ public class Kmip {
      * The response contains the Unique Identifier of the created object. The server
      * SHALL copy the Unique Identifier returned by this operation into the ID
      * Placeholder variable.
+     * 
+     * @param request The Create request
+     * @return the successful response
+     * @throws CosmianException if the request fails
+     * 
      */
     public CreateResponse create(Create request) throws CosmianException {
         logger.finer(() -> "Create " + request.toString());
@@ -87,6 +92,9 @@ public class Kmip {
      * The response contains the Unique Identifiers of both created objects. The ID
      * Placeholder value SHALL be set to the Unique Identifier of the Private Key.
      * 
+     * @param request The Create request
+     * @return the successful response
+     * @throws CosmianException if the request fails
      */
     public CreateKeyPairResponse createKeyPair(CreateKeyPair request) throws CosmianException {
         logger.finer(() -> "CreateKeyPair " + request.toString());
@@ -118,6 +126,11 @@ public class Kmip {
      * 
      * The success or failure of the operation is indicated by the Result Status
      * (and if failure the Result Reason) in the response header.
+     * 
+     * @param request The Decrypt request
+     * @return the successful response
+     * @throws CosmianException if the request fails *
+     * 
      */
     public DecryptResponse decrypt(Decrypt request) throws CosmianException {
         logger.finer(() -> "Decrypt " + request.toString());
@@ -138,6 +151,11 @@ public class Kmip {
      * the specified Managed Object SHALL be destroyed or rendered inaccessible. The
      * meta-data for the key material SHALL be retained by the server. Objects SHALL
      * only be destroyed if they are in either Pre-Active or Deactivated state.
+     * 
+     * @param request The Destroy request
+     * @return the successful response
+     * @throws CosmianException if the request fails
+     * 
      */
     public DestroyResponse locate(Destroy request) throws CosmianException {
         logger.finer(() -> "Destroy " + request.toString());
@@ -178,6 +196,11 @@ public class Kmip {
      * 
      * The success or failure of the operation is indicated by the Result Status
      * (and if failure the Result Reason) in the response header
+     * 
+     * @param request The Encrypt request
+     * @return the successful response
+     * @throws CosmianException if the request fails
+     * 
      */
     public EncryptResponse encrypt(Encrypt request) throws CosmianException {
         logger.finer(() -> "Encrypt " + request.toString());
@@ -222,6 +245,11 @@ public class Kmip {
      * the base certificate, and then using each certificate’s Certificate Link to
      * build the certificate chain. It is an error if there is more than one valid
      * certificate chain.
+     * 
+     * @param request The Get request
+     * @return the successful response
+     * @throws CosmianException if the request fails
+     * 
      */
     public GetResponse get(Get request) throws CosmianException {
         logger.finer(() -> "Get " + request.toString());
@@ -247,6 +275,11 @@ public class Kmip {
      * The response contains the Unique Identifier provided in the request or
      * assigned by the server. The server SHALL copy the Unique Identifier returned
      * by this operations into the ID Placeholder variable.
+     * 
+     * @param request The Import request
+     * @return the successful response
+     * @throws CosmianException if the request fails
+     * 
      */
     public ImportResponse importObject(Import request) throws CosmianException {
         logger.finer(() -> "Import " + request.toString());
@@ -346,6 +379,11 @@ public class Kmip {
      * Mask field includes the Destroyed Storage indicator. The server SHALL NOT
      * return unique identifiers for objects that are archived unless the Storage
      * Status Mask field includes the Archived Storage indicator.
+     * 
+     * @param request The Locate request
+     * @return the successful response
+     * @throws CosmianException if the request fails
+     * 
      */
     public LocateResponse locate(Locate request) throws CosmianException {
         logger.finer(() -> "Locate " + request.toString());
@@ -387,6 +425,11 @@ public class Kmip {
      * key pair. If Offset is set and dates exist for the existing key pair, then
      * the dates of the replacement key pair SHALL be set based on the dates of the
      * existing key pair as follows
+     * 
+     * @param request The Rekey KeyPair request
+     * @return the successful response
+     * @throws CosmianException if the request fails
+     * 
      */
     public ReKeyKeyPairResponse reKeyKeyPair(ReKeyKeyPair request) throws CosmianException {
         logger.finer(() -> "ReKeyKeypair " + request.toString());
@@ -418,6 +461,11 @@ public class Kmip {
      * If the revocation reason is neither “key
      * compromise” nor “CA compromise”, the object is placed into the “deactivated”
      * state, and the Deactivation Date is set to the current date and time.
+     * 
+     * @param request The Revoke request
+     * @return the successful response
+     * @throws CosmianException if the request fails
+     * 
      */
     public RevokeResponse revoke(Revoke request) throws CosmianException {
         logger.finer(() -> "Revoke " + request.toString());

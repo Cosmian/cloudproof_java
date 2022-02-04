@@ -19,6 +19,9 @@ public class Ffi {
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes
+     * 
+     * @return the last error recorded by the native library
+     * @throws FfiException in case of native library error
      */
     public String get_last_error() throws FfiException {
         return get_last_error(1023);
@@ -26,6 +29,10 @@ public class Ffi {
 
     /**
      * Return the last error in a String that does not exceed `max_len` bytes
+     * 
+     * @param max_len the maximum number of bytes to return
+     * @throws FfiException in case of native library error
+     * @return the error
      */
     public String get_last_error(int max_len) throws FfiException {
         if (max_len < 1) {
@@ -42,8 +49,8 @@ public class Ffi {
     /**
      * Set the last error on the native lib
      * 
-     * @param error_msg
-     * @throws FfiException
+     * @param error_msg the last error to set on the native lib
+     * @throws FfiException n case of native library error
      */
     public void set_error(String error_msg) throws FfiException {
         unwrap(FfiWrapper.INSTANCE.set_error(error_msg));
@@ -65,7 +72,7 @@ public class Ffi {
      * @param uid            the optional resource uid
      * @param additionalData optional additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException
+     * @throws FfiException in case of native library error
      */
     public EncryptedHeader encryptHeader(Policy policy, byte[] publicKey, Attr[] attributes, byte[] uid,
             byte[] additionalData) throws FfiException {
@@ -142,7 +149,7 @@ public class Ffi {
      * @param uidLen               the bytes length of the expected UID
      * @param additionalDataLen    the bytes length of the expected additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException
+     * @throws FfiException in case of native library error
      */
     public DecryptedHeader decryptHeader(byte[] userDecryptionKey, byte[] encryptedHeaderBytes, int uidLen,
             int additionalDataLen) throws FfiException {
@@ -199,7 +206,7 @@ public class Ffi {
      *                     blocks
      * @param clearText    the clear text to encrypt
      * @return the encrypted block
-     * @throws FfiException
+     * @throws FfiException in case of native library error
      */
     public byte[] encryptBlock(byte[] symmetricKey, byte[] uid, int blockNumber,
             byte[] clearText) throws FfiException {
@@ -240,7 +247,7 @@ public class Ffi {
      * @param blockNumber    the block number of the resource
      * @param encryptedBytes the encrypted block bytes
      * @return the clear text bytes
-     * @throws FfiException
+     * @throws FfiException in case of native library error
      */
     public byte[] decryptBlock(byte[] symmetricKey, byte[] uid, int blockNumber, byte[] encryptedBytes)
             throws FfiException {
@@ -274,7 +281,7 @@ public class Ffi {
      * the native code and throw an exception wrapping it.
      * 
      * @param result the result of the FFI call
-     * @throws FfiException
+     * @throws FfiException in case of native library error
      */
     private void unwrap(int result) throws FfiException {
         if (result == 1) {

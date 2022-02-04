@@ -80,7 +80,10 @@ public class SecretData extends KmipObject {
     /**
      * 
      * Deserialize an instance from its Json representation obtained using
-     * {@link toJson()}
+     * toJson()
+     * 
+     * @param json secret data in JSON form
+     * @return the {@link SecretData}
      */
     public static SecretData fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, SecretData.class);

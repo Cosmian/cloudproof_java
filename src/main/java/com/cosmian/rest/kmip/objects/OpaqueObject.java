@@ -81,7 +81,12 @@ public class OpaqueObject extends KmipObject {
     /**
      * 
      * Deserialize an instance from its Json representation obtained using
-     * {@link toJson()}
+     * toJson()
+     * 
+     * @param json the JSON string
+     * @return the {@link OpaqueObject}
+     * @throws CosmianException if the parsing fails
+     * 
      */
     public static OpaqueObject fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, OpaqueObject.class);

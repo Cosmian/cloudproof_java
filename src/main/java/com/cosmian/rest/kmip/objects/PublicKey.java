@@ -62,6 +62,8 @@ public class PublicKey extends KmipObject {
     /**
      * Return the {@link Attributes} or a set of empty
      * {@link Attributes}
+     * 
+     * @return the {@link Attributes} found in the {@link KeyBlock}
      */
     public Attributes attributes() {
         return this.keyBlock.attributes(ObjectType.Private_Key);
@@ -70,7 +72,11 @@ public class PublicKey extends KmipObject {
     /**
      * 
      * Deserialize an instance from its Json representation obtained using
-     * {@link toJson()}
+     * oJson()
+     * 
+     * @param json the public key in JSON form
+     * @return the public key
+     * @throws CosmianException if the parsing fails
      */
     public static PublicKey fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, PublicKey.class);

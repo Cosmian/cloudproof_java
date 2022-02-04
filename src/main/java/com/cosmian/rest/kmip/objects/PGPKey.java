@@ -91,7 +91,12 @@ public class PGPKey extends KmipObject {
     /**
      * 
      * Deserialize an instance from its Json representation obtained using
-     * {@link toJson()}
+     * toJson()
+     * 
+     * @param json the JSON string
+     * @return the {@link PGPKey}
+     * @throws CosmianException if the parsing fails
+     * 
      */
     public static PGPKey fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, PGPKey.class);

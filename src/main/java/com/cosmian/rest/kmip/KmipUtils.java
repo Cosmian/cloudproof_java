@@ -9,6 +9,13 @@ public class KmipUtils {
 
     /**
      * Extract the key bytes from a {@link KeyBlock} for those made of byte arrays
+     * 
+     * @param keyBlock the {@link KeyBlock}
+     * @return the bytes of the key
+     * @throws CosmianException if the {@link KeyBlock} is malformed the bytes
+     *                          cannot be
+     *                          found
+     * 
      */
     public static byte[] bytesFromKeyBlock(KeyBlock keyBlock) throws CosmianException {
         Object keyValueContent = keyBlock.getKeyValue().get();

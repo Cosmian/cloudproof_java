@@ -87,7 +87,11 @@ public class Certificate extends KmipObject {
     /**
      * 
      * Deserialize an instance from its Json representation obtained using
-     * {@link toJson()}
+     * toJson()
+     * 
+     * @param json the JSON string
+     * @return the {@link Certificate}
+     * @throws CosmianException if the {@link Certificate} cannot be parsed
      */
     public static Certificate fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, Certificate.class);

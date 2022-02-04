@@ -70,7 +70,11 @@ public class SymmetricKey extends KmipObject {
     /**
      * 
      * Deserialize an instance from its Json representation obtained using
-     * {@link toJson()}
+     * toJson()
+     * 
+     * @param json key in JSON form
+     * @return the {@link SymmetricKey}
+     * @throws CosmianException if the key cannot be recovered
      */
     public static SymmetricKey fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, SymmetricKey.class);

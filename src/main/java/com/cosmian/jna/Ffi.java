@@ -88,7 +88,6 @@ public class Ffi {
         } catch (JsonProcessingException e) {
             throw new FfiException("Invalid Policy");
         }
-        System.out.println("JAVA POLICY: " + policyJson);
 
         // Public Key
         final Pointer publicKeyPointer = new Memory(publicKey.length);
@@ -106,7 +105,6 @@ public class Ffi {
         } catch (JsonProcessingException e) {
             throw new FfiException("Invalid Policy");
         }
-        System.out.println("JAVA ATTRIBUTES: " + attributesJson);
 
         // Uid
         final Pointer uidPointer;
@@ -164,12 +162,10 @@ public class Ffi {
         // User Decryption Key
         final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKey.length);
         userDecryptionKeyPointer.write(0, userDecryptionKey, 0, userDecryptionKey.length);
-        System.out.println("Ffi.decryptHeader() udk len " + userDecryptionKey.length);
 
         // encrypted bytes
         final Pointer encryptedHeaderBytesPointer = new Memory(encryptedHeaderBytes.length);
         encryptedHeaderBytesPointer.write(0, encryptedHeaderBytes, 0, encryptedHeaderBytes.length);
-        System.out.println("Ffi.decryptHeader() encrypted header len " + encryptedHeaderBytes.length);
 
         unwrap(FfiWrapper.INSTANCE.h_aes_decrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, uidBuffer,
                 uidBufferSize, additionalDataBuffer, additionalDataBufferSize, encryptedHeaderBytesPointer,

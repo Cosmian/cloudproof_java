@@ -38,12 +38,6 @@
             <version>${jna.version}</version>
         </dependency>
         <dependency>
-            <!-- JNA platform dependency -->
-            <groupId>net.java.dev.jna</groupId>
-            <artifactId>jna-platform</artifactId>
-            <version>${jna.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.4.2</version>

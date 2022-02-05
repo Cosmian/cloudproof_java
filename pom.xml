@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.3.2</version>
+    <version>0.3.3-SNAPSHOT</version>
 
     <name>cosmian_java_lib</name>
     <description>The Cosmian Java Lib that provides local encryption/decyption and access to the Cosmian public platform APIs</description>

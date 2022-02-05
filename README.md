@@ -18,6 +18,15 @@ The library provides a Java friendly API to the Cosmian Ubiquitous Encryption pl
   - [Confidential KMS](#confidential-kms)
 
 
+This library is available on Maven Central
+
+```xml
+<dependency>
+    <groupId>com.cosmian</groupId>
+    <artifactId>cosmian_java_lib</artifactId>
+    <version>0.3.2</version>
+</dependency>
+```
 
 ## Confidential Data Access
 

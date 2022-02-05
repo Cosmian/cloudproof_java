@@ -5,6 +5,28 @@
     <artifactId>cosmian_java_lib</artifactId>
     <version>0.3.2</version>
 
+    <name>cosmian_java_lib</name>
+    <description>The Cosmian Java Lib that provides local encryption/decyption and access to the Cosmian public platform APIs</description>
+    <url>https://github.com/Cosmian/cosmian_java_lib</url>
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://mit-license.org/</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <url>https://github.com/Cosmian/cosmian_java_lib</url>
+        <connection>scm:git:https://github.com/Cosmian/cosmian_java_lib.git</connection>
+        <developerConnection>scm:git:git@github.com:Cosmian/cosmian_java_lib.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <name>Bruno Grieder</name>
+            <email>bruno.grieder@cosmian.com</email>
+        </developer>
+    </developers>
+
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>

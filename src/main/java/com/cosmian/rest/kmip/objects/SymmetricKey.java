@@ -61,7 +61,8 @@ public class SymmetricKey extends KmipObject {
 
     /**
      * Return the {@link Attributes} or a set of empty
-     * {@link Attributes}
+     * 
+     * @return the {@link Attributes}
      */
     public Attributes attributes() {
         return this.keyBlock.attributes(ObjectType.Private_Key);

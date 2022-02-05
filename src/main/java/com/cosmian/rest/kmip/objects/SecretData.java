@@ -84,6 +84,7 @@ public class SecretData extends KmipObject {
      * 
      * @param json secret data in JSON form
      * @return the {@link SecretData}
+     * @throws CosmianException if the the JSON cannot be parsed
      */
     public static SecretData fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, SecretData.class);

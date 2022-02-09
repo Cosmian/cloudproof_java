@@ -30,7 +30,7 @@ public abstract class KmipChoice2<C1, C2> {
                     this.c2 = Optional.of((C2) value);
                 } else {
                     throw new IllegalArgumentException(
-                            "Value if of class: " + value.getClass() + " which is nos supported by this Choice");
+                        "Value of class: " + value.getClass() + " which is not supported by this Choice");
                 }
             }
         }

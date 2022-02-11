@@ -28,11 +28,11 @@ public class RestClient {
     private final int connection_timeout;
     private final int read_timeout;
     // cache the socket factory for kee-alive
-    private final SSLSocketFactory ssl_soccket_factory;
+    private final SSLSocketFactory ssl_socket_factory;
 
     /**
      * Instantiate a new REST Client
-     * 
+     *
      * @param server_url
      *                           the REST Server URL e.g. http://localhost:9000
      * @param connection_timeout
@@ -66,13 +66,13 @@ public class RestClient {
             logger.severe(err);
             throw new RuntimeException(err, e);
         }
-        this.ssl_soccket_factory = ssl_context.getSocketFactory();
+        this.ssl_socket_factory = ssl_context.getSocketFactory();
     }
 
     /**
      * Instantiate a new REST Client with DEFAULT_CONNECT_TIMEOUT and
      * DEFAULT_READ_TIMEOUT
-     * 
+     *
      * @param server_url the REST Server URL e.g. http://localhost:9000
      * @param api_key    API Key to use to authenticate
      */
@@ -83,17 +83,17 @@ public class RestClient {
     private HttpURLConnection get_connection(String path) throws MalformedURLException, IOException {
         HttpURLConnection cnx = (HttpURLConnection) new URL(this.server_url + path).openConnection();
         if (cnx instanceof HttpsURLConnection) {
-            ((HttpsURLConnection) cnx).setSSLSocketFactory(this.ssl_soccket_factory);
+            ((HttpsURLConnection)cnx).setSSLSocketFactory(this.ssl_socket_factory);
         }
         cnx.setConnectTimeout(this.connection_timeout);
         cnx.setReadTimeout(this.read_timeout);
-        cnx.setRequestProperty("Authorization", "Bearer " + this.api_key);
+        cnx.setRequestProperty("Authorization", this.api_key);
         return cnx;
     }
 
     /**
      * Perform a GET request returning JSON
-     * 
+     *
      * @param path
      *             the REST service path and query parameters answering the GET
      *             request
@@ -114,7 +114,7 @@ public class RestClient {
 
     /**
      * Perform a JSON POST request returning JSON
-     * 
+     *
      * @param path
      *                the REST service path and query parameters answering the POST
      *                request

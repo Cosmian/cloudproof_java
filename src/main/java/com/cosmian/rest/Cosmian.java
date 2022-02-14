@@ -112,8 +112,8 @@ public class Cosmian {
      *            second byte array
      * @return the merged byte array
      */
-    public static <T> T[] concat(T[] a, T[] b) {
-        T[] result = (T[])new Object[a.length + b.length];
+    public static byte[] concat(byte[] a, byte[] b) {
+        byte[] result = new byte[a.length + b.length];
         System.arraycopy(a, 0, result, 0, a.length);
         System.arraycopy(b, 0, result, a.length, b.length);
         return result;

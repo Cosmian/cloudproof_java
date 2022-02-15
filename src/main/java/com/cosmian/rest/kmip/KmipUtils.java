@@ -43,6 +43,14 @@ public class KmipUtils {
      * Extract the nonce/iv/counter bytes from a {@link KeyWrappingData} for those
      * made of byte arrays
      */
+    /**
+     * Extract the nonce/iv/counter bytes from a {@link KeyWrappingData} for those
+     * made of byte arrays
+     * 
+     * @param keyWrappingData the {@link KeyWrappingData}
+     * @return the bytes of the Nonce
+     * @throws CosmianException if no Noce is available
+     */
     public static byte[] nonceFromKeyWrappingData(KeyWrappingData keyWrappingData) throws CosmianException {
         if (!keyWrappingData.getIv_counter_nonce().isPresent()) {
             throw new CosmianException("No IV/counter/nonce found for key wrapping data");

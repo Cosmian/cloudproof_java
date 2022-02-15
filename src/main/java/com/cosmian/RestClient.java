@@ -11,6 +11,7 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -24,7 +25,7 @@ public class RestClient {
     public static final int DEFAULT_READ_TIMEOUT = 45000;
 
     private final String server_url;
-    private final String api_key;
+    private final Optional<String> api_key;
     private final int connection_timeout;
     private final int read_timeout;
     // cache the socket factory for kee-alive
@@ -44,7 +45,7 @@ public class RestClient {
      *                           milliseconds.
      * @param api_key            The API Key to use to authenticate
      */
-    public RestClient(String server_url, String api_key, int connection_timeout, int read_timeout) {
+    public RestClient(String server_url, Optional<String> api_key, int connection_timeout, int read_timeout) {
         if (server_url.endsWith("/")) {
             this.server_url = server_url.substring(0, server_url.length() - 1);
         } else {
@@ -74,20 +75,22 @@ public class RestClient {
      * DEFAULT_READ_TIMEOUT
      *
      * @param server_url the REST Server URL e.g. http://localhost:9000
-     * @param api_key    API Key to use to authenticate
+     * @param api_key    he optional API Key to use to authenticate
      */
-    public RestClient(String server_url, String api_key) {
+    public RestClient(String server_url, Optional<String> api_key) {
         this(server_url, api_key, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
     }
 
     private HttpURLConnection get_connection(String path) throws MalformedURLException, IOException {
         HttpURLConnection cnx = (HttpURLConnection) new URL(this.server_url + path).openConnection();
         if (cnx instanceof HttpsURLConnection) {
-            ((HttpsURLConnection)cnx).setSSLSocketFactory(this.ssl_socket_factory);
+            ((HttpsURLConnection) cnx).setSSLSocketFactory(this.ssl_socket_factory);
         }
         cnx.setConnectTimeout(this.connection_timeout);
         cnx.setReadTimeout(this.read_timeout);
-        cnx.setRequestProperty("Authorization", this.api_key);
+        if (this.api_key.isPresent()) {
+            cnx.setRequestProperty("Authorization", "Bearer " + this.api_key.get());
+        }
         return cnx;
     }
 
@@ -156,13 +159,19 @@ public class RestClient {
             // see
             // https://docs.oracle.com/javase/8/docs/technotes/guides/net/http-keepalive.html
             int code = cnx.getResponseCode();
-            byte[] bytes;
+            byte[] bytes = null;
             try (InputStream es = cnx.getErrorStream()) {
-                bytes = read_all_bytes(es);
+                if (es != null) {
+                    bytes = read_all_bytes(es);
+                }
             }
             String body;
             try {
-                body = new String(bytes, StandardCharsets.UTF_8);
+                if (bytes == null) {
+                    body = "";
+                } else {
+                    body = new String(bytes, StandardCharsets.UTF_8);
+                }
             } catch (Exception _e) {
                 body = "N/A";
             }

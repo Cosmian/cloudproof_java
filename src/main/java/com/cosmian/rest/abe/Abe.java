@@ -1,6 +1,5 @@
 package com.cosmian.rest.abe;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -32,6 +31,9 @@ import com.cosmian.rest.kmip.operations.RevokeResponse;
 import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.CryptographicAlgorithm;
 import com.cosmian.rest.kmip.types.KeyFormatType;
+import com.cosmian.rest.kmip.types.Link;
+import com.cosmian.rest.kmip.types.LinkType;
+import com.cosmian.rest.kmip.types.LinkedObjectIdentifier;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.RevocationReason;
 import com.cosmian.rest.kmip.types.VendorAttribute;
@@ -214,10 +216,11 @@ public class Abe {
             // convert the Access Policy to attributes and attach it to the common
             // attributes
             VendorAttribute accessPolicyAttribute = accessPolicy.toVendorAttribute();
-            VendorAttribute masterPrivateKeyId = new VendorAttribute("cosmian", "abe_master_private_key_id",
-                    privateMasterKeyUniqueIdentifier.getBytes(StandardCharsets.UTF_8));
             commonAttributes.setVendorAttributes(
-                    Optional.of(new VendorAttribute[] { accessPolicyAttribute, masterPrivateKeyId }));
+                    Optional.of(new VendorAttribute[] { accessPolicyAttribute }));
+            // link to the master private key
+            commonAttributes.setLink(new Link[] {
+                    new Link(LinkType.Parent_Link, new LinkedObjectIdentifier(privateMasterKeyUniqueIdentifier)) });
 
             Create request = new Create(ObjectType.Private_Key, commonAttributes, Optional.empty());
             CreateResponse response = this.kmip.create(request);

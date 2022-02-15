@@ -21,7 +21,7 @@ public class KmipUtils {
     public static byte[] bytesFromKeyBlock(KeyBlock keyBlock) throws CosmianException {
         Object keyValueContent = keyBlock.getKeyValue().get();
         if (keyValueContent instanceof byte[]) {
-            return (byte[])keyValueContent;
+            return (byte[]) keyValueContent;
         } else if (!(keyValueContent instanceof PlainTextKeyValue)) {
             throw new CosmianException("Unknown KeyValue type: " + keyValueContent.getClass().getName());
         }
@@ -40,10 +40,11 @@ public class KmipUtils {
     }
 
     /**
-    * Extract the nonce/iv/counter bytes from a {@link KeyWrappingData} for those made of byte arrays
-    */
+     * Extract the nonce/iv/counter bytes from a {@link KeyWrappingData} for those
+     * made of byte arrays
+     */
     public static byte[] nonceFromKeyWrappingData(KeyWrappingData keyWrappingData) throws CosmianException {
-        if (keyWrappingData.getIv_counter_nonce().isEmpty()) {
+        if (!keyWrappingData.getIv_counter_nonce().isPresent()) {
             throw new CosmianException("No IV/counter/nonce found for key wrapping data");
         }
 

@@ -148,7 +148,7 @@ public class Abe {
      * @return the Public Key
      * @throws CosmianException if the retrieval fails
      */
-    public PublicKey RetrievePublicMasterKey(String publicMasterKeyUniqueIdentifier) throws CosmianException {
+    public PublicKey retrievePublicMasterKey(String publicMasterKeyUniqueIdentifier) throws CosmianException {
         try {
             Get request = new Get(publicMasterKeyUniqueIdentifier);
             request.setKeyFormatType(Optional.of(KeyFormatType.AbeMasterPublicKey));

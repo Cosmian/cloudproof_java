@@ -3,12 +3,16 @@ package com.cosmian.jna;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
 
+import com.cosmian.CosmianException;
 import com.cosmian.jna.abe.DecryptedHeader;
 import com.cosmian.jna.abe.EncryptedHeader;
 import com.cosmian.jna.abe.FfiWrapper;
 import com.cosmian.rest.abe.acccess_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.rest.kmip.objects.PrivateKey;
+import com.cosmian.rest.kmip.objects.PublicKey;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
@@ -61,12 +65,58 @@ public class Ffi {
      * 
      * A symmetric key is randomly generated and encrypted using the ABE schemes and
      * the provided policy attributes for the given policy
+     * 
+     * @param publicKey  the ABE public key also holds the {@link Policy}
+     * @param attributes the policy attributes used to encrypt the generated
+     *                   symmetric key
+     * @return the encrypted header, bytes and symmetric key
+     * @throws FfiException     in case of native library error
+     * @throws CosmianException in case the {@link Policy} and key bytes cannot be
+     *                          recovered from the {@link PublicKey}
+     */
+    public EncryptedHeader encryptHeader(PublicKey publicKey, Attr[] attributes) throws FfiException, CosmianException {
+        byte[] publicKeyBytes = publicKey.bytes();
+        Policy policy = Policy.fromVendorAttributes(publicKey.attributes());
+        return encryptHeader(policy, publicKeyBytes, attributes, Optional.empty(), Optional.empty());
+    }
+
+    /**
+     * Generate an hybrid encryption header.
+     * 
+     * A symmetric key is randomly generated and encrypted using the ABE schemes and
+     * the provided policy attributes for the given policy.
      * .
      * If provided, the resource `uid` and the `additionalData` are symmetrically
      * encrypted and appended to the encrypted header.
      * 
+     * @param publicKey      the ABE public key also holds the {@link Policy}
+     * @param attributes     the policy attributes used to encrypt the generated
+     *                       symmetric key
+     * @param uid            the optional resource uid
+     * @param additionalData optional additional data
+     * @return the encrypted header, bytes and symmetric key
+     * @throws FfiException     in case of native library error
+     * @throws CosmianException in case the {@link Policy} and key bytes cannot be
+     *                          recovered from the {@link PublicKey}
+     */
+    public EncryptedHeader encryptHeader(PublicKey publicKey, Attr[] attributes, Optional<byte[]> uid,
+            Optional<byte[]> additionalData) throws FfiException, CosmianException {
+        byte[] publicKeyBytes = publicKey.bytes();
+        Policy policy = Policy.fromVendorAttributes(publicKey.attributes());
+        return encryptHeader(policy, publicKeyBytes, attributes, uid, additionalData);
+    }
+
+    /**
+     * Generate an hybrid encryption header.
+     * 
+     * A symmetric key is randomly generated and encrypted using the ABE schemes and
+     * the provided policy attributes for the given policy.
+     * 
+     * If provided, the resource `uid` and the `additionalData` are symmetrically
+     * encrypted and appended to the encrypted header.
+     * 
      * @param policy         the policy to use
-     * @param publicKey      the ABE public key
+     * @param publicKeyBytes the ABE public key bytes
      * @param attributes     the policy attributes used to encrypt the generated
      *                       symmetric key
      * @param uid            the optional resource uid
@@ -74,8 +124,24 @@ public class Ffi {
      * @return the encrypted header, bytes and symmetric key
      * @throws FfiException in case of native library error
      */
-    public EncryptedHeader encryptHeader(Policy policy, byte[] publicKey, Attr[] attributes, byte[] uid,
-            byte[] additionalData) throws FfiException {
+    public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, Attr[] attributes, Optional<byte[]> uid,
+            Optional<byte[]> additionalData) throws FfiException {
+
+        // Is a resource UID supplied
+        int uidLength;
+        if (uid.isPresent()) {
+            uidLength = uid.get().length;
+        } else {
+            uidLength = 0;
+        }
+
+        // Are additional data supplied
+        int adLength;
+        if (uid.isPresent()) {
+            adLength = additionalData.get().length;
+        } else {
+            adLength = 0;
+        }
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -85,7 +151,7 @@ public class Ffi {
         IntByReference symmetricKeyBufferSize = new IntByReference(symmetricKeyBuffer.length);
 
         // Header Bytes OUT
-        byte[] headerBytesBuffer = new byte[8192 + uid.length + additionalData.length];
+        byte[] headerBytesBuffer = new byte[8192 + uidLength + adLength];
         IntByReference headerBytesBufferSize = new IntByReference(headerBytesBuffer.length);
 
         // Policy
@@ -97,8 +163,8 @@ public class Ffi {
         }
 
         // Public Key
-        final Pointer publicKeyPointer = new Memory(publicKey.length);
-        publicKeyPointer.write(0, publicKey, 0, publicKey.length);
+        final Pointer publicKeyPointer = new Memory(publicKeyBytes.length);
+        publicKeyPointer.write(0, publicKeyBytes, 0, publicKeyBytes.length);
 
         // Attributes
         // The value must be the JSON array of the String representation of the Attrs
@@ -115,29 +181,44 @@ public class Ffi {
 
         // Uid
         final Pointer uidPointer;
-        if (uid.length == 0) {
+        if (uidLength == 0) {
             uidPointer = Pointer.NULL;
         } else {
-            uidPointer = new Memory(uid.length);
-            uidPointer.write(0, uid, 0, uid.length);
+            uidPointer = new Memory(uidLength);
+            uidPointer.write(0, uid.get(), 0, uidLength);
         }
 
         // Additional Data
         final Pointer additionalDataPointer;
-        if (additionalData.length == 0) {
+        if (adLength == 0) {
             additionalDataPointer = Pointer.NULL;
         } else {
-            additionalDataPointer = new Memory(additionalData.length);
-            additionalDataPointer.write(0, additionalData, 0, additionalData.length);
+            additionalDataPointer = new Memory(adLength);
+            additionalDataPointer.write(0, additionalData.get(), 0, adLength);
         }
 
         unwrap(FfiWrapper.INSTANCE.h_aes_encrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, headerBytesBuffer,
                 headerBytesBufferSize, policyJson, publicKeyPointer,
-                publicKey.length,
-                attributesJson, uidPointer, uid.length, additionalDataPointer, additionalData.length));
+                publicKeyBytes.length,
+                attributesJson, uidPointer, uidLength, additionalDataPointer, adLength));
 
         return new EncryptedHeader(Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
                 Arrays.copyOfRange(headerBytesBuffer, 0, headerBytesBufferSize.getValue()));
+    }
+
+    /**
+     * Decrypt a hybrid header, recovering the symmetric key
+     * 
+     * @param userDecryptionKey    the ABE user decryption key
+     * @param encryptedHeaderBytes the encrypted header
+     * @return The decrypted header: symmetric key, uid and additional data
+     * @throws FfiException     in case of native library error
+     * @throws CosmianException in case the key bytes cannot be recovered from the
+     *                          {@link PrivateKey}
+     */
+    public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes)
+            throws FfiException, CosmianException {
+        return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, 0, 0);
     }
 
     /**
@@ -146,12 +227,34 @@ public class Ffi {
      * 
      * @param userDecryptionKey    the ABE user decryption key
      * @param encryptedHeaderBytes the encrypted header
-     * @param uidLen               the bytes length of the expected UID
-     * @param additionalDataLen    the bytes length of the expected additional data
+     * @param uidLen               the maximum bytes length of the expected UID
+     * @param additionalDataLen    the maximum bytes length of the expected
+     *                             additional
+     *                             data
+     * @return The decrypted header: symmetric key, uid and additional data
+     * @throws FfiException     in case of native library error
+     * @throws CosmianException in case the key bytes cannot be recovered from the
+     *                          {@link PrivateKey}
+     */
+    public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes, int uidLen,
+            int additionalDataLen) throws FfiException, CosmianException {
+        return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, uidLen, additionalDataLen);
+    }
+
+    /**
+     * Decrypt a hybrid header, recovering the symmetric key, and optionally, the
+     * resource UID and additional data
+     * 
+     * @param userDecryptionKeyBytes the ABE user decryption key bytes
+     * @param encryptedHeaderBytes   the encrypted header
+     * @param uidLen                 the maximum bytes length of the expected UID
+     * @param additionalDataLen      the maximum bytes length of the expected
+     *                               additional
+     *                               data
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws FfiException in case of native library error
      */
-    public DecryptedHeader decryptHeader(byte[] userDecryptionKey, byte[] encryptedHeaderBytes, int uidLen,
+    public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes, int uidLen,
             int additionalDataLen) throws FfiException {
 
         // Symmetric Key OUT
@@ -167,8 +270,8 @@ public class Ffi {
         IntByReference additionalDataBufferSize = new IntByReference(additionalDataBuffer.length);
 
         // User Decryption Key
-        final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKey.length);
-        userDecryptionKeyPointer.write(0, userDecryptionKey, 0, userDecryptionKey.length);
+        final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKeyBytes.length);
+        userDecryptionKeyPointer.write(0, userDecryptionKeyBytes, 0, userDecryptionKeyBytes.length);
 
         // encrypted bytes
         final Pointer encryptedHeaderBytesPointer = new Memory(encryptedHeaderBytes.length);
@@ -177,7 +280,7 @@ public class Ffi {
         unwrap(FfiWrapper.INSTANCE.h_aes_decrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, uidBuffer,
                 uidBufferSize, additionalDataBuffer, additionalDataBufferSize, encryptedHeaderBytesPointer,
                 encryptedHeaderBytes.length, userDecryptionKeyPointer,
-                userDecryptionKey.length));
+                userDecryptionKeyBytes.length));
 
         return new DecryptedHeader(
                 Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),

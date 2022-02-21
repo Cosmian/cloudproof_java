@@ -99,7 +99,7 @@ public class TestAbe {
 		assertEquals(CryptographicAlgorithm.ABE, privateMasterKey.getKeyBlock().getCryptographicAlgorithm());
 
 		String publicMasterKeyUniqueIdentifier = ids[1];
-		PublicKey publicMasterKey = abe.RetrievePublicMasterKey(publicMasterKeyUniqueIdentifier);
+		PublicKey publicMasterKey = abe.retrievePublicMasterKey(publicMasterKeyUniqueIdentifier);
 		assertEquals(KeyFormatType.AbeMasterPublicKey, publicMasterKey.getKeyBlock().getKeyFormatType());
 		assertEquals(CryptographicAlgorithm.ABE, publicMasterKey.getKeyBlock().getCryptographicAlgorithm());
 
@@ -116,7 +116,7 @@ public class TestAbe {
 				publicMasterKey, true);
 		logger.info("Imported Public Key with id: " + publicMasterKeyUniqueIdentifier_);
 		// retrieve it again
-		PublicKey publicMasterKey_ = abe.RetrievePublicMasterKey(publicMasterKeyUniqueIdentifier);
+		PublicKey publicMasterKey_ = abe.retrievePublicMasterKey(publicMasterKeyUniqueIdentifier);
 		assertEquals(ObjectType.Public_Key, publicMasterKey_.getObjectType());
 		assertEquals(KeyFormatType.AbeMasterPublicKey, publicMasterKey_.getKeyBlock().getKeyFormatType());
 		assertEquals(CryptographicAlgorithm.ABE, publicMasterKey_.getKeyBlock().getCryptographicAlgorithm());
@@ -153,7 +153,7 @@ public class TestAbe {
 		Resources.write_resource("private_master_key.json", privateMasterKey.toJson().getBytes(StandardCharsets.UTF_8));
 
 		String publicMasterKeyUniqueIdentifier = ids[1];
-		PublicKey publicMasterKey = abe.RetrievePublicMasterKey(publicMasterKeyUniqueIdentifier);
+		PublicKey publicMasterKey = abe.retrievePublicMasterKey(publicMasterKeyUniqueIdentifier);
 		assertEquals(KeyFormatType.AbeMasterPublicKey, publicMasterKey.getKeyBlock().getKeyFormatType());
 		assertEquals(CryptographicAlgorithm.ABE, publicMasterKey.getKeyBlock().getCryptographicAlgorithm());
 		Resources.write_resource("public_master_key.json", publicMasterKey.toJson().getBytes(StandardCharsets.UTF_8));

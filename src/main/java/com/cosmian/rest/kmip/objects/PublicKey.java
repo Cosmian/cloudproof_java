@@ -3,6 +3,7 @@ package com.cosmian.rest.kmip.objects;
 import java.util.Objects;
 
 import com.cosmian.CosmianException;
+import com.cosmian.rest.kmip.KmipUtils;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.ObjectType;
@@ -67,6 +68,16 @@ public class PublicKey extends KmipObject {
      */
     public Attributes attributes() {
         return this.keyBlock.attributes(ObjectType.Private_Key);
+    }
+
+    /**
+     * The low level cryptographic content of the Public Key
+     * 
+     * @return the byte array
+     * @throws CosmianException if the key is wrapped and bytes cannot be extracted
+     */
+    public byte[] bytes() throws CosmianException {
+        return KmipUtils.bytesFromKeyBlock(this.getKeyBlock());
     }
 
     /**

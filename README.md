@@ -24,7 +24,7 @@ This library is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.4.0</version>
+    <version>0.5.0</version>
 </dependency>
 ```
 
@@ -36,9 +36,9 @@ Attributes Based Encryption (ABE) allows building secure data lakes, repositorie
 
 In addition, Cosmian Confidential Data Access allows building secure indexes on the data, to efficiently search the encrypted data, without the cloud learning anything about the search query, the response or the underlying data itself.
 
-### Quick Start
+### Quick Start ABE+AES
 
-Head for [demo.java](./src/test/java/com/cosmian/Demo.java). 
+Head for [demo.java](./src/test/java/com/cosmian/Demo.java) which demonstrates the use of the Abe class to exercise the Cosmian KMS server to create keys, encrypt and decrypt messages.
 
 This demo creates a Policy which combines two policy axes, 
 
@@ -50,13 +50,115 @@ Data is encrypted with two values, one from each axis, say: `[MKG, Low Secret]`
 A user is able to decrypt data only if it possesses a key with an access policy with sufficient security level and the code for the department, say ` Top Secret && ( MKG || FIN )`
 
 
-### Local encryption and decryption
+### Local ABE+AES encryption and decryption
 
-In addition to KMS encryption and decryption, the library offers the ability to perform and hybrid encryption ABE+AES. This requires having the native dynamic library [abe_gpsw](https://github.com/Cosmian/abe_gpsw) deployed on your system.
+In addition to KMS encryption and decryption, the library offers the ability to perform a local, and hence faster and more secure, hybrid encryption ABE + AES 256 GCM. This requires having the native dynamic library [abe_gpsw](https://github.com/Cosmian/abe_gpsw) deployed on the system.
 
-The native library can also be packaged as part of the jar package by placing a copy in the `src/main/resources/{OS}-{ARCH}` folder (`linux-amd64` for linux) and running `mvn package`.
+#### Building the the ABE GPSW native lib
+
+1. Rust must be installed on the system using [rustup](https://rustup.rs/)
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+2. Check out the [ABE GPSW library](https://github.com/Cosmian/abe_gpsw)
+
+```sh
+git clone https://github.com/Cosmian/abe_gpsw.git
+```
+
+3. Build the native library, which will be available as `libabe_gpsw.so` (linux) or `libabe_gpsw.dylib` (macos) in the `target` directory
+
+```sh
+cargo build --release --all-features
+```
+
+4. Place the library on the dynamic libraries path of your system, or a path indicated by `LD_LIBRARY_PATH` on Linux. Alternatively, If you are using tis library in a java project, you can place the library in 
+
+
+- `src/main/resources/linux-x86-64` folder for a Linux Intel machine
+- `src/main/resources/linux-amd64` folder for a Linux AMD machine
+- `src/main/resources/darwin` folder for a Mac running MacOS
+- `src/main/resources/win32-x86` folder for a Windows machine (untested)
+
+#### Using the native library
 
 To learn how to use the local ABE+AES hybrid encryption facilities, check [the Hybrid ABE AES tests](src/test/java/com/cosmian/TestLocalABE_AES.java)
+
+A typical workflow will be as follows
+
+```java
+// The data we want to encrypt/decrypt
+byte[] data = "This s a test message".getBytes(StandardCharsets.UTF_8);
+
+// A unique ID associated with this message. The unique id is used to
+// authenticate the message in the AES encryption scheme.
+// Typically this will be a hash of the content if it is unique, a unique
+// filename or a database unique key
+byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
+
+// Access the Cosmian KMS server. 
+// Change the Cosmian Server Server URL and API key as appropriate
+Abe abe = new Abe(new RestClient([KMS SEVER URL], [API KEY]);
+
+//
+// Encryption
+//
+
+// Extract the Public Key with the Policy from the KMS server
+PublicKey publicKey = abe.retrievePublicMasterKey([MASTER PUBLIC KEY IDENTIFIER]);
+
+/// The policy attributes that will be used to encrypt the content. They must
+/// exist in the policy associated with the Public Key
+Attr[] attributes = new Attr[] { new Attr("Department", "FIN"), new Attr("Security Level", "Confidential") };
+
+// Now generate the header which contains the ABE encryption of the randomly
+// generated AES key.
+// This example assumes that the Unique ID can be recovered at time of
+// decryption, and is thus not stored as part of the encrypted header.
+// If that is not the case check the other signature of #FFI.encryptedHeader()
+// to inject the unique id.
+EncryptedHeader encryptedHeader = FFI.encryptHeader(publicKey, attributes);
+
+// The data can now be encrypted with the generated key
+// The block number is also part of the authentication of the AES scheme
+byte[] encryptedBlock = FFI.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+
+// Create a full message with header+encrypted data. The length of the header
+// is pre-pended.
+ByteBuffer headerSize = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN)
+    .putInt(encryptedHeader.getEncryptedHeaderBytes().length);
+// Write the message
+ByteArrayOutputStream bao = new ByteArrayOutputStream();
+bao.write(headerSize.array());
+bao.write(encryptedHeader.getEncryptedHeaderBytes());
+bao.write(encryptedBlock);
+bao.flush();
+byte[] ciphertext = bao.toByteArray();
+
+//
+// Decryption
+//
+
+// Extract an existing User Decryption Key from the KMS server
+PublicKey publicKey = abe.retrieveUserDecryptionKey([USER DECRYPTION KEY IDENTIFIER]);
+
+// Parse the message by first recovering the header length
+int headerSize_ = ByteBuffer.wrap(ciphertext).order(ByteOrder.BIG_ENDIAN).getInt(0);
+// Then recover the encrypted header and encrypted content
+byte[] encryptedHeader_ = Arrays.copyOfRange(ciphertext, 4, 4 + headerSize_);
+byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize_, ciphertext.length);
+
+// Decrypt he header to recover the symmetric AES key
+DecryptedHeader decryptedHeader = FFI.decryptHeader(userDecryptionKey, encryptedHeader_);
+
+// decrypt the content, passing the unique id and block number
+byte[] data_ = FFI.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+
+// Verify everything is correct
+assertTrue(Arrays.equals(data, data_));        
+```
 
 ## Confidential Micro Services
 

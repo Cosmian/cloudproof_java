@@ -8,7 +8,7 @@ The library provides a Java friendly API to the Cosmian Ubiquitous Encryption pl
  - managed keys with the [Cosmian Confidential Key Management Service (KMS)](#confidential-kms) 
 
 
-:warning: This is an early release of the java library for Cosmian Ubiquitous Encryption. Only a limited set of the operations is publicly supported.
+:warning: This is the public release of the java library for Cosmian Ubiquitous Encryption. Only a limited set of the operations is currently publicly supported. Ask us for details.
 
 
   - [Confidential Data Access](#confidential-data-access)

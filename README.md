@@ -4,18 +4,12 @@
 The library provides a Java friendly API to the Cosmian Ubiquitous Encryption platform:
 
  - perform [Confidential Data Access](#confidential-data-access) advanced encryption routines 
- - build and run [Confidential Micro Services](#confidential-micro-services) on the Cosmian Confidential Cloud 
+ - build and run [Secure Computations](#secure-computations) on the Cosmian Confidential Cloud 
  - managed keys with the [Cosmian Confidential Key Management Service (KMS)](#confidential-kms) 
 
 
 :warning: This is the public release of the java library for Cosmian Ubiquitous Encryption. Only a limited set of the operations is currently publicly supported. Ask us for details.
 
-
-  - [Confidential Data Access](#confidential-data-access)
-    - [Quick Start](#quick-start)
-    - [Local encryption and decryption](#local-encryption-and-decryption)
-  - [Confidential Micro Services](#confidential-micro-services)
-  - [Confidential KMS](#confidential-kms)
 
 
 This library is available on Maven Central
@@ -24,9 +18,22 @@ This library is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
 </dependency>
 ```
+
+
+
+  - [Confidential Data Access](#confidential-data-access)
+    - [Versions Correspondence](#versions-correspondence)
+    - [Quick Start ABE+AES](#quick-start-abeaes)
+    - [Local ABE+AES encryption and decryption](#local-abeaes-encryption-and-decryption)
+      - [Building the the ABE GPSW native lib](#building-the-the-abe-gpsw-native-lib)
+      - [Using the native library](#using-the-native-library)
+  - [Secure Computations](#secure-computations)
+  - [Confidential KMS](#confidential-kms)
+
+
 
 ## Confidential Data Access
 
@@ -35,6 +42,15 @@ Cosmian Ubiquitous Encryption provides the ability to encrypt data - locally or 
 Attributes Based Encryption (ABE) allows building secure data lakes, repositories, directories... of data in zero trust environments, such as the cloud, where users and client applications can only read the data they are allowed to access.
 
 In addition, Cosmian Confidential Data Access allows building secure indexes on the data, to efficiently search the encrypted data, without the cloud learning anything about the search query, the response or the underlying data itself.
+
+
+### Versions Correspondence
+
+KMS Server | Java Lib | abe_gpsw lib
+-----------|----------|--------------
+1.2.0      | 0.5.0    | 0.3.0
+1.2.1      | 0.5.1    | 0.4.0
+
 
 ### Quick Start ABE+AES
 
@@ -65,7 +81,9 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 2. Check out the [ABE GPSW library](https://github.com/Cosmian/abe_gpsw)
 
 ```sh
-git clone https://github.com/Cosmian/abe_gpsw.git
+git clone https://github.com/Cosmian/abe_gpsw.git && \
+cd abe_gpsw && \
+git checkout v0.4.0
 ```
 
 3. Build the native library, which will be available as `libabe_gpsw.so` (linux) or `libabe_gpsw.dylib` (macos) in the `target` directory
@@ -74,12 +92,19 @@ git clone https://github.com/Cosmian/abe_gpsw.git
 cargo build --release --all-features
 ```
 
+  *Note for MacOS M1 machines*
+  If java is running in intel x86_64 emulation mode, the library must be built for an x86_64 target, i.e.
+
+  ```sh
+  cargo build --release --all-features --target x86_64-apple-darwin
+  ```
+
 4. Place the library on the dynamic libraries path of your system, or a path indicated by `LD_LIBRARY_PATH` on Linux. Alternatively, If you are using tis library in a java project, you can place the library in 
 
 
 - `src/main/resources/linux-x86-64` folder for a Linux Intel machine
 - `src/main/resources/linux-amd64` folder for a Linux AMD machine
-- `src/main/resources/darwin` folder for a Mac running MacOS
+- `src/main/resources/darwin` folder for a Mac running MacOS (M1 and Intel)
 - `src/main/resources/win32-x86` folder for a Windows machine (untested)
 
 #### Using the native library
@@ -160,11 +185,12 @@ byte[] data_ = FFI.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encry
 assertTrue(Arrays.equals(data, data_));        
 ```
 
-## Confidential Micro Services
+
+## Secure Computations
 
 *Not publicly available yet. Call Cosmian for early access*
 
-Cosmian Confidential Micro Services allows building micro services in Python (soon Java) that can be deployed on the Cosmian Confidential Cloud. 
+Cosmian Secure Computations allows building micro services in Python (soon Java) that can be deployed on the Cosmian Confidential Cloud. 
 
 The code, the data and the results are encrypted at all times, so the Cosmian Cloud does not learn anything about the data or the algorithm. 
 
@@ -181,10 +207,10 @@ Also, data sources, code and results can be encrypted under different keys enabl
 
 ## Confidential KMS
 
-Cosmian offers a confidential KMS in the Cosmian Confidential Cloud. The KMS operations are protected with the same technology used for the Confidential Micro Services, so Cosmian never learns anything about the keys stored in the KMS or the operations performed with those keys inside the KMS (encryption, decryption, signature,...).
+Cosmian offers a confidential KMS in the Cosmian Confidential Cloud. The KMS operations are protected with the same technology used for the Secure Computations, so Cosmian never learns anything about the keys stored in the KMS or the operations performed with those keys inside the KMS (encryption, decryption, signature,...).
 
 Use of Cosmian KMS is included with the services above.
 
 The KMS offers a KMIP 2.1 interface.
 
-*Only the KMS operations required to enable the Confidential Data Access and Confidential Micro Services are publicly available for now. Contact Cosmian for full KMS access*
+*Only the KMS operations required to enable the Confidential Data Access and Secure Computations are publicly available for now. Contact Cosmian for full KMS access*

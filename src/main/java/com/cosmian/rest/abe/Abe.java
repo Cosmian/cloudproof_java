@@ -297,7 +297,14 @@ public class Abe {
     /**
      * Encrypt data in the KMS using the given Policy Attributes (@see {@link Attr})
      * and Public Master Key.
-     * The data is encrypted using an hybrid encryption scheme ABE + AÉS 256 GCM
+     * The data is encrypted using an hybrid encryption scheme ABE + AÉS 256 GCM.
+     * No Metadata is added to the header and no resource uid is used in the AES
+     * AEAD scheme.
+     * 
+     * The generated cipher text is made of 3 parts
+     * - the length of the encrypted header as a u32 in big endian format (4 bytes)
+     * - the header
+     * - the AES GCM encrypted content
      * 
      * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
      * @param data                            the data to encrypt
@@ -307,11 +314,37 @@ public class Abe {
      */
     public byte[] kmsEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes)
             throws CosmianException {
+        return kmsEncrypt(publicMasterKeyUniqueIdentifier, data, attributes, Optional.empty());
+    }
+
+    /**
+     * Encrypt data in the KMS using the given Policy Attributes (@see {@link Attr})
+     * and Public Master Key.
+     * The data is encrypted using an hybrid encryption scheme ABE + AÉS 256 GCM.
+     * 
+     * The uid, is used in the authentication of the AES GCM scheme.
+     * It is not saved ith the header and must be resupplied on decryption
+     * 
+     * The generated cipher text is made of 3 parts
+     * - the length of the encrypted header as a u32 in big endian format (4 bytes)
+     * - the header
+     * - the AES GCM encrypted content
+     * 
+     * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
+     * @param data                            the data to encrypt
+     * @param attributes                      the Policy Attributes
+     * @return the encrypted data
+     * @throws CosmianException if the encryption fails
+     */
+    public byte[] kmsEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes,
+            Optional<byte[]> uid)
+            throws CosmianException {
         try {
             DataToEncrypt dataToEncrypt = new DataToEncrypt(attributes, data);
             ObjectMapper mapper = new ObjectMapper();
             byte[] bytes = mapper.writeValueAsBytes(dataToEncrypt);
-            Encrypt request = new Encrypt(publicMasterKeyUniqueIdentifier, bytes, Optional.empty(), Optional.empty());
+            Encrypt request = new Encrypt(publicMasterKeyUniqueIdentifier, bytes, Optional.empty(),
+                    uid.isPresent() ? Optional.of(uid.get()) : Optional.empty());
             EncryptResponse response = this.kmip.encrypt(request);
             if (response.getData().isPresent()) {
                 return response.getData().get();
@@ -329,14 +362,40 @@ public class Abe {
     /**
      * Decrypt the data in the KMS using the given User Decryption Key
      * 
+     * The encryptedData should be made of 3 parts:
+     * - the length of the encrypted header as a u32 in big endian format (4 bytes)
+     * - the header
+     * - the AES GCM encrypted content
+     * 
      * @param userDecryptionKeyUniqueIdentifier the key UID
      * @param encryptedData                     the cipher text
      * @return the clear text data
      * @throws CosmianException if the decryption fails
      */
     public byte[] kmsDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData) throws CosmianException {
+        return this.kmsDecrypt(userDecryptionKeyUniqueIdentifier, encryptedData, Optional.empty());
+    }
+
+    /**
+     * Decrypt the data in the KMS using the given User Decryption Key
+     * 
+     * The encryptedData should be made of 3 parts:
+     * - the length of the encrypted header as a u32 in big endian format (4 bytes)
+     * - the header
+     * - the AES GCM encrypted content
+     * 
+     * @param userDecryptionKeyUniqueIdentifier the key UID
+     * @param encryptedData                     the cipher text
+     * @param uid                               the resource uid to use in the
+     *                                          authentication of the symmetric
+     *                                          scheme
+     * @return the clear text data
+     * @throws CosmianException if the decryption fails
+     */
+    public byte[] kmsDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData, Optional<byte[]> uid)
+            throws CosmianException {
         try {
-            Decrypt request = new Decrypt(userDecryptionKeyUniqueIdentifier, encryptedData, Optional.empty());
+            Decrypt request = new Decrypt(userDecryptionKeyUniqueIdentifier, encryptedData, uid);
             DecryptResponse response = this.kmip.decrypt(request);
             if (response.getData().isPresent()) {
                 return response.getData().get();

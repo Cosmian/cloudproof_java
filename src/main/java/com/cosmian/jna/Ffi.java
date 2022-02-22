@@ -301,6 +301,21 @@ public class Ffi {
     /**
      * Symmetrically encrypt a block of clear text data.
      * 
+     * No resource UID is used for authentication and the block number is assumed to
+     * be zero
+     * 
+     * @param symmetricKey The key to use to symmetrically encrypt the block
+     * @param clearText    the clear text to encrypt
+     * @return the encrypted block
+     * @throws FfiException in case of native library error
+     */
+    public byte[] encryptBlock(byte[] symmetricKey, byte[] clearText) throws FfiException {
+        return encryptBlock(symmetricKey, new byte[] {}, 0, clearText);
+    }
+
+    /**
+     * Symmetrically encrypt a block of clear text data.
+     * 
      * The UID and Block Number are part of the AEAD of the symmetric scheme.
      * 
      * @param symmetricKey The key to use to symmetrically encrypt the block
@@ -324,8 +339,13 @@ public class Ffi {
         symmetricKeyPointer.write(0, symmetricKey, 0, symmetricKey.length);
 
         // Uid
-        final Pointer uidPointer = new Memory(uid.length);
-        uidPointer.write(0, uid, 0, uid.length);
+        final Pointer uidPointer;
+        if (uid.length > 0) {
+            uidPointer = new Memory(uid.length);
+            uidPointer.write(0, uid, 0, uid.length);
+        } else {
+            uidPointer = Pointer.NULL;
+        }
 
         // Additional Data
         final Pointer dataPointer = new Memory(clearText.length);
@@ -337,6 +357,23 @@ public class Ffi {
                 uidPointer, uid.length, blockNumber, dataPointer, clearText.length));
 
         return Arrays.copyOfRange(cipherTextBuffer, 0, cipherTextBufferSize.getValue());
+    }
+
+    /**
+     * Symmetrically decrypt a block of encrypted data.
+     * 
+     * No resource UID is used for authentication and the block number is assumed to
+     * be zero
+     * 
+     * @param symmetricKey   the symmetric key to use
+     * @param encryptedBytes the encrypted block bytes
+     * @return the clear text bytes
+     * @throws FfiException in case of native library error
+     */
+    public byte[] decryptBlock(byte[] symmetricKey, byte[] encryptedBytes)
+            throws FfiException {
+
+        return decryptBlock(symmetricKey, new byte[] {}, 0, encryptedBytes);
     }
 
     /**
@@ -365,8 +402,13 @@ public class Ffi {
         symmetricKeyPointer.write(0, symmetricKey, 0, symmetricKey.length);
 
         // Uid
-        final Pointer uidPointer = new Memory(uid.length);
-        uidPointer.write(0, uid, 0, uid.length);
+        final Pointer uidPointer;
+        if (uid.length > 0) {
+            uidPointer = new Memory(uid.length);
+            uidPointer.write(0, uid, 0, uid.length);
+        } else {
+            uidPointer = Pointer.NULL;
+        }
 
         // Encrypted Data
         final Pointer encryptedBytesPointer = new Memory(encryptedBytes.length);

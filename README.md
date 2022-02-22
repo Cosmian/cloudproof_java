@@ -18,7 +18,7 @@ This library is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.5.1</version>
+    <version>0.5.2</version>
 </dependency>
 ```
 
@@ -49,7 +49,7 @@ In addition, Cosmian Confidential Data Access allows building secure indexes on 
 KMS Server | Java Lib | abe_gpsw lib
 -----------|----------|--------------
 1.2.0      | 0.5.0    | 0.3.0
-1.2.1      | 0.5.1    | 0.4.0
+1.2.1      | 0.5.2    | 0.4.0
 
 
 ### Quick Start ABE+AES

@@ -1,5 +1,6 @@
 package com.cosmian.jna;
 
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +20,7 @@ import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
-public class Ffi {
+public class Ffi implements Serializable{
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes

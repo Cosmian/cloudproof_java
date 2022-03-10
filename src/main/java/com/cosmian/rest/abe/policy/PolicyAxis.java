@@ -1,10 +1,11 @@
 package com.cosmian.rest.abe.policy;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class PolicyAxis {
+public class PolicyAxis implements Serializable {
     final private String name;
     final private List<String> attributes;
     final private boolean hierarchical;

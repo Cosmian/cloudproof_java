@@ -1,5 +1,6 @@
 package com.cosmian.rest.abe.policy;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import com.cosmian.CosmianException;
@@ -8,7 +9,7 @@ import com.cosmian.CosmianException;
  * An attribute in a policy group is characterized by the policy axis and its
  * own name within that axis
  */
-public class PolicyAttributeUid {
+public class PolicyAttributeUid implements Serializable{
     private final String axis;
     private final String name;
 

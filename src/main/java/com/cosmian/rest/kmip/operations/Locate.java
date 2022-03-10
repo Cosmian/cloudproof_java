@@ -8,6 +8,7 @@ import com.cosmian.rest.kmip.json.KmipStructDeserializer;
 import com.cosmian.rest.kmip.json.KmipStructSerializer;
 import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.ObjectGroupMember;
+import com.cosmian.rest.kmip.types.StorageStatusMask;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -120,8 +121,6 @@ public class Locate implements KmipStruct {
      * on-line objects, only archived objects, destroyed objects or any
      * combination of these, are to be searched. If omitted, then only on-line
      * objects SHALL be returned.
-     * 
-     * @see StorageStatusMask
      */
     @JsonProperty(value = "StorageStatusMask")
     private Optional<Integer> storage_status_mask;

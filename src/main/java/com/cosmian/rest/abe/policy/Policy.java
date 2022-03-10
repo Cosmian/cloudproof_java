@@ -1,5 +1,6 @@
 package com.cosmian.rest.abe.policy;
 
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,7 +22,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  */
 @JsonSerialize(using = PolicySerializer.class)
 @JsonDeserialize(using = PolicyDeserializer.class)
-public class Policy {
+public class Policy implements Serializable {
     private int lastAttributeValue = 0;
     private final int maxNumberOfRevocations;
     // store the policies by name

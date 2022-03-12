@@ -322,8 +322,8 @@ public class Abe {
      * and Public Master Key.
      * The data is encrypted using an hybrid encryption scheme ABE + AÉS 256 GCM.
      * 
-     * The uid, is used in the authentication of the AES GCM scheme.
-     * It is not saved ith the header and must be resupplied on decryption
+     * The uid is used in the authentication of the AES GCM scheme.
+     * If supplied it will be saved encrypted as part of the header
      * 
      * The generated cipher text is made of 3 parts
      * - the length of the encrypted header as a u32 in big endian format (4 bytes)
@@ -333,6 +333,7 @@ public class Abe {
      * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
      * @param data                            the data to encrypt
      * @param attributes                      the Policy Attributes
+     * @param uid                             the UID uses in the AEAD of the symmetric scheme
      * @return the encrypted data
      * @throws CosmianException if the encryption fails
      */

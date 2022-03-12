@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import com.cosmian.jna.Ffi;
+import com.cosmian.jna.LocalDecryptionCache;
+import com.cosmian.jna.LocalEncryptionCache;
 import com.cosmian.jna.abe.DecryptedHeader;
 import com.cosmian.jna.abe.EncryptedHeader;
 import com.cosmian.rest.abe.Abe;
@@ -29,8 +31,6 @@ import org.junit.jupiter.api.Test;
 
 public class TestABE_AES {
 
-	private static final Ffi FFI = new Ffi();
-
 	@BeforeAll
 	public static void before_all() {
 		TestUtils.initLogging();
@@ -38,19 +38,18 @@ public class TestABE_AES {
 
 	@Test
 	public void testError() throws Exception {
-		Ffi ffi = new Ffi();
-		assertEquals("", ffi.get_last_error());
+		assertEquals("", Ffi.get_last_error());
 		String error = "An Error éà";
-		ffi.set_error(error);
-		assertEquals("FFI error: " + error, ffi.get_last_error());
+		Ffi.set_error(error);
+		assertEquals("FFI error: " + error, Ffi.get_last_error());
 		String base = "0123456789";
 		String s = "";
 		for (int i = 0; i < 110; i++) {
 			s += base;
 		}
 		assertEquals(1100, s.length());
-		ffi.set_error(s);
-		String err = ffi.get_last_error(1023);
+		Ffi.set_error(s);
+		String err = Ffi.get_last_error(1023);
 		assertEquals(1023, err.length());
 	}
 
@@ -90,13 +89,13 @@ public class TestABE_AES {
 		// generated AES key.
 		// This example assumes that the Unique ID can be recovered at time of
 		// decryption, and is thus not stored as part of the encrypted header.
-		// If that is not the case check the other signature of #FFI.encryptedHeader()
+		// If that is not the case check the other signature of #Ffi.encryptedHeader()
 		// to inject the unique id.
-		EncryptedHeader encryptedHeader = FFI.encryptHeader(publicKey, attributes);
+		EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes);
 
 		// The data can now be encrypted with the generated key
 		// The block number is also part of the authentication of the AES scheme
-		byte[] encryptedBlock = FFI.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+		byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
 
 		// Create a full message with header+encrypted data. The length of the header
 		// is pre-pended.
@@ -125,10 +124,10 @@ public class TestABE_AES {
 		byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize_, ciphertext.length);
 
 		// Decrypt he header to recover the symmetric AES key
-		DecryptedHeader decryptedHeader = FFI.decryptHeader(userDecryptionKey, encryptedHeader_);
+		DecryptedHeader decryptedHeader = Ffi.decryptHeader(userDecryptionKey, encryptedHeader_);
 
 		// decrypt the content, passing the unique id and block number
-		byte[] data_ = FFI.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+		byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
 
 		// Verify everything is correct
 		assertTrue(Arrays.equals(data, data_));
@@ -149,23 +148,23 @@ public class TestABE_AES {
 		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"), new Attr("Security Level", "Confidential") };
 		byte[] uid = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 		byte[] additionalData = new byte[] { 10, 11, 12, 13, 14 };
-		EncryptedHeader encryptedHeader = FFI.encryptHeader(publicKey, attributes, Optional.of(uid),
+		EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes, Optional.of(uid),
 				Optional.of(additionalData));
 
 		System.out.println("Symmetric Key length " + encryptedHeader.getSymmetricKey().length);
 		System.out.println("Encrypted Header length " + encryptedHeader.getEncryptedHeaderBytes().length);
 
 		byte[] data = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-		byte[] encryptedBlock = FFI.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+		byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
 		System.out.println("Clear Text Length " + data.length);
-		System.out.println("Symmetric Crypto Overhead " + FFI.symmetricEncryptionOverhead());
+		System.out.println("Symmetric Crypto Overhead " + Ffi.symmetricEncryptionOverhead());
 		System.out.println("Encrypted Block Length " + encryptedBlock.length);
 
 		// Decryption
 		String userDecryptionKeyJson = Resources.load_resource("ffi/fin_confidential_user_key.json");
 		PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
-		DecryptedHeader header_ = FFI.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(),
+		DecryptedHeader header_ = Ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(),
 				uid.length, additionalData.length);
 
 		System.out.println("Decrypted Header: Symmetric Key Length " + header_.getSymmetricKey().length);
@@ -176,7 +175,7 @@ public class TestABE_AES {
 		assertTrue(Arrays.equals(uid, header_.getUid()));
 		assertTrue(Arrays.equals(additionalData, header_.getAdditionalData()));
 
-		byte[] data_ = FFI.decryptBlock(header_.getSymmetricKey(), header_.getUid(), 0, encryptedBlock);
+		byte[] data_ = Ffi.decryptBlock(header_.getSymmetricKey(), header_.getUid(), 0, encryptedBlock);
 		assertTrue(Arrays.equals(data, data_));
 
 	}
@@ -194,7 +193,7 @@ public class TestABE_AES {
 		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
 
 		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"), new Attr("Security Level", "Confidential") };
-		EncryptedHeader encryptedHeader = FFI.encryptHeader(publicKey, attributes);
+		EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes);
 
 		System.out.println("Symmetric Key length " + encryptedHeader.getSymmetricKey().length);
 		System.out.println("Encrypted Header length " + encryptedHeader.getEncryptedHeaderBytes().length);
@@ -203,7 +202,7 @@ public class TestABE_AES {
 		String userDecryptionKeyJson = Resources.load_resource("ffi/fin_confidential_user_key.json");
 		PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
-		DecryptedHeader header_ = FFI.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes());
+		DecryptedHeader header_ = Ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes());
 
 		System.out.println("Decrypted Header: Symmetric Key Length " + header_.getSymmetricKey().length);
 		System.out.println("Decrypted Header: UID Length " + header_.getUid().length);
@@ -268,13 +267,13 @@ public class TestABE_AES {
 		// generated AES key.
 		// This example assumes that the Unique ID can be recovered at time of
 		// decryption, and is thus not stored as part of the encrypted header.
-		// If that is not the case check the other signature of #FFI.encryptedHeader()
+		// If that is not the case check the other signature of #Ffi.encryptedHeader()
 		// to inject the unique id.
-		EncryptedHeader encryptedHeader = FFI.encryptHeader(publicKey, attributes);
+		EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes);
 
 		// The data can now be encrypted with the generated key
 		// The block number is also part of the authentication of the AES scheme
-		byte[] encryptedBlock = FFI.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+		byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
 
 		// Create a full message with header+encrypted data. The length of the header
 		// is pre-pended.
@@ -333,13 +332,13 @@ public class TestABE_AES {
 		// generated AES key.
 		// This example assumes that the Unique ID can be recovered at time of
 		// decryption, and is thus not stored as part of the encrypted header.
-		// If that is not the case check the other signature of #FFI.encryptedHeader()
+		// If that is not the case check the other signature of #Ffi.encryptedHeader()
 		// to inject the unique id.
-		EncryptedHeader encryptedHeader = FFI.encryptHeader(publicKey, attributes);
+		EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes);
 
 		// The data can now be encrypted with the generated key
 		// The block number is also part of the authentication of the AES scheme
-		byte[] encryptedBlock = FFI.encryptBlock(encryptedHeader.getSymmetricKey(), data);
+		byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), data);
 
 		// Create a full message with header+encrypted data. The length of the header
 		// is pre-pended.
@@ -414,10 +413,10 @@ public class TestABE_AES {
 		byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
 
 		// Decrypt he header to recover the symmetric AES key
-		DecryptedHeader decryptedHeader = FFI.decryptHeader(userKey, encryptedHeader);
+		DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
 
 		// decrypt the content, passing the unique id and block number
-		byte[] data_ = FFI.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+		byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
 
 		// Verify everything is correct
 		assertTrue(Arrays.equals(data, data_));
@@ -471,14 +470,77 @@ public class TestABE_AES {
 		byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
 
 		// Decrypt he header to recover the symmetric AES key
-		DecryptedHeader decryptedHeader = FFI.decryptHeader(userKey, encryptedHeader);
+		DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
 
 		// decrypt the content, passing the unique id and block number
-		byte[] data_ = FFI.decryptBlock(decryptedHeader.getSymmetricKey(), encryptedContent);
+		byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), encryptedContent);
 
 		// Verify everything is correct
 		assertTrue(Arrays.equals(data, data_));
 
+	}
+
+	@Test
+	public void testHybridEncryptionDecryptionUsingCacheLocal() throws Exception {
+
+		// encrypt
+
+		String publicKeyJson = Resources.load_resource("ffi/public_master_key.json");
+		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+		LocalEncryptionCache encryptionCachePointer = Ffi.createEncryptionCache(publicKey);
+		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"),
+				new Attr("Security Level", "Confidential") };
+		byte[] uid = new byte[] { 1, 2, 3, 4, 5 };
+		byte[] additional_data = new byte[] { 6, 7, 8, 9, 10 };
+
+		EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCachePointer, attributes,
+				Optional.of(uid), Optional.of(additional_data));
+
+		Ffi.destroyEncryptionCache(encryptionCachePointer);
+
+		// decrypt
+
+		String userDecryptionKeyJson = Resources.load_resource("ffi/fin_confidential_user_key.json");
+		PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+
+		LocalDecryptionCache decryptionCachePointer = Ffi.createDecryptionCache(userDecryptionKey);
+
+		DecryptedHeader decryptedHeader = Ffi.decryptHeaderUsingCache(
+				decryptionCachePointer,
+				encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+
+		Ffi.destroyDecryptionCache(decryptionCachePointer);
+
+		// assert
+
+		assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
+		assertArrayEquals(uid, decryptedHeader.getUid());
+		assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
+	}
+
+	@Test
+	public void testHybridEncryptionDecryptionNoCacheLocal() throws Exception {
+		String publicKeyJson = Resources.load_resource("ffi/public_master_key.json");
+		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+
+		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"), new Attr("Security Level", "Confidential") };
+		byte[] uid = new byte[] { 1, 2, 3, 4, 5 };
+		byte[] additional_data = new byte[] { 6, 7, 8, 9, 10 };
+
+		EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes,
+				Optional.of(uid), Optional.of(additional_data));
+
+		// decrypt
+
+		String userDecryptionKeyJson = Resources.load_resource("ffi/fin_confidential_user_key.json");
+		PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+
+		DecryptedHeader decryptedHeader = Ffi.decryptHeader(userDecryptionKey,
+				encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+
+		assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
+		assertArrayEquals(uid, decryptedHeader.getUid());
+		assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
 	}
 
 }

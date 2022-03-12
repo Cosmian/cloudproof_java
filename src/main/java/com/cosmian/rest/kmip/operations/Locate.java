@@ -120,8 +120,6 @@ public class Locate implements KmipStruct {
      * on-line objects, only archived objects, destroyed objects or any
      * combination of these, are to be searched. If omitted, then only on-line
      * objects SHALL be returned.
-     * 
-     * @see StorageStatusMask
      */
     @JsonProperty(value = "StorageStatusMask")
     private Optional<Integer> storage_status_mask;

@@ -18,10 +18,9 @@ This library is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.5.2</version>
+    <version>0.6.0</version>
 </dependency>
 ```
-
 
 
   - [Confidential Data Access](#confidential-data-access)
@@ -30,8 +29,15 @@ This library is available on Maven Central
     - [Local ABE+AES encryption and decryption](#local-abeaes-encryption-and-decryption)
       - [Building the the ABE GPSW native lib](#building-the-the-abe-gpsw-native-lib)
       - [Using the native library](#using-the-native-library)
+        - [encryption](#encryption)
+        - [decryption](#decryption)
+      - [Locally cached encryption and decryption](#locally-cached-encryption-and-decryption)
+        - [encryption](#encryption-1)
+        - [decryption](#decryption-1)
   - [Secure Computations](#secure-computations)
   - [Confidential KMS](#confidential-kms)
+
+
 
 
 
@@ -46,10 +52,13 @@ In addition, Cosmian Confidential Data Access allows building secure indexes on 
 
 ### Versions Correspondence
 
+This table shows the minimum versions correspondances between the various components
+
 KMS Server | Java Lib | abe_gpsw lib
 -----------|----------|--------------
 1.2.0      | 0.5.0    | 0.3.0
 1.2.1      | 0.5.2    | 0.4.0
+1.2.1      | 0.6.0    | 0.6.0
 
 
 ### Quick Start ABE+AES
@@ -83,7 +92,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```sh
 git clone https://github.com/Cosmian/abe_gpsw.git && \
 cd abe_gpsw && \
-git checkout v0.4.0
+git checkout v0.6.0
 ```
 
 3. Build the native library, which will be available as `libabe_gpsw.so` (linux) or `libabe_gpsw.dylib` (macos) in the `target` directory
@@ -112,6 +121,8 @@ cargo build --release --all-features
 To learn how to use the local ABE+AES hybrid encryption facilities, check [the Hybrid ABE AES tests](src/test/java/com/cosmian/TestLocalABE_AES.java)
 
 A typical workflow will be as follows
+
+##### encryption
 
 ```java
 // The data we want to encrypt/decrypt
@@ -142,13 +153,13 @@ Attr[] attributes = new Attr[] { new Attr("Department", "FIN"), new Attr("Securi
 // generated AES key.
 // This example assumes that the Unique ID can be recovered at time of
 // decryption, and is thus not stored as part of the encrypted header.
-// If that is not the case check the other signature of #FFI.encryptedHeader()
+// If that is not the case check the other signature of #Ffi.encryptedHeader()
 // to inject the unique id.
-EncryptedHeader encryptedHeader = FFI.encryptHeader(publicKey, attributes);
+EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes);
 
 // The data can now be encrypted with the generated key
 // The block number is also part of the authentication of the AES scheme
-byte[] encryptedBlock = FFI.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
 
 // Create a full message with header+encrypted data. The length of the header
 // is pre-pended.
@@ -161,7 +172,10 @@ bao.write(encryptedHeader.getEncryptedHeaderBytes());
 bao.write(encryptedBlock);
 bao.flush();
 byte[] ciphertext = bao.toByteArray();
+```
+##### decryption
 
+```java
 //
 // Decryption
 //
@@ -176,15 +190,67 @@ byte[] encryptedHeader_ = Arrays.copyOfRange(ciphertext, 4, 4 + headerSize_);
 byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize_, ciphertext.length);
 
 // Decrypt he header to recover the symmetric AES key
-DecryptedHeader decryptedHeader = FFI.decryptHeader(userDecryptionKey, encryptedHeader_);
+DecryptedHeader decryptedHeader = Ffi.decryptHeader(userDecryptionKey, encryptedHeader_);
 
 // decrypt the content, passing the unique id and block number
-byte[] data_ = FFI.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
 
 // Verify everything is correct
 assertTrue(Arrays.equals(data, data_));        
 ```
 
+#### Locally cached encryption and decryption
+
+When doing multiple encryptions/decryptions in a row using the same key, a significant speed increase can be achieved using a local cache of the keys (10x on encryption, 2.5x on decryption). 
+
+##### encryption
+
+```java
+
+PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+// Create a cache of the Public Key and Policy
+LocalEncryptionCache cache = Ffi.createEncryptionCache(publicKey);
+
+// process multiple messages in a loop
+try {
+  for (...) {
+    byte[] clearText = ...;
+    // encrypt the hybrid header using the cache
+    Attr[] attributes = ...;
+    EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(cache, attributes);
+    // encrypt the block of bytes as before
+    byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, clearText);
+  }
+finally {
+  // The cache MUST be destroyed to reclaim memory
+  Ffi.destroyEncryptionCache(cache);
+}
+
+```
+
+##### decryption
+
+```java
+PrivateKey decryptionKey = ...;
+// Create a cache of the Decryption Key
+LocalDecryptionCache cache = Ffi.createDecryptionCache(decryptionKey);
+
+// process multiple cipher texts in a loop
+try {
+  for (...) {
+    byte[] encryptedHeader = ...;
+    byte[] encryptedContent = ...;
+    // decrypt the hybrid header using the cache
+    DecryptedHeader decryptedHeader = Ffi.decryptHeaderUsingCache(cache, encryptedHeader);
+    // decrypt the block of bytes as before
+    byte[] clearText = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+  }
+finally {
+  // The cache MUST be destroyed to reclaim memory
+  Ffi.destroyDecryptionCache(cache);
+}
+
+```
 
 ## Secure Computations
 

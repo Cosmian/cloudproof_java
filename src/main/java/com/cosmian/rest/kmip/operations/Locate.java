@@ -8,7 +8,6 @@ import com.cosmian.rest.kmip.json.KmipStructDeserializer;
 import com.cosmian.rest.kmip.json.KmipStructSerializer;
 import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.ObjectGroupMember;
-import com.cosmian.rest.kmip.types.StorageStatusMask;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

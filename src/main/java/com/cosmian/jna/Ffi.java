@@ -119,9 +119,9 @@ public class Ffi implements Serializable {
         // cache ptr ptr
         LocalEncryptionCache cachePointer = new LocalEncryptionCache();
 
-        unwrap(FfiWrapper.INSTANCE.h_aes_create_encryption_cache(cachePointer,
+        LocalEncryptionCache cachePtr =  FfiWrapper.INSTANCE.h_aes_create_encryption_cache(
                 policyJson, publicKeyPointer,
-                publicKeyBytes.length));
+                publicKeyBytes.length);
 
         return cachePointer;
     }

@@ -7,5 +7,8 @@
         "Kmip",
         "serializers"
     ],
-    "java.format.settings.url": ".vscode/eclipse-codestyle.xml"
+    "java.format.settings.url": ".vscode/eclipse-codestyle.xml",
+    "files.watcherExclude": {
+        "**/target": true
+    }
 }

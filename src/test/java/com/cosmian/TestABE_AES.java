@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -541,6 +544,32 @@ public class TestABE_AES {
 		assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
 		assertArrayEquals(uid, decryptedHeader.getUid());
 		assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
+	}
+
+
+	@Test
+	public void testHybridEncryptionCacheSerialization() throws Exception {
+
+		String publicKeyJson = Resources.load_resource("ffi/public_master_key.json");
+		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+		LocalEncryptionCache cache = Ffi.createEncryptionCache(publicKey);
+
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream out = new ObjectOutputStream(baos);
+		out.writeObject(cache);
+		out.close();
+		baos.close();
+
+		// deserialize
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		ObjectInputStream ois =new ObjectInputStream(bais);
+		LocalEncryptionCache cache_ = (LocalEncryptionCache) ois.readObject();
+		ois.close();
+		bais.close();
+
+		Ffi.destroyEncryptionCache(cache_);
+
 	}
 
 }

@@ -1,6 +1,8 @@
 package com.cosmian.jna.abe;
 
 import com.sun.jna.Native;
+import com.cosmian.jna.LocalDecryptionCache;
+import com.cosmian.jna.LocalEncryptionCache;
 import com.sun.jna.Library;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.Pointer;
@@ -37,23 +39,23 @@ public interface FfiWrapper extends Library {
                         int symmetricKeyLength, Pointer uidPointer, int uidLen, int blockNumber,
                         Pointer clearTextPointer, int clearTextLength);
 
-        Pointer h_aes_create_encryption_cache(String policyJson, Pointer publicKeyPointer,
+        LocalEncryptionCache h_aes_create_encryption_cache(String policyJson, Pointer publicKeyPointer,
                         int publicKeyLength);
 
-        int h_aes_destroy_encryption_cache(Pointer cachePtr);
+        int h_aes_destroy_encryption_cache(LocalEncryptionCache cachePtr);
 
         int h_aes_encrypt_header_using_cache(byte[] symmetricKey, IntByReference symmetricKeySize, byte[] headerBytes,
-                        IntByReference headerBytesSize, Pointer cachePtrPtr,
+                        IntByReference headerBytesSize, LocalEncryptionCache cache,
                         String attributesJson, Pointer uidPointer, int uidLen, Pointer additionalDataPointer,
                         int additionalDataLength);
 
-        Pointer h_aes_create_decryption_cache(Pointer userDecryptionKeyPointer,
+        LocalDecryptionCache h_aes_create_decryption_cache(Pointer userDecryptionKeyPointer,
                         int userDecryptionKeyLength);
 
-        int h_aes_destroy_decryption_cache(Pointer cachePtr);
+        int h_aes_destroy_decryption_cache(LocalDecryptionCache cache);
 
         int h_aes_decrypt_header_using_cache(byte[] symmetricKey, IntByReference symmetricKeySize, byte[] uidPointer,
                         IntByReference uidLen, byte[] additionalDataPointer, IntByReference additionalDataLength,
-                        Pointer encryptedHeaderBytes, int encryptedHeaderBytesSize, Pointer cachePtr);
+                        Pointer encryptedHeaderBytes, int encryptedHeaderBytesSize, LocalDecryptionCache cache);
 
 }

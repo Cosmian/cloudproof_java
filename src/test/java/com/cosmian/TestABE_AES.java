@@ -490,16 +490,16 @@ public class TestABE_AES {
 
 		String publicKeyJson = Resources.load_resource("ffi/public_master_key.json");
 		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-		LocalEncryptionCache encryptionCachePointer = Ffi.createEncryptionCache(publicKey);
+		LocalEncryptionCache encryptionCache = Ffi.createEncryptionCache(publicKey);
 		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"),
 				new Attr("Security Level", "Confidential") };
 		byte[] uid = new byte[] { 1, 2, 3, 4, 5 };
 		byte[] additional_data = new byte[] { 6, 7, 8, 9, 10 };
 
-		EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCachePointer, attributes,
+		EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCache, attributes,
 				Optional.of(uid), Optional.of(additional_data));
 
-		Ffi.destroyEncryptionCache(encryptionCachePointer);
+		Ffi.destroyEncryptionCache(encryptionCache);
 
 		// decrypt
 

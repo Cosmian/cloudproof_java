@@ -117,13 +117,9 @@ public class Ffi implements Serializable {
         publicKeyPointer.write(0, publicKeyBytes, 0, publicKeyBytes.length);
 
         // cache ptr ptr
-        LocalEncryptionCache cachePointer = new LocalEncryptionCache();
-
-        LocalEncryptionCache cachePtr =  FfiWrapper.INSTANCE.h_aes_create_encryption_cache(
+        return  FfiWrapper.INSTANCE.h_aes_create_encryption_cache(
                 policyJson, publicKeyPointer,
                 publicKeyBytes.length);
-
-        return cachePointer;
     }
 
     /**
@@ -444,14 +440,11 @@ public class Ffi implements Serializable {
         userDecryptionKeyPointer.write(0, userDecryptionKeyBytes, 0,
                 userDecryptionKeyBytes.length);
 
-        // cache pointer
-        LocalDecryptionCache cachePointer = new LocalDecryptionCache();
-
-        unwrap(FfiWrapper.INSTANCE.h_aes_create_decryption_cache(cachePointer,
+        return FfiWrapper.INSTANCE.h_aes_create_decryption_cache(
                 userDecryptionKeyPointer,
-                userDecryptionKeyBytes.length));
+                userDecryptionKeyBytes.length);
 
-        return cachePointer;
+        
     }
 
     /**

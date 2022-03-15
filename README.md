@@ -210,7 +210,7 @@ When doing multiple encryptions/decryptions in a row using the same key, a signi
 
 PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
 // Create a cache of the Public Key and Policy
-LocalEncryptionCache cache = Ffi.createEncryptionCache(publicKey);
+int cacheHandle = Ffi.createEncryptionCache(publicKey);
 
 // process multiple messages in a loop
 try {
@@ -218,13 +218,13 @@ try {
     byte[] clearText = ...;
     // encrypt the hybrid header using the cache
     Attr[] attributes = ...;
-    EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(cache, attributes);
+    EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(cacheHandle, attributes);
     // encrypt the block of bytes as before
     byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, clearText);
   }
 finally {
-  // The cache MUST be destroyed to reclaim memory
-  Ffi.destroyEncryptionCache(cache);
+  // The cache should be destroyed to reclaim memory
+  Ffi.destroyEncryptionCache(cacheHandle);
 }
 
 ```
@@ -234,7 +234,7 @@ finally {
 ```java
 PrivateKey decryptionKey = ...;
 // Create a cache of the Decryption Key
-LocalDecryptionCache cache = Ffi.createDecryptionCache(decryptionKey);
+int cacheHandle = Ffi.createDecryptionCache(decryptionKey);
 
 // process multiple cipher texts in a loop
 try {
@@ -242,13 +242,13 @@ try {
     byte[] encryptedHeader = ...;
     byte[] encryptedContent = ...;
     // decrypt the hybrid header using the cache
-    DecryptedHeader decryptedHeader = Ffi.decryptHeaderUsingCache(cache, encryptedHeader);
+    DecryptedHeader decryptedHeader = Ffi.decryptHeaderUsingCache(cacheHandle, encryptedHeader);
     // decrypt the block of bytes as before
     byte[] clearText = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
   }
 finally {
-  // The cache MUST be destroyed to reclaim memory
-  Ffi.destroyDecryptionCache(cache);
+  // The cache should be destroyed to reclaim memory
+  Ffi.destroyDecryptionCache(cacheHandle);
 }
 
 ```

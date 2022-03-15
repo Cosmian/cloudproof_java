@@ -1,8 +1,5 @@
 package com.cosmian.jna.abe;
 
-import com.sun.jna.Native;
-import com.cosmian.jna.LocalDecryptionCache;
-import com.cosmian.jna.LocalEncryptionCache;
 import com.sun.jna.Library;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.Pointer;
@@ -12,7 +9,7 @@ import com.sun.jna.Pointer;
  */
 public interface FfiWrapper extends Library {
 
-        FfiWrapper INSTANCE = (FfiWrapper) Native.load("abe_gpsw", FfiWrapper.class);
+
 
         int set_error(String errorMsg);
 
@@ -39,23 +36,23 @@ public interface FfiWrapper extends Library {
                         int symmetricKeyLength, Pointer uidPointer, int uidLen, int blockNumber,
                         Pointer clearTextPointer, int clearTextLength);
 
-        LocalEncryptionCache h_aes_create_encryption_cache(String policyJson, Pointer publicKeyPointer,
+        int h_aes_create_encryption_cache(IntByReference cacheHandle, String policyJson, Pointer publicKeyPointer,
                         int publicKeyLength);
 
-        int h_aes_destroy_encryption_cache(LocalEncryptionCache cachePtr);
+        int h_aes_destroy_encryption_cache(int cacheHandle);
 
         int h_aes_encrypt_header_using_cache(byte[] symmetricKey, IntByReference symmetricKeySize, byte[] headerBytes,
-                        IntByReference headerBytesSize, LocalEncryptionCache cache,
+                        IntByReference headerBytesSize, int cacheHandle,
                         String attributesJson, Pointer uidPointer, int uidLen, Pointer additionalDataPointer,
                         int additionalDataLength);
 
-        LocalDecryptionCache h_aes_create_decryption_cache(Pointer userDecryptionKeyPointer,
+        int h_aes_create_decryption_cache(IntByReference cacheHandle, Pointer userDecryptionKeyPointer,
                         int userDecryptionKeyLength);
 
-        int h_aes_destroy_decryption_cache(LocalDecryptionCache cache);
+        int h_aes_destroy_decryption_cache(int cacheHandle);
 
         int h_aes_decrypt_header_using_cache(byte[] symmetricKey, IntByReference symmetricKeySize, byte[] uidPointer,
                         IntByReference uidLen, byte[] additionalDataPointer, IntByReference additionalDataLength,
-                        Pointer encryptedHeaderBytes, int encryptedHeaderBytesSize, LocalDecryptionCache cache);
+                        Pointer encryptedHeaderBytes, int encryptedHeaderBytesSize, int cacheHandle);
 
 }

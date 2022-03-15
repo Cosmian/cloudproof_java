@@ -1,6 +1,6 @@
 package com.cosmian.jna;
 
-import java.io.Serializable;
+import com.sun.jna.Native;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,9 @@ import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
-public class Ffi implements Serializable {
+public final class Ffi {
+
+    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("abe_gpsw", FfiWrapper.class);
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes
@@ -45,7 +47,7 @@ public class Ffi implements Serializable {
         }
         byte[] output = new byte[max_len + 1];
         IntByReference outputSize = new IntByReference(output.length);
-        if (FfiWrapper.INSTANCE.get_last_error(output, outputSize) == 0) {
+        if (Ffi.INSTANCE.get_last_error(output, outputSize) == 0) {
             return new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
         }
         throw new FfiException("Failed retrieving the last error; check the debug logs");
@@ -58,24 +60,24 @@ public class Ffi implements Serializable {
      * @throws FfiException n case of native library error
      */
     public static void set_error(String error_msg) throws FfiException {
-        unwrap(FfiWrapper.INSTANCE.set_error(error_msg));
+        unwrap(Ffi.INSTANCE.set_error(error_msg));
     }
 
     /**
      * Create an encryption cache that can be used with
-     * {@link #encryptHeaderUsingCache(LocalEncryptionCache, Attr[])}
+     * {@link #encryptHeaderUsingCache(int, Attr[])}
      *
      * se of the cache speeds up the encryption of the header.
      *
      * WARN: the cache MUST be destroyed after use with
-     * {@link #destroyEncryptionCache(LocalEncryptionCache)}
+     * {@link #destroyEncryptionCache(int)}
      *
      * @param publicKey the public key to cache
-     * @return a pointer to the cache that can be passed to the encryption routine
+     * @return the cache handle that can be passed to the encryption routine
      * @throws FfiException     on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static LocalEncryptionCache createEncryptionCache(PublicKey publicKey)
+    public static int createEncryptionCache(PublicKey publicKey)
             throws FfiException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromVendorAttributes(publicKey.attributes());
@@ -84,20 +86,20 @@ public class Ffi implements Serializable {
 
     /**
      * Create an encryption cache that can be used with
-     * {@link #encryptHeaderUsingCache(LocalEncryptionCache, Attr[])}
+     * {@link #encryptHeaderUsingCache(int, Attr[])}
      *
      * Use of the cache speeds up the encryption of the header.
      *
      * WARN: the cache MUST be destroyed after use with
-     * {@link #destroyEncryptionCache(LocalEncryptionCache)}
+     * {@link #destroyEncryptionCache(int)}
      *
      * @param policy         the {@link Policy} to cache
      * @param publicKeyBytes the public key bytes to cache
-     * @return a pointer to the cache that can be passed to the encryption routine
+     * @return the cache handle that can be passed to the encryption routine
      * @throws FfiException     on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static LocalEncryptionCache createEncryptionCache(Policy policy,
+    public static int createEncryptionCache(Policy policy,
             byte[] publicKeyBytes)
             throws FfiException, CosmianException {
 
@@ -116,23 +118,27 @@ public class Ffi implements Serializable {
         final Pointer publicKeyPointer = new Memory(publicKeyBytes.length);
         publicKeyPointer.write(0, publicKeyBytes, 0, publicKeyBytes.length);
 
+        // Cache Handle
+        IntByReference cacheHandle = new IntByReference();
+
         // cache ptr ptr
-        return  FfiWrapper.INSTANCE.h_aes_create_encryption_cache(
-                policyJson, publicKeyPointer,
-                publicKeyBytes.length);
+        unwrap(Ffi.INSTANCE.h_aes_create_encryption_cache(cacheHandle, policyJson, publicKeyPointer,
+                publicKeyBytes.length));
+
+        return cacheHandle.getValue();
     }
 
     /**
      * Destroy the cache created with
      * {@link #createEncryptionCache(Policy, byte[])}
      *
-     * @param cachePointer the pointer to the cache to destroy
+     * @param cacheHandle the pointer to the cache to destroy
      * @throws FfiException     on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static void destroyEncryptionCache(LocalEncryptionCache cachePointer)
+    public static void destroyEncryptionCache(int cacheHandle)
             throws FfiException, CosmianException {
-        unwrap(FfiWrapper.INSTANCE.h_aes_destroy_encryption_cache(cachePointer));
+        unwrap(Ffi.INSTANCE.h_aes_destroy_encryption_cache(cacheHandle));
     }
 
     /**
@@ -142,17 +148,17 @@ public class Ffi implements Serializable {
      * A symmetric key is randomly generated and encrypted using the ABE schemes and
      * the provided policy attributes for the given policy
      * 
-     * @param cachePointer the pointer to the {@link LocalEncryptionCache}
-     * @param attributes   the policy attributes used to encrypt the generated
-     *                     symmetric key
+     * @param cacheHandle the pointer to the {@link int}
+     * @param attributes  the policy attributes used to encrypt the generated
+     *                    symmetric key
      * @return the encrypted header, bytes and symmetric key
      * @throws FfiException     in case of native library error
      * @throws CosmianException in case the {@link Policy} and key bytes cannot be
      *                          recovered from the {@link PublicKey}
      */
-    public static EncryptedHeader encryptHeaderUsingCache(LocalEncryptionCache cachePointer, Attr[] attributes)
+    public static EncryptedHeader encryptHeaderUsingCache(int cacheHandle, Attr[] attributes)
             throws FfiException, CosmianException {
-        return encryptHeaderUsingCache(cachePointer, attributes, Optional.empty(), Optional.empty());
+        return encryptHeaderUsingCache(cacheHandle, attributes, Optional.empty(), Optional.empty());
     }
 
     /**
@@ -165,7 +171,7 @@ public class Ffi implements Serializable {
      * If provided, the resource `uid` and the `additionalData` are symmetrically
      * encrypted and appended to the encrypted header.
      * 
-     * @param cache          the pointer to the {@link LocalEncryptionCache}
+     * @param cacheHandle    the pointer to the {@link int}
      * @param attributes     the policy attributes used to encrypt the generated
      *                       symmetric key
      * @param uid            the optional resource uid
@@ -175,7 +181,7 @@ public class Ffi implements Serializable {
      * @throws CosmianException in case the {@link Policy} and key bytes cannot be
      *                          recovered from the {@link PublicKey}
      */
-    public static EncryptedHeader encryptHeaderUsingCache(LocalEncryptionCache cache, Attr[] attributes,
+    public static EncryptedHeader encryptHeaderUsingCache(int cacheHandle, Attr[] attributes,
             Optional<byte[]> uid,
             Optional<byte[]> additionalData)
             throws FfiException, CosmianException {
@@ -237,10 +243,15 @@ public class Ffi implements Serializable {
             additionalDataPointer.write(0, additionalData.get(), 0, adLength);
         }
 
-        unwrap(FfiWrapper.INSTANCE.h_aes_encrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
-                headerBytesBuffer,
-                headerBytesBufferSize, cache,
-                attributesJson, uidPointer, uidLength, additionalDataPointer, adLength));
+        try {
+            unwrap(Ffi.INSTANCE.h_aes_encrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
+                    headerBytesBuffer,
+                    headerBytesBufferSize, cacheHandle,
+                    attributesJson, uidPointer, uidLength, additionalDataPointer, adLength));
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
 
         return new EncryptedHeader(Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
                 Arrays.copyOfRange(headerBytesBuffer, 0, headerBytesBufferSize.getValue()));
@@ -385,7 +396,7 @@ public class Ffi implements Serializable {
             additionalDataPointer.write(0, additionalData.get(), 0, adLength);
         }
 
-        unwrap(FfiWrapper.INSTANCE.h_aes_encrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, headerBytesBuffer,
+        unwrap(Ffi.INSTANCE.h_aes_encrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, headerBytesBuffer,
                 headerBytesBufferSize, policyJson, publicKeyPointer,
                 publicKeyBytes.length,
                 attributesJson, uidPointer, uidLength, additionalDataPointer, adLength));
@@ -400,19 +411,19 @@ public class Ffi implements Serializable {
 
     /**
      * Create an decryption cache that can be used with
-     * {@link #decryptHeaderUsingCache(LocalDecryptionCache, byte[])}
+     * {@link #decryptHeaderUsingCache(int, byte[])}
      *
      * Use of the cache speeds up decryption of the header
      *
      * WARN: the cache MUST be destroyed after use with
-     * {@link #destroyDecryptionCache(LocalDecryptionCache)}
+     * {@link #destroyDecryptionCache(int)}
      *
      * @param userDecryptionKey the public key to cache
-     * @return a pointer to the cache that can be passed to the decryption routine
+     * @return the cache handle that can be passed to the decryption routine
      * @throws FfiException     on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static LocalDecryptionCache createDecryptionCache(PrivateKey userDecryptionKey)
+    public static int createDecryptionCache(PrivateKey userDecryptionKey)
             throws FfiException, CosmianException {
         byte[] userDecryptionKeyBytes = userDecryptionKey.bytes();
         return createDecryptionCache(userDecryptionKeyBytes);
@@ -420,19 +431,19 @@ public class Ffi implements Serializable {
 
     /**
      * Create a decryption cache that can be used with
-     * {@link #decryptHeaderUsingCache(LocalDecryptionCache, byte[])}
+     * {@link #decryptHeaderUsingCache(int, byte[])}
      *
      * Use of the cache speeds up the decryption of the header.
      *
      * WARN: the cache MUST be destroyed after use with
-     * {@link #destroyDecryptionCache(LocalDecryptionCache)}
+     * {@link #destroyDecryptionCache(int)}
      *
      * @param userDecryptionKeyBytes the public key bytes to cache
-     * @return a pointer to the cache that can be passed to the decryption routine
+     * @return the cache handle that can be passed to the decryption routine
      * @throws FfiException     on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static LocalDecryptionCache createDecryptionCache(byte[] userDecryptionKeyBytes)
+    public static int createDecryptionCache(byte[] userDecryptionKeyBytes)
             throws FfiException, CosmianException {
 
         // Public Key
@@ -440,40 +451,42 @@ public class Ffi implements Serializable {
         userDecryptionKeyPointer.write(0, userDecryptionKeyBytes, 0,
                 userDecryptionKeyBytes.length);
 
-        return FfiWrapper.INSTANCE.h_aes_create_decryption_cache(
-                userDecryptionKeyPointer,
-                userDecryptionKeyBytes.length);
+        // Cache Handle
+        IntByReference cacheHandle = new IntByReference();
 
-        
+        unwrap(Ffi.INSTANCE.h_aes_create_decryption_cache(cacheHandle, userDecryptionKeyPointer,
+                userDecryptionKeyBytes.length));
+
+        return cacheHandle.getValue();
     }
 
     /**
      * Destroy the cache created with
      * {@link #createDecryptionCache(byte[])}
      *
-     * @param cachePointer the pointer to the cache to destroy
+     * @param cacheHandle the pointer to the cache to destroy
      * @throws FfiException     on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static void destroyDecryptionCache(LocalDecryptionCache cachePointer)
+    public static void destroyDecryptionCache(int cacheHandle)
             throws FfiException, CosmianException {
-        unwrap(FfiWrapper.INSTANCE.h_aes_destroy_decryption_cache(cachePointer));
+        unwrap(Ffi.INSTANCE.h_aes_destroy_decryption_cache(cacheHandle));
     }
 
     /**
      * Decrypt a hybrid header using a cache, recovering the symmetric key
      * 
-     * @param cachePointer         the cache to the user decryption key
+     * @param cacheHandle          the cache to the user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws FfiException     in case of native library error
      * @throws CosmianException in case the key bytes cannot be recovered from the
      *                          {@link PrivateKey}
      */
-    public static DecryptedHeader decryptHeaderUsingCache(LocalDecryptionCache cachePointer,
+    public static DecryptedHeader decryptHeaderUsingCache(int cacheHandle,
             byte[] encryptedHeaderBytes)
             throws FfiException, CosmianException {
-        return decryptHeaderUsingCache(cachePointer, encryptedHeaderBytes, 0, 0);
+        return decryptHeaderUsingCache(cacheHandle, encryptedHeaderBytes, 0, 0);
     }
 
     /**
@@ -481,7 +494,7 @@ public class Ffi implements Serializable {
      * optionally, the
      * resource UID and additional data
      * 
-     * @param cachePointer         the cache to the user decryption key
+     * @param cacheHandle          the cache to the user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @param uidLen               the maximum bytes length of the expected UID
      * @param additionalDataLen    the maximum bytes length of the expected
@@ -491,7 +504,7 @@ public class Ffi implements Serializable {
      * @throws FfiException in case of native library error
      */
     public static DecryptedHeader decryptHeaderUsingCache(
-            LocalDecryptionCache cachePointer, byte[] encryptedHeaderBytes, int uidLen,
+            int cacheHandle, byte[] encryptedHeaderBytes, int uidLen,
             int additionalDataLen) throws FfiException {
 
         // Symmetric Key OUT
@@ -510,10 +523,10 @@ public class Ffi implements Serializable {
         final Pointer encryptedHeaderBytesPointer = new Memory(encryptedHeaderBytes.length);
         encryptedHeaderBytesPointer.write(0, encryptedHeaderBytes, 0, encryptedHeaderBytes.length);
 
-        unwrap(FfiWrapper.INSTANCE.h_aes_decrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
+        unwrap(Ffi.INSTANCE.h_aes_decrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
                 uidBuffer,
                 uidBufferSize, additionalDataBuffer, additionalDataBufferSize, encryptedHeaderBytesPointer,
-                encryptedHeaderBytes.length, cachePointer));
+                encryptedHeaderBytes.length, cacheHandle));
 
         return new DecryptedHeader(
                 Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
@@ -592,7 +605,7 @@ public class Ffi implements Serializable {
         final Pointer encryptedHeaderBytesPointer = new Memory(encryptedHeaderBytes.length);
         encryptedHeaderBytesPointer.write(0, encryptedHeaderBytes, 0, encryptedHeaderBytes.length);
 
-        unwrap(FfiWrapper.INSTANCE.h_aes_decrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, uidBuffer,
+        unwrap(Ffi.INSTANCE.h_aes_decrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, uidBuffer,
                 uidBufferSize, additionalDataBuffer, additionalDataBufferSize, encryptedHeaderBytesPointer,
                 encryptedHeaderBytes.length, userDecryptionKeyPointer,
                 userDecryptionKeyBytes.length));
@@ -610,7 +623,7 @@ public class Ffi implements Serializable {
      * @return the overhead bytes
      */
     public static int symmetricEncryptionOverhead() {
-        return FfiWrapper.INSTANCE.h_aes_symmetric_encryption_overhead();
+        return Ffi.INSTANCE.h_aes_symmetric_encryption_overhead();
     }
 
     /**
@@ -645,7 +658,7 @@ public class Ffi implements Serializable {
             byte[] clearText) throws FfiException {
 
         // Header Bytes OUT
-        byte[] cipherTextBuffer = new byte[FfiWrapper.INSTANCE.h_aes_symmetric_encryption_overhead()
+        byte[] cipherTextBuffer = new byte[Ffi.INSTANCE.h_aes_symmetric_encryption_overhead()
                 + clearText.length];
         IntByReference cipherTextBufferSize = new IntByReference(cipherTextBuffer.length);
 
@@ -666,7 +679,7 @@ public class Ffi implements Serializable {
         final Pointer dataPointer = new Memory(clearText.length);
         dataPointer.write(0, clearText, 0, clearText.length);
 
-        unwrap(FfiWrapper.INSTANCE.h_aes_encrypt_block(cipherTextBuffer,
+        unwrap(Ffi.INSTANCE.h_aes_encrypt_block(cipherTextBuffer,
                 cipherTextBufferSize, symmetricKeyPointer,
                 symmetricKey.length,
                 uidPointer, uid.length, blockNumber, dataPointer, clearText.length));
@@ -709,7 +722,7 @@ public class Ffi implements Serializable {
 
         // Clear Text Bytes OUT
         byte[] clearTextBuffer = new byte[encryptedBytes.length
-                - FfiWrapper.INSTANCE.h_aes_symmetric_encryption_overhead()];
+                - Ffi.INSTANCE.h_aes_symmetric_encryption_overhead()];
         IntByReference clearTextBufferSize = new IntByReference(clearTextBuffer.length);
 
         // Symmetric Key
@@ -729,7 +742,7 @@ public class Ffi implements Serializable {
         final Pointer encryptedBytesPointer = new Memory(encryptedBytes.length);
         encryptedBytesPointer.write(0, encryptedBytes, 0, encryptedBytes.length);
 
-        unwrap(FfiWrapper.INSTANCE.h_aes_decrypt_block(clearTextBuffer, clearTextBufferSize, symmetricKeyPointer,
+        unwrap(Ffi.INSTANCE.h_aes_decrypt_block(clearTextBuffer, clearTextBufferSize, symmetricKeyPointer,
                 symmetricKey.length, uidPointer, uid.length, blockNumber,
                 encryptedBytesPointer, encryptedBytes.length));
 

@@ -1,3 +1,5 @@
 target/
 dependency-reduced-pom.xml
 hs_err_*.log
+.bloop/
+project/

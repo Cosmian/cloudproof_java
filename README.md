@@ -18,7 +18,7 @@ This library is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.6.0</version>
+    <version>0.6.1</version>
 </dependency>
 ```
 
@@ -58,7 +58,8 @@ KMS Server | Java Lib | abe_gpsw lib
 -----------|----------|--------------
 1.2.0      | 0.5.0    | 0.3.0
 1.2.1      | 0.5.2    | 0.4.0
-1.2.1      | 0.6.0    | 0.6.0
+1.2.1      | ~~0.6.0~~| ~~0.6.0~~ (yanked)
+1.2.1      | 0.6.1    | 0.6.1
 
 
 ### Quick Start ABE+AES
@@ -92,7 +93,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```sh
 git clone https://github.com/Cosmian/abe_gpsw.git && \
 cd abe_gpsw && \
-git checkout v0.6.0
+git checkout v0.6.1
 ```
 
 3. Build the native library, which will be available as `libabe_gpsw.so` (linux) or `libabe_gpsw.dylib` (macos) in the `target` directory

@@ -12,10 +12,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.cosmian.jna.Ffi;
-import com.cosmian.jna.LocalDecryptionCache;
-import com.cosmian.jna.LocalEncryptionCache;
 import com.cosmian.jna.abe.DecryptedHeader;
 import com.cosmian.jna.abe.EncryptedHeader;
 import com.cosmian.rest.abe.Abe;
@@ -487,29 +488,29 @@ public class TestABE_AES {
 
 		String publicKeyJson = Resources.load_resource("ffi/public_master_key.json");
 		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-		LocalEncryptionCache encryptionCachePointer = Ffi.createEncryptionCache(publicKey);
+		int encryptionCacheHandle = Ffi.createEncryptionCache(publicKey);
 		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"),
 				new Attr("Security Level", "Confidential") };
 		byte[] uid = new byte[] { 1, 2, 3, 4, 5 };
 		byte[] additional_data = new byte[] { 6, 7, 8, 9, 10 };
 
-		EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCachePointer, attributes,
+		EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes,
 				Optional.of(uid), Optional.of(additional_data));
 
-		Ffi.destroyEncryptionCache(encryptionCachePointer);
+		Ffi.destroyEncryptionCache(encryptionCacheHandle);
 
 		// decrypt
 
 		String userDecryptionKeyJson = Resources.load_resource("ffi/fin_confidential_user_key.json");
 		PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
-		LocalDecryptionCache decryptionCachePointer = Ffi.createDecryptionCache(userDecryptionKey);
+		int decryptionCacheHandle = Ffi.createDecryptionCache(userDecryptionKey);
 
 		DecryptedHeader decryptedHeader = Ffi.decryptHeaderUsingCache(
-				decryptionCachePointer,
+				decryptionCacheHandle,
 				encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
 
-		Ffi.destroyDecryptionCache(decryptionCachePointer);
+		Ffi.destroyDecryptionCache(decryptionCacheHandle);
 
 		// assert
 
@@ -541,6 +542,73 @@ public class TestABE_AES {
 		assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
 		assertArrayEquals(uid, decryptedHeader.getUid());
 		assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
+	}
+
+	@Test
+	public void testHybridEncryptionCacheSerialization() throws Exception {
+
+		String publicKeyJson = Resources.load_resource("ffi/public_master_key.json");
+		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+
+		// serialize encryption cache
+		int e_cache = Ffi.createEncryptionCache(publicKey);
+
+		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"), new Attr("Security Level", "Confidential") };
+		byte[] uid = new byte[] { 1, 2, 3, 4, 5 };
+		byte[] additional_data = new byte[] { 6, 7, 8, 9, 10 };
+
+		String userDecryptionKeyJson = Resources.load_resource("ffi/fin_confidential_user_key.json");
+		PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+
+		// serialize decryption cache
+		int d_cache = Ffi.createDecryptionCache(userDecryptionKey);
+
+		int threads = 4;
+		ExecutorService executor = Executors.newFixedThreadPool(threads);
+		for (int i = 0; i < threads; i++) {
+
+			executor.submit(() -> {
+
+				String threadName = Thread.currentThread().getName();
+				// deserialize encryption cache
+				EncryptedHeader encryptedHeader;
+				DecryptedHeader decryptedHeader;
+				try {
+
+					encryptedHeader = Ffi.encryptHeaderUsingCache(e_cache, attributes, Optional.of(uid),
+							Optional.of(additional_data));
+					decryptedHeader = Ffi.decryptHeaderUsingCache(d_cache, encryptedHeader.getEncryptedHeaderBytes(),
+							10, 10);
+
+					assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
+					assertArrayEquals(uid, decryptedHeader.getUid());
+					assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
+
+					System.out.println("Thread name " + threadName + " OK");
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+
+			});
+		}
+
+		try {
+			System.out.println("attempt to shutdown executor");
+			executor.shutdown();
+			executor.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			System.err.println("tasks interrupted");
+		} finally {
+			if (!executor.isTerminated()) {
+				System.err.println("cancel non-finished tasks");
+			}
+			executor.shutdownNow();
+			System.out.println("shutdown finished");
+		}
+
+		Ffi.destroyEncryptionCache(e_cache);
+		Ffi.destroyDecryptionCache(d_cache);
+
 	}
 
 }

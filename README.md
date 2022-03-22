@@ -1,5 +1,6 @@
 # Cosmian Java Lib
 
+[workflow](https://github.com/Cosmian/cosmian_java_lib/actions/workflows/maven.yml/badge.svg)
 
 The library provides a Java friendly API to the Cosmian Ubiquitous Encryption platform:
 

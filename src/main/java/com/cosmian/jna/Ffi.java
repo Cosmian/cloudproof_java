@@ -195,7 +195,7 @@ public final class Ffi {
 
         // Are additional data supplied
         int adLength;
-        if (uid.isPresent()) {
+        if (additionalData.isPresent()) {
             adLength = additionalData.get().length;
         } else {
             adLength = 0;
@@ -336,7 +336,7 @@ public final class Ffi {
 
         // Are additional data supplied
         int adLength;
-        if (uid.isPresent()) {
+        if (additionalData.isPresent()) {
             adLength = additionalData.get().length;
         } else {
             adLength = 0;

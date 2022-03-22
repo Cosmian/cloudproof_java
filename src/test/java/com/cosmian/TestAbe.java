@@ -86,6 +86,11 @@ public class TestAbe {
 	@Test
 	public void test_keys_import_export() throws Exception {
 
+		if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+			System.out.println("No KMS Server: ignoring");
+			return;
+		}
+
 		Policy pg = policy();
 
 		Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
@@ -139,6 +144,10 @@ public class TestAbe {
 	@Test
 	public void test_user_decryption_keys() throws Exception {
 
+		if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+			System.out.println("No KMS Server: ignoring");
+			return;
+		}
 		Policy pg = policy();
 
 		Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));

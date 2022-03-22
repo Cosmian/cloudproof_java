@@ -30,7 +30,7 @@ import com.cosmian.rest.kmip.objects.PublicKey;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class TestABE_AES {
+public class TestFfi {
 
 	@BeforeAll
 	public static void before_all() {
@@ -234,6 +234,11 @@ public class TestABE_AES {
 		System.out.println("---------------------------------------");
 		System.out.println("");
 
+		if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+			System.out.println("No KMS Server: ignoring");
+			return;
+		}
+
 		// The data we want to encrypt/decrypt
 		byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
 
@@ -305,6 +310,11 @@ public class TestABE_AES {
 		System.out.println("---------------------------------------");
 		System.out.println("");
 
+		if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+			System.out.println("No KMS Server: ignoring");
+			return;
+		}
+
 		// The data we want to encrypt/decrypt
 		byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
 
@@ -370,6 +380,11 @@ public class TestABE_AES {
 		System.out.println("---------------------------------------");
 		System.out.println("");
 
+		if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+			System.out.println("No KMS Server: ignoring");
+			return;
+		}
+
 		// The data we want to encrypt/decrypt
 		byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
 
@@ -432,6 +447,11 @@ public class TestABE_AES {
 		System.out.println(" Hybrid Crypto Test KMS Encrypt + Local Decrypt - No UID");
 		System.out.println("---------------------------------------");
 		System.out.println("");
+
+		if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+			System.out.println("No KMS Server: ignoring");
+			return;
+		}
 
 		// The data we want to encrypt/decrypt
 		byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
@@ -517,6 +537,115 @@ public class TestABE_AES {
 		assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
 		assertArrayEquals(uid, decryptedHeader.getUid());
 		assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
+	}
+
+	@Test
+	public void testHybridEncryptionDecryptionUsingCacheLocalNoUid() throws Exception {
+
+		// encrypt
+
+		String publicKeyJson = Resources.load_resource("ffi/public_master_key.json");
+		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+		int encryptionCacheHandle = Ffi.createEncryptionCache(publicKey);
+		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"),
+				new Attr("Security Level", "Confidential") };
+		byte[] uid = new byte[] { 1, 2, 3, 4, 5 };
+
+		EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes,
+				Optional.of(uid), Optional.empty());
+
+		Ffi.destroyEncryptionCache(encryptionCacheHandle);
+
+		// decrypt
+
+		String userDecryptionKeyJson = Resources.load_resource("ffi/fin_confidential_user_key.json");
+		PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+
+		int decryptionCacheHandle = Ffi.createDecryptionCache(userDecryptionKey);
+
+		DecryptedHeader decryptedHeader = Ffi.decryptHeaderUsingCache(
+				decryptionCacheHandle,
+				encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+
+		Ffi.destroyDecryptionCache(decryptionCacheHandle);
+
+		// assert
+
+		assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
+		assertArrayEquals(uid, decryptedHeader.getUid());
+		assertArrayEquals(new byte[] {}, decryptedHeader.getAdditionalData());
+	}
+
+	@Test
+	public void testHybridEncryptionDecryptionUsingCacheLocalUidNoData() throws Exception {
+
+		// encrypt
+
+		String publicKeyJson = Resources.load_resource("ffi/public_master_key.json");
+		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+		int encryptionCacheHandle = Ffi.createEncryptionCache(publicKey);
+		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"),
+				new Attr("Security Level", "Confidential") };
+		byte[] additional_data = new byte[] { 6, 7, 8, 9, 10 };
+
+		EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes,
+				Optional.empty(), Optional.of(additional_data));
+
+		Ffi.destroyEncryptionCache(encryptionCacheHandle);
+
+		// decrypt
+
+		String userDecryptionKeyJson = Resources.load_resource("ffi/fin_confidential_user_key.json");
+		PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+
+		int decryptionCacheHandle = Ffi.createDecryptionCache(userDecryptionKey);
+
+		DecryptedHeader decryptedHeader = Ffi.decryptHeaderUsingCache(
+				decryptionCacheHandle,
+				encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+
+		Ffi.destroyDecryptionCache(decryptionCacheHandle);
+
+		// assert
+
+		assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
+		assertArrayEquals(new byte[] {}, decryptedHeader.getUid());
+		assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
+	}
+
+	@Test
+	public void testHybridEncryptionDecryptionUsingCacheLocalNoUidNoData() throws Exception {
+
+		// encrypt
+
+		String publicKeyJson = Resources.load_resource("ffi/public_master_key.json");
+		PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+		int encryptionCacheHandle = Ffi.createEncryptionCache(publicKey);
+		Attr[] attributes = new Attr[] { new Attr("Department", "FIN"),
+				new Attr("Security Level", "Confidential") };
+
+		EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes);
+
+		Ffi.destroyEncryptionCache(encryptionCacheHandle);
+
+		// decrypt
+
+		String userDecryptionKeyJson = Resources.load_resource("ffi/fin_confidential_user_key.json");
+		PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+
+		int decryptionCacheHandle = Ffi.createDecryptionCache(userDecryptionKey);
+
+		DecryptedHeader decryptedHeader = Ffi.decryptHeaderUsingCache(
+				decryptionCacheHandle,
+				encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+
+		Ffi.destroyDecryptionCache(decryptionCacheHandle);
+
+		// assert
+
+		assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
+		assertArrayEquals(new byte[] {}, decryptedHeader.getUid());
+		assertArrayEquals(new byte[] {}, decryptedHeader.getAdditionalData());
 	}
 
 	@Test

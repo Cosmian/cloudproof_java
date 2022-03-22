@@ -34,4 +34,15 @@ public final class TestUtils {
         }
         return Optional.of(v);
     }
+
+    public static boolean serverAvailable(String kmsServerUrl) {
+        try {
+            new RestClient(kmsServerUrl, Optional.empty()).json_get("/");
+
+            return true;
+        } catch (RestException e) {
+            return false;
+        }
+    }
+
 }

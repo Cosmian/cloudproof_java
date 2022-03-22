@@ -18,7 +18,7 @@ This library is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.6.1</version>
+    <version>0.6.2</version>
 </dependency>
 ```
 
@@ -93,7 +93,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```sh
 git clone https://github.com/Cosmian/abe_gpsw.git && \
 cd abe_gpsw && \
-git checkout v0.6.1
+git checkout v0.6.2
 ```
 
 3. Build the native library, which will be available as `libabe_gpsw.so` (linux) or `libabe_gpsw.dylib` (macos) in the `target` directory

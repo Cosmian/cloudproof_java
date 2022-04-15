@@ -33,7 +33,7 @@ public class Demo {
          * 
          */
         @Test
-        public void abe() throws Exception {
+        public void test_abe() throws Exception {
 
                 if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
                         System.out.println("Demo: No KMS Server: ignoring");

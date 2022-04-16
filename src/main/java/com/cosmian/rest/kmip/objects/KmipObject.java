@@ -1,5 +1,7 @@
 package com.cosmian.rest.kmip.objects;
 
+import java.lang.reflect.InvocationTargetException;
+
 import com.cosmian.CosmianException;
 import com.cosmian.rest.kmip.json.KmipStruct;
 import com.cosmian.rest.kmip.json.KmipStructDeserializer;
@@ -38,9 +40,11 @@ public abstract class KmipObject implements KmipStruct {
             return mapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
             try {
-                throw new CosmianException("Failed de serializing from JSON the " + clazz.newInstance().getObjectType()
+                throw new CosmianException("Failed de serializing from JSON the "
+                        + clazz.getDeclaredConstructor().newInstance().getObjectType()
                         + ": " + e.getMessage(), e);
-            } catch (InstantiationException | IllegalAccessException e1) {
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException
+                    | InvocationTargetException e1) {
                 throw new CosmianException("Failed de serializing from JSON:" + e.getMessage(), e);
             }
         }

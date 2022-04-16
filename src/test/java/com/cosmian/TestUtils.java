@@ -41,6 +41,10 @@ public final class TestUtils {
 
             return true;
         } catch (RestException e) {
+            if (e.getMessage().contains("404")) {
+                return true;
+            }
+            System.out.println("ERROR: " + e.getMessage());
             return false;
         }
     }

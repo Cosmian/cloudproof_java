@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeSet;
+
 import com.cosmian.CosmianException;
 import com.cosmian.rest.kmip.json.KmipJsonDeserializer;
 import com.fasterxml.jackson.core.JacksonException;
@@ -44,8 +45,8 @@ public class PolicyDeserializer extends KmipJsonDeserializer<Policy> {
             for (JsonNode value : toIterable(axisNode.get(0).elements())) {
                 values.add(value.asText());
             }
-            PolicyAxis axis = new PolicyAxis(entry.getKey(), values.toArray(new String[values.size()]),
-                    axisNode.get(1).asBoolean());
+            PolicyAxis axis =
+                new PolicyAxis(entry.getKey(), values.toArray(new String[values.size()]), axisNode.get(1).asBoolean());
             store.put(entry.getKey(), axis);
         }
 

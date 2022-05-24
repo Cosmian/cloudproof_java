@@ -1,0 +1,77 @@
+{
+  "tag" : "PrivateKey",
+  "value" : [ {
+    "tag" : "KeyBlock",
+    "value" : [ {
+      "tag" : "KeyFormatType",
+      "type" : "Enumeration",
+      "value" : "AbeUserDecryptionKey"
+    }, {
+      "tag" : "KeyValue",
+      "value" : [ {
+        "tag" : "KeyMaterial",
+        "type" : "ByteString",
+        "value" : "00000003AE9CD969494DC55F308DE8B3CF940F3333C1CA39DE3572B4636EE9597EE686ECBA45E6DAAC5988CFDC740CE4A653AC5E1119506B7ADAA91F5D01FEB00D02DBCCCEF0BFAED9B361344687CAC21DB13A66E4F8B7AE1C1AF512FD114737400BD85A8715DE3BF28971DD7369C2C5E6D8101E870095782ABB8290EB1D45CC23312DDAD6591FC5A68B3A9E75F7237CA16EB57509365E9C7C918A0EA48D43F6115EB895F0F3F6C006EC95E4B71BE6216029344CCFEFC23D5587DB815771858AF1F18224A39B01BFAB6251F62B1CB0757BFADDE94143301381E0DA026C781D606C031A3D24B411A35CBDE54A14DF6FC4A02CA6F0129A81F7CAB4ABCC8B603D5CE158CCAFF16495ECF1CC9A19F0420FC6C51FFB6CF79DE151B6538039B79693D22122061D0000000300000002000000010000000400000005000000000000000000000000000000000000000000000000000000000000000000000000FFFFFFFFFE5BFEFF02A4BD5305D8A10908D83933487D9D2953A7ED730100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000"
+      }, {
+        "tag" : "Attributes",
+        "value" : [ {
+          "tag" : "CryptographicAlgorithm",
+          "type" : "Enumeration",
+          "value" : "ABE"
+        }, {
+          "tag" : "KeyFormatType",
+          "type" : "Enumeration",
+          "value" : "AbeUserDecryptionKey"
+        }, {
+          "tag" : "Link",
+          "value" : [ ]
+        }, {
+          "tag" : "ObjectType",
+          "type" : "Enumeration",
+          "value" : "PrivateKey"
+        }, {
+          "tag" : "VendorAttributes",
+          "value" : [ {
+            "tag" : "VendorAttributes",
+            "value" : [ {
+              "tag" : "VendorIdentification",
+              "type" : "TextString",
+              "value" : "cosmian"
+            }, {
+              "tag" : "AttributeName",
+              "type" : "TextString",
+              "value" : "abe_master_private_key_id"
+            }, {
+              "tag" : "AttributeValue",
+              "type" : "ByteString",
+              "value" : "33626238623134632D323962382D343233652D383165322D393765393161343033376135"
+            } ]
+          }, {
+            "tag" : "VendorAttributes",
+            "value" : [ {
+              "tag" : "VendorIdentification",
+              "type" : "TextString",
+              "value" : "cosmian"
+            }, {
+              "tag" : "AttributeName",
+              "type" : "TextString",
+              "value" : "abe_access_policy"
+            }, {
+              "tag" : "AttributeValue",
+              "type" : "ByteString",
+              "value" : "7B22416E64223A5B7B224F72223A5B7B2241747472223A224465706172746D656E743A3A46494E227D2C7B2241747472223A224465706172746D656E743A3A4D4B47227D5D7D2C7B2241747472223A225365637572697479204C6576656C3A3A50726F746563746564227D5D7D"
+            } ]
+          } ]
+        } ]
+      } ]
+    }, {
+      "tag" : "CryptographicAlgorithm",
+      "type" : "Enumeration",
+      "value" : "ABE"
+    }, {
+      "tag" : "CryptographicLength",
+      "type" : "Integer",
+      "value" : 504
+    } ]
+  } ]
+}

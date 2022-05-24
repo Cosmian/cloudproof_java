@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Resources {
@@ -35,7 +36,9 @@ public class Resources {
 
     public static void write_resource(String resource_name, byte[] bytes) throws IOException {
         String parentDir = Resources.class.getClassLoader().getResource(".").getFile();
+        Files.createDirectories(Paths.get(parentDir, resource_name).getParent());
         String path = Paths.get(parentDir, resource_name).toString();
+
         try (OutputStream os = new FileOutputStream(path)) {
             os.write(bytes);
             os.flush();

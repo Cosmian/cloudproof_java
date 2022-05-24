@@ -35,15 +35,14 @@ public class RestClient {
      * Instantiate a new REST Client
      *
      * @param server_url
-     *                           the REST Server URL e.g. http://localhost:9000
+     *            the REST Server URL e.g. http://localhost:9000
      * @param connection_timeout
-     *                           Sets a specified timeout value, in milliseconds, to
-     *                           be used when opening a communications link to the
-     *                           resource referenced by this URLConnection.
+     *            Sets a specified timeout value, in milliseconds, to be used when opening a communications link to the
+     *            resource referenced by this URLConnection.
      * @param read_timeout
-     *                           Sets the read timeout to a specified timeout, in
-     *                           milliseconds.
-     * @param api_key            The API Key to use to authenticate
+     *            Sets the read timeout to a specified timeout, in milliseconds.
+     * @param api_key
+     *            The API Key to use to authenticate
      */
     public RestClient(String server_url, Optional<String> api_key, int connection_timeout, int read_timeout) {
         if (server_url.endsWith("/")) {
@@ -71,26 +70,27 @@ public class RestClient {
     }
 
     /**
-     * Instantiate a new REST Client with DEFAULT_CONNECT_TIMEOUT and
-     * DEFAULT_READ_TIMEOUT
+     * Instantiate a new REST Client with DEFAULT_CONNECT_TIMEOUT and DEFAULT_READ_TIMEOUT
      *
-     * @param server_url the REST Server URL e.g. http://localhost:9000
-     * @param api_key    he optional API Key to use to authenticate
+     * @param server_url
+     *            the REST Server URL e.g. http://localhost:9000
+     * @param api_key
+     *            he optional API Key to use to authenticate
      */
     public RestClient(String server_url, Optional<String> api_key) {
         this(server_url, api_key, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
     }
 
     private HttpURLConnection get_connection(String path) throws MalformedURLException, IOException {
-        HttpURLConnection cnx = (HttpURLConnection) new URL(this.server_url + path).openConnection();
+        HttpURLConnection cnx = (HttpURLConnection)new URL(this.server_url + path).openConnection();
         if (cnx instanceof HttpsURLConnection) {
-            ((HttpsURLConnection) cnx).setSSLSocketFactory(this.ssl_socket_factory);
+            ((HttpsURLConnection)cnx).setSSLSocketFactory(this.ssl_socket_factory);
         }
-        cnx.setConnectTimeout(this.connection_timeout);
-        cnx.setReadTimeout(this.read_timeout);
         if (this.api_key.isPresent()) {
             cnx.setRequestProperty("Authorization", "Bearer " + this.api_key.get());
         }
+        cnx.setConnectTimeout(this.connection_timeout);
+        cnx.setReadTimeout(this.read_timeout);
         return cnx;
     }
 
@@ -98,10 +98,10 @@ public class RestClient {
      * Perform a GET request returning JSON
      *
      * @param path
-     *             the REST service path and query parameters answering the GET
-     *             request
+     *            the REST service path and query parameters answering the GET request
      * @return the JSON response
-     * @throws RestException on any REST error
+     * @throws RestException
+     *             on any REST error
      */
     public String json_get(String path) throws RestException {
         HttpURLConnection cnx = null;
@@ -119,14 +119,15 @@ public class RestClient {
      * Perform a JSON POST request returning JSON
      *
      * @param path
-     *                the REST service path and query parameters answering the POST
-     *                request
+     *            the REST service path and query parameters answering the POST request
      * @param payload
-     *                the JSON payload passed as the body of the POST request
+     *            the JSON payload passed as the body of the POST request
      * @return the JSON response
-     * @throws RestException on any REST error
+     * @throws RestException
+     *             on any REST error
      */
     public String json_post(String path, String payload) throws RestException {
+        logger.fine(() -> path + "--->\n" + payload);
         HttpURLConnection cnx = null;
         try {
             cnx = get_connection(path);
@@ -138,7 +139,9 @@ public class RestClient {
                 os.write(payload.getBytes(StandardCharsets.UTF_8));
                 os.flush();
             }
-            return read_json_response(cnx);
+            String response = read_json_response(cnx);
+            logger.fine(() -> path + "<---\n" + response);
+            return response;
         } catch (Throwable t) {
             throw handle_throwable("POST", t, cnx, this.server_url + path);
         }

@@ -13,7 +13,7 @@ public enum KeyFormatType {
     McfeSecretKey(0x8880_0001), McfeMasterSecretKey(0x8880_0002), McfeFunctionalKey(0x8880_0003),
     McfeFksSecretKey(0x8880_0004), EnclaveECKeyPair(0x8880_0005), EnclaveECSharedKey(0x8880_0006), TFHE(0x8880_0007),
     AbeMasterSecretKey(0x8880_0008), AbeMasterPublicKey(0x8880_0009), AbeUserDecryptionKey(0x8880_000A),
-    AbeSymmetricKey(0x8880_000B);
+    AbeSymmetricKey(0x8880_000B), CoverCryptSecretKey(0x8880_000C), CoverCryptPublicKey(0x8880_000D);
 
     private final int code;
 

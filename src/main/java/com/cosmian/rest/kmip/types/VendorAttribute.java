@@ -114,7 +114,7 @@ public class VendorAttribute implements KmipStruct {
         VendorAttribute vendorAttribute = (VendorAttribute)o;
         return Objects.equals(vendor_identification, vendorAttribute.vendor_identification)
             && Objects.equals(attribute_name, vendorAttribute.attribute_name)
-            && Objects.equals(attribute_value, vendorAttribute.attribute_value);
+            && Arrays.equals(attribute_value, vendorAttribute.attribute_value);
     }
 
     @Override

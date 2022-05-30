@@ -125,7 +125,7 @@ public class VendorAttribute implements KmipStruct {
     @Override
     public String toString() {
         return "{" + " vendor_identification='" + getVendor_identification() + "'" + ", attribute_name='"
-            + getAttribute_name() + "'" + ", attribute_value='" + getAttribute_value() + "'" + "}";
+            + getAttribute_name() + "'" + ", attribute_value='" + Arrays.toString(getAttribute_value()) + "'" + "}";
     }
 
 }

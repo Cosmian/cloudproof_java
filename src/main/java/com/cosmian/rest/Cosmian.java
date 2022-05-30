@@ -5,7 +5,7 @@ import java.util.logging.Logger;
 
 import com.cosmian.CosmianException;
 import com.cosmian.RestClient;
-import com.cosmian.rest.abe.CoverCrypt;
+import com.cosmian.rest.abe.Abe;
 import com.cosmian.rest.kmip.Kmip;
 
 import org.apache.commons.codec.DecoderException;
@@ -70,8 +70,8 @@ public class Cosmian {
      *
      * @return an Abe instance exposing the endpoints
      */
-    public CoverCrypt abe() {
-        return new CoverCrypt(this.rest_client);
+    public Abe abe() {
+        return new Abe(this.rest_client);
     }
 
     /**

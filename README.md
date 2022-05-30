@@ -30,7 +30,7 @@ This library free software and is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.7.1</version>
+    <version>0.7.2</version>
 </dependency>
 ```
 
@@ -48,5 +48,5 @@ KMS Server | Java Lib | abe_gpsw lib | CoverCrypt lib
 1.2.1      | 0.5.2    | 0.4.0        |  N/A
 1.2.1      | ~~0.6.0~~| ~~0.6.0~~    |  N/A
 1.2.1      | 0.6.1    | 0.6.1        |  N/A
-2.0.1      | 0.7.1    | 0.6.5        |  1.0.2
+2.0.1      | 0.7.2    | 0.6.5        |  1.0.2
 

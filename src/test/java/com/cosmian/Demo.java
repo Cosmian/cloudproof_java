@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import java.nio.charset.StandardCharsets;
 
-import com.cosmian.rest.abe.CoverCrypt;
+import com.cosmian.rest.abe.Abe;
 import com.cosmian.rest.abe.acccess_policy.AccessPolicy;
 import com.cosmian.rest.abe.acccess_policy.And;
 import com.cosmian.rest.abe.acccess_policy.Attr;
@@ -39,7 +39,7 @@ public class Demo {
                 }
 
                 // Change the Cosmian Server Server URL and API key as appropriate
-                CoverCrypt abe = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+                Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
                 // ## Policy
                 // In this demo, we will create a Policy which combines two axes, a

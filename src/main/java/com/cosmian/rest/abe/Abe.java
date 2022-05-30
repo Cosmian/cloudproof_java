@@ -42,12 +42,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * ABE (Attribute Based Encryption) endpoints
  */
-public class CoverCrypt {
+public class Abe {
 
-    private static final Logger logger = Logger.getLogger(CoverCrypt.class.getName());
+    private static final Logger logger = Logger.getLogger(Abe.class.getName());
     private final Kmip kmip;
 
-    public CoverCrypt(RestClient rest_client) {
+    public Abe(RestClient rest_client) {
         this.kmip = new Kmip(rest_client);
     }
 

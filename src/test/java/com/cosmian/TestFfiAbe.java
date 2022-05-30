@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 import com.cosmian.jna.abe.DecryptedHeader;
 import com.cosmian.jna.abe.EncryptedHeader;
 import com.cosmian.jna.abe.Ffi;
-import com.cosmian.rest.abe.CoverCrypt;
+import com.cosmian.rest.abe.Abe;
 import com.cosmian.rest.abe.acccess_policy.AccessPolicy;
 import com.cosmian.rest.abe.acccess_policy.And;
 import com.cosmian.rest.abe.acccess_policy.Attr;
@@ -249,7 +249,7 @@ public class TestFfiAbe {
 
 		Policy pg = policy();
 
-		CoverCrypt abe = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+		Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
 		String[] ids = abe.createMasterKeyPair(pg);
 
@@ -319,7 +319,7 @@ public class TestFfiAbe {
 
 		Policy pg = policy();
 
-		CoverCrypt abe = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+		Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
 		String[] ids = abe.createMasterKeyPair(pg);
 
@@ -395,7 +395,7 @@ public class TestFfiAbe {
 
 		Policy pg = policy();
 
-		CoverCrypt abe = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+		Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
 		String[] ids = abe.createMasterKeyPair(pg);
 
@@ -457,7 +457,7 @@ public class TestFfiAbe {
 
 		Policy pg = policy();
 
-		CoverCrypt abe = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+		Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
 		String[] ids = abe.createMasterKeyPair(pg);
 

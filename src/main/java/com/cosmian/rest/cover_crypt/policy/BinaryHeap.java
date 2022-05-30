@@ -163,7 +163,7 @@ public class BinaryHeap {
             return false;
         }
         BinaryHeap binaryHeap = (BinaryHeap)o;
-        return Objects.equals(heap, binaryHeap.heap) && heapSize == binaryHeap.heapSize;
+        return Arrays.equals(heap, binaryHeap.heap) && heapSize == binaryHeap.heapSize;
     }
 
     @Override

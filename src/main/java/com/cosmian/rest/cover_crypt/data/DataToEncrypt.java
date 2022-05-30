@@ -59,7 +59,7 @@ public class DataToEncrypt {
 
     @Override
     public int hashCode() {
-        return Objects.hash(policyAttributes, data);
+        return Objects.hash(Arrays.hashCode(policyAttributes), Arrays.hashCode(data));
     }
 
     @Override

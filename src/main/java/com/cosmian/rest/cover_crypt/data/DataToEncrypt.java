@@ -54,7 +54,7 @@ public class DataToEncrypt {
         }
         DataToEncrypt dataToEncrypt = (DataToEncrypt)o;
         return Arrays.equals(policyAttributes, dataToEncrypt.policyAttributes)
-            && Objects.equals(data, dataToEncrypt.data);
+            && Arrays.equals(data, dataToEncrypt.data);
     }
 
     @Override

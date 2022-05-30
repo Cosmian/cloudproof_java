@@ -52,7 +52,7 @@ public class DataToEncrypt {
             return false;
         }
         DataToEncrypt dataToEncrypt = (DataToEncrypt)o;
-        return Objects.equals(policyAttributes, dataToEncrypt.policyAttributes)
+        return Arrays.equals(policyAttributes, dataToEncrypt.policyAttributes)
             && Objects.equals(data, dataToEncrypt.data);
     }
 

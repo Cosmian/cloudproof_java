@@ -47,7 +47,7 @@ public class PolicyAttributeUid implements Serializable {
     }
 
     public static PolicyAttributeUid fromString(String s) throws CosmianException {
-        List<String> parts = Splitter.on("::").splitToList(s);
+        String[] parts = s.split("::");
         if (parts.length != 2) {
             throw new CosmianException("Invalid Policy attribute string");
         }

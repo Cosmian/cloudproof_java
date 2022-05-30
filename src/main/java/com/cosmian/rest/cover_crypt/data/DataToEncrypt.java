@@ -1,5 +1,6 @@
 package com.cosmian.rest.cover_crypt.data;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.cosmian.rest.cover_crypt.acccess_policy.Attr;
@@ -63,7 +64,8 @@ public class DataToEncrypt {
 
     @Override
     public String toString() {
-        return "{" + " policyAttributes='" + getPolicyAttributes() + "'" + ", data='" + Arrays.toString(getData()) + "'" + "}";
+        return "{" + " policyAttributes='" + getPolicyAttributes() + "'" + ", data='" + Arrays.toString(getData()) + "'"
+            + "}";
     }
 
 }

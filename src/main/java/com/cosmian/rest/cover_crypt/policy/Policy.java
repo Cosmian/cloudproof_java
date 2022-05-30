@@ -130,6 +130,7 @@ public class Policy implements Serializable {
 
     /**
      * @param lastAttributeValue
+     *            the last attribute value that was assigned.
      */
     void setLastAttributeValue(int lastAttributeValue) {
         this.lastAttributeValue = lastAttributeValue;

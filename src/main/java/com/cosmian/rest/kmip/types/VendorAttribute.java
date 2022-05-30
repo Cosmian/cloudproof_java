@@ -1,5 +1,6 @@
 package com.cosmian.rest.kmip.types;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.cosmian.rest.kmip.json.KmipStruct;

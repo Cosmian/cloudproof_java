@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -38,23 +39,29 @@ public class KmipStructSerializer<E extends Object> extends JsonSerializer<E> {
 
         Field[] fields = clazz.getDeclaredFields();
         for (Field f : fields) {
+
+            JsonIgnore ignore = f.getAnnotation(JsonIgnore.class);
+            if (ignore != null) {
+                continue;
+            }
+
             f.setAccessible(true);
             Object v;
             try {
                 v = f.get(struct);
             } catch (IllegalArgumentException | IllegalAccessException e) {
                 throw new IOException("Cannot serialize: " + clazz.getName() + ": unable to access value of: "
-                        + f.getName() + ": " + e.getMessage(), e);
+                    + f.getName() + ": " + e.getMessage(), e);
             }
             if (v == null) {
                 throw new IOException(
-                        "Cannot serialize: " + clazz.getName() + ": value of: " + f.getName() + " should not be NULL ");
+                    "Cannot serialize: " + clazz.getName() + ": value of: " + f.getName() + " should not be NULL ");
             }
             // is it an optional field ?
             boolean is_optional = (v instanceof Optional);
             // unwrap v
             if (is_optional) {
-                Optional<?> opt = (Optional<?>) v;
+                Optional<?> opt = (Optional<?>)v;
                 if (opt.isPresent()) {
                     v = opt.get();
                 } else {
@@ -65,8 +72,8 @@ public class KmipStructSerializer<E extends Object> extends JsonSerializer<E> {
             final Object value = v;
             JsonProperty property = f.getAnnotation(JsonProperty.class);
             String tag = property == null ? value.getClass().getSimpleName() : property.value();
-            logger.finer(() -> " ... processing " + (is_optional ? "optional " : "required ") + tag + " with value "
-                    + value);
+            logger.finer(
+                () -> " ... processing " + (is_optional ? "optional " : "required ") + tag + " with value " + value);
             KmipJson.serialize_value(tag, value, generator, serializers);
         }
         generator.writeEndArray();

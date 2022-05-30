@@ -12,49 +12,30 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * This operation requests the server to perform a decryption operation on the
- * provided data using a Managed Cryptographic Object as the key for the
- * decryption operation.
- * 
- * The request contains information about the cryptographic parameters (mode and
- * padding method), the data to be decrypted, and the IV/Counter/Nonce to use.
- * The cryptographic parameters MAY be omitted from the request as they can be
- * specified as associated attributes of the Managed Cryptographic Object. The
- * initialization vector/counter/nonce MAY also be omitted from the request if
- * the algorithm does not use an IV/Counter/Nonce.
- * 
- * The response contains the Unique Identifier of the Managed Cryptographic
- * Object used as the key and the result of the decryption operation.
- * 
- * The success or failure of the operation is indicated by the Result Status
- * (and if failure the Result Reason) in the response header.
+ * This operation requests the server to perform a decryption operation on the provided data using a Managed
+ * Cryptographic Object as the key for the decryption operation. The request contains information about the
+ * cryptographic parameters (mode and padding method), the data to be decrypted, and the IV/Counter/Nonce to use. The
+ * cryptographic parameters MAY be omitted from the request as they can be specified as associated attributes of the
+ * Managed Cryptographic Object. The initialization vector/counter/nonce MAY also be omitted from the request if the
+ * algorithm does not use an IV/Counter/Nonce. The response contains the Unique Identifier of the Managed Cryptographic
+ * Object used as the key and the result of the decryption operation. The success or failure of the operation is
+ * indicated by the Result Status (and if failure the Result Reason) in the response header.
  */
 @JsonSerialize(using = KmipStructSerializer.class)
 @JsonDeserialize(using = KmipStructDeserializer.class)
 public class Decrypt implements KmipStruct {
 
     /**
-     * The Unique Identifier of the Managed
-     * Cryptographic Object that is the key to
-     * use for the decryption operation. If
-     * omitted, then the ID Placeholder value
-     * SHALL be used by the server as the
-     * Unique Identifier.
+     * The Unique Identifier of the Managed Cryptographic Object that is the key to use for the decryption operation. If
+     * omitted, then the ID Placeholder value SHALL be used by the server as the Unique Identifier.
      */
     @JsonProperty(value = "UniqueIdentifier")
     private Optional<String> unique_identifier;
 
     /**
-     * The Cryptographic Parameters (Block
-     * Cipher Mode, Padding Method)
-     * corresponding to the particular
-     * decryption method requested.
-     * If there are no Cryptographic
-     * Parameters associated with the
-     * Managed Cryptographic Object and
-     * the algorithm requires parameters then
-     * the operation SHALL return with a
-     * Result Status of Operation Failed.
+     * The Cryptographic Parameters (Block Cipher Mode, Padding Method) corresponding to the particular decryption
+     * method requested. If there are no Cryptographic Parameters associated with the Managed Cryptographic Object and
+     * the algorithm requires parameters then the operation SHALL return with a Result Status of Operation Failed.
      */
     @JsonProperty(value = "CryptographicParameters")
     private Optional<CryptographicParameters> cryptographic_parameters;
@@ -66,8 +47,7 @@ public class Decrypt implements KmipStruct {
     private Optional<byte[]> data;
 
     /**
-     * The initialization vector, counter or
-     * nonce to be used (where appropriate)
+     * The initialization vector, counter or nonce to be used (where appropriate)
      */
     @JsonProperty(value = "IvCounterNonce")
     private Optional<byte[]> iv_counter_nonce;
@@ -85,22 +65,15 @@ public class Decrypt implements KmipStruct {
     private Optional<Boolean> final_indicator;
 
     /**
-     * Additional data to be authenticated via
-     * the Authenticated Encryption Tag. If
-     * supplied in multi-part decryption, this
-     * data MUST be supplied on the initial
-     * Decrypt request
+     * Additional data to be authenticated via the Authenticated Encryption Tag. If supplied in multi-part decryption,
+     * this data MUST be supplied on the initial Decrypt request
      */
     @JsonProperty(value = "AuthenticatedEncryptionAdditionalData")
     private Optional<byte[]> authenticated_encryption_additional_data;
 
     /**
-     * Specifies the tag that will be needed to
-     * authenticate the decrypted data and
-     * the additional authenticated data. If
-     * supplied in multi-part decryption, this
-     * data MUST be supplied on the initial
-     * Decrypt request
+     * Specifies the tag that will be needed to authenticate the decrypted data and the additional authenticated data.
+     * If supplied in multi-part decryption, this data MUST be supplied on the initial Decrypt request
      */
     @JsonProperty(value = "AuthenticatedEncryptionTag")
     private Optional<byte[]> authenticated_encryption_tag;
@@ -109,7 +82,7 @@ public class Decrypt implements KmipStruct {
     }
 
     public Decrypt(String userDecryptionKeyIdentifier, byte[] encrypted_data,
-            Optional<byte[]> authenticated_encryption_additional_data) {
+        Optional<byte[]> authenticated_encryption_additional_data) {
         this.unique_identifier = Optional.of(userDecryptionKeyIdentifier);
         this.cryptographic_parameters = Optional.empty();
         this.data = Optional.of(encrypted_data);
@@ -121,9 +94,9 @@ public class Decrypt implements KmipStruct {
     }
 
     public Decrypt(Optional<String> unique_identifier, Optional<CryptographicParameters> cryptographic_parameters,
-            Optional<byte[]> data, Optional<byte[]> iv_counter_nonce, Optional<Boolean> init_indicator,
-            Optional<Boolean> final_indicator, Optional<byte[]> authenticated_encryption_additional_data,
-            Optional<byte[]> authenticated_encryption_tag) {
+        Optional<byte[]> data, Optional<byte[]> iv_counter_nonce, Optional<Boolean> init_indicator,
+        Optional<Boolean> final_indicator, Optional<byte[]> authenticated_encryption_additional_data,
+        Optional<byte[]> authenticated_encryption_tag) {
         this.unique_identifier = unique_identifier;
         this.cryptographic_parameters = cryptographic_parameters;
         this.data = data;
@@ -247,29 +220,29 @@ public class Decrypt implements KmipStruct {
         }
         Decrypt decrypt = (Decrypt) o;
         return Objects.equals(unique_identifier, decrypt.unique_identifier)
-                && Objects.equals(cryptographic_parameters, decrypt.cryptographic_parameters)
-                && Objects.equals(data, decrypt.data) && Objects.equals(iv_counter_nonce, decrypt.iv_counter_nonce)
-                && Objects.equals(init_indicator, decrypt.init_indicator)
-                && Objects.equals(final_indicator, decrypt.final_indicator)
-                && Objects.equals(authenticated_encryption_additional_data,
-                        decrypt.authenticated_encryption_additional_data)
-                && Objects.equals(authenticated_encryption_tag, decrypt.authenticated_encryption_tag);
+            && Objects.equals(cryptographic_parameters, decrypt.cryptographic_parameters)
+            && Objects.equals(data, decrypt.data) && Objects.equals(iv_counter_nonce, decrypt.iv_counter_nonce)
+            && Objects.equals(init_indicator, decrypt.init_indicator)
+            && Objects.equals(final_indicator, decrypt.final_indicator)
+            && Objects.equals(authenticated_encryption_additional_data,
+                decrypt.authenticated_encryption_additional_data)
+            && Objects.equals(authenticated_encryption_tag, decrypt.authenticated_encryption_tag);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(unique_identifier, cryptographic_parameters, data, iv_counter_nonce, init_indicator,
-                final_indicator, authenticated_encryption_additional_data, authenticated_encryption_tag);
+            final_indicator, authenticated_encryption_additional_data, authenticated_encryption_tag);
     }
 
     @Override
     public String toString() {
         return "{" + " unique_identifier='" + getUnique_identifier() + "'" + ", cryptographic_parameters='"
-                + getCryptographic_parameters() + "'" + ", data='" + getData() + "'" + ", iv_counter_nonce='"
-                + getIv_counter_nonce() + "'" + ", init_indicator='" + getInit_indicator() + "'" + ", final_indicator='"
-                + getFinal_indicator() + "'" + ", authenticated_encryption_additional_data='"
-                + getAuthenticated_encryption_additional_data() + "'" + ", authenticated_encryption_tag='"
-                + getAuthenticated_encryption_tag() + "'" + "}";
+            + getCryptographic_parameters() + "'" + ", data='" + getData() + "'" + ", iv_counter_nonce='"
+            + getIv_counter_nonce() + "'" + ", init_indicator='" + getInit_indicator() + "'" + ", final_indicator='"
+            + getFinal_indicator() + "'" + ", authenticated_encryption_additional_data='"
+            + getAuthenticated_encryption_additional_data() + "'" + ", authenticated_encryption_tag='"
+            + getAuthenticated_encryption_tag() + "'" + "}";
     }
 
 }

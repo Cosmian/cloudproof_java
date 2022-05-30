@@ -15,19 +15,16 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class LocateResponse implements KmipStruct {
 
     /**
-     * An Integer object that indicates the number of object identifiers that
-     * satisfy the identification criteria specified in the request. A server
-     * MAY elect to omit this value from the Response if it is unable or
-     * unwilling to determine the total count of matched items.
-     * A server MAY elect to return the Located Items value even if Offset Items is
-     * not present in the Request.
+     * An Integer object that indicates the number of object identifiers that satisfy the identification criteria
+     * specified in the request. A server MAY elect to omit this value from the Response if it is unable or unwilling to
+     * determine the total count of matched items. A server MAY elect to return the Located Items value even if Offset
+     * Items is not present in the Request.
      */
     @JsonProperty(value = "LocatedItems")
     private Optional<Integer> located_items;
 
     /**
-     * The Unique Identifier of the located
-     * objects.
+     * The Unique Identifier of the located objects.
      */
     @JsonProperty(value = "UniqueIdentifier")
     private Optional<String[]> unique_identifier;
@@ -75,7 +72,7 @@ public class LocateResponse implements KmipStruct {
         }
         LocateResponse locateResponse = (LocateResponse) o;
         return Objects.equals(located_items, locateResponse.located_items)
-                && Objects.equals(unique_identifier, locateResponse.unique_identifier);
+            && Objects.equals(unique_identifier, locateResponse.unique_identifier);
     }
 
     @Override
@@ -86,7 +83,7 @@ public class LocateResponse implements KmipStruct {
     @Override
     public String toString() {
         return "{" + " located_items='" + getLocated_items() + "'" + ", unique_identifier='" + getUnique_identifier()
-                + "'" + "}";
+            + "'" + "}";
     }
 
 }

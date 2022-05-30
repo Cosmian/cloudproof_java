@@ -69,9 +69,7 @@ public class SymmetricKey extends KmipObject {
     }
 
     /**
-     * 
-     * Deserialize an instance from its Json representation obtained using
-     * toJson()
+     * Deserialize an instance from its Json representation obtained using toJson()
      * 
      * @param json key in JSON form
      * @return the {@link SymmetricKey}

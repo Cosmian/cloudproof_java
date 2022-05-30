@@ -14,7 +14,8 @@ public class TransparentECPublicKey implements KmipStruct {
     @JsonProperty(value = "QString")
     private byte[] qString;
 
-    public TransparentECPublicKey() {}
+    public TransparentECPublicKey() {
+    }
 
     public TransparentECPublicKey(RecommendedCurve recommendedCurve, byte[] qString) {
         this.recommendedCurve = recommendedCurve;
@@ -54,7 +55,7 @@ public class TransparentECPublicKey implements KmipStruct {
         if (!(o instanceof TransparentECPublicKey)) {
             return false;
         }
-        TransparentECPublicKey transparentECPublicKey = (TransparentECPublicKey)o;
+        TransparentECPublicKey transparentECPublicKey = (TransparentECPublicKey) o;
         return Objects.equals(recommendedCurve, transparentECPublicKey.recommendedCurve)
             && Objects.equals(qString, transparentECPublicKey.qString);
     }

@@ -13,31 +13,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * The Key Block MAY also supply OPTIONAL information about a cryptographic key wrapping mechanism used to wrap the Key
  * Value. This consists of a Key Wrapping Data structure. It is only used inside a Key Block. This structure contains
- * fields for:
- *
- * Value Description
- *
- * Wrapping Method Indicates the method used to wrap the Key Value.
- *
- * Encryption Key Information Contains the Unique Identifier value of the encryption key and associated cryptographic
- * parameters.
- *
+ * fields for: Value Description Wrapping Method Indicates the method used to wrap the Key Value. Encryption Key
+ * Information Contains the Unique Identifier value of the encryption key and associated cryptographic parameters.
  * MAC/Signature Key Information Contains the Unique Identifier value of the MAC/signature key and associated
- * cryptographic parameters.
- *
- * MAC/Signature Contains a MAC or signature of the Key Value
- *
- * IV/Counter/Nonce If REQUIRED by the wrapping method.
- *
- * Encoding Option Specifies the encoding of the Key Material within the Key Value structure of the Key Block that has
- * been wrapped. If No Encoding is specified, then the Key Value structure SHALL NOT contain any attributes.
- *
- * If wrapping is used, then the whole Key Value structure is wrapped unless otherwise specified by the Wrapping Method.
- * The algorithms used for wrapping are given by the Cryptographic Algorithm attributes of the encryption key and/or
- * MAC/signature key; the block-cipher mode, padding method, and hashing algorithm used for wrapping are given by the
- * Cryptographic Parameters in the Encryption Key Information and/or MAC/Signature Key Information, or, if not present,
- * from the Cryptographic Parameters attribute of the respective key(s). Either the Encryption Key Information or the
- * MAC/Signature Key Information (or both) in the Key Wrapping Data structure SHALL be specified.
+ * cryptographic parameters. MAC/Signature Contains a MAC or signature of the Key Value IV/Counter/Nonce If REQUIRED by
+ * the wrapping method. Encoding Option Specifies the encoding of the Key Material within the Key Value structure of the
+ * Key Block that has been wrapped. If No Encoding is specified, then the Key Value structure SHALL NOT contain any
+ * attributes. If wrapping is used, then the whole Key Value structure is wrapped unless otherwise specified by the
+ * Wrapping Method. The algorithms used for wrapping are given by the Cryptographic Algorithm attributes of the
+ * encryption key and/or MAC/signature key; the block-cipher mode, padding method, and hashing algorithm used for
+ * wrapping are given by the Cryptographic Parameters in the Encryption Key Information and/or MAC/Signature Key
+ * Information, or, if not present, from the Cryptographic Parameters attribute of the respective key(s). Either the
+ * Encryption Key Information or the MAC/Signature Key Information (or both) in the Key Wrapping Data structure SHALL be
+ * specified.
  */
 public class KeyWrappingData implements KmipStruct {
 
@@ -63,7 +51,8 @@ public class KeyWrappingData implements KmipStruct {
     @JsonProperty("EncodingOption")
     private Optional<EncodingOption> encoding_option;
 
-    public KeyWrappingData() {}
+    public KeyWrappingData() {
+    }
 
     public KeyWrappingData(WrappingMethod wrapping_method,
         Optional<EncryptionKeyInformation> encryption_key_information,
@@ -97,8 +86,8 @@ public class KeyWrappingData implements KmipStruct {
         return this.mac_or_signature_key_information;
     }
 
-    public void
-        setMac_or_signature_key_information(Optional<MacSignatureKeyInformation> mac_or_signature_key_information) {
+    public void setMac_or_signature_key_information(
+        Optional<MacSignatureKeyInformation> mac_or_signature_key_information) {
         this.mac_or_signature_key_information = mac_or_signature_key_information;
     }
 
@@ -136,8 +125,8 @@ public class KeyWrappingData implements KmipStruct {
         return this;
     }
 
-    public KeyWrappingData
-        mac_or_signature_key_information(Optional<MacSignatureKeyInformation> mac_or_signature_key_information) {
+    public KeyWrappingData mac_or_signature_key_information(
+        Optional<MacSignatureKeyInformation> mac_or_signature_key_information) {
         setMac_or_signature_key_information(mac_or_signature_key_information);
         return this;
     }
@@ -164,7 +153,7 @@ public class KeyWrappingData implements KmipStruct {
         if (!(o instanceof KeyWrappingData)) {
             return false;
         }
-        KeyWrappingData keyWrappingData = (KeyWrappingData)o;
+        KeyWrappingData keyWrappingData = (KeyWrappingData) o;
         return Objects.equals(wrapping_method, keyWrappingData.wrapping_method)
             && Objects.equals(encryption_key_information, keyWrappingData.encryption_key_information)
             && Objects.equals(mac_or_signature_key_information, keyWrappingData.mac_or_signature_key_information)

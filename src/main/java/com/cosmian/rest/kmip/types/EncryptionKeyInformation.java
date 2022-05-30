@@ -14,7 +14,8 @@ public class EncryptionKeyInformation implements KmipStruct {
     @JsonProperty("CryptographicParameters")
     private Optional<CryptographicParameters> cryptographic_parameters;
 
-    public EncryptionKeyInformation() {}
+    public EncryptionKeyInformation() {
+    }
 
     public EncryptionKeyInformation(String unique_identifier,
         Optional<CryptographicParameters> cryptographic_parameters) {
@@ -43,8 +44,8 @@ public class EncryptionKeyInformation implements KmipStruct {
         return this;
     }
 
-    public EncryptionKeyInformation
-        cryptographic_parameters(Optional<CryptographicParameters> cryptographic_parameters) {
+    public EncryptionKeyInformation cryptographic_parameters(
+        Optional<CryptographicParameters> cryptographic_parameters) {
         setCryptographic_parameters(cryptographic_parameters);
         return this;
     }
@@ -56,7 +57,7 @@ public class EncryptionKeyInformation implements KmipStruct {
         if (!(o instanceof EncryptionKeyInformation)) {
             return false;
         }
-        EncryptionKeyInformation encryptionKeyInformation = (EncryptionKeyInformation)o;
+        EncryptionKeyInformation encryptionKeyInformation = (EncryptionKeyInformation) o;
         return Objects.equals(unique_identifier, encryptionKeyInformation.unique_identifier)
             && Objects.equals(cryptographic_parameters, encryptionKeyInformation.cryptographic_parameters);
     }

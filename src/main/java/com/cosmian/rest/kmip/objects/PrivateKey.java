@@ -10,8 +10,7 @@ import com.cosmian.rest.kmip.types.ObjectType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * A Managed Cryptographic Object that is the private portion of an asymmetric
- * key pair.
+ * A Managed Cryptographic Object that is the private portion of an asymmetric key pair.
  */
 public class PrivateKey extends KmipObject {
 
@@ -75,14 +74,11 @@ public class PrivateKey extends KmipObject {
     }
 
     /**
-     * 
-     * Deserialize an instance from its Json representation obtained using
-     * toJson()
+     * Deserialize an instance from its Json representation obtained using toJson()
      * 
      * @param json the JSON string
      * @return the {@link PrivateKey}
      * @throws CosmianException if the parsing fails
-     * 
      */
     public static PrivateKey fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, PrivateKey.class);

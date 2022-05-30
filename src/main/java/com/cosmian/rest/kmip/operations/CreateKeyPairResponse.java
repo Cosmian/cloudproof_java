@@ -64,7 +64,7 @@ public class CreateKeyPairResponse implements KmipStruct {
         }
         CreateKeyPairResponse createKeyPairResponse = (CreateKeyPairResponse) o;
         return Objects.equals(privateKeyUniqueIdentifier, createKeyPairResponse.privateKeyUniqueIdentifier)
-                && Objects.equals(publicKeyUniqueIdentifier, createKeyPairResponse.publicKeyUniqueIdentifier);
+            && Objects.equals(publicKeyUniqueIdentifier, createKeyPairResponse.publicKeyUniqueIdentifier);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class CreateKeyPairResponse implements KmipStruct {
     @Override
     public String toString() {
         return "{" + " privateKeyUniqueIdentifier='" + getPrivateKeyUniqueIdentifier() + "'"
-                + ", publicKeyUniqueIdentifier='" + getPublicKeyUniqueIdentifier() + "'" + "}";
+            + ", publicKeyUniqueIdentifier='" + getPublicKeyUniqueIdentifier() + "'" + "}";
     }
 
 }

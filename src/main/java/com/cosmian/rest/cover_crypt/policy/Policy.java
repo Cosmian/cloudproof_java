@@ -23,9 +23,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonDeserialize(using = PolicyDeserializer.class)
 public class Policy implements Serializable {
     private int lastAttributeValue = 0;
+
     private final int maxAttributeValue;
+
     // store the policies by name
     private HashMap<String, PolicyAxis> store = new HashMap<>();
+
     // mapping between (policy_name, policy_attribute) -> integer
     private HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt = new HashMap<>();
 
@@ -40,8 +43,7 @@ public class Policy implements Serializable {
     /**
      * Instantiate an empty policy allowing the given max number of revocations of attributes
      * 
-     * @param maxNumberOfRevocations
-     *            the maximum number of attributes revocations
+     * @param maxNumberOfRevocations the maximum number of attributes revocations
      */
     public Policy(int maxNumberOfRevocations) {
         this.maxAttributeValue = maxNumberOfRevocations;
@@ -50,15 +52,11 @@ public class Policy implements Serializable {
     /**
      * Add the given Axis to this policy and return the policy
      * 
-     * @param name
-     *            axis name
-     * @param attributes
-     *            policy attributes of the axis
-     * @param hierarchical
-     *            whether the axis is hierarchical
+     * @param name axis name
+     * @param attributes policy attributes of the axis
+     * @param hierarchical whether the axis is hierarchical
      * @return the update Policy
-     * @throws CosmianException
-     *             if the addition fails
+     * @throws CosmianException if the addition fails
      */
     public Policy addAxis(String name, String[] attributes, boolean hierarchical) throws CosmianException {
         PolicyAxis axis = new PolicyAxis(name, attributes, hierarchical);
@@ -81,8 +79,7 @@ public class Policy implements Serializable {
      * Convert the policy to a KMIP Vendor attribute that can be set on a KMIP Object
      * 
      * @return the {@link VendorAttribute}
-     * @throws CosmianException
-     *             if the JSON cannot be serialized
+     * @throws CosmianException if the JSON cannot be serialized
      */
     public VendorAttribute toVendorAttribute() throws CosmianException {
         String json;
@@ -129,8 +126,7 @@ public class Policy implements Serializable {
     }
 
     /**
-     * @param lastAttributeValue
-     *            the last attribute value that was assigned.
+     * @param lastAttributeValue the last attribute value that was assigned.
      */
     void setLastAttributeValue(int lastAttributeValue) {
         this.lastAttributeValue = lastAttributeValue;
@@ -178,7 +174,7 @@ public class Policy implements Serializable {
         if (!(o instanceof Policy)) {
             return false;
         }
-        Policy policyGroup = (Policy)o;
+        Policy policyGroup = (Policy) o;
         return lastAttributeValue == policyGroup.lastAttributeValue
             && maxAttributeValue == policyGroup.maxAttributeValue && Objects.equals(store, policyGroup.store)
             && Objects.equals(attributeToInt, policyGroup.attributeToInt);

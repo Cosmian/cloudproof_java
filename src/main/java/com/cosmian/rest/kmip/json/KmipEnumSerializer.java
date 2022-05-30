@@ -29,7 +29,7 @@ public class KmipEnumSerializer extends StdSerializer<Enum<?>> {
         generator.writeFieldName("type");
         generator.writeString("Enumeration");
         generator.writeFieldName("value");
-        generator.writeString(KmipEnumUtils.to_string(((Enum<?>)value)));
+        generator.writeString(KmipEnumUtils.to_string(((Enum<?>) value)));
         generator.writeEndObject();
     }
 }

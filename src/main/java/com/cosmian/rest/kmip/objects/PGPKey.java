@@ -8,17 +8,12 @@ import com.cosmian.rest.kmip.types.ObjectType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * A Managed Cryptographic Object that is a text-based representation of a PGP
- * key. The Key Block field, indicated below, will contain the ASCII-armored
- * export of a PGP key in the format as specified in RFC 4880. It MAY contain
- * only a public key block, or both a public and private key block. Two
- * different versions of PGP keys, version 3 and version 4, MAY be stored in
- * this Managed Cryptographic Object.
- *
- * KMIP implementers SHOULD treat the Key Block field as an opaque blob.
- * PGP-aware KMIP clients SHOULD take on the responsibility of decomposing the
- * Key Block into other Managed Cryptographic Objects (Public Keys, Private
- * Keys, etc.).
+ * A Managed Cryptographic Object that is a text-based representation of a PGP key. The Key Block field, indicated
+ * below, will contain the ASCII-armored export of a PGP key in the format as specified in RFC 4880. It MAY contain only
+ * a public key block, or both a public and private key block. Two different versions of PGP keys, version 3 and version
+ * 4, MAY be stored in this Managed Cryptographic Object. KMIP implementers SHOULD treat the Key Block field as an
+ * opaque blob. PGP-aware KMIP clients SHOULD take on the responsibility of decomposing the Key Block into other Managed
+ * Cryptographic Objects (Public Keys, Private Keys, etc.).
  */
 public class PGPKey extends KmipObject {
 
@@ -89,14 +84,11 @@ public class PGPKey extends KmipObject {
     }
 
     /**
-     * 
-     * Deserialize an instance from its Json representation obtained using
-     * toJson()
+     * Deserialize an instance from its Json representation obtained using toJson()
      * 
      * @param json the JSON string
      * @return the {@link PGPKey}
      * @throws CosmianException if the parsing fails
-     * 
      */
     public static PGPKey fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, PGPKey.class);

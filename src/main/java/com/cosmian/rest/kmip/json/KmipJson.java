@@ -53,18 +53,18 @@ public class KmipJson {
     }
 
     public static <E> E deserialize_value(Class<E> clazz, JsonNode node, DeserializationContext context)
-            throws IllegalArgumentException, IOException {
+        throws IllegalArgumentException, IOException {
         try {
             return deserializer_from_class(clazz).deserialize(node, context);
         } catch (IOException e) {
             throw new IllegalArgumentException(
-                    "Unable to deserialize value for class: " + clazz.getName() + ": " + e.getMessage(), e);
+                "Unable to deserialize value for class: " + clazz.getName() + ": " + e.getMessage(), e);
         }
     }
 
     @SuppressWarnings("unchecked")
     public static <E> KmipJsonDeserializer<E> deserializer_from_class(final Class<E> clazz)
-            throws IllegalArgumentException {
+        throws IllegalArgumentException {
         // logger.finer(() -> "Searching deserializer for " + clazz.getName() + "...");
         KmipJsonDeserializer<?> deserializer = null;
         if (clazz.isEnum()) {
@@ -89,7 +89,7 @@ public class KmipJson {
             deserializer = new KmipChoice3Deserializer<KmipChoice3<?, ?, ?>>((Class<KmipChoice3<?, ?, ?>>) clazz);
         } else if (clazz.getSuperclass() != null && clazz.getSuperclass().equals(KmipChoice6.class)) {
             deserializer = new KmipChoice6Deserializer<KmipChoice6<?, ?, ?, ?, ?, ?>>(
-                    (Class<KmipChoice6<?, ?, ?, ?, ?, ?>>) clazz);
+                (Class<KmipChoice6<?, ?, ?, ?, ?, ?>>) clazz);
         } else if (KmipStruct.class.isAssignableFrom(clazz)) {
             deserializer = new KmipStructDeserializer<KmipStruct>((Class<KmipStruct>) clazz);
         } else if (clazz.isArray()) {
@@ -103,11 +103,11 @@ public class KmipJson {
 
     @SuppressWarnings("unchecked")
     public static void serialize_value(String tag, Object value, JsonGenerator generator,
-            SerializerProvider serializers) throws IllegalArgumentException {
+        SerializerProvider serializers) throws IllegalArgumentException {
         try {
             if (value instanceof Enum<?>) {
                 new KmipEnumSerializer((Class<Enum<?>>) value.getClass(), tag).serialize((Enum<?>) value, generator,
-                        serializers);
+                    serializers);
             } else if (value instanceof String) {
                 new KmipStringSerializer(tag).serialize((String) value, generator, serializers);
             } else if (value instanceof Boolean) {
@@ -131,7 +131,7 @@ public class KmipJson {
             }
         } catch (IllegalArgumentException |
 
-                IOException e) {
+            IOException e) {
             throw new IllegalArgumentException("Unable to serialize: " + tag + ": " + e.getMessage(), e);
         }
     }

@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class And extends AccessPolicy {
 
     private AccessPolicy left;
+
     private AccessPolicy right;
 
-    public And() {}
+    public And() {
+    }
 
     public And(AccessPolicy left, AccessPolicy right) {
         this.left = left;
@@ -50,7 +52,7 @@ public class And extends AccessPolicy {
         if (!(o instanceof And)) {
             return false;
         }
-        And and = (And)o;
+        And and = (And) o;
         return Objects.equals(left, and.left) && Objects.equals(right, and.right);
     }
 

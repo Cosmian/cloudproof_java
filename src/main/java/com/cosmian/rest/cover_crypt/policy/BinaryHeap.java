@@ -6,30 +6,23 @@ import java.util.Objects;
 
 /**
  * Heap is basically a tree based data structure. It has nodes. Node comprises of certain elements. Every node contains
- * one element.
- * 
- * Nodes may have children. If in case there are no children, it is called a Leaf.
- * 
- * There are two rules to be followed:
- * 
- * - The value of every node must be less or equal to all the values stored in its children. - It has the least possible
- * height.
- * 
- * Heaps are extremely efficient in extracting the least or greatest element.
- * 
+ * one element. Nodes may have children. If in case there are no children, it is called a Leaf. There are two rules to
+ * be followed: - The value of every node must be less or equal to all the values stored in its children. - It has the
+ * least possible height. Heaps are extremely efficient in extracting the least or greatest element.
  * Check"https://www.edureka.co/blog/binary-heap-in-java/" for details
  */
 public class BinaryHeap {
 
     private static final int d = 2;
+
     private int[] heap;
+
     private int heapSize;
 
     /**
      * This will initialize our heap with default size.
      * 
-     * @param capacity
-     *            the capacity of the heap
+     * @param capacity the capacity of the heap
      */
     public BinaryHeap(int capacity) {
         heapSize = 0;
@@ -68,8 +61,7 @@ public class BinaryHeap {
      * This will insert new element in to heap Complexity: O(log N) As worst case scenario, we need to traverse till the
      * root
      * 
-     * @param x
-     *            the value to insert
+     * @param x the value to insert
      */
     public void insert(int x) {
         if (isFull())
@@ -81,10 +73,8 @@ public class BinaryHeap {
     /**
      * This will delete element at index x Complexity: O(log N)
      * 
-     * @param x
-     *            the value to delete
+     * @param x the value to delete
      * @return the key
-     * 
      */
     public int delete(int x) {
         if (isEmpty())
@@ -98,7 +88,6 @@ public class BinaryHeap {
 
     /**
      * This method used to maintain the heap property while inserting an element.
-     * 
      */
     private void heapifyUp(int i) {
         int temp = heap[i];
@@ -111,7 +100,6 @@ public class BinaryHeap {
 
     /**
      * This method used to maintain the heap property while deleting an element.
-     * 
      */
     private void heapifyDown(int i) {
         int child;
@@ -135,7 +123,6 @@ public class BinaryHeap {
 
     /**
      * This method used to print all element of the heap
-     * 
      */
     public void printHeap() {
         System.out.print("nHeap = ");
@@ -162,7 +149,7 @@ public class BinaryHeap {
         if (!(o instanceof BinaryHeap)) {
             return false;
         }
-        BinaryHeap binaryHeap = (BinaryHeap)o;
+        BinaryHeap binaryHeap = (BinaryHeap) o;
         return Arrays.equals(heap, binaryHeap.heap) && heapSize == binaryHeap.heapSize;
     }
 

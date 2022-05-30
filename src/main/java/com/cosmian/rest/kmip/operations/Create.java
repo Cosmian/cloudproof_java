@@ -13,13 +13,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * This operation requests the server to generate a new symmetric key or
- * generate Secret Data as a Managed Cryptographic Object. The request contains
- * information about the type of object being created, and some of the
- * attributes to be assigned to the object (e.g., Cryptographic Algorithm,
- * Cryptographic Length, etc.). The response contains the Unique Identifier of
- * the created object. The server SHALL copy the Unique Identifier returned by
- * this operation into the ID Placeholder variable.
+ * This operation requests the server to generate a new symmetric key or generate Secret Data as a Managed Cryptographic
+ * Object. The request contains information about the type of object being created, and some of the attributes to be
+ * assigned to the object (e.g., Cryptographic Algorithm, Cryptographic Length, etc.). The response contains the Unique
+ * Identifier of the created object. The server SHALL copy the Unique Identifier returned by this operation into the ID
+ * Placeholder variable.
  */
 @JsonSerialize(using = KmipStructSerializer.class)
 @JsonDeserialize(using = KmipStructDeserializer.class)
@@ -96,7 +94,7 @@ public class Create implements KmipStruct {
         }
         Create create = (Create) o;
         return Objects.equals(objectType, create.objectType) && Objects.equals(attributes, create.attributes)
-                && Objects.equals(protection_storage_masks, create.protection_storage_masks);
+            && Objects.equals(protection_storage_masks, create.protection_storage_masks);
     }
 
     @Override
@@ -107,7 +105,7 @@ public class Create implements KmipStruct {
     @Override
     public String toString() {
         return "{" + " objectType='" + getObjectType() + "'" + ", attributes='" + getAttributes() + "'"
-                + ", protection_storage_masks='" + getProtection_storage_masks() + "'" + "}";
+            + ", protection_storage_masks='" + getProtection_storage_masks() + "'" + "}";
     }
 
 }

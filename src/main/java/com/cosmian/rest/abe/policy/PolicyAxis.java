@@ -7,7 +7,9 @@ import java.util.Objects;
 
 public class PolicyAxis implements Serializable {
     final private String name;
+
     final private List<String> attributes;
+
     final private boolean hierarchical;
 
     public PolicyAxis(String name, String[] attributes, boolean hierarchical) {
@@ -45,7 +47,7 @@ public class PolicyAxis implements Serializable {
         }
         PolicyAxis policyAxis = (PolicyAxis) o;
         return Objects.equals(name, policyAxis.name) && Objects.equals(attributes, policyAxis.attributes)
-                && hierarchical == policyAxis.hierarchical;
+            && hierarchical == policyAxis.hierarchical;
     }
 
     @Override
@@ -56,7 +58,7 @@ public class PolicyAxis implements Serializable {
     @Override
     public String toString() {
         return "{" + " name='" + getName() + "'" + ", attributes='" + getAttributes() + "'" + ", hierarchical='"
-                + isHierarchical() + "'" + "}";
+            + isHierarchical() + "'" + "}";
     }
 
 }

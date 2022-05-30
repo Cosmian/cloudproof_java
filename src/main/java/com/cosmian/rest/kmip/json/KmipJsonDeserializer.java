@@ -23,13 +23,10 @@ public abstract class KmipJsonDeserializer<E> extends JsonDeserializer<E> {
      * Deserializes an already existing {@link JsonNode}
      * 
      * @see #deserialize(JsonNode, DeserializationContext)
-     * 
-     * @param n
-     *                the {@link JsonNode}
-     * @param context
-     *                a {@link DeserializationContext}
+     * @param n the {@link JsonNode}
+     * @param context a {@link DeserializationContext}
      * @return the deserialized value
-     * @throws IOException      if the JSON cannot be read
+     * @throws IOException if the JSON cannot be read
      * @throws JacksonException if the JSON is malformed
      */
     public abstract E deserialize(JsonNode n, DeserializationContext context) throws IOException, JacksonException;

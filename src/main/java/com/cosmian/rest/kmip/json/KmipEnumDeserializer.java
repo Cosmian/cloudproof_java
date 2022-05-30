@@ -61,7 +61,7 @@ public class KmipEnumDeserializer extends KmipJsonDeserializer<Enum<?>> {
             Method method = clazz.getMethod("from", String.class);
             o = (Enum<?>) method.invoke(null, value);
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException e) {
+            | InvocationTargetException e) {
             throw new IOException("Not a KMIP Enumeration " + tag_node.asText() + ": " + e.getMessage(), e);
         }
 

@@ -7,8 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class VendorAttributeReference {
 
     /**
-     * Text String (with usage limited to alphanumeric, underscore and period – i.e.
-     * [A-Za-z0-9_.])
+     * Text String (with usage limited to alphanumeric, underscore and period – i.e. [A-Za-z0-9_.])
      */
     @JsonProperty("VendorIdentification")
     private String vendor_identification;
@@ -63,7 +62,7 @@ public class VendorAttributeReference {
         }
         VendorAttributeReference vendorAttributeReference = (VendorAttributeReference) o;
         return Objects.equals(vendor_identification, vendorAttributeReference.vendor_identification)
-                && Objects.equals(attribute_name, vendorAttributeReference.attribute_name);
+            && Objects.equals(attribute_name, vendorAttributeReference.attribute_name);
     }
 
     @Override
@@ -74,7 +73,7 @@ public class VendorAttributeReference {
     @Override
     public String toString() {
         return "{" + " vendor_identification='" + getVendor_identification() + "'" + ", attribute_name='"
-                + getAttribute_name() + "'" + "}";
+            + getAttribute_name() + "'" + "}";
     }
 
 }

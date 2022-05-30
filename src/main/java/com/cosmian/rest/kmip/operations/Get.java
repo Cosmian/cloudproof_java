@@ -15,34 +15,19 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * This operation requests that the server returns the Managed Object specified
- * by its Unique Identifier.
- * 
- * Only a single object is returned. The response contains the Unique Identifier
- * of the object, along with the object itself, which MAY be wrapped using a
- * wrapping key as specified in the request.
- * 
- * The following key format capabilities SHALL be assumed by the client;
- * restrictions apply when the client requests the server to return an object in
- * a particular format:
- * 
- * · If a client registered a key in a given format, the server SHALL be able to
- * return the key during the Get operation in the same format that was used when
- * the key was registered.
- * 
- * · Any other format conversion MAY be supported by the server.
- * 
- * If Key Format Type is specified to be PKCS#12 then the response payload shall
- * be a PKCS#12 container as specified by [RFC7292]. The Unique Identifier shall
- * be either that of a private key or certificate to be included in the
- * response. The container shall be protected using the Secret Data object
- * specified via the private key or certificate’s PKCS#12 Password Link. The
- * current certificate chain shall also be included as determined by using the
- * private key’s Public Key link to get the corresponding public key (where
- * relevant), and then using that public key’s PKCS#12 Certificate Link to get
- * the base certificate, and then using each certificate’s Certificate Link to
- * build the certificate chain. It is an error if there is more than one valid
- * certificate chain.
+ * This operation requests that the server returns the Managed Object specified by its Unique Identifier. Only a single
+ * object is returned. The response contains the Unique Identifier of the object, along with the object itself, which
+ * MAY be wrapped using a wrapping key as specified in the request. The following key format capabilities SHALL be
+ * assumed by the client; restrictions apply when the client requests the server to return an object in a particular
+ * format: · If a client registered a key in a given format, the server SHALL be able to return the key during the Get
+ * operation in the same format that was used when the key was registered. · Any other format conversion MAY be
+ * supported by the server. If Key Format Type is specified to be PKCS#12 then the response payload shall be a PKCS#12
+ * container as specified by [RFC7292]. The Unique Identifier shall be either that of a private key or certificate to be
+ * included in the response. The container shall be protected using the Secret Data object specified via the private key
+ * or certificate’s PKCS#12 Password Link. The current certificate chain shall also be included as determined by using
+ * the private key’s Public Key link to get the corresponding public key (where relevant), and then using that public
+ * key’s PKCS#12 Certificate Link to get the base certificate, and then using each certificate’s Certificate Link to
+ * build the certificate chain. It is an error if there is more than one valid certificate chain.
  */
 @JsonSerialize(using = KmipStructSerializer.class)
 @JsonDeserialize(using = KmipStructDeserializer.class)
@@ -77,8 +62,8 @@ public class Get implements KmipStruct {
     }
 
     public Get(Optional<String> uniqueIdentifier, Optional<KeyFormatType> keyFormatType,
-            Optional<KeyWrapType> keyWrapType, Optional<KeyCompressionType> keyCompressionType,
-            Optional<KeyWrappingData> keyWrappingData) {
+        Optional<KeyWrapType> keyWrapType, Optional<KeyCompressionType> keyCompressionType,
+        Optional<KeyWrappingData> keyWrappingData) {
         this.uniqueIdentifier = uniqueIdentifier;
         this.keyFormatType = keyFormatType;
         this.keyWrapType = keyWrapType;
@@ -160,9 +145,9 @@ public class Get implements KmipStruct {
         }
         Get get = (Get) o;
         return Objects.equals(uniqueIdentifier, get.uniqueIdentifier)
-                && Objects.equals(keyFormatType, get.keyFormatType) && Objects.equals(keyWrapType, get.keyWrapType)
-                && Objects.equals(keyCompressionType, get.keyCompressionType)
-                && Objects.equals(keyWrappingData, get.keyWrappingData);
+            && Objects.equals(keyFormatType, get.keyFormatType) && Objects.equals(keyWrapType, get.keyWrapType)
+            && Objects.equals(keyCompressionType, get.keyCompressionType)
+            && Objects.equals(keyWrappingData, get.keyWrappingData);
     }
 
     @Override
@@ -173,8 +158,8 @@ public class Get implements KmipStruct {
     @Override
     public String toString() {
         return "{" + " uniqueIdentifier='" + getUniqueIdentifier() + "'" + ", keyFormatType='" + getKeyFormatType()
-                + "'" + ", keyWrapType='" + getKeyWrapType() + "'" + ", keyCompressionType='" + getKeyCompressionType()
-                + "'" + ", keyWrappingData='" + getKeyWrappingData() + "'" + "}";
+            + "'" + ", keyWrapType='" + getKeyWrapType() + "'" + ", keyCompressionType='" + getKeyCompressionType()
+            + "'" + ", keyWrappingData='" + getKeyWrappingData() + "'" + "}";
     }
 
 }

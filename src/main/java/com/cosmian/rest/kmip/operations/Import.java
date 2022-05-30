@@ -14,17 +14,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * This operation requests the server to Import a Managed Object specified by
- * its Unique Identifier. The request specifies the object being imported and
- * all the attributes to be assigned to the object. The attribute rules for each
- * attribute for “Initially set by” and “When implicitly set” SHALL NOT be
- * enforced as all attributes MUST be set to the supplied values rather than any
- * server generated values.
- *
- * The response contains the Unique Identifier provided in the request or
- * assigned by the server. The server SHALL copy the Unique Identifier returned
- * by this operations into the ID Placeholder variable.
- * https://docs.oasis-open.org/kmip/kmip-spec/v2.1/os/kmip-spec-v2.1-os.html#_Toc57115657
+ * This operation requests the server to Import a Managed Object specified by its Unique Identifier. The request
+ * specifies the object being imported and all the attributes to be assigned to the object. The attribute rules for each
+ * attribute for “Initially set by” and “When implicitly set” SHALL NOT be enforced as all attributes MUST be set to the
+ * supplied values rather than any server generated values. The response contains the Unique Identifier provided in the
+ * request or assigned by the server. The server SHALL copy the Unique Identifier returned by this operations into the
+ * ID Placeholder variable. https://docs.oasis-open.org/kmip/kmip-spec/v2.1/os/kmip-spec-v2.1-os.html#_Toc57115657
  */
 @JsonSerialize(using = KmipStructSerializer.class)
 @JsonDeserialize(using = KmipStructDeserializer.class)
@@ -43,18 +38,16 @@ public class Import implements KmipStruct {
     private ObjectType objectType;
 
     /**
-     * A Boolean. If specified and true then any existing object with the same
-     * Unique Identifier SHALL be replaced by this operation.
-     * If absent or false and an object exists with the same Unique Identifier then
-     * an error SHALL be returned.
+     * A Boolean. If specified and true then any existing object with the same Unique Identifier SHALL be replaced by
+     * this operation. If absent or false and an object exists with the same Unique Identifier then an error SHALL be
+     * returned.
      */
     @JsonProperty(value = "ReplaceExisting")
     private Optional<Boolean> replaceExisting;
 
     /**
-     * If Not Wrapped then the server SHALL unwrap the object before storing it,
-     * and return an error if the wrapping key is not available.
-     * Otherwise the server SHALL store the object as provided.
+     * If Not Wrapped then the server SHALL unwrap the object before storing it, and return an error if the wrapping key
+     * is not available. Otherwise the server SHALL store the object as provided.
      */
     @JsonProperty(value = "KeyWrapType")
     private Optional<KeyWrapType> keyWrapType;
@@ -72,7 +65,7 @@ public class Import implements KmipStruct {
     private KmipObject object;
 
     public Import(String uniqueIdentifier, ObjectType objectType, Optional<Boolean> replaceExisting,
-            Optional<KeyWrapType> keyWrapType, Attributes attributes, KmipObject object) {
+        Optional<KeyWrapType> keyWrapType, Attributes attributes, KmipObject object) {
         this.uniqueIdentifier = uniqueIdentifier;
         this.objectType = objectType;
         this.replaceExisting = replaceExisting;

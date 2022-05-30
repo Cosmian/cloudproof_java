@@ -65,7 +65,7 @@ public class GetAttributesResponse implements KmipStruct {
         }
         GetAttributesResponse getAttributesResponse = (GetAttributesResponse) o;
         return Objects.equals(uniqueIdentifier, getAttributesResponse.uniqueIdentifier)
-                && Objects.equals(attributes, getAttributesResponse.attributes);
+            && Objects.equals(attributes, getAttributesResponse.attributes);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class GetAttributesResponse implements KmipStruct {
     @Override
     public String toString() {
         return "{" + " uniqueIdentifier='" + getUniqueIdentifier() + "'" + ", attributes='" + getAttributes() + "'"
-                + "}";
+            + "}";
     }
 
 }

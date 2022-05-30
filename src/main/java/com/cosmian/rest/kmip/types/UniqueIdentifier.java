@@ -6,11 +6,23 @@ import com.cosmian.rest.kmip.json.KmipEnumUtils;
 
 public enum UniqueIdentifier {
 
-    ID_Placeholder(0x0000_0001), Certify(0x0000_0002), Create(0x0000_0003), Create_Key_Pair(0x0000_0004),
-    Create_Key_Pair_Private_Key(0x0000_0005), Create_Key_Pair_Public_Key(0x0000_0006), Create_Split_Key(0x0000_0007),
-    Derive_Key(0x0000_0008), Import(0x0000_0009), Join_Split_Key(0x0000_000A), Locate(0x0000_000B),
-    Register(0x0000_000C), Re_key(0x0000_000D), Re_certify(0x0000_000E), Re_key_Key_Pair(0x0000_000F),
-    Re_key_Key_Pair_Private_Key(0x0000_0010), Re_key_Key_Pair_Public_Key(0x0000_0011);
+    ID_Placeholder(0x0000_0001),
+    Certify(0x0000_0002),
+    Create(0x0000_0003),
+    Create_Key_Pair(0x0000_0004),
+    Create_Key_Pair_Private_Key(0x0000_0005),
+    Create_Key_Pair_Public_Key(0x0000_0006),
+    Create_Split_Key(0x0000_0007),
+    Derive_Key(0x0000_0008),
+    Import(0x0000_0009),
+    Join_Split_Key(0x0000_000A),
+    Locate(0x0000_000B),
+    Register(0x0000_000C),
+    Re_key(0x0000_000D),
+    Re_certify(0x0000_000E),
+    Re_key_Key_Pair(0x0000_000F),
+    Re_key_Key_Pair_Private_Key(0x0000_0010),
+    Re_key_Key_Pair_Public_Key(0x0000_0011);
 
     private final int code;
 

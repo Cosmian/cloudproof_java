@@ -14,7 +14,8 @@ public class MacSignatureKeyInformation implements KmipStruct {
     @JsonProperty("CryptographicParameters")
     private Optional<CryptographicParameters> cryptographic_parameters;
 
-    public MacSignatureKeyInformation() {}
+    public MacSignatureKeyInformation() {
+    }
 
     public MacSignatureKeyInformation(String unique_identifier,
         Optional<CryptographicParameters> cryptographic_parameters) {
@@ -43,8 +44,8 @@ public class MacSignatureKeyInformation implements KmipStruct {
         return this;
     }
 
-    public MacSignatureKeyInformation
-        cryptographic_parameters(Optional<CryptographicParameters> cryptographic_parameters) {
+    public MacSignatureKeyInformation cryptographic_parameters(
+        Optional<CryptographicParameters> cryptographic_parameters) {
         setCryptographic_parameters(cryptographic_parameters);
         return this;
     }
@@ -56,7 +57,7 @@ public class MacSignatureKeyInformation implements KmipStruct {
         if (!(o instanceof MacSignatureKeyInformation)) {
             return false;
         }
-        MacSignatureKeyInformation macSignatureKeyInformation = (MacSignatureKeyInformation)o;
+        MacSignatureKeyInformation macSignatureKeyInformation = (MacSignatureKeyInformation) o;
         return Objects.equals(unique_identifier, macSignatureKeyInformation.unique_identifier)
             && Objects.equals(cryptographic_parameters, macSignatureKeyInformation.cryptographic_parameters);
     }

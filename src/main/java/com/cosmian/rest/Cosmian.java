@@ -20,15 +20,11 @@ public class Cosmian {
     /**
      * Instantiate a new Cosmian Server REST Client
      *
-     * @param server_url
-     *            the REST Server URL e.g. http://localhost:9000
-     * @param api_key
-     *            the Cosmian API KEY
-     * @param connection_timeout
-     *            Sets a specified timeout value, in milliseconds, to be used when opening a communications link to the
-     *            resource referenced by this URLConnection.
-     * @param read_timeout
-     *            Sets the read timeout to a specified timeout, in milliseconds.
+     * @param server_url the REST Server URL e.g. http://localhost:9000
+     * @param api_key the Cosmian API KEY
+     * @param connection_timeout Sets a specified timeout value, in milliseconds, to be used when opening a
+     *            communications link to the resource referenced by this URLConnection.
+     * @param read_timeout Sets the read timeout to a specified timeout, in milliseconds.
      */
     Cosmian(String server_url, Optional<String> api_key, int connection_timeout, int read_timeout) {
         this.rest_client = new RestClient(server_url, api_key, connection_timeout, read_timeout);
@@ -37,10 +33,8 @@ public class Cosmian {
     /**
      * Instantiate a new Cosmian Server REST Client with DEFAULT_CONNECT_TIMEOUT and DEFAULT_READ_TIMEOUT
      *
-     * @param server_url
-     *            the REST Server URL e.g. http://localhost:9000
-     * @param api_key
-     *            the Cosmian API KEY
+     * @param server_url the REST Server URL e.g. http://localhost:9000
+     * @param api_key the Cosmian API KEY
      * @see RestClient
      */
     public Cosmian(String server_url, Optional<String> api_key) {
@@ -77,8 +71,7 @@ public class Cosmian {
     /**
      * Hex Encode an array of bytes
      *
-     * @param bytes
-     *            the bytes to encode
+     * @param bytes the bytes to encode
      * @return the hex encoded String
      */
     public static String hex_encode(byte[] bytes) {
@@ -88,11 +81,9 @@ public class Cosmian {
     /**
      * Decode an hex encoded String to bytes
      *
-     * @param hex_encoded_string
-     *            the hex encoded String
+     * @param hex_encoded_string the hex encoded String
      * @return the decoded bytes
-     * @throws CosmianException
-     *             if the hex String is invalid
+     * @throws CosmianException if the hex String is invalid
      */
     public static byte[] hex_decode(String hex_encoded_string) throws CosmianException {
         try {
@@ -107,10 +98,8 @@ public class Cosmian {
     /**
      * Concat 2 byte-arrays
      *
-     * @param a
-     *            first byte array
-     * @param b
-     *            second byte array
+     * @param a first byte array
+     * @param b second byte array
      * @return the merged byte array
      */
     public static byte[] concat(byte[] a, byte[] b) {

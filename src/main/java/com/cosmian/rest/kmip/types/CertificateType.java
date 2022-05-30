@@ -6,7 +6,8 @@ import com.cosmian.rest.kmip.json.KmipEnumUtils;
 
 public enum CertificateType {
 
-    X509(0x01), PGP(0x02);
+    X509(0x01),
+    PGP(0x02);
 
     private final int code;
 

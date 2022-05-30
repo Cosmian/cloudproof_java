@@ -29,8 +29,8 @@ public enum RevocationReasonEnumeration {
         return KmipEnumUtils.to_string(this);
     }
 
-    static Map<String, RevocationReasonEnumeration> ENUM_MAP = KmipEnumUtils
-            .to_map(RevocationReasonEnumeration.values());
+    static Map<String, RevocationReasonEnumeration> ENUM_MAP =
+        KmipEnumUtils.to_map(RevocationReasonEnumeration.values());
 
     public static RevocationReasonEnumeration from(String name) throws IllegalArgumentException {
         RevocationReasonEnumeration o = ENUM_MAP.get(name);

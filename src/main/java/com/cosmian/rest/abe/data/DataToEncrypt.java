@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class DataToEncrypt {
 
     private Attr[] policyAttributes;
+
     private byte[] data;
 
     public DataToEncrypt() {
@@ -54,7 +55,7 @@ public class DataToEncrypt {
         }
         DataToEncrypt dataToEncrypt = (DataToEncrypt) o;
         return Objects.equals(policyAttributes, dataToEncrypt.policyAttributes)
-                && Objects.equals(data, dataToEncrypt.data);
+            && Objects.equals(data, dataToEncrypt.data);
     }
 
     @Override

@@ -6,7 +6,8 @@ import com.cosmian.rest.kmip.json.KmipEnumUtils;
 
 public enum ObjectGroupMember {
 
-    GroupMemberFresh(0x0000_0001), GroupMemberDefault(0x0000_0002);
+    GroupMemberFresh(0x0000_0001),
+    GroupMemberDefault(0x0000_0002);
 
     private final int code;
 

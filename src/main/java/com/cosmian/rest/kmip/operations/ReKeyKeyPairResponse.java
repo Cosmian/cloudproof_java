@@ -68,7 +68,7 @@ public class ReKeyKeyPairResponse implements KmipStruct {
         }
         ReKeyKeyPairResponse reKeyKeypairResponse = (ReKeyKeyPairResponse) o;
         return Objects.equals(privateKeyUniqueIdentifier, reKeyKeypairResponse.privateKeyUniqueIdentifier)
-                && Objects.equals(publicKeyUniqueIdentifier, reKeyKeypairResponse.publicKeyUniqueIdentifier);
+            && Objects.equals(publicKeyUniqueIdentifier, reKeyKeypairResponse.publicKeyUniqueIdentifier);
     }
 
     @Override
@@ -78,10 +78,8 @@ public class ReKeyKeyPairResponse implements KmipStruct {
 
     @Override
     public String toString() {
-        return "{" +
-                " privateKeyUniqueIdentifier='" + getPrivateKeyUniqueIdentifier() + "'" +
-                ", publicKeyUniqueIdentifier='" + getPublicKeyUniqueIdentifier() + "'" +
-                "}";
+        return "{" + " privateKeyUniqueIdentifier='" + getPrivateKeyUniqueIdentifier() + "'"
+            + ", publicKeyUniqueIdentifier='" + getPublicKeyUniqueIdentifier() + "'" + "}";
     }
 
 }

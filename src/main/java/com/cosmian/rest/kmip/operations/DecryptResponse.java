@@ -88,8 +88,8 @@ public class DecryptResponse implements KmipStruct {
         }
         DecryptResponse decryptResponse = (DecryptResponse) o;
         return Objects.equals(unique_identifier, decryptResponse.unique_identifier)
-                && Objects.equals(data, decryptResponse.data)
-                && Objects.equals(correlation_value, decryptResponse.correlation_value);
+            && Objects.equals(data, decryptResponse.data)
+            && Objects.equals(correlation_value, decryptResponse.correlation_value);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class DecryptResponse implements KmipStruct {
     @Override
     public String toString() {
         return "{" + " unique_identifier='" + getUnique_identifier() + "'" + ", data='" + getData() + "'"
-                + ", correlation_value='" + getCorrelation_value() + "'" + "}";
+            + ", correlation_value='" + getCorrelation_value() + "'" + "}";
     }
 
 }

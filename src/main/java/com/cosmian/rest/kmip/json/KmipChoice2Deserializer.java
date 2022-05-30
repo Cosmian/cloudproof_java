@@ -42,13 +42,13 @@ public class KmipChoice2Deserializer<E extends KmipChoice2<?, ?>> extends KmipJs
                 return instance;
             } catch (Exception e) {
                 logger.finer(
-                        "Deserializing a " + clazz.getName() + ": not a " + p_class.getName() + "   " + e.getMessage());
+                    "Deserializing a " + clazz.getName() + ": not a " + p_class.getName() + "   " + e.getMessage());
                 continue;
             }
         }
 
         throw new IOException(
-                "Unable to deserialize a " + clazz.getName() + " for the value: " + node.toPrettyString());
+            "Unable to deserialize a " + clazz.getName() + " for the value: " + node.toPrettyString());
     }
 
 }

@@ -53,7 +53,7 @@ public class EncryptResponse implements KmipStruct {
     }
 
     public EncryptResponse(String unique_identifier, Optional<byte[]> data, Optional<byte[]> iv_counter_nonce,
-            Optional<byte[]> correlation_value, Optional<byte[]> authenticated_encryption_tag) {
+        Optional<byte[]> correlation_value, Optional<byte[]> authenticated_encryption_tag) {
         this.unique_identifier = unique_identifier;
         this.data = data;
         this.iv_counter_nonce = iv_counter_nonce;
@@ -135,10 +135,10 @@ public class EncryptResponse implements KmipStruct {
         }
         EncryptResponse encryptResponse = (EncryptResponse) o;
         return Objects.equals(unique_identifier, encryptResponse.unique_identifier)
-                && Objects.equals(data, encryptResponse.data)
-                && Objects.equals(iv_counter_nonce, encryptResponse.iv_counter_nonce)
-                && Objects.equals(correlation_value, encryptResponse.correlation_value)
-                && Objects.equals(authenticated_encryption_tag, encryptResponse.authenticated_encryption_tag);
+            && Objects.equals(data, encryptResponse.data)
+            && Objects.equals(iv_counter_nonce, encryptResponse.iv_counter_nonce)
+            && Objects.equals(correlation_value, encryptResponse.correlation_value)
+            && Objects.equals(authenticated_encryption_tag, encryptResponse.authenticated_encryption_tag);
     }
 
     @Override
@@ -149,9 +149,8 @@ public class EncryptResponse implements KmipStruct {
     @Override
     public String toString() {
         return "{" + " unique_identifier='" + getUnique_identifier() + "'" + ", data='" + getData() + "'"
-                + ", iv_counter_nonce='" + getIv_counter_nonce() + "'" + ", correlation_value='"
-                + getCorrelation_value() + "'" + ", authenticated_encryption_tag='" + getAuthenticated_encryption_tag()
-                + "'" + "}";
+            + ", iv_counter_nonce='" + getIv_counter_nonce() + "'" + ", correlation_value='" + getCorrelation_value()
+            + "'" + ", authenticated_encryption_tag='" + getAuthenticated_encryption_tag() + "'" + "}";
     }
 
 }

@@ -17,6 +17,6 @@ public class AccessPolicy {
             throw new CosmianException("Failed serializing the Access Policy to json: " + e.getMessage(), e);
         }
         return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN, VendorAttribute.VENDOR_ATTR_ABE_ACCESS_POLICY,
-                json.getBytes(StandardCharsets.UTF_8));
+            json.getBytes(StandardCharsets.UTF_8));
     }
 }

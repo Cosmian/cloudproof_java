@@ -35,7 +35,7 @@ public class SplitKey extends KmipObject {
     }
 
     public SplitKey(int split_key_parts, int key_part_identifier, int split_key_threshold,
-            SplitKeyMethod split_key_method, Optional<BigInteger> prime_field_size, KeyBlock keyBlock) {
+        SplitKeyMethod split_key_method, Optional<BigInteger> prime_field_size, KeyBlock keyBlock) {
         this.split_key_parts = split_key_parts;
         this.key_part_identifier = key_part_identifier;
         this.split_key_threshold = split_key_threshold;
@@ -131,24 +131,24 @@ public class SplitKey extends KmipObject {
         }
         SplitKey splitKey = (SplitKey) o;
         return split_key_parts == splitKey.split_key_parts && key_part_identifier == splitKey.key_part_identifier
-                && split_key_threshold == splitKey.split_key_threshold
-                && Objects.equals(split_key_method, splitKey.split_key_method)
-                && Objects.equals(prime_field_size, splitKey.prime_field_size)
-                && Objects.equals(keyBlock, splitKey.keyBlock);
+            && split_key_threshold == splitKey.split_key_threshold
+            && Objects.equals(split_key_method, splitKey.split_key_method)
+            && Objects.equals(prime_field_size, splitKey.prime_field_size)
+            && Objects.equals(keyBlock, splitKey.keyBlock);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(split_key_parts, key_part_identifier, split_key_threshold, split_key_method,
-                prime_field_size, keyBlock);
+            prime_field_size, keyBlock);
     }
 
     @Override
     public String toString() {
         return "{" + " split_key_parts='" + getSplit_key_parts() + "'" + ", key_part_identifier='"
-                + getKey_part_identifier() + "'" + ", split_key_threshold='" + getSplit_key_threshold() + "'"
-                + ", split_key_method='" + getSplit_key_method() + "'" + ", prime_field_size='" + getPrime_field_size()
-                + "'" + ", keyBlock='" + getKeyBlock() + "'" + "}";
+            + getKey_part_identifier() + "'" + ", split_key_threshold='" + getSplit_key_threshold() + "'"
+            + ", split_key_method='" + getSplit_key_method() + "'" + ", prime_field_size='" + getPrime_field_size()
+            + "'" + ", keyBlock='" + getKeyBlock() + "'" + "}";
     }
 
     @Override
@@ -157,9 +157,7 @@ public class SplitKey extends KmipObject {
     }
 
     /**
-     * 
-     * Deserialize an instance from its Json representation obtained using
-     * toJson()
+     * Deserialize an instance from its Json representation obtained using toJson()
      * 
      * @param json the key in JSON form
      * @return the Split Key

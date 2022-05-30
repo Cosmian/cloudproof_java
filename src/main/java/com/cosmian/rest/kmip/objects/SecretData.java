@@ -59,7 +59,7 @@ public class SecretData extends KmipObject {
         }
         SecretData secretData = (SecretData) o;
         return Objects.equals(secretDataType, secretData.secretDataType)
-                && Objects.equals(keyBlock, secretData.keyBlock);
+            && Objects.equals(keyBlock, secretData.keyBlock);
     }
 
     @Override
@@ -78,9 +78,7 @@ public class SecretData extends KmipObject {
     }
 
     /**
-     * 
-     * Deserialize an instance from its Json representation obtained using
-     * toJson()
+     * Deserialize an instance from its Json representation obtained using toJson()
      * 
      * @param json secret data in JSON form
      * @return the {@link SecretData}

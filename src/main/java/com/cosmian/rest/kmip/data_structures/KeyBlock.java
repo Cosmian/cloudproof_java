@@ -12,8 +12,8 @@ import com.cosmian.rest.kmip.types.ObjectType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * A Key Block object is a structure used to encapsulate all of the information
- * that is closely associated with a cryptographic key.
+ * A Key Block object is a structure used to encapsulate all of the information that is closely associated with a
+ * cryptographic key.
  */
 public class KeyBlock implements KmipStruct {
 
@@ -36,8 +36,7 @@ public class KeyBlock implements KmipStruct {
     private Optional<KeyWrappingData> keyWrappingData;
 
     /**
-     * Return {@link KeyBlock} {@link Attributes} or a set of empty
-     * {@link Attributes} for the given {@link ObjectType}
+     * Return {@link KeyBlock} {@link Attributes} or a set of empty {@link Attributes} for the given {@link ObjectType}
      * 
      * @param objectType the {@link ObjectType}
      * @return the {@link Attributes}
@@ -57,8 +56,8 @@ public class KeyBlock implements KmipStruct {
     }
 
     public KeyBlock(KeyFormatType keyFormatType, Optional<KeyCompressionType> keyCompressionType, KeyValue keyValue,
-            CryptographicAlgorithm cryptographicAlgorithm, int cryptographicLength,
-            Optional<KeyWrappingData> keyWrappingData) {
+        CryptographicAlgorithm cryptographicAlgorithm, int cryptographicLength,
+        Optional<KeyWrappingData> keyWrappingData) {
         this.keyFormatType = keyFormatType;
         this.keyCompressionType = keyCompressionType;
         this.keyValue = keyValue;
@@ -154,25 +153,25 @@ public class KeyBlock implements KmipStruct {
         }
         KeyBlock keyBlock = (KeyBlock) o;
         return Objects.equals(keyFormatType, keyBlock.keyFormatType)
-                && Objects.equals(keyCompressionType, keyBlock.keyCompressionType)
-                && Objects.equals(keyValue, keyBlock.keyValue)
-                && Objects.equals(cryptographicAlgorithm, keyBlock.cryptographicAlgorithm)
-                && cryptographicLength == keyBlock.cryptographicLength
-                && Objects.equals(keyWrappingData, keyBlock.keyWrappingData);
+            && Objects.equals(keyCompressionType, keyBlock.keyCompressionType)
+            && Objects.equals(keyValue, keyBlock.keyValue)
+            && Objects.equals(cryptographicAlgorithm, keyBlock.cryptographicAlgorithm)
+            && cryptographicLength == keyBlock.cryptographicLength
+            && Objects.equals(keyWrappingData, keyBlock.keyWrappingData);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(keyFormatType, keyCompressionType, keyValue, cryptographicAlgorithm, cryptographicLength,
-                keyWrappingData);
+            keyWrappingData);
     }
 
     @Override
     public String toString() {
         return "{" + " keyFormatType='" + getKeyFormatType() + "'" + ", keyCompressionType='" + getKeyCompressionType()
-                + "'" + ", keyValue='" + getKeyValue() + "'" + ", cryptographicAlgorithm='"
-                + getCryptographicAlgorithm() + "'" + ", cryptographicLength='" + getCryptographicLength() + "'"
-                + ", keyWrappingData='" + getKeyWrappingData() + "'" + "}";
+            + "'" + ", keyValue='" + getKeyValue() + "'" + ", cryptographicAlgorithm='" + getCryptographicAlgorithm()
+            + "'" + ", cryptographicLength='" + getCryptographicLength() + "'" + ", keyWrappingData='"
+            + getKeyWrappingData() + "'" + "}";
     }
 
 }

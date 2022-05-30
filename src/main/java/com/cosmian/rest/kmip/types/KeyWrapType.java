@@ -6,7 +6,8 @@ import com.cosmian.rest.kmip.json.KmipEnumUtils;
 
 public enum KeyWrapType {
 
-    Not_Wrapped(0x0000_0001), As_Registered(0x0000_0002);
+    Not_Wrapped(0x0000_0001),
+    As_Registered(0x0000_0002);
 
     private final int code;
 

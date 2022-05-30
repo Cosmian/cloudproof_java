@@ -21,28 +21,30 @@ import javax.net.ssl.SSLSocketFactory;
 public class RestClient {
 
     private static final Logger logger = Logger.getLogger(RestClient.class.getName());
+
     public static final int DEFAULT_CONNECT_TIMEOUT = 45000;
+
     public static final int DEFAULT_READ_TIMEOUT = 45000;
 
     private final String server_url;
+
     private final Optional<String> api_key;
+
     private final int connection_timeout;
+
     private final int read_timeout;
+
     // cache the socket factory for kee-alive
     private final SSLSocketFactory ssl_socket_factory;
 
     /**
      * Instantiate a new REST Client
      *
-     * @param server_url
-     *            the REST Server URL e.g. http://localhost:9000
-     * @param connection_timeout
-     *            Sets a specified timeout value, in milliseconds, to be used when opening a communications link to the
-     *            resource referenced by this URLConnection.
-     * @param read_timeout
-     *            Sets the read timeout to a specified timeout, in milliseconds.
-     * @param api_key
-     *            The API Key to use to authenticate
+     * @param server_url the REST Server URL e.g. http://localhost:9000
+     * @param connection_timeout Sets a specified timeout value, in milliseconds, to be used when opening a
+     *            communications link to the resource referenced by this URLConnection.
+     * @param read_timeout Sets the read timeout to a specified timeout, in milliseconds.
+     * @param api_key The API Key to use to authenticate
      */
     public RestClient(String server_url, Optional<String> api_key, int connection_timeout, int read_timeout) {
         if (server_url.endsWith("/")) {
@@ -72,19 +74,17 @@ public class RestClient {
     /**
      * Instantiate a new REST Client with DEFAULT_CONNECT_TIMEOUT and DEFAULT_READ_TIMEOUT
      *
-     * @param server_url
-     *            the REST Server URL e.g. http://localhost:9000
-     * @param api_key
-     *            he optional API Key to use to authenticate
+     * @param server_url the REST Server URL e.g. http://localhost:9000
+     * @param api_key he optional API Key to use to authenticate
      */
     public RestClient(String server_url, Optional<String> api_key) {
         this(server_url, api_key, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
     }
 
     private HttpURLConnection get_connection(String path) throws MalformedURLException, IOException {
-        HttpURLConnection cnx = (HttpURLConnection)new URL(this.server_url + path).openConnection();
+        HttpURLConnection cnx = (HttpURLConnection) new URL(this.server_url + path).openConnection();
         if (cnx instanceof HttpsURLConnection) {
-            ((HttpsURLConnection)cnx).setSSLSocketFactory(this.ssl_socket_factory);
+            ((HttpsURLConnection) cnx).setSSLSocketFactory(this.ssl_socket_factory);
         }
         if (this.api_key.isPresent()) {
             cnx.setRequestProperty("Authorization", "Bearer " + this.api_key.get());
@@ -97,11 +97,9 @@ public class RestClient {
     /**
      * Perform a GET request returning JSON
      *
-     * @param path
-     *            the REST service path and query parameters answering the GET request
+     * @param path the REST service path and query parameters answering the GET request
      * @return the JSON response
-     * @throws RestException
-     *             on any REST error
+     * @throws RestException on any REST error
      */
     public String json_get(String path) throws RestException {
         HttpURLConnection cnx = null;
@@ -118,13 +116,10 @@ public class RestClient {
     /**
      * Perform a JSON POST request returning JSON
      *
-     * @param path
-     *            the REST service path and query parameters answering the POST request
-     * @param payload
-     *            the JSON payload passed as the body of the POST request
+     * @param path the REST service path and query parameters answering the POST request
+     * @param payload the JSON payload passed as the body of the POST request
      * @return the JSON response
-     * @throws RestException
-     *             on any REST error
+     * @throws RestException on any REST error
      */
     public String json_post(String path, String payload) throws RestException {
         logger.fine(() -> path + "--->\n" + payload);

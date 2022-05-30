@@ -3,6 +3,7 @@ package com.cosmian.jna.cover_crypt;
 public class EncryptedHeader {
 
     private final byte[] symmetricKey;
+
     private final byte[] encryptedHeaderBytes;
 
     public EncryptedHeader(byte[] symmetricKey, byte[] headerBytes) {

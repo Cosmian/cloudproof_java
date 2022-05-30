@@ -7,7 +7,9 @@ import java.util.Objects;
 
 public class PolicyAxis implements Serializable {
     final private String name;
+
     final private List<String> attributes;
+
     final private boolean hierarchical;
 
     public PolicyAxis(String name, String[] attributes, boolean hierarchical) {
@@ -43,7 +45,7 @@ public class PolicyAxis implements Serializable {
         if (!(o instanceof PolicyAxis)) {
             return false;
         }
-        PolicyAxis policyAxis = (PolicyAxis)o;
+        PolicyAxis policyAxis = (PolicyAxis) o;
         return Objects.equals(name, policyAxis.name) && Objects.equals(attributes, policyAxis.attributes)
             && hierarchical == policyAxis.hierarchical;
     }

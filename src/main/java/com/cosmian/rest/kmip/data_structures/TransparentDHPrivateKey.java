@@ -24,7 +24,8 @@ public class TransparentDHPrivateKey implements KmipStruct {
     @JsonProperty(value = "X")
     private BigInteger x;
 
-    public TransparentDHPrivateKey() {}
+    public TransparentDHPrivateKey() {
+    }
 
     public TransparentDHPrivateKey(BigInteger p, Optional<BigInteger> q, BigInteger g, Optional<BigInteger> j,
         BigInteger x) {
@@ -107,7 +108,7 @@ public class TransparentDHPrivateKey implements KmipStruct {
         if (!(o instanceof TransparentDHPrivateKey)) {
             return false;
         }
-        TransparentDHPrivateKey transparentDHPrivateKey = (TransparentDHPrivateKey)o;
+        TransparentDHPrivateKey transparentDHPrivateKey = (TransparentDHPrivateKey) o;
         return Objects.equals(p, transparentDHPrivateKey.p) && Objects.equals(q, transparentDHPrivateKey.q)
             && Objects.equals(g, transparentDHPrivateKey.g) && Objects.equals(j, transparentDHPrivateKey.j)
             && Objects.equals(x, transparentDHPrivateKey.x);

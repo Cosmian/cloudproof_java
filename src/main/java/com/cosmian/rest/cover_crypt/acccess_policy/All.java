@@ -2,7 +2,8 @@ package com.cosmian.rest.cover_crypt.acccess_policy;
 
 public class All extends AccessPolicy {
 
-    public All() {}
+    public All() {
+    }
 
     @Override
     public boolean equals(Object o) {

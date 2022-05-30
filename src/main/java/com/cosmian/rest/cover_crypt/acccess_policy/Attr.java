@@ -13,9 +13,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Attr extends AccessPolicy {
 
     String axis;
+
     String name;
 
-    public Attr() {}
+    public Attr() {
+    }
 
     private static void assertValidCharacters(String value) throws CosmianException {
         if (value.equals("")) {
@@ -71,7 +73,7 @@ public class Attr extends AccessPolicy {
         if (!(o instanceof Attr)) {
             return false;
         }
-        Attr attr = (Attr)o;
+        Attr attr = (Attr) o;
         return Objects.equals(axis, attr.axis) && Objects.equals(name, attr.name);
     }
 

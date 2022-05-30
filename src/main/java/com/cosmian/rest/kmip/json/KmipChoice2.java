@@ -10,6 +10,7 @@ public abstract class KmipChoice2<C1, C2> {
     // Logger.getLogger(KmipChoice2.class.getName());
 
     private Optional<C1> c1 = Optional.empty();
+
     private Optional<C2> c2 = Optional.empty();
 
     protected KmipChoice2(Optional<C1> c1, Optional<C2> c2) {

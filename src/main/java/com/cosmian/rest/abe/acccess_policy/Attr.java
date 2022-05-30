@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Attr extends AccessPolicy {
 
     String axis;
+
     String name;
 
     public Attr() {
@@ -98,8 +99,7 @@ public class Attr extends AccessPolicy {
         return new Attr(axis, name);
     }
 
-    public static VendorAttribute toVendorAttribute(Attr[] abePolicyAttributes)
-            throws CosmianException {
+    public static VendorAttribute toVendorAttribute(Attr[] abePolicyAttributes) throws CosmianException {
         // The value must be the JSON array of the String representation of the Attrs
         ArrayList<String> array = new ArrayList<String>();
         for (Attr attr : abePolicyAttributes) {
@@ -110,8 +110,7 @@ public class Attr extends AccessPolicy {
         try {
             value = mapper.writeValueAsBytes(array.toArray());
         } catch (JsonProcessingException e) {
-            throw new CosmianException("Failed serializing to JSON the  ABE attributes: " + e.getMessage(),
-                    e);
+            throw new CosmianException("Failed serializing to JSON the  ABE attributes: " + e.getMessage(), e);
         }
         return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN, VendorAttribute.VENDOR_ATTR_ABE_ATTR, value);
     }

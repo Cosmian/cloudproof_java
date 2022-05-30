@@ -59,7 +59,7 @@ public class OpaqueObject extends KmipObject {
         }
         OpaqueObject opaqueObject = (OpaqueObject) o;
         return Objects.equals(opaque_data_type, opaqueObject.opaque_data_type)
-                && Arrays.equals(opaque_data_value, opaqueObject.opaque_data_value);
+            && Arrays.equals(opaque_data_value, opaqueObject.opaque_data_value);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class OpaqueObject extends KmipObject {
     @Override
     public String toString() {
         return "{" + " opaque_data_type='" + getOpaque_data_type() + "'" + ", opaque_data_value='"
-                + getOpaque_data_value() + "'" + "}";
+            + getOpaque_data_value() + "'" + "}";
     }
 
     @Override
@@ -79,14 +79,11 @@ public class OpaqueObject extends KmipObject {
     }
 
     /**
-     * 
-     * Deserialize an instance from its Json representation obtained using
-     * toJson()
+     * Deserialize an instance from its Json representation obtained using toJson()
      * 
      * @param json the JSON string
      * @return the {@link OpaqueObject}
      * @throws CosmianException if the parsing fails
-     * 
      */
     public static OpaqueObject fromJson(String json) throws CosmianException {
         return KmipObject.fromJson(json, OpaqueObject.class);

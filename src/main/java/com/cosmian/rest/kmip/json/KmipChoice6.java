@@ -10,14 +10,19 @@ public abstract class KmipChoice6<C1, C2, C3, C4, C5, C6> {
     // Logger.getLogger(KmipChoice6.class.getName());
 
     private Optional<C1> c1 = Optional.empty();
+
     private Optional<C2> c2 = Optional.empty();
+
     private Optional<C3> c3 = Optional.empty();
+
     private Optional<C4> c4 = Optional.empty();
+
     private Optional<C5> c5 = Optional.empty();
+
     private Optional<C6> c6 = Optional.empty();
 
     protected KmipChoice6(Optional<C1> c1, Optional<C2> c2, Optional<C3> c3, Optional<C4> c4, Optional<C5> c5,
-            Optional<C6> c6) {
+        Optional<C6> c6) {
         this.c1 = c1;
         this.c2 = c2;
         this.c3 = c3;
@@ -47,7 +52,7 @@ public abstract class KmipChoice6<C1, C2, C3, C4, C5, C6> {
                     this.c6 = Optional.of((C6) value);
                 } else {
                     throw new IllegalArgumentException(
-                            "Value if of class: " + value.getClass() + " which is nos supported by this Choice");
+                        "Value if of class: " + value.getClass() + " which is nos supported by this Choice");
                 }
             }
 
@@ -85,8 +90,8 @@ public abstract class KmipChoice6<C1, C2, C3, C4, C5, C6> {
         }
         KmipChoice6<?, ?, ?, ?, ?, ?> kmipChoice = (KmipChoice6<?, ?, ?, ?, ?, ?>) o;
         return Objects.equals(c1, kmipChoice.c1) && Objects.equals(c2, kmipChoice.c2)
-                && Objects.equals(c3, kmipChoice.c3) && Objects.equals(c4, kmipChoice.c4)
-                && Objects.equals(c5, kmipChoice.c5) && Objects.equals(c6, kmipChoice.c6);
+            && Objects.equals(c3, kmipChoice.c3) && Objects.equals(c4, kmipChoice.c4)
+            && Objects.equals(c5, kmipChoice.c5) && Objects.equals(c6, kmipChoice.c6);
     }
 
     @Override

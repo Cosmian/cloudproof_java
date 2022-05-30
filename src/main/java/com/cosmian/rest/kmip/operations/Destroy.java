@@ -11,9 +11,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * This operation is used to indicate to the server that the key material for
- * the specified Managed Object SHALL be destroyed or rendered inaccessible. The
- * meta-data for the key material SHALL be retained by the server. Objects SHALL
+ * This operation is used to indicate to the server that the key material for the specified Managed Object SHALL be
+ * destroyed or rendered inaccessible. The meta-data for the key material SHALL be retained by the server. Objects SHALL
  * only be destroyed if they are in either Pre-Active or Deactivated state.
  */
 @JsonSerialize(using = KmipStructSerializer.class)
@@ -21,8 +20,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Destroy implements KmipStruct {
 
     /**
-     * Determines the object being destroyed. If omitted, then the ID
-     * Placeholder value is used by the server as the Unique Identifier.
+     * Determines the object being destroyed. If omitted, then the ID Placeholder value is used by the server as the
+     * Unique Identifier.
      */
     @JsonProperty(value = "UniqueIdentifier")
     private Optional<String> uniqueIdentifier = Optional.empty();
@@ -65,9 +64,7 @@ public class Destroy implements KmipStruct {
 
     @Override
     public String toString() {
-        return "{" +
-                " uniqueIdentifier='" + getUniqueIdentifier() + "'" +
-                "}";
+        return "{" + " uniqueIdentifier='" + getUniqueIdentifier() + "'" + "}";
     }
 
 }

@@ -12,58 +12,36 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * This operation requests the server to perform an encryption operation on the
- * provided data using a Managed Cryptographic Object as the key for the
- * encryption operation.
- * 
- * The request contains information about the cryptographic parameters (mode and
- * padding method), the data to be encrypted, and the IV/Counter/Nonce to use.
- * The cryptographic parameters MAY be omitted from the request as they can be
- * specified as associated attributes of the Managed Cryptographic Object. The
- * IV/Counter/Nonce MAY also be omitted from the request if the cryptographic
- * parameters indicate that the server shall generate a Random IV on behalf of
- * the client or the encryption algorithm does not need an IV/Counter/Nonce. The
- * server does not store or otherwise manage the IV/Counter/Nonce.
- * 
- * If the Managed Cryptographic Object referenced has a Usage Limits attribute
- * then the server SHALL obtain an allocation from the current Usage Limits
- * value prior to performing the encryption operation. If the allocation is
- * unable to be obtained the operation SHALL return with a result status of
- * Operation Failed and result reason of Permission Denied.
- * 
- * The response contains the Unique Identifier of the Managed Cryptographic
- * Object used as the key and the result of the encryption operation.
- * 
- * The success or failure of the operation is indicated by the Result Status
- * (and if failure the Result Reason) in the response header
+ * This operation requests the server to perform an encryption operation on the provided data using a Managed
+ * Cryptographic Object as the key for the encryption operation. The request contains information about the
+ * cryptographic parameters (mode and padding method), the data to be encrypted, and the IV/Counter/Nonce to use. The
+ * cryptographic parameters MAY be omitted from the request as they can be specified as associated attributes of the
+ * Managed Cryptographic Object. The IV/Counter/Nonce MAY also be omitted from the request if the cryptographic
+ * parameters indicate that the server shall generate a Random IV on behalf of the client or the encryption algorithm
+ * does not need an IV/Counter/Nonce. The server does not store or otherwise manage the IV/Counter/Nonce. If the Managed
+ * Cryptographic Object referenced has a Usage Limits attribute then the server SHALL obtain an allocation from the
+ * current Usage Limits value prior to performing the encryption operation. If the allocation is unable to be obtained
+ * the operation SHALL return with a result status of Operation Failed and result reason of Permission Denied. The
+ * response contains the Unique Identifier of the Managed Cryptographic Object used as the key and the result of the
+ * encryption operation. The success or failure of the operation is indicated by the Result Status (and if failure the
+ * Result Reason) in the response header
  */
 @JsonSerialize(using = KmipStructSerializer.class)
 @JsonDeserialize(using = KmipStructDeserializer.class)
 public class Encrypt implements KmipStruct {
 
     /**
-     * The Unique Identifier of the Managed
-     * Cryptographic Object that is the key to
-     * use for the encryption operation. If
-     * omitted, then the ID Placeholder value
-     * SHALL be used by the server as the
-     * Unique Identifier
+     * The Unique Identifier of the Managed Cryptographic Object that is the key to use for the encryption operation. If
+     * omitted, then the ID Placeholder value SHALL be used by the server as the Unique Identifier
      */
     @JsonProperty(value = "UniqueIdentifier")
     private Optional<String> unique_identifier;
 
     /**
-     * The Cryptographic Parameters (Block
-     * Cipher Mode, Padding Method,
-     * RandomIV) corresponding to the
-     * particular encryption method
-     * requested.
-     * If there are no Cryptographic
-     * Parameters associated with the
-     * Managed Cryptographic Object and
-     * the algorithm requires parameters then
-     * the operation SHALL return with a
-     * Result Status of Operation Failed.
+     * The Cryptographic Parameters (Block Cipher Mode, Padding Method, RandomIV) corresponding to the particular
+     * encryption method requested. If there are no Cryptographic Parameters associated with the Managed Cryptographic
+     * Object and the algorithm requires parameters then the operation SHALL return with a Result Status of Operation
+     * Failed.
      */
     @JsonProperty(value = "CryptographicParameters")
     private Optional<CryptographicParameters> cryptographic_parameters;
@@ -75,16 +53,13 @@ public class Encrypt implements KmipStruct {
     private Optional<byte[]> data;
 
     /**
-     * The initialization vector, counter or
-     * nonce to be used (where appropriate).
+     * The initialization vector, counter or nonce to be used (where appropriate).
      */
     @JsonProperty(value = "IvCounterNonce")
     private Optional<byte[]> iv_counter_nonce;
 
     /**
-     * Specifies the existing stream or by-
-     * parts cryptographic operation (as
-     * returned from a previous call to this
+     * Specifies the existing stream or by- parts cryptographic operation (as returned from a previous call to this
      * operation)
      */
     @JsonProperty(value = "CorrelationValue")
@@ -103,9 +78,8 @@ public class Encrypt implements KmipStruct {
     private Optional<Boolean> final_indicator;
 
     /**
-     * Any additional data to be authenticated via the Authenticated Encryption
-     * Tag. If supplied in multi-part encryption,
-     * this data MUST be supplied on the initial Encrypt request
+     * Any additional data to be authenticated via the Authenticated Encryption Tag. If supplied in multi-part
+     * encryption, this data MUST be supplied on the initial Encrypt request
      */
     @JsonProperty(value = "AuthenticatedEncryptionAdditionalData")
     private Optional<byte[]> authenticated_encryption_additional_data;
@@ -114,9 +88,9 @@ public class Encrypt implements KmipStruct {
     }
 
     public Encrypt(Optional<String> unique_identifier, Optional<CryptographicParameters> cryptographic_parameters,
-            Optional<byte[]> data, Optional<byte[]> iv_counter_nonce, Optional<byte[]> correlation_value,
-            Optional<Boolean> init_indicator, Optional<Boolean> final_indicator,
-            Optional<byte[]> authenticated_encryption_additional_data) {
+        Optional<byte[]> data, Optional<byte[]> iv_counter_nonce, Optional<byte[]> correlation_value,
+        Optional<Boolean> init_indicator, Optional<Boolean> final_indicator,
+        Optional<byte[]> authenticated_encryption_additional_data) {
         this.unique_identifier = unique_identifier;
         this.cryptographic_parameters = cryptographic_parameters;
         this.data = data;
@@ -128,7 +102,7 @@ public class Encrypt implements KmipStruct {
     }
 
     public Encrypt(String unique_identifier, byte[] data, Optional<byte[]> iv_counter_nonce,
-            Optional<byte[]> authenticated_encryption_additional_data) {
+        Optional<byte[]> authenticated_encryption_additional_data) {
         this.unique_identifier = Optional.of(unique_identifier);
         this.cryptographic_parameters = Optional.empty();
         this.data = Optional.of(data);
@@ -252,28 +226,28 @@ public class Encrypt implements KmipStruct {
         }
         Encrypt encrypt = (Encrypt) o;
         return Objects.equals(unique_identifier, encrypt.unique_identifier)
-                && Objects.equals(cryptographic_parameters, encrypt.cryptographic_parameters)
-                && Objects.equals(data, encrypt.data) && Objects.equals(iv_counter_nonce, encrypt.iv_counter_nonce)
-                && Objects.equals(correlation_value, encrypt.correlation_value)
-                && Objects.equals(init_indicator, encrypt.init_indicator)
-                && Objects.equals(final_indicator, encrypt.final_indicator) && Objects.equals(
-                        authenticated_encryption_additional_data, encrypt.authenticated_encryption_additional_data);
+            && Objects.equals(cryptographic_parameters, encrypt.cryptographic_parameters)
+            && Objects.equals(data, encrypt.data) && Objects.equals(iv_counter_nonce, encrypt.iv_counter_nonce)
+            && Objects.equals(correlation_value, encrypt.correlation_value)
+            && Objects.equals(init_indicator, encrypt.init_indicator)
+            && Objects.equals(final_indicator, encrypt.final_indicator) && Objects
+                .equals(authenticated_encryption_additional_data, encrypt.authenticated_encryption_additional_data);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(unique_identifier, cryptographic_parameters, data, iv_counter_nonce, correlation_value,
-                init_indicator, final_indicator, authenticated_encryption_additional_data);
+            init_indicator, final_indicator, authenticated_encryption_additional_data);
     }
 
     @Override
     public String toString() {
         return "{" + " unique_identifier='" + getUnique_identifier() + "'" + ", cryptographic_parameters='"
-                + getCryptographic_parameters() + "'" + ", data='" + getData() + "'" + ", iv_counter_nonce='"
-                + getIv_counter_nonce() + "'" + ", correlation_value='" + getCorrelation_value() + "'"
-                + ", init_indicator='" + getInit_indicator() + "'" + ", final_indicator='" + getFinal_indicator() + "'"
-                + ", authenticated_encryption_additional_data='" + getAuthenticated_encryption_additional_data() + "'"
-                + "}";
+            + getCryptographic_parameters() + "'" + ", data='" + getData() + "'" + ", iv_counter_nonce='"
+            + getIv_counter_nonce() + "'" + ", correlation_value='" + getCorrelation_value() + "'"
+            + ", init_indicator='" + getInit_indicator() + "'" + ", final_indicator='" + getFinal_indicator() + "'"
+            + ", authenticated_encryption_additional_data='" + getAuthenticated_encryption_additional_data() + "'"
+            + "}";
     }
 
 }

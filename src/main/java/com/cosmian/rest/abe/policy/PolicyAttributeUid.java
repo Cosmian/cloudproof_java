@@ -6,11 +6,11 @@ import java.util.Objects;
 import com.cosmian.CosmianException;
 
 /**
- * An attribute in a policy group is characterized by the policy axis and its
- * own name within that axis
+ * An attribute in a policy group is characterized by the policy axis and its own name within that axis
  */
-public class PolicyAttributeUid implements Serializable{
+public class PolicyAttributeUid implements Serializable {
     private final String axis;
+
     private final String name;
 
     public PolicyAttributeUid(String axis, String name) {

@@ -1,8 +1,8 @@
 package com.cosmian.rest.abe.policy;
 
 import java.io.IOException;
-import java.util.TreeSet;
 import java.util.Map.Entry;
+import java.util.TreeSet;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -12,7 +12,7 @@ public class PolicySerializer extends JsonSerializer<Policy> {
 
     @Override
     public void serialize(Policy policyGroup, JsonGenerator generator, SerializerProvider serializers)
-            throws IOException {
+        throws IOException {
 
         generator.writeStartObject();
         generator.writeFieldName("last_attribute");

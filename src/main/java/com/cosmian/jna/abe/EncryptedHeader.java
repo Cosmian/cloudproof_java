@@ -3,6 +3,7 @@ package com.cosmian.jna.abe;
 public class EncryptedHeader {
 
     private final byte[] symmetricKey;
+
     private final byte[] encryptedHeaderBytes;
 
     public EncryptedHeader(byte[] symmetricKey, byte[] headerBytes) {

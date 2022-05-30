@@ -13,10 +13,7 @@ public class KmipUtils {
      *
      * @param keyBlock the {@link KeyBlock}
      * @return the bytes of the key
-     * @throws CosmianException if the {@link KeyBlock} is malformed the bytes
-     *                          cannot be
-     *                          found
-     *
+     * @throws CosmianException if the {@link KeyBlock} is malformed the bytes cannot be found
      */
     public static byte[] bytesFromKeyBlock(KeyBlock keyBlock) throws CosmianException {
         Object keyValueContent = keyBlock.getKeyValue().get();
@@ -33,19 +30,17 @@ public class KmipUtils {
             bytes = ((TransparentSymmetricKey) keyMaterialContent).getKey();
         } else {
             throw new CosmianException(
-                    "KeyMaterial has type " + keyMaterialContent.getClass().getName() + " and is not made of byte[]");
+                "KeyMaterial has type " + keyMaterialContent.getClass().getName() + " and is not made of byte[]");
 
         }
         return bytes;
     }
 
     /**
-     * Extract the nonce/iv/counter bytes from a {@link KeyWrappingData} for those
-     * made of byte arrays
+     * Extract the nonce/iv/counter bytes from a {@link KeyWrappingData} for those made of byte arrays
      */
     /**
-     * Extract the nonce/iv/counter bytes from a {@link KeyWrappingData} for those
-     * made of byte arrays
+     * Extract the nonce/iv/counter bytes from a {@link KeyWrappingData} for those made of byte arrays
      * 
      * @param keyWrappingData the {@link KeyWrappingData}
      * @return the bytes of the Nonce

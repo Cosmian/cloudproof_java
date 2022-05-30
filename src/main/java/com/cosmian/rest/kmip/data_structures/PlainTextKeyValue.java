@@ -15,7 +15,8 @@ public class PlainTextKeyValue implements KmipStruct {
     @JsonProperty(value = "Attributes")
     private Optional<Attributes> attributes;
 
-    public PlainTextKeyValue() {}
+    public PlainTextKeyValue() {
+    }
 
     public PlainTextKeyValue(KeyMaterial keyMaterial, Optional<Attributes> attributes) {
         this.keyMaterial = keyMaterial;
@@ -55,7 +56,7 @@ public class PlainTextKeyValue implements KmipStruct {
         if (!(o instanceof PlainTextKeyValue)) {
             return false;
         }
-        PlainTextKeyValue plainTextKeyValue = (PlainTextKeyValue)o;
+        PlainTextKeyValue plainTextKeyValue = (PlainTextKeyValue) o;
         return Objects.equals(keyMaterial, plainTextKeyValue.keyMaterial)
             && Objects.equals(attributes, plainTextKeyValue.attributes);
     }

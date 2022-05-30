@@ -12,66 +12,54 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * This operation requests the server to generate a new public/private key pair
- * and register the two corresponding new Managed Cryptographic Objects.
- * 
- * The request contains attributes to be assigned to the objects (e.g.,
- * Cryptographic Algorithm, Cryptographic Length, etc.). Attributes MAY be
- * specified for both keys at the same time by specifying a Common Attributes
- * object in the request. Attributes not common to both keys (e.g., Name,
- * Cryptographic Usage Mask) MAY be specified using the Private Key Attributes
- * and Public Key Attributes objects in the request, which take precedence over
- * the Common Attributes object.
- * 
- * For the Private Key, the server SHALL create a Link attribute of Link Type
- * Public Key pointing to the Public Key. For the Public Key, the server SHALL
- * create a Link attribute of Link Type Private Key pointing to the Private Key.
- * The response contains the Unique Identifiers of both created objects. The ID
+ * This operation requests the server to generate a new public/private key pair and register the two corresponding new
+ * Managed Cryptographic Objects. The request contains attributes to be assigned to the objects (e.g., Cryptographic
+ * Algorithm, Cryptographic Length, etc.). Attributes MAY be specified for both keys at the same time by specifying a
+ * Common Attributes object in the request. Attributes not common to both keys (e.g., Name, Cryptographic Usage Mask)
+ * MAY be specified using the Private Key Attributes and Public Key Attributes objects in the request, which take
+ * precedence over the Common Attributes object. For the Private Key, the server SHALL create a Link attribute of Link
+ * Type Public Key pointing to the Public Key. For the Public Key, the server SHALL create a Link attribute of Link Type
+ * Private Key pointing to the Private Key. The response contains the Unique Identifiers of both created objects. The ID
  * Placeholder value SHALL be set to the Unique Identifier of the Private Key.
- * 
  */
 @JsonSerialize(using = KmipStructSerializer.class)
 @JsonDeserialize(using = KmipStructDeserializer.class)
 public class CreateKeyPair implements KmipStruct {
 
     /**
-     * Specifies desired attributes to be associated with the new object that apply
-     * to both the Private and Public Key Objects
+     * Specifies desired attributes to be associated with the new object that apply to both the Private and Public Key
+     * Objects
      */
     @JsonProperty("CommonAttributes")
     private Optional<Attributes> commonAttributes = Optional.empty();
 
     /**
-     * Specifies the attributes to be associated with the new object that apply to
-     * the Private Key Object.
+     * Specifies the attributes to be associated with the new object that apply to the Private Key Object.
      */
     @JsonProperty("PrivateKeyAttributes")
     private Optional<Attributes> privateKeyAttributes = Optional.empty();
 
     /**
-     * Specifies the attributes to be associated with the new object that apply to
-     * the Public Key Object.
+     * Specifies the attributes to be associated with the new object that apply to the Public Key Object.
      */
     @JsonProperty("PublicKeyAttributes")
     private Optional<Attributes> publicKeyAttributes = Optional.empty();
 
     /**
-     * Specifies all ProtectionStorage Mask selections that are permissible for the
-     * new Private Key and Public Key objects.
+     * Specifies all ProtectionStorage Mask selections that are permissible for the new Private Key and Public Key
+     * objects.
      */
     @JsonProperty(value = "CommonProtectionStorageMasks")
     private Optional<Integer> commonProtectionStorageMasks = Optional.empty();
 
     /**
-     * Specifies all ProtectionStorage Mask selections that are permissible for the
-     * new Private Key object.
+     * Specifies all ProtectionStorage Mask selections that are permissible for the new Private Key object.
      */
     @JsonProperty(value = "PrivateProtectionStorageMasks")
     private Optional<Integer> privateProtectionStorageMasks = Optional.empty();
 
     /**
-     * Specifies all ProtectionStorage Mask selections that are permissible for the
-     * new PublicKey object.
+     * Specifies all ProtectionStorage Mask selections that are permissible for the new PublicKey object.
      */
     @JsonProperty(value = "PublicProtectionStorageMasks")
     private Optional<Integer> publicProtectionStorageMasks = Optional.empty();
@@ -80,8 +68,8 @@ public class CreateKeyPair implements KmipStruct {
     }
 
     public CreateKeyPair(Optional<Attributes> commonAttributes, Optional<Attributes> privateKeyAttributes,
-            Optional<Attributes> publicKeyAttributes, Optional<Integer> commonProtectionStorageMasks,
-            Optional<Integer> privateProtectionStorageMasks, Optional<Integer> publicProtectionStorageMasks) {
+        Optional<Attributes> publicKeyAttributes, Optional<Integer> commonProtectionStorageMasks,
+        Optional<Integer> privateProtectionStorageMasks, Optional<Integer> publicProtectionStorageMasks) {
         this.commonAttributes = commonAttributes;
         this.privateKeyAttributes = privateKeyAttributes;
         this.publicKeyAttributes = publicKeyAttributes;
@@ -182,26 +170,26 @@ public class CreateKeyPair implements KmipStruct {
         }
         CreateKeyPair createKeyPair = (CreateKeyPair) o;
         return Objects.equals(commonAttributes, createKeyPair.commonAttributes)
-                && Objects.equals(privateKeyAttributes, createKeyPair.privateKeyAttributes)
-                && Objects.equals(publicKeyAttributes, createKeyPair.publicKeyAttributes)
-                && Objects.equals(commonProtectionStorageMasks, createKeyPair.commonProtectionStorageMasks)
-                && Objects.equals(privateProtectionStorageMasks, createKeyPair.privateProtectionStorageMasks)
-                && Objects.equals(publicProtectionStorageMasks, createKeyPair.publicProtectionStorageMasks);
+            && Objects.equals(privateKeyAttributes, createKeyPair.privateKeyAttributes)
+            && Objects.equals(publicKeyAttributes, createKeyPair.publicKeyAttributes)
+            && Objects.equals(commonProtectionStorageMasks, createKeyPair.commonProtectionStorageMasks)
+            && Objects.equals(privateProtectionStorageMasks, createKeyPair.privateProtectionStorageMasks)
+            && Objects.equals(publicProtectionStorageMasks, createKeyPair.publicProtectionStorageMasks);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(commonAttributes, privateKeyAttributes, publicKeyAttributes, commonProtectionStorageMasks,
-                privateProtectionStorageMasks, publicProtectionStorageMasks);
+            privateProtectionStorageMasks, publicProtectionStorageMasks);
     }
 
     @Override
     public String toString() {
         return "{" + " commonAttributes='" + getCommonAttributes() + "'" + ", privateKeyAttributes='"
-                + getPrivateKeyAttributes() + "'" + ", publicKeyAttributes='" + getPublicKeyAttributes() + "'"
-                + ", commonProtectionStorageMasks='" + getCommonProtectionStorageMasks() + "'"
-                + ", privateProtectionStorageMasks='" + getPrivateProtectionStorageMasks() + "'"
-                + ", publicProtectionStorageMasks='" + getPublicProtectionStorageMasks() + "'" + "}";
+            + getPrivateKeyAttributes() + "'" + ", publicKeyAttributes='" + getPublicKeyAttributes() + "'"
+            + ", commonProtectionStorageMasks='" + getCommonProtectionStorageMasks() + "'"
+            + ", privateProtectionStorageMasks='" + getPrivateProtectionStorageMasks() + "'"
+            + ", publicProtectionStorageMasks='" + getPublicProtectionStorageMasks() + "'" + "}";
     }
 
 }

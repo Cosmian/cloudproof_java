@@ -47,7 +47,7 @@ public class KmipStructDeserializer<E extends KmipStruct> extends KmipJsonDeseri
             throw new IOException("Invalid KMIP Json " + node.toPrettyString() + ". No tag");
         }
         E instance = this.handledType() == null ? get_instance_from_tag(tag_node.asText())
-                : get_instance_from_class((Class<E>) this.handledType());
+            : get_instance_from_class((Class<E>) this.handledType());
         logger.finer(() -> "Deserializing a " + instance.getClass().getName());
 
         // extract values
@@ -63,8 +63,8 @@ public class KmipStructDeserializer<E extends KmipStruct> extends KmipJsonDeseri
 
             final ResolvedType resolvedType = field.getType();
             final boolean is_optional = resolvedType.getErasedType().equals(Optional.class);
-            Class<?> resolved_class = is_optional ? resolvedType.getTypeParameters().get(0).getErasedType()
-                    : resolvedType.getErasedType();
+            Class<?> resolved_class =
+                is_optional ? resolvedType.getTypeParameters().get(0).getErasedType() : resolvedType.getErasedType();
             if (KmipObject.class.isAssignableFrom(resolved_class)) {
                 // in the case the class is the KMIP Object, resolve the actual class
                 if (objectType == null) {
@@ -101,7 +101,7 @@ public class KmipStructDeserializer<E extends KmipStruct> extends KmipJsonDeseri
                         f.set(instance, Optional.empty());
                     } else {
                         throw new IOException("Invalid KMIP Json for " + instance.getClass().getName()
-                                + ". No json for required property " + tag + ".\n" + node.toPrettyString());
+                            + ". No json for required property " + tag + ".\n" + node.toPrettyString());
                     }
                 } else {
                     Object field_value = KmipJson.deserialize_value(clazz, field_node, context);
@@ -128,17 +128,16 @@ public class KmipStructDeserializer<E extends KmipStruct> extends KmipJsonDeseri
         try {
             // try as an operation (use Import for package)
             return (K) Class.forName(Import.class.getPackage().getName() + "." + tag).getDeclaredConstructor()
-                    .newInstance();
+                .newInstance();
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-                | NoSuchMethodException | SecurityException | ClassNotFoundException e1) {
+            | NoSuchMethodException | SecurityException | ClassNotFoundException e1) {
 
             try {
                 // try as an object (use PrivateKey for package)
                 return (K) Class.forName(PrivateKey.class.getPackage().getName() + "." + tag).getDeclaredConstructor()
-                        .newInstance();
+                    .newInstance();
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                    | InvocationTargetException | NoSuchMethodException | SecurityException
-                    | ClassNotFoundException e2) {
+                | InvocationTargetException | NoSuchMethodException | SecurityException | ClassNotFoundException e2) {
 
                 throw new IOException("Cannot deserialize KMIP unknown tag: " + tag + ": " + e2.getMessage(), e2);
             }
@@ -149,7 +148,7 @@ public class KmipStructDeserializer<E extends KmipStruct> extends KmipJsonDeseri
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-                | NoSuchMethodException | SecurityException e) {
+            | NoSuchMethodException | SecurityException e) {
             throw new IOException("Cannot instantiate KMIP class: " + clazz.getName() + ": " + e.getMessage(), e);
         }
     }

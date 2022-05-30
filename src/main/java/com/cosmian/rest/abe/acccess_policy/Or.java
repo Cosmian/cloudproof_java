@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Or extends AccessPolicy {
 
     private AccessPolicy left;
+
     private AccessPolicy right;
 
     public Or() {

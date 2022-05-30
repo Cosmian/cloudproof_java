@@ -8,7 +8,10 @@
         "Kmip",
         "serializers"
     ],
-    "java.format.settings.url": ".vscode/eclipse-codestyle.xml",
+    "java.format.settings.url": ".vscode/codestyle-java.xml",
+    "[java]": {
+        "editor.detectIndentation": false
+    },
     "files.watcherExclude": {
         "**/target": true
     }

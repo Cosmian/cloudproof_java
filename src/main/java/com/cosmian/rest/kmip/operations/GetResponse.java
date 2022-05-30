@@ -84,8 +84,8 @@ public class GetResponse implements KmipStruct {
         }
         GetResponse getResponse = (GetResponse) o;
         return Objects.equals(objectType, getResponse.objectType)
-                && Objects.equals(uniqueIdentifier, getResponse.uniqueIdentifier)
-                && Objects.equals(object, getResponse.object);
+            && Objects.equals(uniqueIdentifier, getResponse.uniqueIdentifier)
+            && Objects.equals(object, getResponse.object);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class GetResponse implements KmipStruct {
     @Override
     public String toString() {
         return "{" + " objectType='" + getObjectType() + "'" + ", uniqueIdentifier='" + getUniqueIdentifier() + "'"
-                + ", object='" + getObject() + "'" + "}";
+            + ", object='" + getObject() + "'" + "}";
     }
 
 }

@@ -6,8 +6,14 @@ import com.cosmian.rest.kmip.json.KmipEnumUtils;
 
 public enum ObjectType {
 
-    Certificate(0x0000_0001), Symmetric_Key(0x0000_0002), Public_Key(0x0000_0003), Private_Key(0x0000_0004),
-    Split_Key(0x0000_0005), Secret_Data(0x0000_0007), Opaque_Object(0x0000_0008), PGP_Key(0x0000_0009),
+    Certificate(0x0000_0001),
+    Symmetric_Key(0x0000_0002),
+    Public_Key(0x0000_0003),
+    Private_Key(0x0000_0004),
+    Split_Key(0x0000_0005),
+    Secret_Data(0x0000_0007),
+    Opaque_Object(0x0000_0008),
+    PGP_Key(0x0000_0009),
     Certificate_Request(0x0000_000A);
 
     private final int code;

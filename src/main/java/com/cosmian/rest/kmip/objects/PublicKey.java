@@ -61,8 +61,7 @@ public class PublicKey extends KmipObject {
     }
 
     /**
-     * Return the {@link Attributes} or a set of empty
-     * {@link Attributes}
+     * Return the {@link Attributes} or a set of empty {@link Attributes}
      * 
      * @return the {@link Attributes} found in the {@link KeyBlock}
      */
@@ -81,9 +80,7 @@ public class PublicKey extends KmipObject {
     }
 
     /**
-     * 
-     * Deserialize an instance from its Json representation obtained using
-     * oJson()
+     * Deserialize an instance from its Json representation obtained using oJson()
      * 
      * @param json the public key in JSON form
      * @return the public key

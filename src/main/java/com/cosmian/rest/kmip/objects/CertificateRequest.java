@@ -59,7 +59,7 @@ public class CertificateRequest extends KmipObject {
         }
         CertificateRequest certificateRequest = (CertificateRequest) o;
         return Objects.equals(certificate_request_type, certificateRequest.certificate_request_type)
-                && Arrays.equals(certificate_request_value, certificateRequest.certificate_request_value);
+            && Arrays.equals(certificate_request_value, certificateRequest.certificate_request_value);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class CertificateRequest extends KmipObject {
     @Override
     public String toString() {
         return "{" + " certificate_request_type='" + getCertificate_request_type() + "'"
-                + ", certificate_request_value='" + getCertificate_request_value() + "'" + "}";
+            + ", certificate_request_value='" + getCertificate_request_value() + "'" + "}";
     }
 
     @Override
@@ -79,9 +79,7 @@ public class CertificateRequest extends KmipObject {
     }
 
     /**
-     * 
-     * Deserialize an instance from its Json representation obtained using
-     * toJson()
+     * Deserialize an instance from its Json representation obtained using toJson()
      * 
      * @param json the JSON string
      * @return the {@link CertificateRequest}

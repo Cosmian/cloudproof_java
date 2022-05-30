@@ -42,7 +42,9 @@ public enum LinkType {
     /// For all object types: the previous object to this object.
     Previous_Link(0x0000_010A),
     /// For all object types: the next object to this object.
-    Next_Link(0x0000_010B), PKCS_12_Certificate_Link(0x0000_010C), PKCS_12_Password_Link(0x0000_010D),
+    Next_Link(0x0000_010B),
+    PKCS_12_Certificate_Link(0x0000_010C),
+    PKCS_12_Password_Link(0x0000_010D),
     /// For wrapped objects: the object that was used to wrap this object.
     Wrapping_Key_Link(0x0000_010E);
 

@@ -16,7 +16,7 @@ public class DataToEncryptSerializer extends JsonSerializer<DataToEncrypt> {
 
     @Override
     public void serialize(DataToEncrypt attr, JsonGenerator generator, SerializerProvider serializers)
-            throws IOException {
+        throws IOException {
 
         logger.finer(() -> "Serializing a " + attr.getClass().toString());
 

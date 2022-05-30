@@ -31,7 +31,7 @@ public class KmipBytesSerializer extends StdSerializer<byte[]> {
         generator.writeFieldName("type");
         generator.writeString("ByteString");
         generator.writeFieldName("value");
-        generator.writeString(Hex.encodeHexString((byte[])value).toUpperCase());
+        generator.writeString(Hex.encodeHexString((byte[]) value).toUpperCase());
         generator.writeEndObject();
     }
 }

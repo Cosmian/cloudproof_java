@@ -15,7 +15,8 @@ public class TransparentECPrivateKey implements KmipStruct {
     @JsonProperty(value = "D")
     private BigInteger d;
 
-    public TransparentECPrivateKey() {}
+    public TransparentECPrivateKey() {
+    }
 
     public TransparentECPrivateKey(RecommendedCurve recommendedCurve, BigInteger d) {
         this.recommendedCurve = recommendedCurve;
@@ -55,7 +56,7 @@ public class TransparentECPrivateKey implements KmipStruct {
         if (!(o instanceof TransparentECPrivateKey)) {
             return false;
         }
-        TransparentECPrivateKey transparentECPrivateKey = (TransparentECPrivateKey)o;
+        TransparentECPrivateKey transparentECPrivateKey = (TransparentECPrivateKey) o;
         return Objects.equals(recommendedCurve, transparentECPrivateKey.recommendedCurve)
             && Objects.equals(d, transparentECPrivateKey.d);
     }

@@ -61,7 +61,7 @@ public class KmipStructSerializer<E extends Object> extends JsonSerializer<E> {
             boolean is_optional = (v instanceof Optional);
             // unwrap v
             if (is_optional) {
-                Optional<?> opt = (Optional<?>)v;
+                Optional<?> opt = (Optional<?>) v;
                 if (opt.isPresent()) {
                     v = opt.get();
                 } else {

@@ -11,15 +11,14 @@ import java.util.Optional;
 import com.cosmian.CosmianException;
 
 /**
- * The symmetric encryption optional meta data:
- * - the uid uniquely identifies the resource and is part of the AEAD of the
- * encryption scheme
- * - the additional data is not part of the AEAD
- * The meta data in symmetrically encrypted in the hybrid header is provided
+ * The symmetric encryption optional meta data: - the uid uniquely identifies the resource and is part of the AEAD of
+ * the encryption scheme - the additional data is not part of the AEAD The meta data in symmetrically encrypted in the
+ * hybrid header is provided
  */
 public class MetaData {
 
     private final Optional<byte[]> uid;
+
     private final Optional<byte[]> additionalData;
 
     /**
@@ -41,9 +40,8 @@ public class MetaData {
         // Then recover the uid and additional data
         byte[] uid = Arrays.copyOfRange(bytes, 4, 4 + headerSize_);
         byte[] additionalData = Arrays.copyOfRange(bytes, 4 + headerSize_, bytes.length);
-        return new MetaData(
-                uid.length == 0 ? Optional.empty() : Optional.of(uid),
-                additionalData.length == 0 ? Optional.empty() : Optional.of(additionalData));
+        return new MetaData(uid.length == 0 ? Optional.empty() : Optional.of(uid),
+            additionalData.length == 0 ? Optional.empty() : Optional.of(additionalData));
     }
 
     public MetaData() {
@@ -65,9 +63,8 @@ public class MetaData {
     }
 
     /**
-     * Converts the meta data to a byte array which can parsed back using the
-     * {@link #fromBytes(byte[])} method
-     * The first 4 bytes is the u32 size of the uid in big endian format.
+     * Converts the meta data to a byte array which can parsed back using the {@link #fromBytes(byte[])} method The
+     * first 4 bytes is the u32 size of the uid in big endian format.
      * 
      * @return the meta data as a byte array
      * @throws CosmianException if the {@link MetaData} cannot be serialized
@@ -75,7 +72,7 @@ public class MetaData {
     public byte[] toBytes() throws CosmianException {
         // The length of the uid is pre-pended.
         ByteBuffer uidSize = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN)
-                .putInt(this.getUid().isPresent() ? this.uid.get().length : 0);
+            .putInt(this.getUid().isPresent() ? this.uid.get().length : 0);
         // Write the message
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
         try {
@@ -102,11 +99,12 @@ public class MetaData {
         }
         MetaData metaData = (MetaData) o;
 
-        boolean uidEquals = (uid.isPresent() && metaData.uid.isPresent()
-                && Arrays.equals(uid.get(), metaData.uid.get())) || (!uid.isPresent() && !metaData.uid.isPresent());
+        boolean uidEquals =
+            (uid.isPresent() && metaData.uid.isPresent() && Arrays.equals(uid.get(), metaData.uid.get()))
+                || (!uid.isPresent() && !metaData.uid.isPresent());
         boolean additionalDataEquals = (additionalData.isPresent() && metaData.additionalData.isPresent()
-                && Arrays.equals(additionalData.get(), metaData.additionalData.get()))
-                || (!additionalData.isPresent() && !metaData.additionalData.isPresent());
+            && Arrays.equals(additionalData.get(), metaData.additionalData.get()))
+            || (!additionalData.isPresent() && !metaData.additionalData.isPresent());
 
         return uidEquals && additionalDataEquals;
     }
@@ -118,10 +116,7 @@ public class MetaData {
 
     @Override
     public String toString() {
-        return "{" +
-                " uid='" + getUid() + "'" +
-                ", additionalData='" + getAdditionalData() + "'" +
-                "}";
+        return "{" + " uid='" + getUid() + "'" + ", additionalData='" + getAdditionalData() + "'" + "}";
     }
 
 }

@@ -10,9 +10,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class DataToEncrypt {
 
     private Attr[] policyAttributes;
+
     private byte[] data;
 
-    public DataToEncrypt() {}
+    public DataToEncrypt() {
+    }
 
     public DataToEncrypt(Attr[] policyAttributes, byte[] data) {
         this.policyAttributes = policyAttributes;
@@ -52,7 +54,7 @@ public class DataToEncrypt {
         if (!(o instanceof DataToEncrypt)) {
             return false;
         }
-        DataToEncrypt dataToEncrypt = (DataToEncrypt)o;
+        DataToEncrypt dataToEncrypt = (DataToEncrypt) o;
         return Arrays.equals(policyAttributes, dataToEncrypt.policyAttributes)
             && Arrays.equals(data, dataToEncrypt.data);
     }
@@ -64,8 +66,8 @@ public class DataToEncrypt {
 
     @Override
     public String toString() {
-        return "{" + " policyAttributes='" + Arrays.toString(getPolicyAttributes()) + "'" + ", data='" + Arrays.toString(getData()) + "'"
-            + "}";
+        return "{" + " policyAttributes='" + Arrays.toString(getPolicyAttributes()) + "'" + ", data='"
+            + Arrays.toString(getData()) + "'" + "}";
     }
 
 }

@@ -10,6 +10,7 @@ import com.cosmian.CosmianException;
  */
 public class PolicyAttributeUid implements Serializable {
     private final String axis;
+
     private final String name;
 
     public PolicyAttributeUid(String axis, String name) {
@@ -32,7 +33,7 @@ public class PolicyAttributeUid implements Serializable {
         if (!(o instanceof PolicyAttributeUid)) {
             return false;
         }
-        PolicyAttributeUid policyAttribute = (PolicyAttributeUid)o;
+        PolicyAttributeUid policyAttribute = (PolicyAttributeUid) o;
         return Objects.equals(axis, policyAttribute.axis) && Objects.equals(name, policyAttribute.name);
     }
 

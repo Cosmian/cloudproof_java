@@ -20,14 +20,13 @@ import com.sun.jna.ptr.IntByReference;
 
 public final class Ffi {
 
-    static final FfiWrapper INSTANCE = (FfiWrapper)Native.load("cover_crypt", FfiWrapper.class);
+    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("cover_crypt", FfiWrapper.class);
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes
      * 
      * @return the last error recorded by the native library
-     * @throws FfiException
-     *             in case of native library error
+     * @throws FfiException in case of native library error
      */
     public static String get_last_error() throws FfiException {
         return get_last_error(1023);
@@ -36,10 +35,8 @@ public final class Ffi {
     /**
      * Return the last error in a String that does not exceed `max_len` bytes
      * 
-     * @param max_len
-     *            the maximum number of bytes to return
-     * @throws FfiException
-     *             in case of native library error
+     * @param max_len the maximum number of bytes to return
+     * @throws FfiException in case of native library error
      * @return the error
      */
     public static String get_last_error(int max_len) throws FfiException {
@@ -57,29 +54,22 @@ public final class Ffi {
     /**
      * Set the last error on the native lib
      * 
-     * @param error_msg
-     *            the last error to set on the native lib
-     * @throws FfiException
-     *             n case of native library error
+     * @param error_msg the last error to set on the native lib
+     * @throws FfiException n case of native library error
      */
     public static void set_error(String error_msg) throws FfiException {
         unwrap(Ffi.INSTANCE.set_error(error_msg));
     }
 
     /**
-     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, Attr[])}
+     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, Attr[])} se of the cache
+     * speeds up the encryption of the header. WARN: the cache MUST be destroyed after use with
+     * {@link #destroyEncryptionCache(int)}
      *
-     * se of the cache speeds up the encryption of the header.
-     *
-     * WARN: the cache MUST be destroyed after use with {@link #destroyEncryptionCache(int)}
-     *
-     * @param publicKey
-     *            the public key to cache
+     * @param publicKey the public key to cache
      * @return the cache handle that can be passed to the encryption routine
-     * @throws FfiException
-     *             on Rust lib errors
-     * @throws CosmianException
-     *             in case of other errors
+     * @throws FfiException on Rust lib errors
+     * @throws CosmianException in case of other errors
      */
     public static int createEncryptionCache(PublicKey publicKey) throws FfiException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
@@ -88,21 +78,15 @@ public final class Ffi {
     }
 
     /**
-     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, Attr[])}
+     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, Attr[])} Use of the cache
+     * speeds up the encryption of the header. WARN: the cache MUST be destroyed after use with
+     * {@link #destroyEncryptionCache(int)}
      *
-     * Use of the cache speeds up the encryption of the header.
-     *
-     * WARN: the cache MUST be destroyed after use with {@link #destroyEncryptionCache(int)}
-     *
-     * @param policy
-     *            the {@link Policy} to cache
-     * @param publicKeyBytes
-     *            the public key bytes to cache
+     * @param policy the {@link Policy} to cache
+     * @param publicKeyBytes the public key bytes to cache
      * @return the cache handle that can be passed to the encryption routine
-     * @throws FfiException
-     *             on Rust lib errors
-     * @throws CosmianException
-     *             in case of other errors
+     * @throws FfiException on Rust lib errors
+     * @throws CosmianException in case of other errors
      */
     public static int createEncryptionCache(Policy policy, byte[] publicKeyBytes)
         throws FfiException, CosmianException {
@@ -135,32 +119,23 @@ public final class Ffi {
     /**
      * Destroy the cache created with {@link #createEncryptionCache(Policy, byte[])}
      *
-     * @param cacheHandle
-     *            the pointer to the cache to destroy
-     * @throws FfiException
-     *             on Rust lib errors
-     * @throws CosmianException
-     *             in case of other errors
+     * @param cacheHandle the pointer to the cache to destroy
+     * @throws FfiException on Rust lib errors
+     * @throws CosmianException in case of other errors
      */
     public static void destroyEncryptionCache(int cacheHandle) throws FfiException, CosmianException {
         unwrap(Ffi.INSTANCE.h_aes_destroy_encryption_cache(cacheHandle));
     }
 
     /**
-     * Generate an hybrid encryption header using a pre-cached Public Key and Policy.
+     * Generate an hybrid encryption header using a pre-cached Public Key and Policy. A symmetric key is randomly
+     * generated and encrypted using the CoverCrypt schemes and the provided policy attributes for the given policy
      * 
-     * A symmetric key is randomly generated and encrypted using the CoverCrypt schemes and the provided policy
-     * attributes for the given policy
-     * 
-     * @param cacheHandle
-     *            the pointer to the {@link int}
-     * @param attributes
-     *            the policy attributes used to encrypt the generated symmetric key
+     * @param cacheHandle the pointer to the {@link int}
+     * @param attributes the policy attributes used to encrypt the generated symmetric key
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException
-     *             in case of native library error
-     * @throws CosmianException
-     *             in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
+     * @throws FfiException in case of native library error
+     * @throws CosmianException in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
      */
     public static EncryptedHeader encryptHeaderUsingCache(int cacheHandle, Attr[] attributes)
         throws FfiException, CosmianException {
@@ -168,25 +143,18 @@ public final class Ffi {
     }
 
     /**
-     * Generate an hybrid encryption header using a pre-cached Public Key and Policy.
+     * Generate an hybrid encryption header using a pre-cached Public Key and Policy. A symmetric key is randomly
+     * generated and encrypted using the CoverCrypt schemes and the provided policy attributes for the given policy. .
+     * If provided, the resource `uid` and the `additionalData` are symmetrically encrypted and appended to the
+     * encrypted header.
      * 
-     * A symmetric key is randomly generated and encrypted using the CoverCrypt schemes and the provided policy
-     * attributes for the given policy. . If provided, the resource `uid` and the `additionalData` are symmetrically
-     * encrypted and appended to the encrypted header.
-     * 
-     * @param cacheHandle
-     *            the pointer to the {@link int}
-     * @param attributes
-     *            the policy attributes used to encrypt the generated symmetric key
-     * @param uid
-     *            the optional resource uid
-     * @param additionalData
-     *            optional additional data
+     * @param cacheHandle the pointer to the {@link int}
+     * @param attributes the policy attributes used to encrypt the generated symmetric key
+     * @param uid the optional resource uid
+     * @param additionalData optional additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException
-     *             in case of native library error
-     * @throws CosmianException
-     *             in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
+     * @throws FfiException in case of native library error
+     * @throws CosmianException in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
      */
     public static EncryptedHeader encryptHeaderUsingCache(int cacheHandle, Attr[] attributes, Optional<byte[]> uid,
         Optional<byte[]> additionalData) throws FfiException, CosmianException {
@@ -262,20 +230,14 @@ public final class Ffi {
     }
 
     /**
-     * Generate an hybrid encryption header.
+     * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the CoverCrypt
+     * schemes and the provided policy attributes for the given policy
      * 
-     * A symmetric key is randomly generated and encrypted using the CoverCrypt schemes and the provided policy
-     * attributes for the given policy
-     * 
-     * @param publicKey
-     *            the CoverCrypt public key also holds the {@link Policy}
-     * @param attributes
-     *            the policy attributes used to encrypt the generated symmetric key
+     * @param publicKey the CoverCrypt public key also holds the {@link Policy}
+     * @param attributes the policy attributes used to encrypt the generated symmetric key
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException
-     *             in case of native library error
-     * @throws CosmianException
-     *             in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
+     * @throws FfiException in case of native library error
+     * @throws CosmianException in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
      */
     public static EncryptedHeader encryptHeader(PublicKey publicKey, Attr[] attributes)
         throws FfiException, CosmianException {
@@ -285,25 +247,17 @@ public final class Ffi {
     }
 
     /**
-     * Generate an hybrid encryption header.
+     * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the CoverCrypt
+     * schemes and the provided policy attributes for the given policy. . If provided, the resource `uid` and the
+     * `additionalData` are symmetrically encrypted and appended to the encrypted header.
      * 
-     * A symmetric key is randomly generated and encrypted using the CoverCrypt schemes and the provided policy
-     * attributes for the given policy. . If provided, the resource `uid` and the `additionalData` are symmetrically
-     * encrypted and appended to the encrypted header.
-     * 
-     * @param publicKey
-     *            the CoverCrypt public key also holds the {@link Policy}
-     * @param attributes
-     *            the policy attributes used to encrypt the generated symmetric key
-     * @param uid
-     *            the optional resource uid
-     * @param additionalData
-     *            optional additional data
+     * @param publicKey the CoverCrypt public key also holds the {@link Policy}
+     * @param attributes the policy attributes used to encrypt the generated symmetric key
+     * @param uid the optional resource uid
+     * @param additionalData optional additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException
-     *             in case of native library error
-     * @throws CosmianException
-     *             in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
+     * @throws FfiException in case of native library error
+     * @throws CosmianException in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
      */
     public static EncryptedHeader encryptHeader(PublicKey publicKey, Attr[] attributes, Optional<byte[]> uid,
         Optional<byte[]> additionalData) throws FfiException, CosmianException {
@@ -313,27 +267,17 @@ public final class Ffi {
     }
 
     /**
-     * Generate an hybrid encryption header.
+     * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the CoverCrypt
+     * schemes and the provided policy attributes for the given policy. If provided, the resource `uid` and the
+     * `additionalData` are symmetrically encrypted and appended to the encrypted header.
      * 
-     * A symmetric key is randomly generated and encrypted using the CoverCrypt schemes and the provided policy
-     * attributes for the given policy.
-     * 
-     * If provided, the resource `uid` and the `additionalData` are symmetrically encrypted and appended to the
-     * encrypted header.
-     * 
-     * @param policy
-     *            the policy to use
-     * @param publicKeyBytes
-     *            the CoverCrypt public key bytes
-     * @param attributes
-     *            the policy attributes used to encrypt the generated symmetric key
-     * @param uid
-     *            the optional resource uid
-     * @param additionalData
-     *            optional additional data
+     * @param policy the policy to use
+     * @param publicKeyBytes the CoverCrypt public key bytes
+     * @param attributes the policy attributes used to encrypt the generated symmetric key
+     * @param uid the optional resource uid
+     * @param additionalData optional additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException
-     *             in case of native library error
+     * @throws FfiException in case of native library error
      */
     public static EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, Attr[] attributes,
         Optional<byte[]> uid, Optional<byte[]> additionalData) throws FfiException {
@@ -421,19 +365,14 @@ public final class Ffi {
     // -----------------------------------------------
 
     /**
-     * Create an decryption cache that can be used with {@link #decryptHeaderUsingCache(int, byte[])}
+     * Create an decryption cache that can be used with {@link #decryptHeaderUsingCache(int, byte[])} Use of the cache
+     * speeds up decryption of the header WARN: the cache MUST be destroyed after use with
+     * {@link #destroyDecryptionCache(int)}
      *
-     * Use of the cache speeds up decryption of the header
-     *
-     * WARN: the cache MUST be destroyed after use with {@link #destroyDecryptionCache(int)}
-     *
-     * @param userDecryptionKey
-     *            the public key to cache
+     * @param userDecryptionKey the public key to cache
      * @return the cache handle that can be passed to the decryption routine
-     * @throws FfiException
-     *             on Rust lib errors
-     * @throws CosmianException
-     *             in case of other errors
+     * @throws FfiException on Rust lib errors
+     * @throws CosmianException in case of other errors
      */
     public static int createDecryptionCache(PrivateKey userDecryptionKey) throws FfiException, CosmianException {
         byte[] userDecryptionKeyBytes = userDecryptionKey.bytes();
@@ -441,19 +380,14 @@ public final class Ffi {
     }
 
     /**
-     * Create a decryption cache that can be used with {@link #decryptHeaderUsingCache(int, byte[])}
+     * Create a decryption cache that can be used with {@link #decryptHeaderUsingCache(int, byte[])} Use of the cache
+     * speeds up the decryption of the header. WARN: the cache MUST be destroyed after use with
+     * {@link #destroyDecryptionCache(int)}
      *
-     * Use of the cache speeds up the decryption of the header.
-     *
-     * WARN: the cache MUST be destroyed after use with {@link #destroyDecryptionCache(int)}
-     *
-     * @param userDecryptionKeyBytes
-     *            the public key bytes to cache
+     * @param userDecryptionKeyBytes the public key bytes to cache
      * @return the cache handle that can be passed to the decryption routine
-     * @throws FfiException
-     *             on Rust lib errors
-     * @throws CosmianException
-     *             in case of other errors
+     * @throws FfiException on Rust lib errors
+     * @throws CosmianException in case of other errors
      */
     public static int createDecryptionCache(byte[] userDecryptionKeyBytes) throws FfiException, CosmianException {
 
@@ -473,12 +407,9 @@ public final class Ffi {
     /**
      * Destroy the cache created with {@link #createDecryptionCache(byte[])}
      *
-     * @param cacheHandle
-     *            the pointer to the cache to destroy
-     * @throws FfiException
-     *             on Rust lib errors
-     * @throws CosmianException
-     *             in case of other errors
+     * @param cacheHandle the pointer to the cache to destroy
+     * @throws FfiException on Rust lib errors
+     * @throws CosmianException in case of other errors
      */
     public static void destroyDecryptionCache(int cacheHandle) throws FfiException, CosmianException {
         unwrap(Ffi.INSTANCE.h_aes_destroy_decryption_cache(cacheHandle));
@@ -487,15 +418,11 @@ public final class Ffi {
     /**
      * Decrypt a hybrid header using a cache, recovering the symmetric key
      * 
-     * @param cacheHandle
-     *            the cache to the user decryption key
-     * @param encryptedHeaderBytes
-     *            the encrypted header
+     * @param cacheHandle the cache to the user decryption key
+     * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException
-     *             in case of native library error
-     * @throws CosmianException
-     *             in case the key bytes cannot be recovered from the {@link PrivateKey}
+     * @throws FfiException in case of native library error
+     * @throws CosmianException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
     public static DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes)
         throws FfiException, CosmianException {
@@ -506,17 +433,12 @@ public final class Ffi {
      * Decrypt a hybrid header using a cache, recovering the symmetric key, and optionally, the resource UID and
      * additional data
      * 
-     * @param cacheHandle
-     *            the cache to the user decryption key
-     * @param encryptedHeaderBytes
-     *            the encrypted header
-     * @param uidLen
-     *            the maximum bytes length of the expected UID
-     * @param additionalDataLen
-     *            the maximum bytes length of the expected additional data
+     * @param cacheHandle the cache to the user decryption key
+     * @param encryptedHeaderBytes the encrypted header
+     * @param uidLen the maximum bytes length of the expected UID
+     * @param additionalDataLen the maximum bytes length of the expected additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException
-     *             in case of native library error
+     * @throws FfiException in case of native library error
      */
     public static DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes, int uidLen,
         int additionalDataLen) throws FfiException {
@@ -549,15 +471,11 @@ public final class Ffi {
     /**
      * Decrypt a hybrid header, recovering the symmetric key
      * 
-     * @param userDecryptionKey
-     *            the CoverCrypt user decryption key
-     * @param encryptedHeaderBytes
-     *            the encrypted header
+     * @param userDecryptionKey the CoverCrypt user decryption key
+     * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException
-     *             in case of native library error
-     * @throws CosmianException
-     *             in case the key bytes cannot be recovered from the {@link PrivateKey}
+     * @throws FfiException in case of native library error
+     * @throws CosmianException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
     public static DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes)
         throws FfiException, CosmianException {
@@ -567,19 +485,13 @@ public final class Ffi {
     /**
      * Decrypt a hybrid header, recovering the symmetric key, and optionally, the resource UID and additional data
      * 
-     * @param userDecryptionKey
-     *            the CoverCrypt user decryption key
-     * @param encryptedHeaderBytes
-     *            the encrypted header
-     * @param uidLen
-     *            the maximum bytes length of the expected UID
-     * @param additionalDataLen
-     *            the maximum bytes length of the expected additional data
+     * @param userDecryptionKey the CoverCrypt user decryption key
+     * @param encryptedHeaderBytes the encrypted header
+     * @param uidLen the maximum bytes length of the expected UID
+     * @param additionalDataLen the maximum bytes length of the expected additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException
-     *             in case of native library error
-     * @throws CosmianException
-     *             in case the key bytes cannot be recovered from the {@link PrivateKey}
+     * @throws FfiException in case of native library error
+     * @throws CosmianException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
     public static DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes, int uidLen,
         int additionalDataLen) throws FfiException, CosmianException {
@@ -589,17 +501,12 @@ public final class Ffi {
     /**
      * Decrypt a hybrid header, recovering the symmetric key, and optionally, the resource UID and additional data
      * 
-     * @param userDecryptionKeyBytes
-     *            the CoverCrypt user decryption key bytes
-     * @param encryptedHeaderBytes
-     *            the encrypted header
-     * @param uidLen
-     *            the maximum bytes length of the expected UID
-     * @param additionalDataLen
-     *            the maximum bytes length of the expected additional data
+     * @param userDecryptionKeyBytes the CoverCrypt user decryption key bytes
+     * @param encryptedHeaderBytes the encrypted header
+     * @param uidLen the maximum bytes length of the expected UID
+     * @param additionalDataLen the maximum bytes length of the expected additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException
-     *             in case of native library error
+     * @throws FfiException in case of native library error
      */
     public static DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes, int uidLen,
         int additionalDataLen) throws FfiException {
@@ -643,38 +550,28 @@ public final class Ffi {
     }
 
     /**
-     * Symmetrically encrypt a block of clear text data.
+     * Symmetrically encrypt a block of clear text data. No resource UID is used for authentication and the block number
+     * is assumed to be zero
      * 
-     * No resource UID is used for authentication and the block number is assumed to be zero
-     * 
-     * @param symmetricKey
-     *            The key to use to symmetrically encrypt the block
-     * @param clearText
-     *            the clear text to encrypt
+     * @param symmetricKey The key to use to symmetrically encrypt the block
+     * @param clearText the clear text to encrypt
      * @return the encrypted block
-     * @throws FfiException
-     *             in case of native library error
+     * @throws FfiException in case of native library error
      */
     public static byte[] encryptBlock(byte[] symmetricKey, byte[] clearText) throws FfiException {
         return encryptBlock(symmetricKey, new byte[] {}, 0, clearText);
     }
 
     /**
-     * Symmetrically encrypt a block of clear text data.
+     * Symmetrically encrypt a block of clear text data. The UID and Block Number are part of the AEAD of the symmetric
+     * scheme.
      * 
-     * The UID and Block Number are part of the AEAD of the symmetric scheme.
-     * 
-     * @param symmetricKey
-     *            The key to use to symmetrically encrypt the block
-     * @param uid
-     *            The resource UID
-     * @param blockNumber
-     *            the block number when the resource is split in multiple blocks
-     * @param clearText
-     *            the clear text to encrypt
+     * @param symmetricKey The key to use to symmetrically encrypt the block
+     * @param uid The resource UID
+     * @param blockNumber the block number when the resource is split in multiple blocks
+     * @param clearText the clear text to encrypt
      * @return the encrypted block
-     * @throws FfiException
-     *             in case of native library error
+     * @throws FfiException in case of native library error
      */
     public static byte[] encryptBlock(byte[] symmetricKey, byte[] uid, int blockNumber, byte[] clearText)
         throws FfiException {
@@ -707,17 +604,13 @@ public final class Ffi {
     }
 
     /**
-     * Symmetrically decrypt a block of encrypted data.
+     * Symmetrically decrypt a block of encrypted data. No resource UID is used for authentication and the block number
+     * is assumed to be zero
      * 
-     * No resource UID is used for authentication and the block number is assumed to be zero
-     * 
-     * @param symmetricKey
-     *            the symmetric key to use
-     * @param encryptedBytes
-     *            the encrypted block bytes
+     * @param symmetricKey the symmetric key to use
+     * @param encryptedBytes the encrypted block bytes
      * @return the clear text bytes
-     * @throws FfiException
-     *             in case of native library error
+     * @throws FfiException in case of native library error
      */
     public static byte[] decryptBlock(byte[] symmetricKey, byte[] encryptedBytes) throws FfiException {
 
@@ -725,21 +618,15 @@ public final class Ffi {
     }
 
     /**
-     * Symmetrically decrypt a block of encrypted data.
+     * Symmetrically decrypt a block of encrypted data. The resource UID and block Number must match those supplied on
+     * encryption or decryption will fail.
      * 
-     * The resource UID and block Number must match those supplied on encryption or decryption will fail.
-     * 
-     * @param symmetricKey
-     *            the symmetric key to use
-     * @param uid
-     *            the resource UID
-     * @param blockNumber
-     *            the block number of the resource
-     * @param encryptedBytes
-     *            the encrypted block bytes
+     * @param symmetricKey the symmetric key to use
+     * @param uid the resource UID
+     * @param blockNumber the block number of the resource
+     * @param encryptedBytes the encrypted block bytes
      * @return the clear text bytes
-     * @throws FfiException
-     *             in case of native library error
+     * @throws FfiException in case of native library error
      */
     public static byte[] decryptBlock(byte[] symmetricKey, byte[] uid, int blockNumber, byte[] encryptedBytes)
         throws FfiException {
@@ -775,10 +662,8 @@ public final class Ffi {
      * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
      * exception wrapping it.
      * 
-     * @param result
-     *            the result of the FFI call
-     * @throws FfiException
-     *             in case of native library error
+     * @param result the result of the FFI call
+     * @throws FfiException in case of native library error
      */
     public static void unwrap(int result) throws FfiException {
         if (result == 1) {

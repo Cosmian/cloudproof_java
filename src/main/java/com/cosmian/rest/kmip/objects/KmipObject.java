@@ -30,7 +30,7 @@ public abstract class KmipObject implements KmipStruct {
             return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
         } catch (JsonProcessingException e) {
             throw new CosmianException("Failed serializing to JSON the " + this.getObjectType() + ": " + e.getMessage(),
-                    e);
+                e);
         }
     }
 
@@ -41,10 +41,9 @@ public abstract class KmipObject implements KmipStruct {
         } catch (JsonProcessingException e) {
             try {
                 throw new CosmianException("Failed de serializing from JSON the "
-                        + clazz.getDeclaredConstructor().newInstance().getObjectType()
-                        + ": " + e.getMessage(), e);
+                    + clazz.getDeclaredConstructor().newInstance().getObjectType() + ": " + e.getMessage(), e);
             } catch (InstantiationException | IllegalAccessException | NoSuchMethodException
-                    | InvocationTargetException e1) {
+                | InvocationTargetException e1) {
                 throw new CosmianException("Failed de serializing from JSON:" + e.getMessage(), e);
             }
         }
@@ -54,7 +53,7 @@ public abstract class KmipObject implements KmipStruct {
      * Helper function to retrieve the KMIP Object class from its {@link ObjectType}
      * 
      * @param objectType the {@link ObjectType}
-     * @param <C>        the {@link KmipObject}
+     * @param <C> the {@link KmipObject}
      * @return the Class of the object
      */
     @SuppressWarnings("unchecked")

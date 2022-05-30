@@ -168,7 +168,7 @@ public class BinaryHeap {
 
     @Override
     public int hashCode() {
-        return Objects.hash(heap, heapSize);
+        return Objects.hash(Arrays.hashCode(heap), heapSize);
     }
 
     @Override

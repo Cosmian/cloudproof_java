@@ -370,135 +370,135 @@ public class TestFfiAbe {
 		assertArrayEquals(data, data_kms);
 	}
 
-	// // @Test
-	// public void testHybridCryptoKmsEncryptLocalDecrypt() throws Exception {
+	@Test
+	public void testHybridCryptoKmsEncryptLocalDecrypt() throws Exception {
 
-	// System.out.println("");
-	// System.out.println("---------------------------------------");
-	// System.out.println(" Hybrid Crypto Test KMS Encrypt + Local Decrypt");
-	// System.out.println("---------------------------------------");
-	// System.out.println("");
+		System.out.println("");
+		System.out.println("---------------------------------------");
+		System.out.println(" Hybrid Crypto Test KMS Encrypt + Local Decrypt");
+		System.out.println("---------------------------------------");
+		System.out.println("");
 
-	// if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-	// System.out.println("No KMS Server: ignoring");
-	// return;
-	// }
+		if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+			System.out.println("No KMS Server: ignoring");
+			return;
+		}
 
-	// // The data we want to encrypt/decrypt
-	// byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
+		// The data we want to encrypt/decrypt
+		byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
 
-	// // A unique ID associated with this message. The unique id is used to
-	// // authenticate the message in the AES encryption scheme.
-	// // Typically this will be a hash of the content if it is unique, a unique
-	// // filename or a database unique key
-	// byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
+		// A unique ID associated with this message. The unique id is used to
+		// authenticate the message in the AES encryption scheme.
+		// Typically this will be a hash of the content if it is unique, a unique
+		// filename or a database unique key
+		byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
 
-	// Policy pg = policy();
+		Policy pg = policy();
 
-	// CoverCrypt abe = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+		CoverCrypt abe = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
-	// String[] ids = abe.createMasterKeyPair(pg);
+		String[] ids = abe.createMasterKeyPair(pg);
 
-	// String privateMasterKeyId = ids[0];
-	// String publicMasterKeyId = ids[1];
+		String privateMasterKeyId = ids[0];
+		String publicMasterKeyId = ids[1];
 
-	// // User decryption key Confidential, FIN
-	// String userKeyId = abe.createUserDecryptionKey(accessPolicyConfidential(), privateMasterKeyId);
-	// PrivateKey userKey = abe.retrieveUserDecryptionKey(userKeyId);
+		// User decryption key Confidential, FIN
+		String userKeyId = abe.createUserDecryptionKey(accessPolicyConfidential(), privateMasterKeyId);
+		PrivateKey userKey = abe.retrieveUserDecryptionKey(userKeyId);
 
-	// // The policy attributes that will be used to encrypt the content. They must
-	// // exist in the policy associated with the Public Key
-	// Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+		// The policy attributes that will be used to encrypt the content. They must
+		// exist in the policy associated with the Public Key
+		Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
 
-	// //
-	// // KMS Encryption
-	// //
-	// byte[] ciphertext = abe.kmsEncrypt(publicMasterKeyId, data, attributes, Optional.of(uid));
-	// System.out.println("CIPHER TEXT SIZE: " + ciphertext.length);
+		//
+		// KMS Encryption
+		//
+		byte[] ciphertext = abe.kmsEncrypt(publicMasterKeyId, data, attributes, Optional.of(uid));
+		System.out.println("CIPHER TEXT SIZE: " + ciphertext.length);
 
-	// //
-	// // Local Decryption
-	// //
-	// // Parse the message by first recovering the header length
-	// int headerSize = ByteBuffer.wrap(ciphertext).order(ByteOrder.BIG_ENDIAN).getInt(0);
-	// System.out.println("HEADER SIZE: " + headerSize);
-	// // Then recover the encrypted header and encrypted content
-	// byte[] encryptedHeader = Arrays.copyOfRange(ciphertext, 4, 4 + headerSize);
+		//
+		// Local Decryption
+		//
+		// Parse the message by first recovering the header length
+		int headerSize = ByteBuffer.wrap(ciphertext).order(ByteOrder.BIG_ENDIAN).getInt(0);
+		System.out.println("HEADER SIZE: " + headerSize);
+		// Then recover the encrypted header and encrypted content
+		byte[] encryptedHeader = Arrays.copyOfRange(ciphertext, 4, 4 + headerSize);
 
-	// byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
+		byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
 
-	// // Decrypt he header to recover the symmetric AES key
-	// DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
+		// Decrypt he header to recover the symmetric AES key
+		DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
 
-	// // decrypt the content, passing the unique id and block number
-	// byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+		// decrypt the content, passing the unique id and block number
+		byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
 
-	// // Verify everything is correct
-	// assertTrue(Arrays.equals(data, data_));
+		// Verify everything is correct
+		assertTrue(Arrays.equals(data, data_));
 
-	// }
+	}
 
-	// // @Test
-	// public void testHybridCryptoKmsEncryptLocalDecryptNoUid() throws Exception {
+	@Test
+	public void testHybridCryptoKmsEncryptLocalDecryptNoUid() throws Exception {
 
-	// System.out.println("");
-	// System.out.println("---------------------------------------");
-	// System.out.println(" Hybrid Crypto Test KMS Encrypt + Local Decrypt - No UID");
-	// System.out.println("---------------------------------------");
-	// System.out.println("");
+		System.out.println("");
+		System.out.println("---------------------------------------");
+		System.out.println(" Hybrid Crypto Test KMS Encrypt + Local Decrypt - No UID");
+		System.out.println("---------------------------------------");
+		System.out.println("");
 
-	// if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-	// System.out.println("No KMS Server: ignoring");
-	// return;
-	// }
+		if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+			System.out.println("No KMS Server: ignoring");
+			return;
+		}
 
-	// // The data we want to encrypt/decrypt
-	// byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
+		// The data we want to encrypt/decrypt
+		byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
 
-	// Policy pg = policy();
+		Policy pg = policy();
 
-	// CoverCrypt abe = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+		CoverCrypt abe = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
-	// String[] ids = abe.createMasterKeyPair(pg);
+		String[] ids = abe.createMasterKeyPair(pg);
 
-	// String privateMasterKeyId = ids[0];
-	// String publicMasterKeyId = ids[1];
+		String privateMasterKeyId = ids[0];
+		String publicMasterKeyId = ids[1];
 
-	// // User decryption key Confidential, FIN
-	// String userKeyId = abe.createUserDecryptionKey(accessPolicyConfidential(), privateMasterKeyId);
-	// PrivateKey userKey = abe.retrieveUserDecryptionKey(userKeyId);
+		// User decryption key Confidential, FIN
+		String userKeyId = abe.createUserDecryptionKey(accessPolicyConfidential(), privateMasterKeyId);
+		PrivateKey userKey = abe.retrieveUserDecryptionKey(userKeyId);
 
-	// // The policy attributes that will be used to encrypt the content. They must
-	// // exist in the policy associated with the Public Key
-	// Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+		// The policy attributes that will be used to encrypt the content. They must
+		// exist in the policy associated with the Public Key
+		Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
 
-	// //
-	// // KMS Encryption
-	// //
-	// byte[] ciphertext = abe.kmsEncrypt(publicMasterKeyId, data, attributes);
-	// System.out.println("CIPHER TEXT SIZE: " + ciphertext.length);
+		//
+		// KMS Encryption
+		//
+		byte[] ciphertext = abe.kmsEncrypt(publicMasterKeyId, data, attributes);
+		System.out.println("CIPHER TEXT SIZE: " + ciphertext.length);
 
-	// //
-	// // Local Decryption
-	// //
-	// // Parse the message by first recovering the header length
-	// int headerSize = ByteBuffer.wrap(ciphertext).order(ByteOrder.BIG_ENDIAN).getInt(0);
-	// System.out.println("HEADER SIZE: " + headerSize);
-	// // Then recover the encrypted header and encrypted content
-	// byte[] encryptedHeader = Arrays.copyOfRange(ciphertext, 4, 4 + headerSize);
+		//
+		// Local Decryption
+		//
+		// Parse the message by first recovering the header length
+		int headerSize = ByteBuffer.wrap(ciphertext).order(ByteOrder.BIG_ENDIAN).getInt(0);
+		System.out.println("HEADER SIZE: " + headerSize);
+		// Then recover the encrypted header and encrypted content
+		byte[] encryptedHeader = Arrays.copyOfRange(ciphertext, 4, 4 + headerSize);
 
-	// byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
+		byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
 
-	// // Decrypt he header to recover the symmetric AES key
-	// DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
+		// Decrypt he header to recover the symmetric AES key
+		DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
 
-	// // decrypt the content, passing the unique id and block number
-	// byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), encryptedContent);
+		// decrypt the content, passing the unique id and block number
+		byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), encryptedContent);
 
-	// // Verify everything is correct
-	// assertTrue(Arrays.equals(data, data_));
+		// Verify everything is correct
+		assertTrue(Arrays.equals(data, data_));
 
-	// }
+	}
 
 	@Test
 	public void testHybridEncryptionDecryptionUsingCacheLocal() throws Exception {

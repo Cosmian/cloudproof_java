@@ -64,7 +64,7 @@ public class DataToEncrypt {
 
     @Override
     public String toString() {
-        return "{" + " policyAttributes='" + getPolicyAttributes() + "'" + ", data='" + Arrays.toString(getData()) + "'"
+        return "{" + " policyAttributes='" + Arrays.toString(getPolicyAttributes()) + "'" + ", data='" + Arrays.toString(getData()) + "'"
             + "}";
     }
 

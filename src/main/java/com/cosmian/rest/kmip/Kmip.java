@@ -51,7 +51,7 @@ public class Kmip {
      * attributes to be assigned to the object (e.g., Cryptographic Algorithm, Cryptographic Length, etc.). The response
      * contains the Unique Identifier of the created object. The server SHALL copy the Unique Identifier returned by
      * this operation into the ID Placeholder variable.
-     * 
+     *
      * @param request The Create request
      * @return the successful response
      * @throws CosmianException if the request fails
@@ -80,7 +80,7 @@ public class Kmip {
      * create a Link attribute of Link Type Private Key pointing to the Private Key. The response contains the Unique
      * Identifiers of both created objects. The ID Placeholder value SHALL be set to the Unique Identifier of the
      * Private Key.
-     * 
+     *
      * @param request The Create request
      * @return the successful response
      * @throws CosmianException if the request fails
@@ -107,7 +107,7 @@ public class Kmip {
      * the algorithm does not use an IV/Counter/Nonce. The response contains the Unique Identifier of the Managed
      * Cryptographic Object used as the key and the result of the decryption operation. The success or failure of the
      * operation is indicated by the Result Status (and if failure the Result Reason) in the response header.
-     * 
+     *
      * @param request The Decrypt request
      * @return the successful response
      * @throws CosmianException if the request fails *
@@ -130,12 +130,12 @@ public class Kmip {
      * This operation is used to indicate to the server that the key material for the specified Managed Object SHALL be
      * destroyed or rendered inaccessible. The meta-data for the key material SHALL be retained by the server. Objects
      * SHALL only be destroyed if they are in either Pre-Active or Deactivated state.
-     * 
+     *
      * @param request The Destroy request
      * @return the successful response
      * @throws CosmianException if the request fails
      */
-    public DestroyResponse locate(Destroy request) throws CosmianException {
+    public DestroyResponse destroy(Destroy request) throws CosmianException {
         logger.finer(() -> "Destroy " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
@@ -163,7 +163,7 @@ public class Kmip {
      * Permission Denied. The response contains the Unique Identifier of the Managed Cryptographic Object used as the
      * key and the result of the encryption operation. The success or failure of the operation is indicated by the
      * Result Status (and if failure the Result Reason) in the response header
-     * 
+     *
      * @param request The Encrypt request
      * @return the successful response
      * @throws CosmianException if the request fails
@@ -197,7 +197,7 @@ public class Kmip {
      * (where relevant), and then using that public key’s PKCS#12 Certificate Link to get the base certificate, and then
      * using each certificate’s Certificate Link to build the certificate chain. It is an error if there is more than
      * one valid certificate chain.
-     * 
+     *
      * @param request The Get request
      * @return the successful response
      * @throws CosmianException if the request fails
@@ -222,7 +222,7 @@ public class Kmip {
      * set to the supplied values rather than any server generated values. The response contains the Unique Identifier
      * provided in the request or assigned by the server. The server SHALL copy the Unique Identifier returned by this
      * operations into the ID Placeholder variable.
-     * 
+     *
      * @param request The Import request
      * @return the successful response
      * @throws CosmianException if the request fails
@@ -290,7 +290,7 @@ public class Kmip {
      * searched.The server SHALL NOT return unique identifiers for objects that are destroyed unless the Storage Status
      * Mask field includes the Destroyed Storage indicator. The server SHALL NOT return unique identifiers for objects
      * that are archived unless the Storage Status Mask field includes the Archived Storage indicator.
-     * 
+     *
      * @param request The Locate request
      * @return the successful response
      * @throws CosmianException if the request fails
@@ -323,7 +323,7 @@ public class Kmip {
      * the replacement key pair. If no Offset is specified, the Activation Date and Deactivation Date values are copied
      * from the existing key pair. If Offset is set and dates exist for the existing key pair, then the dates of the
      * replacement key pair SHALL be set based on the dates of the existing key pair as follows
-     * 
+     *
      * @param request The Rekey KeyPair request
      * @return the successful response
      * @throws CosmianException if the request fails
@@ -351,7 +351,7 @@ public class Kmip {
      * Compromise Occurrence Date SHOULD be set to the Initial Date for the object. If the revocation reason is neither
      * “key compromise” nor “CA compromise”, the object is placed into the “deactivated” state, and the Deactivation
      * Date is set to the current date and time.
-     * 
+     *
      * @param request The Revoke request
      * @return the successful response
      * @throws CosmianException if the request fails

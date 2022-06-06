@@ -3,13 +3,13 @@ package com.cosmian.rest;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+
 import com.cosmian.CosmianException;
 import com.cosmian.RestClient;
 import com.cosmian.rest.abe.Abe;
 import com.cosmian.rest.kmip.Kmip;
-
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 
 public class Cosmian {
 
@@ -87,7 +87,9 @@ public class Cosmian {
      */
     public static byte[] hex_decode(String hex_encoded_string) throws CosmianException {
         try {
-            return Hex.decodeHex(hex_encoded_string);
+            // conversion to char array to make the library compatible with older versions of commons-codec
+            // such as the ones found in spark-2.7
+            return Hex.decodeHex(hex_encoded_string.toCharArray());
         } catch (DecoderException e) {
             String err = "Failed decoding the hex encoded String: " + e.getMessage();
             logger.severe(err);

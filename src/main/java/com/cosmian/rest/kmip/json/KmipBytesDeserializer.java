@@ -4,12 +4,12 @@ import java.io.IOException;
 // import java.util.logging.Logger;
 import java.util.logging.Logger;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 
 public class KmipBytesDeserializer extends KmipJsonDeserializer<byte[]> {
 
@@ -34,7 +34,9 @@ public class KmipBytesDeserializer extends KmipJsonDeserializer<byte[]> {
             throw new IOException("Invalid KMIP Json " + node.toPrettyString() + ". No value");
         }
         try {
-            return Hex.decodeHex(value_node.asText().toLowerCase());
+            // conversion to char array to make the library compatible with older versions of commons-codec
+            // such as the ones found in spark-2.7
+            return Hex.decodeHex(value_node.asText().toLowerCase().toCharArray());
         } catch (DecoderException e) {
             throw new IOException("Invalid KMIP Json " + node.toPrettyString() + ". Value is no a ByteString");
         }

@@ -16,9 +16,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import com.cosmian.jna.cover_crypt.DecryptedHeader;
 import com.cosmian.jna.cover_crypt.EncryptedHeader;
 import com.cosmian.jna.cover_crypt.Ffi;
+import com.cosmian.jna.cover_crypt.MasterKeys;
 import com.cosmian.rest.cover_crypt.CoverCrypt;
 import com.cosmian.rest.cover_crypt.acccess_policy.AccessPolicy;
 import com.cosmian.rest.cover_crypt.acccess_policy.And;
@@ -26,9 +30,6 @@ import com.cosmian.rest.cover_crypt.acccess_policy.Attr;
 import com.cosmian.rest.cover_crypt.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
-
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 public class TestFfiCoverCrypt {
 
@@ -58,6 +59,25 @@ public class TestFfiCoverCrypt {
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
         byte[] passHash = sha256.digest(data);
         return passHash;
+    }
+
+    @Test
+    public void testKeysGeneration() throws Exception {
+
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println(" Master keys generation");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        Policy policy = policy();
+        MasterKeys masterKeys = Ffi.generateMasterKeys(policy);
+        System.out.println("Master private key: " + Arrays.toString(masterKeys.getPrivateKey()));
+        System.out.println("Master public key: " + Arrays.toString(masterKeys.getPublicKey()));
+
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        byte[] userKey = Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
+        System.out.println("User key: " + Arrays.toString(userKey));
     }
 
     @Test
@@ -178,7 +198,6 @@ public class TestFfiCoverCrypt {
 
         byte[] data_ = Ffi.decryptBlock(header_.getSymmetricKey(), header_.getUid(), 0, encryptedBlock);
         assertTrue(Arrays.equals(data, data_));
-
     }
 
     @Test

@@ -40,7 +40,7 @@ When using local encryption and decryption with [GPSW](https://github.com/Cosmia
 
 Check the main pages of the respective projects to build the native librairies appropriate for your systems. The [test directory](./src/test/resources/linux-x86-64/) provides pre-built libraries for Linux GLIBC 2.17. These librairies should run fine on a system with a more recent GLIBC version.
 
-This table shows the minimum versions correspondances between the various components
+This table shows the minimum versions correspondences between the various components
 
 KMS Server | Java Lib  | abe_gpsw lib | CoverCrypt lib
 -----------|-----------|--------------|---------------
@@ -50,3 +50,4 @@ KMS Server | Java Lib  | abe_gpsw lib | CoverCrypt lib
 1.2.1      | 0.6.1     | 0.6.1        | N/A
 2.0.1      | 0.7.2     | 0.6.5        | 1.0.2
 2.0.2      | 0.7.5     | 0.6.10       | 2.0.0
+2.0.2      | 0.7.5     | 0.6.11       | 2.0.1

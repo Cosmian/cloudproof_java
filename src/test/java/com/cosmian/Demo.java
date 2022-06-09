@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import java.nio.charset.StandardCharsets;
 
+import org.junit.jupiter.api.Test;
+
 import com.cosmian.rest.abe.Abe;
 import com.cosmian.rest.abe.acccess_policy.AccessPolicy;
 import com.cosmian.rest.abe.acccess_policy.And;
@@ -11,8 +13,6 @@ import com.cosmian.rest.abe.acccess_policy.Attr;
 import com.cosmian.rest.abe.acccess_policy.Or;
 import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
-
-import org.junit.jupiter.api.Test;
 
 /**
  * This class contains demos of the Java API. Demos are written as tests so that they can be easily launched from an IDE

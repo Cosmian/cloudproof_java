@@ -1,0 +1,23 @@
+image: gitlab.cosmian.com:5000/core/ci-java-8:latest
+
+variables:
+  CARGO_HOME: ${CI_PROJECT_DIR}/.cargo/
+  SCCACHE_DIR: ${CI_PROJECT_DIR}/.cache/sccache
+  COSMIAN_SERVER_URL: http://localhost:9998
+
+stages:
+  - build
+
+build:
+  stage: build
+  services:
+    # - name: gitlab.cosmian.com:5000/core/kms:2.0.2
+    - name: gitlab.cosmian.com:5000/core/kms:ci_dev
+      alias: kms_ci
+      # command: [ "--port","9998","--verbose"]
+  script:
+    - mvn package
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 3 mos

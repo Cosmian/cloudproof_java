@@ -10,7 +10,9 @@
     ],
     "java.format.settings.url": ".vscode/codestyle-java.xml",
     "[java]": {
-        "editor.detectIndentation": false
+        "editor.detectIndentation": false,
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4,
     },
     "files.watcherExclude": {
         "**/target": true

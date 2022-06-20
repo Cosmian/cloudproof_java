@@ -8,7 +8,8 @@ DESTINATION_DIR=$ROOT_DIR/src/test/resources/linux-x86-64
 build_native_library() {
   CRATE_NAME=$1
   GIT_TAG=$2
-  [ ! -d "$CRATE_NAME" ] && git clone git@github.com:Cosmian/"$CRATE_NAME".git
+  rm -rf $CRATE_NAME
+  git clone git@github.com:Cosmian/"$CRATE_NAME".git
   cp -f build_rust.sh "$CRATE_NAME"
   pushd "$CRATE_NAME"
   docker run \
@@ -19,5 +20,8 @@ build_native_library() {
   popd
 }
 
-build_native_library abe_gpsw v0.6.11
+build_native_library abe_gpsw v0.7.0
 build_native_library cover_crypt v2.0.1
+
+# Since docker user is root, restore local permissions to current user
+sudo chown -R "$(whoami)" .

@@ -253,8 +253,8 @@ public class TestFfiAbe {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
+        if (TestUtils.isGithub()) {
+            System.out.println("Ignoring this test on Github CI");
             return;
         }
 
@@ -329,8 +329,8 @@ public class TestFfiAbe {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
+        if (TestUtils.isGithub()) {
+            System.out.println("Ignoring this test on Github CI");
             return;
         }
 
@@ -399,8 +399,8 @@ public class TestFfiAbe {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
+        if (TestUtils.isGithub()) {
+            System.out.println("Ignoring this test on Github CI");
             return;
         }
 
@@ -467,8 +467,8 @@ public class TestFfiAbe {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
+        if (TestUtils.isGithub()) {
+            System.out.println("Ignoring this test on Github CI");
             return;
         }
 

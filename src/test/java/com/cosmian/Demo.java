@@ -30,8 +30,8 @@ public class Demo {
     @Test
     public void test_abe() throws Exception {
 
-        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("Demo: No KMS Server: ignoring");
+        if (TestUtils.isGithub()) {
+            System.out.println("Ignoring this test on Github CI");
             return;
         }
 

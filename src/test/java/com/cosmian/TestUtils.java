@@ -54,4 +54,16 @@ public final class TestUtils {
         }
     }
 
+    /*
+     * This function is made for CI purpose:
+     * if running on Github, ignore test
+     * otherwise, a running KMS server is required
+     */
+    public static boolean isGithub() {
+        String isGithub = System.getenv("GITHUB_JOB");
+        if (isGithub != null && isGithub.length() != 0) {
+            return true;
+        }
+        return false;
+    }
 }

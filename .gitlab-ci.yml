@@ -14,7 +14,6 @@ build:
     # - name: gitlab.cosmian.com:5000/core/kms:2.0.2
     - name: gitlab.cosmian.com:5000/core/kms:ci_dev
       alias: kms_ci
-      # command: [ "--port","9998","--verbose"]
   script:
     - mvn package
   artifacts:

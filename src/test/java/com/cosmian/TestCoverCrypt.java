@@ -8,6 +8,11 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import org.apache.commons.codec.binary.Hex;
+import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import com.cosmian.rest.cover_crypt.CoverCrypt;
 import com.cosmian.rest.cover_crypt.acccess_policy.AccessPolicy;
 import com.cosmian.rest.cover_crypt.acccess_policy.And;
@@ -23,11 +28,6 @@ import com.cosmian.rest.kmip.types.KeyFormatType;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.VendorAttribute;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.commons.codec.binary.Hex;
-import org.json.JSONObject;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 public class TestCoverCrypt {
 
@@ -85,8 +85,8 @@ public class TestCoverCrypt {
     @Test
     public void test_keys_import_export() throws Exception {
 
-        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
+        if (TestUtils.isGithub()) {
+            System.out.println("Ignoring this test on Github CI");
             return;
         }
 
@@ -143,10 +143,11 @@ public class TestCoverCrypt {
     @Test
     public void test_user_decryption_keys() throws Exception {
 
-        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
+        if (TestUtils.isGithub()) {
+            System.out.println("Ignoring this test on Github CI");
             return;
         }
+
         Policy pg = policy();
 
         CoverCrypt coverCrypt = new CoverCrypt(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));

@@ -30,7 +30,7 @@ This library free software and is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.7.5</version>
+    <version>0.7.6</version>
 </dependency>
 ```
 
@@ -50,4 +50,14 @@ KMS Server | Java Lib  | abe_gpsw lib | CoverCrypt lib
 1.2.1      | 0.6.1     | 0.6.1        | N/A
 2.0.1      | 0.7.2     | 0.6.5        | 1.0.2
 2.0.2      | 0.7.5     | 0.6.10       | 2.0.0
-2.0.2      | 0.7.5     | 0.6.11       | 2.0.1
+2.0.4      | 0.7.6     | 0.7.0        | 2.0.1
+
+## Update native libraries
+
+The Cosmian Java lib uses JNA to access functions of the 2 native shared libraries `CoverCrypt` and `ABE GPSW`.
+
+On Linux, those 2 libraries must be found in 1 of these folders:
+- src/resources/linux-x86-64
+- src/test/resources/linux-x86-64
+
+To update those native libraries, the script `src/test/resources/linux-x86-64/update_native_libraries.sh`

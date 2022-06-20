@@ -66,7 +66,7 @@ public class TestFfiCoverCrypt {
 
         System.out.println("");
         System.out.println("---------------------------------------");
-        System.out.println(" Master keys generation");
+        System.out.println(" ABE keys generation");
         System.out.println("---------------------------------------");
         System.out.println("");
 
@@ -78,6 +78,38 @@ public class TestFfiCoverCrypt {
         AccessPolicy accessPolicy = accessPolicyConfidential();
         byte[] userKey = Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
         System.out.println("User key: " + Arrays.toString(userKey));
+    }
+
+    @Test
+    public void testBenchKeysGeneration() throws Exception {
+
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println(" Bench CoverCrypt keys generation");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        Policy policy = policy();
+        MasterKeys masterKeys = null;
+        long start = System.nanoTime();
+        // Single generation being very small (about 180µs), nb_occurrences should be at least 1 million
+        // for CI purpose, value is 10000
+        int nb_occurrences = 10000;
+        for (int i = 0; i < nb_occurrences; i++) {
+            masterKeys = Ffi.generateMasterKeys(policy);
+        }
+        long time = (System.nanoTime() - start);
+        System.out.println("CoverCrypt Master Key generation average time: " + time / nb_occurrences + "ns (or "
+            + time / 1000 / nb_occurrences + "µs)");
+
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        start = System.nanoTime();
+        for (int i = 0; i < nb_occurrences; i++) {
+            Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
+        }
+        time = (System.nanoTime() - start);
+        System.out.println("CoverCrypt User Private Key generation average time: " + time / nb_occurrences + "ns (or "
+            + time / 1000 / nb_occurrences + "µs)");
     }
 
     @Test

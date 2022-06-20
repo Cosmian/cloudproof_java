@@ -66,7 +66,7 @@ public class TestFfiAbe {
 
         System.out.println("");
         System.out.println("---------------------------------------");
-        System.out.println(" Master keys generation");
+        System.out.println(" ABE keys generation");
         System.out.println("---------------------------------------");
         System.out.println("");
 
@@ -78,6 +78,34 @@ public class TestFfiAbe {
         AccessPolicy accessPolicy = accessPolicyConfidential();
         byte[] userKey = Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
         System.out.println("User key: " + Arrays.toString(userKey));
+    }
+
+    @Test
+    public void testBenchKeysGeneration() throws Exception {
+
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println(" Bench ABE keys generation");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        Policy policy = policy();
+        MasterKeys masterKeys = null;
+        long start = System.nanoTime();
+        int nb_occurrences = 100;
+        for (int i = 0; i < nb_occurrences; i++) {
+            masterKeys = Ffi.generateMasterKeys(policy);
+        }
+        long time = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        System.out.println("ABE Master Key generation average time: " + time / nb_occurrences + "s");
+
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        start = System.nanoTime();
+        for (int i = 0; i < nb_occurrences; i++) {
+            Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
+        }
+        time = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        System.out.println("ABE User Private Key generation average time: " + time / nb_occurrences + "ms");
     }
 
     @Test

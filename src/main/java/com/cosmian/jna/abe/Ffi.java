@@ -1,6 +1,8 @@
 package com.cosmian.jna.abe;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,12 +10,15 @@ import java.util.Optional;
 
 import com.cosmian.CosmianException;
 import com.cosmian.jna.FfiException;
+import com.cosmian.rest.Cosmian;
 import com.cosmian.rest.abe.acccess_policy.AccessPolicy;
 import com.cosmian.rest.abe.acccess_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
@@ -738,6 +743,56 @@ public final class Ffi {
             masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson));
 
         return Arrays.copyOfRange(userPrivateKeyBuffer, 0, userPrivateKeyBufferSize.getValue());
+    }
+
+    /**
+     * Rotate attributes, changing their underlying value with that of an unused slot
+     *
+     * @param attributes: a list of attributes to rotate
+     * @param policy: the current policy returns the new Policy
+     * @return the new policy
+     * @throws FfiException in case of native library error
+     * @throws IOException standard IO exceptions
+     * @throws DatabindException standard databind exceptions
+     * @throws StreamReadException stream read exceptions
+     * @throws CosmianException in case of hex decoding error
+     */
+    public static Policy rotateAttributes(Attr[] attributes, Policy policy)
+        throws FfiException, StreamReadException, DatabindException, IOException, CosmianException {
+        // New policy Bytes OUT
+        byte[] policyBuffer = new byte[4096];
+        IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
+
+        // For the JSON strings
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Attributes
+        // The value must be the JSON array of the String representation of the Attrs
+        ArrayList<String> attributesArray = new ArrayList<String>();
+        for (Attr attr : attributes) {
+            attributesArray.add(attr.toString());
+        }
+        String attributesJson;
+        try {
+            attributesJson = mapper.writeValueAsString(attributesArray);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid Policy");
+        }
+
+        // Policy
+        String policyJson;
+        try {
+            policyJson = mapper.writeValueAsString(policy);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid Policy");
+        }
+
+        unwrap(Ffi.INSTANCE.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson));
+
+        byte[] policyBytes = Arrays.copyOfRange(policyBuffer, 0, policyBufferSize.getValue());
+        Policy newPolicy =
+            mapper.readValue(Cosmian.hex_decode(new String(policyBytes, Charset.defaultCharset())), Policy.class);
+        return newPolicy;
     }
 
     /**

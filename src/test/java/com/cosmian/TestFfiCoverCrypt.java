@@ -66,18 +66,47 @@ public class TestFfiCoverCrypt {
 
         System.out.println("");
         System.out.println("---------------------------------------");
-        System.out.println(" ABE keys generation");
+        System.out.println(" CoverCrypt keys generation");
         System.out.println("---------------------------------------");
         System.out.println("");
 
+        // Declare the CoverCrypt Policy
         Policy policy = policy();
-        MasterKeys masterKeys = Ffi.generateMasterKeys(policy);
-        System.out.println("Master private key: " + Arrays.toString(masterKeys.getPrivateKey()));
-        System.out.println("Master public key: " + Arrays.toString(masterKeys.getPublicKey()));
 
+        // Generate the master keys
+        MasterKeys masterKeys = Ffi.generateMasterKeys(policy);
+
+        // Generate an user decryption key
         AccessPolicy accessPolicy = accessPolicyConfidential();
-        byte[] userKey = Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
-        System.out.println("User key: " + Arrays.toString(userKey));
+        byte[] userDecryptionKey = Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
+
+        // Rotate attributes
+        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+        Policy newPolicy = Ffi.rotateAttributes(attributes, policy);
+
+        // Must refresh the master keys after an attributes rotation
+        masterKeys = Ffi.generateMasterKeys(newPolicy);
+
+        // Now generate the header which contains the ABE encryption of the randomly
+        // generated AES key.
+        EncryptedHeader encryptedHeader =
+            Ffi.encryptHeader(newPolicy, masterKeys.getPublicKey(), attributes, Optional.empty(), Optional.empty());
+
+        // Decrypt the header to recover the symmetric AES key
+        // Should fail since user decryption key has not been refreshed
+        try {
+            Ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(), 0, 0);
+        } catch (Exception ex) {
+            System.out.println(
+                "As expected, user cannot be decrypt CoverCrypt Header since his user decryption key has not been refreshed");
+        }
+
+        // Generate an user decryption key
+        byte[] userDecryptionKeyRefreshed =
+            Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, newPolicy);
+
+        // Decrypt the header to recover the symmetric AES key
+        Ffi.decryptHeader(userDecryptionKeyRefreshed, encryptedHeader.getEncryptedHeaderBytes(), 0, 0);
     }
 
     @Test
@@ -176,7 +205,7 @@ public class TestFfiCoverCrypt {
         byte[] encryptedHeader_ = Arrays.copyOfRange(ciphertext, 4, 4 + headerSize_);
         byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize_, ciphertext.length);
 
-        // Decrypt he header to recover the symmetric AES key
+        // Decrypt the header to recover the symmetric AES key
         DecryptedHeader decryptedHeader = Ffi.decryptHeader(userDecryptionKey, encryptedHeader_);
 
         // decrypt the content, passing the unique id and block number
@@ -478,7 +507,7 @@ public class TestFfiCoverCrypt {
 
         byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
 
-        // Decrypt he header to recover the symmetric AES key
+        // Decrypt the header to recover the symmetric AES key
         DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
 
         // decrypt the content, passing the unique id and block number
@@ -540,7 +569,7 @@ public class TestFfiCoverCrypt {
 
         byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
 
-        // Decrypt he header to recover the symmetric AES key
+        // Decrypt the header to recover the symmetric AES key
         DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
 
         // decrypt the content, passing the unique id and block number

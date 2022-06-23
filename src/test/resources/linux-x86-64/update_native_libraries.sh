@@ -20,8 +20,8 @@ build_native_library() {
   popd
 }
 
-build_native_library abe_gpsw v0.7.0
-build_native_library cover_crypt v2.0.1
+build_native_library abe_gpsw v0.8.0
+build_native_library cover_crypt v3.0.1
 
 # Since docker user is root, restore local permissions to current user
 sudo chown -R "$(whoami)" .

@@ -8,7 +8,7 @@ import org.apache.commons.codec.binary.Hex;
 
 import com.cosmian.CosmianException;
 import com.cosmian.RestClient;
-import com.cosmian.rest.abe.Abe;
+import com.cosmian.rest.gpsw.Abe;
 import com.cosmian.rest.kmip.Kmip;
 
 public class Cosmian {

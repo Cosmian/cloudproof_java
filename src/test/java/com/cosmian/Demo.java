@@ -6,12 +6,12 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
-import com.cosmian.rest.abe.Abe;
-import com.cosmian.rest.abe.acccess_policy.AccessPolicy;
-import com.cosmian.rest.abe.acccess_policy.And;
-import com.cosmian.rest.abe.acccess_policy.Attr;
-import com.cosmian.rest.abe.acccess_policy.Or;
-import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.rest.gpsw.Abe;
+import com.cosmian.rest.gpsw.acccess_policy.AccessPolicy;
+import com.cosmian.rest.gpsw.acccess_policy.And;
+import com.cosmian.rest.gpsw.acccess_policy.Attr;
+import com.cosmian.rest.gpsw.acccess_policy.Or;
+import com.cosmian.rest.gpsw.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 
 /**

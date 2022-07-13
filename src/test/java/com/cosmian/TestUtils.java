@@ -13,7 +13,7 @@ public final class TestUtils {
         logger.setLevel(Level.ALL);
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new SimpleFormatter());
-        handler.setLevel(Level.FINE);
+        handler.setLevel(Level.ALL);
         logger.setUseParentHandlers(false);
         logger.addHandler(handler);
         logger.fine("Logger was setup");

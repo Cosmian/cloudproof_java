@@ -19,19 +19,29 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.cosmian.jna.gpsw.DecryptedHeader;
-import com.cosmian.jna.gpsw.EncryptedHeader;
-import com.cosmian.jna.gpsw.Ffi;
-import com.cosmian.jna.gpsw.MasterKeys;
-import com.cosmian.rest.gpsw.Abe;
-import com.cosmian.rest.gpsw.acccess_policy.AccessPolicy;
-import com.cosmian.rest.gpsw.acccess_policy.And;
-import com.cosmian.rest.gpsw.acccess_policy.Attr;
-import com.cosmian.rest.gpsw.policy.Policy;
+import com.cosmian.jna.abe.DecryptedHeader;
+import com.cosmian.jna.abe.EncryptedHeader;
+import com.cosmian.jna.abe.Ffi;
+import com.cosmian.jna.abe.FfiWrapper;
+import com.cosmian.jna.abe.MasterKeys;
+import com.cosmian.rest.abe.Abe;
+import com.cosmian.rest.abe.Implementation;
+import com.cosmian.rest.abe.Specifications;
+import com.cosmian.rest.abe.access_policy.AccessPolicy;
+import com.cosmian.rest.abe.access_policy.And;
+import com.cosmian.rest.abe.access_policy.Attr;
+import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
+import com.sun.jna.Native;
 
 public class TestFfiGpsw {
+
+    static final Implementation abeImplementation = Implementation.GPSW;
+
+    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("abe_gpsw", FfiWrapper.class);
+
+    static final Ffi ffi = new Ffi(INSTANCE, new Specifications(abeImplementation));
 
     @BeforeAll
     public static void before_all() {
@@ -40,18 +50,18 @@ public class TestFfiGpsw {
 
     @Test
     public void testError() throws Exception {
-        assertEquals("", Ffi.get_last_error());
+        assertEquals("", ffi.get_last_error());
         String error = "An Error éà";
-        Ffi.set_error(error);
-        assertEquals("FFI error: " + error, Ffi.get_last_error());
+        ffi.set_error(error);
+        assertEquals("FFI error: " + error, ffi.get_last_error());
         String base = "0123456789";
         String s = "";
         for (int i = 0; i < 110; i++) {
             s += base;
         }
         assertEquals(1100, s.length());
-        Ffi.set_error(s);
-        String err = Ffi.get_last_error(1023);
+        ffi.set_error(s);
+        String err = ffi.get_last_error(1023);
         assertEquals(1023, err.length());
     }
 
@@ -74,28 +84,28 @@ public class TestFfiGpsw {
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = Ffi.generateMasterKeys(policy);
+        MasterKeys masterKeys = ffi.generateMasterKeys(policy);
 
         // Generate an user decryption key
         AccessPolicy accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
+        byte[] userDecryptionKey = ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
 
         // Rotate attributes
         Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
-        Policy newPolicy = Ffi.rotateAttributes(attributes, policy);
+        Policy newPolicy = ffi.rotateAttributes(attributes, policy);
 
         // Must refresh the master keys after an attributes rotation
-        masterKeys = Ffi.generateMasterKeys(newPolicy);
+        masterKeys = ffi.generateMasterKeys(newPolicy);
 
         // Now generate the header which contains the ABE encryption of the randomly
         // generated AES key.
         EncryptedHeader encryptedHeader =
-            Ffi.encryptHeader(newPolicy, masterKeys.getPublicKey(), attributes, Optional.empty(), Optional.empty());
+            ffi.encryptHeader(newPolicy, masterKeys.getPublicKey(), attributes, Optional.empty(), Optional.empty());
 
         // Decrypt the header to recover the symmetric AES key
         // Should fail since user decryption key has not been refreshed
         try {
-            Ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(), 0, 0);
+            ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(), 0, 0);
         } catch (Exception ex) {
             System.out.println(
                 "As expected, user cannot be decrypt ABE Header since his user decryption key has not been refreshed");
@@ -103,10 +113,10 @@ public class TestFfiGpsw {
 
         // Generate an user decryption key
         byte[] userDecryptionKeyRefreshed =
-            Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, newPolicy);
+            ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, newPolicy);
 
         // Decrypt the header to recover the symmetric AES key
-        Ffi.decryptHeader(userDecryptionKeyRefreshed, encryptedHeader.getEncryptedHeaderBytes(), 0, 0);
+        ffi.decryptHeader(userDecryptionKeyRefreshed, encryptedHeader.getEncryptedHeaderBytes(), 0, 0);
     }
 
     @Test
@@ -123,7 +133,7 @@ public class TestFfiGpsw {
         long start = System.nanoTime();
         int nb_occurrences = 100;
         for (int i = 0; i < nb_occurrences; i++) {
-            masterKeys = Ffi.generateMasterKeys(policy);
+            masterKeys = ffi.generateMasterKeys(policy);
         }
         long time = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
         System.out.println("ABE Master Key generation average time: " + time / nb_occurrences + "s");
@@ -131,7 +141,7 @@ public class TestFfiGpsw {
         AccessPolicy accessPolicy = accessPolicyConfidential();
         start = System.nanoTime();
         for (int i = 0; i < nb_occurrences; i++) {
-            Ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
+            ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
         }
         time = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
         System.out.println("ABE User Private Key generation average time: " + time / nb_occurrences + "ms");
@@ -167,13 +177,13 @@ public class TestFfiGpsw {
         // generated AES key.
         // This example assumes that the Unique ID can be recovered at time of
         // decryption, and is thus not stored as part of the encrypted header.
-        // If that is not the case check the other signature of #Ffi.encryptedHeader()
+        // If that is not the case check the other signature of #ffi.encryptedHeader()
         // to inject the unique id.
-        EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes);
+        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, attributes);
 
         // The data can now be encrypted with the generated key
         // The block number is also part of the authentication of the AES scheme
-        byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
 
         // Create a full message with header+encrypted data. The length of the header
         // is pre-pended.
@@ -202,10 +212,10 @@ public class TestFfiGpsw {
         byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize_, ciphertext.length);
 
         // Decrypt he header to recover the symmetric AES key
-        DecryptedHeader decryptedHeader = Ffi.decryptHeader(userDecryptionKey, encryptedHeader_);
+        DecryptedHeader decryptedHeader = ffi.decryptHeader(userDecryptionKey, encryptedHeader_);
 
         // decrypt the content, passing the unique id and block number
-        byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+        byte[] data_ = ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
 
         // Verify everything is correct
         assertTrue(Arrays.equals(data, data_));
@@ -227,22 +237,22 @@ public class TestFfiGpsw {
         byte[] uid = new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9};
         byte[] additionalData = new byte[] {10, 11, 12, 13, 14};
         EncryptedHeader encryptedHeader =
-            Ffi.encryptHeader(publicKey, attributes, Optional.of(uid), Optional.of(additionalData));
+            ffi.encryptHeader(publicKey, attributes, Optional.of(uid), Optional.of(additionalData));
 
         System.out.println("Symmetric Key length " + encryptedHeader.getSymmetricKey().length);
         System.out.println("Encrypted Header length " + encryptedHeader.getEncryptedHeaderBytes().length);
 
         byte[] data = new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9};
-        byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
         System.out.println("Clear Text Length " + data.length);
-        System.out.println("Symmetric Crypto Overhead " + Ffi.symmetricEncryptionOverhead());
+        System.out.println("Symmetric Crypto Overhead " + ffi.symmetricEncryptionOverhead());
         System.out.println("Encrypted Block Length " + encryptedBlock.length);
 
         // Decryption
         String userDecryptionKeyJson = Resources.load_resource("ffi/abe/fin_confidential_user_key.json");
         PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
-        DecryptedHeader header_ = Ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(),
+        DecryptedHeader header_ = ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(),
             uid.length, additionalData.length);
 
         System.out.println("Decrypted Header: Symmetric Key Length " + header_.getSymmetricKey().length);
@@ -253,7 +263,7 @@ public class TestFfiGpsw {
         assertTrue(Arrays.equals(uid, header_.getUid()));
         assertTrue(Arrays.equals(additionalData, header_.getAdditionalData()));
 
-        byte[] data_ = Ffi.decryptBlock(header_.getSymmetricKey(), header_.getUid(), 0, encryptedBlock);
+        byte[] data_ = ffi.decryptBlock(header_.getSymmetricKey(), header_.getUid(), 0, encryptedBlock);
         assertTrue(Arrays.equals(data, data_));
 
     }
@@ -271,7 +281,7 @@ public class TestFfiGpsw {
         PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
 
         Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
-        EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes);
+        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, attributes);
 
         System.out.println("Symmetric Key length " + encryptedHeader.getSymmetricKey().length);
         System.out.println("Encrypted Header length " + encryptedHeader.getEncryptedHeaderBytes().length);
@@ -280,7 +290,7 @@ public class TestFfiGpsw {
         String userDecryptionKeyJson = Resources.load_resource("ffi/abe/fin_confidential_user_key.json");
         PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
-        DecryptedHeader header_ = Ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes());
+        DecryptedHeader header_ = ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes());
 
         System.out.println("Decrypted Header: Symmetric Key Length " + header_.getSymmetricKey().length);
         System.out.println("Decrypted Header: UID Length " + header_.getUid().length);
@@ -326,7 +336,8 @@ public class TestFfiGpsw {
 
         Policy pg = policy();
 
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()),
+            new Specifications(Implementation.GPSW));
 
         String[] ids = abe.createMasterKeyPair(pg);
 
@@ -349,13 +360,13 @@ public class TestFfiGpsw {
         // generated AES key.
         // This example assumes that the Unique ID can be recovered at time of
         // decryption, and is thus not stored as part of the encrypted header.
-        // If that is not the case check the other signature of #Ffi.encryptedHeader()
+        // If that is not the case check the other signature of #ffi.encryptedHeader()
         // to inject the unique id.
-        EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes);
+        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, attributes);
 
         // The data can now be encrypted with the generated key
         // The block number is also part of the authentication of the AES scheme
-        byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
 
         // Create a full message with header+encrypted data. The length of the header
         // is pre-pended.
@@ -396,7 +407,8 @@ public class TestFfiGpsw {
 
         Policy pg = policy();
 
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()),
+            new Specifications(Implementation.GPSW));
 
         String[] ids = abe.createMasterKeyPair(pg);
 
@@ -419,13 +431,13 @@ public class TestFfiGpsw {
         // generated AES key.
         // This example assumes that the Unique ID can be recovered at time of
         // decryption, and is thus not stored as part of the encrypted header.
-        // If that is not the case check the other signature of #Ffi.encryptedHeader()
+        // If that is not the case check the other signature of #ffi.encryptedHeader()
         // to inject the unique id.
-        EncryptedHeader encryptedHeader = Ffi.encryptHeader(publicKey, attributes);
+        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, attributes);
 
         // The data can now be encrypted with the generated key
         // The block number is also part of the authentication of the AES scheme
-        byte[] encryptedBlock = Ffi.encryptBlock(encryptedHeader.getSymmetricKey(), data);
+        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), data);
 
         // Create a full message with header+encrypted data. The length of the header
         // is pre-pended.
@@ -472,7 +484,8 @@ public class TestFfiGpsw {
 
         Policy pg = policy();
 
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()),
+            new Specifications(Implementation.GPSW));
 
         String[] ids = abe.createMasterKeyPair(pg);
 
@@ -505,10 +518,10 @@ public class TestFfiGpsw {
         byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
 
         // Decrypt he header to recover the symmetric AES key
-        DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
+        DecryptedHeader decryptedHeader = ffi.decryptHeader(userKey, encryptedHeader);
 
         // decrypt the content, passing the unique id and block number
-        byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+        byte[] data_ = ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
 
         // Verify everything is correct
         assertTrue(Arrays.equals(data, data_));
@@ -534,7 +547,8 @@ public class TestFfiGpsw {
 
         Policy pg = policy();
 
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()),
+            new Specifications(Implementation.GPSW));
 
         String[] ids = abe.createMasterKeyPair(pg);
 
@@ -567,10 +581,10 @@ public class TestFfiGpsw {
         byte[] encryptedContent = Arrays.copyOfRange(ciphertext, 4 + headerSize, ciphertext.length);
 
         // Decrypt he header to recover the symmetric AES key
-        DecryptedHeader decryptedHeader = Ffi.decryptHeader(userKey, encryptedHeader);
+        DecryptedHeader decryptedHeader = ffi.decryptHeader(userKey, encryptedHeader);
 
         // decrypt the content, passing the unique id and block number
-        byte[] data_ = Ffi.decryptBlock(decryptedHeader.getSymmetricKey(), encryptedContent);
+        byte[] data_ = ffi.decryptBlock(decryptedHeader.getSymmetricKey(), encryptedContent);
 
         // Verify everything is correct
         assertTrue(Arrays.equals(data, data_));
@@ -584,27 +598,27 @@ public class TestFfiGpsw {
 
         String publicKeyJson = Resources.load_resource("ffi/abe/public_master_key.json");
         PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-        int encryptionCacheHandle = Ffi.createEncryptionCache(publicKey);
+        int encryptionCacheHandle = ffi.createEncryptionCache(publicKey);
         Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
         byte[] uid = new byte[] {1, 2, 3, 4, 5};
         byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
 
-        EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes,
+        EncryptedHeader encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes,
             Optional.of(uid), Optional.of(additional_data));
 
-        Ffi.destroyEncryptionCache(encryptionCacheHandle);
+        ffi.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
         String userDecryptionKeyJson = Resources.load_resource("ffi/abe/fin_confidential_user_key.json");
         PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
-        int decryptionCacheHandle = Ffi.createDecryptionCache(userDecryptionKey);
+        int decryptionCacheHandle = ffi.createDecryptionCache(userDecryptionKey);
 
         DecryptedHeader decryptedHeader =
-            Ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
 
-        Ffi.destroyDecryptionCache(decryptionCacheHandle);
+        ffi.destroyDecryptionCache(decryptionCacheHandle);
 
         // assert
 
@@ -620,26 +634,26 @@ public class TestFfiGpsw {
 
         String publicKeyJson = Resources.load_resource("ffi/abe/public_master_key.json");
         PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-        int encryptionCacheHandle = Ffi.createEncryptionCache(publicKey);
+        int encryptionCacheHandle = ffi.createEncryptionCache(publicKey);
         Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
         byte[] uid = new byte[] {1, 2, 3, 4, 5};
 
         EncryptedHeader encryptedHeader =
-            Ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes, Optional.of(uid), Optional.empty());
+            ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes, Optional.of(uid), Optional.empty());
 
-        Ffi.destroyEncryptionCache(encryptionCacheHandle);
+        ffi.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
         String userDecryptionKeyJson = Resources.load_resource("ffi/abe/fin_confidential_user_key.json");
         PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
-        int decryptionCacheHandle = Ffi.createDecryptionCache(userDecryptionKey);
+        int decryptionCacheHandle = ffi.createDecryptionCache(userDecryptionKey);
 
         DecryptedHeader decryptedHeader =
-            Ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
 
-        Ffi.destroyDecryptionCache(decryptionCacheHandle);
+        ffi.destroyDecryptionCache(decryptionCacheHandle);
 
         // assert
 
@@ -655,26 +669,26 @@ public class TestFfiGpsw {
 
         String publicKeyJson = Resources.load_resource("ffi/abe/public_master_key.json");
         PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-        int encryptionCacheHandle = Ffi.createEncryptionCache(publicKey);
+        int encryptionCacheHandle = ffi.createEncryptionCache(publicKey);
         Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
         byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
 
-        EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes,
+        EncryptedHeader encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes,
             Optional.empty(), Optional.of(additional_data));
 
-        Ffi.destroyEncryptionCache(encryptionCacheHandle);
+        ffi.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
         String userDecryptionKeyJson = Resources.load_resource("ffi/abe/fin_confidential_user_key.json");
         PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
-        int decryptionCacheHandle = Ffi.createDecryptionCache(userDecryptionKey);
+        int decryptionCacheHandle = ffi.createDecryptionCache(userDecryptionKey);
 
         DecryptedHeader decryptedHeader =
-            Ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
 
-        Ffi.destroyDecryptionCache(decryptionCacheHandle);
+        ffi.destroyDecryptionCache(decryptionCacheHandle);
 
         // assert
 
@@ -690,24 +704,24 @@ public class TestFfiGpsw {
 
         String publicKeyJson = Resources.load_resource("ffi/abe/public_master_key.json");
         PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-        int encryptionCacheHandle = Ffi.createEncryptionCache(publicKey);
+        int encryptionCacheHandle = ffi.createEncryptionCache(publicKey);
         Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
 
-        EncryptedHeader encryptedHeader = Ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes);
+        EncryptedHeader encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes);
 
-        Ffi.destroyEncryptionCache(encryptionCacheHandle);
+        ffi.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
         String userDecryptionKeyJson = Resources.load_resource("ffi/abe/fin_confidential_user_key.json");
         PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
-        int decryptionCacheHandle = Ffi.createDecryptionCache(userDecryptionKey);
+        int decryptionCacheHandle = ffi.createDecryptionCache(userDecryptionKey);
 
         DecryptedHeader decryptedHeader =
-            Ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
 
-        Ffi.destroyDecryptionCache(decryptionCacheHandle);
+        ffi.destroyDecryptionCache(decryptionCacheHandle);
 
         // assert
 
@@ -726,7 +740,7 @@ public class TestFfiGpsw {
         byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
 
         EncryptedHeader encryptedHeader =
-            Ffi.encryptHeader(publicKey, attributes, Optional.of(uid), Optional.of(additional_data));
+            ffi.encryptHeader(publicKey, attributes, Optional.of(uid), Optional.of(additional_data));
 
         // decrypt
 
@@ -734,7 +748,7 @@ public class TestFfiGpsw {
         PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
         DecryptedHeader decryptedHeader =
-            Ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+            ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
 
         assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
         assertArrayEquals(uid, decryptedHeader.getUid());
@@ -748,7 +762,7 @@ public class TestFfiGpsw {
         PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
 
         // serialize encryption cache
-        int e_cache = Ffi.createEncryptionCache(publicKey);
+        int e_cache = ffi.createEncryptionCache(publicKey);
 
         Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
         byte[] uid = new byte[] {1, 2, 3, 4, 5};
@@ -758,7 +772,7 @@ public class TestFfiGpsw {
         PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
 
         // serialize decryption cache
-        int d_cache = Ffi.createDecryptionCache(userDecryptionKey);
+        int d_cache = ffi.createDecryptionCache(userDecryptionKey);
 
         int threads = 4;
         ExecutorService executor = Executors.newFixedThreadPool(threads);
@@ -772,10 +786,10 @@ public class TestFfiGpsw {
                 DecryptedHeader decryptedHeader;
                 try {
 
-                    encryptedHeader = Ffi.encryptHeaderUsingCache(e_cache, attributes, Optional.of(uid),
+                    encryptedHeader = ffi.encryptHeaderUsingCache(e_cache, attributes, Optional.of(uid),
                         Optional.of(additional_data));
                     decryptedHeader =
-                        Ffi.decryptHeaderUsingCache(d_cache, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+                        ffi.decryptHeaderUsingCache(d_cache, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
 
                     assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
                     assertArrayEquals(uid, decryptedHeader.getUid());
@@ -803,8 +817,8 @@ public class TestFfiGpsw {
             System.out.println("shutdown finished");
         }
 
-        Ffi.destroyEncryptionCache(e_cache);
-        Ffi.destroyDecryptionCache(d_cache);
+        ffi.destroyEncryptionCache(e_cache);
+        ffi.destroyDecryptionCache(d_cache);
 
     }
 

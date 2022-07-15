@@ -9,7 +9,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.cosmian.rest.gpsw.policy.Policy;
+import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.data_structures.KeyMaterial;
 import com.cosmian.rest.kmip.data_structures.KeyValue;

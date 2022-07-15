@@ -313,8 +313,8 @@ public class TestFfiCoverCrypt {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (TestUtils.isGithub()) {
-            System.out.println("Ignoring this test on Github CI");
+        if (!TestUtils.isGitlab()) {
+            System.out.println("Ignoring this test since not on Gitlab CI");
             return;
         }
 
@@ -389,8 +389,8 @@ public class TestFfiCoverCrypt {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (TestUtils.isGithub()) {
-            System.out.println("Ignoring this test on Github CI");
+        if (!TestUtils.isGitlab()) {
+            System.out.println("Ignoring this test since not on Gitlab CI");
             return;
         }
 
@@ -459,8 +459,8 @@ public class TestFfiCoverCrypt {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (TestUtils.isGithub()) {
-            System.out.println("Ignoring this test on Github CI");
+        if (!TestUtils.isGitlab()) {
+            System.out.println("Ignoring this test since not on Gitlab CI");
             return;
         }
 
@@ -527,8 +527,8 @@ public class TestFfiCoverCrypt {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (TestUtils.isGithub()) {
-            System.out.println("Ignoring this test on Github CI");
+        if (!TestUtils.isGitlab()) {
+            System.out.println("Ignoring this test since not on Gitlab CI");
             return;
         }
 

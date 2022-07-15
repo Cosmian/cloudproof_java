@@ -56,12 +56,12 @@ public final class TestUtils {
 
     /*
      * This function is made for CI purpose:
-     * if running on Github, ignore test
-     * otherwise, a running KMS server is required
+     * - if running on Gitlab, force KMS tests
+     * - ignore KMS test otherwise
      */
-    public static boolean isGithub() {
-        String isGithub = System.getenv("GITHUB_JOB");
-        if (isGithub != null && isGithub.length() != 0) {
+    public static boolean isGitlab() {
+        String isGitlab = System.getenv("GITLAB_CI");
+        if (isGitlab != null && isGitlab.length() != 0) {
             return true;
         }
         return false;

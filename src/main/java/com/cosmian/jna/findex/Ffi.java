@@ -71,7 +71,7 @@ public final class Ffi {
         try {
             masterKeysJson = mapper.writeValueAsString(masterKeys);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid master keys");
+            throw new FfiException("Invalid master keys", e);
         }
 
         // Findex db UIDS and words
@@ -79,7 +79,7 @@ public final class Ffi {
         try {
             dbUidsAndWordsJson = mapper.writeValueAsString(dbUidsAndWords);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid db uids and words");
+            throw new FfiException("Invalid db uids and words", e);
         }
 
         // Indexes creation + insertion/update
@@ -102,7 +102,7 @@ public final class Ffi {
         try {
             masterKeysJson = mapper.writeValueAsString(masterKeys);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid master keys");
+            throw new FfiException("Invalid master keys", e);
         }
 
         // Findex words
@@ -110,7 +110,7 @@ public final class Ffi {
         try {
             wordsJson = mapper.writeValueAsString(words);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid words");
+            throw new FfiException("Invalid words", e);
         }
 
         String[] dbUids = null;
@@ -123,7 +123,7 @@ public final class Ffi {
         try {
             dbUids = mapper.readValue(dbUidsBytes, String[].class);
         } catch (IOException e) {
-            throw new FfiException("DB UIDs deserialization failed");
+            throw new FfiException("DB UIDs deserialization failed", e);
         }
         return dbUids;
     }

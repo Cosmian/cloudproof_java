@@ -1,6 +1,7 @@
 package com.cosmian.jna.findex.Callbacks;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 
 import com.cosmian.jna.FfiException;
@@ -37,7 +38,7 @@ public class FetchEntry implements FetchEntryCallback {
         try {
             entryTableUids = mapper.readValue(uids, String[].class);
         } catch (IOException e) {
-            throw new FfiException("Failed deserializing uids in FetchEntry callback: " + e.toString());
+            throw new FfiException("Failed deserializing uids in FetchEntry callback: ", e);
         }
 
         //
@@ -53,10 +54,10 @@ public class FetchEntry implements FetchEntryCallback {
             try {
                 uidsAndValuesJson = mapper.writeValueAsString(uidsAndValues);
             } catch (JsonProcessingException e) {
-                throw new FfiException("Failed serializing FetchEntry results callback: " + e.toString());
+                throw new FfiException("Failed serializing FetchEntry results callback: ", e);
             }
 
-            byte[] uidsAndValuesBytes = uidsAndValuesJson.getBytes();
+            byte[] uidsAndValuesBytes = uidsAndValuesJson.getBytes(Charset.defaultCharset());
             output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
             outputSize.setValue(uidsAndValuesBytes.length);
         } else {

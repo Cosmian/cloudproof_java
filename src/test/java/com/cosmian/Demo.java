@@ -30,8 +30,8 @@ public class Demo {
     @Test
     public void test_abe() throws Exception {
 
-        if (TestUtils.isGithub()) {
-            System.out.println("Ignoring this test on Github CI");
+        if (!TestUtils.isGitlab()) {
+            System.out.println("Ignoring this test since not on Gitlab CI");
             return;
         }
 

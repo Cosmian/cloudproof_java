@@ -35,7 +35,7 @@ public class UpsertEntry implements UpsertEntryCallback {
         try {
             uidsAndValues = mapper.readValue(entriesBytes, HashMap.class);
         } catch (IOException e) {
-            throw new FfiException("Failed deserializing UpsertChain callback: " + e.toString());
+            throw new FfiException("Failed deserializing UpsertChain callback: ", e);
         }
 
         //

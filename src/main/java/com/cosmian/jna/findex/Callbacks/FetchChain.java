@@ -1,6 +1,7 @@
 package com.cosmian.jna.findex.Callbacks;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import com.cosmian.jna.FfiException;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
@@ -56,7 +57,7 @@ public class FetchChain implements FetchChainCallback {
                 throw new FfiException("Failed serializing FetchChain results callback: " + e.toString());
             }
 
-            byte[] valuesBytes = valuesJson.getBytes();
+            byte[] valuesBytes = valuesJson.getBytes(Charset.defaultCharset());
             output.write(0, valuesBytes, 0, valuesBytes.length);
             outputSize.setValue(valuesBytes.length);
         } else {

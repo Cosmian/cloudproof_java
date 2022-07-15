@@ -104,7 +104,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         // Public Key
@@ -200,7 +200,7 @@ public final class Ffi {
         try {
             attributesJson = mapper.writeValueAsString(attributesArray);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         // Uid
@@ -319,7 +319,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         // Public Key
@@ -336,7 +336,7 @@ public final class Ffi {
         try {
             attributesJson = mapper.writeValueAsString(attributesArray);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         // Uid
@@ -683,7 +683,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         unwrap(Ffi.INSTANCE.h_generate_master_keys(masterKeysBuffer, masterKeysBufferSize, policyJson));
@@ -727,14 +727,14 @@ public final class Ffi {
         try {
             accessPolicyJson = mapper.writeValueAsString(accessPolicy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Access Policy");
+            throw new FfiException("Invalid Access Policy", e);
         }
         // Policy
         String policyJson;
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         unwrap(Ffi.INSTANCE.h_generate_user_private_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
@@ -754,7 +754,8 @@ public final class Ffi {
      * @throws DatabindException standard databind exceptions
      * @throws StreamReadException stream read exceptions
      */
-    public static Policy rotateAttributes(Attr[] attributes, Policy policy) throws FfiException, StreamReadException, DatabindException, IOException {
+    public static Policy rotateAttributes(Attr[] attributes, Policy policy)
+        throws FfiException, StreamReadException, DatabindException, IOException {
         // New policy Bytes OUT
         byte[] policyBuffer = new byte[4096];
         IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
@@ -772,7 +773,7 @@ public final class Ffi {
         try {
             attributesJson = mapper.writeValueAsString(attributesArray);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         // Policy
@@ -780,7 +781,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         unwrap(Ffi.INSTANCE.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson));

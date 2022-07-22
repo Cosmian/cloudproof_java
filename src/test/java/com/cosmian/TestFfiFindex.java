@@ -2,11 +2,14 @@ package com.cosmian;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -53,9 +56,9 @@ public class TestFfiFindex {
         // Recover test vectors
         //
         ObjectMapper mapper = new ObjectMapper();
-        String expectedSearchResultsString = Resources.load_resource("findex/search_results.json");
-        String[] expectedSearchResults = mapper.readValue(expectedSearchResultsString, String[].class);
-        Arrays.sort(expectedSearchResults);
+        String expectedSearchResultsString = Resources.load_resource("findex/expected_db_uids.json");
+        String[] expectedDbUids = mapper.readValue(expectedSearchResultsString, String[].class);
+        Arrays.sort(expectedDbUids);
 
         //
         // Build dataset with DB uids and words
@@ -85,7 +88,7 @@ public class TestFfiFindex {
         //
         FetchEntry fetchEntry = new FetchEntry(new com.cosmian.jna.findex.FfiWrapper.FetchEntryInterface() {
             @Override
-            public HashMap<String, String> fetch(String[] uids) throws FfiException {
+            public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException {
                 try {
                     return db.fetchEntryTableItems(uids);
                 } catch (SQLException e) {
@@ -96,7 +99,7 @@ public class TestFfiFindex {
 
         FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FfiWrapper.FetchChainInterface() {
             @Override
-            public String[] fetch(String[] uids) throws FfiException {
+            public List<byte[]> fetch(List<byte[]> uids) throws FfiException {
                 try {
                     return db.fetchChainTableItems(uids);
                 } catch (SQLException e) {
@@ -107,9 +110,9 @@ public class TestFfiFindex {
 
         UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface() {
             @Override
-            public void upsert(HashMap<String, String> uidsAndValues) throws FfiException {
+            public void upsert(byte[] uid, byte[] value) throws FfiException {
                 try {
-                    db.databaseUpsert(uidsAndValues, "entry_table");
+                    db.databaseUpsert(uid, value, "entry_table");
                 } catch (SQLException e) {
                     throw new FfiException("Failed chain upsert: " + e.toString());
                 }
@@ -117,9 +120,9 @@ public class TestFfiFindex {
         });
         UpsertChain upsertChain = new UpsertChain(new com.cosmian.jna.findex.FfiWrapper.UpsertChainInterface() {
             @Override
-            public void upsert(HashMap<String, String> uidsAndValues) throws FfiException {
+            public void upsert(byte[] uid, byte[] value) throws FfiException {
                 try {
-                    db.databaseUpsert(uidsAndValues, "chain_table");
+                    db.databaseUpsert(uid, value, "chain_table");
                 } catch (SQLException e) {
                     throw new FfiException("Failed chain upsert: " + e.toString());
                 }
@@ -141,11 +144,20 @@ public class TestFfiFindex {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        String[] dbUids = Ffi.search(masterKeys, new String[] {"France"}, 100, fetchEntry, fetchChain);
-        Arrays.sort(dbUids);
+        List<byte[]> dbUidsList = Ffi.search(masterKeys, new String[] {"France"}, 100, fetchEntry, fetchChain);
 
+        // Only for test purposes, encode in hex the results to compare with expected db uids
+        List<String> dbUidsStringList = new ArrayList<String>();
+        for (byte[] dbUidBytes : dbUidsList) {
+            String dbUid = new String(dbUidBytes, StandardCharsets.UTF_8);
+            dbUidsStringList.add(dbUid);
+        }
+        String[] dbUids = new String[dbUidsStringList.size()];
+        dbUidsStringList.toArray(dbUids);
+        Arrays.sort(dbUids);
         System.out.println("DB UIDS found: " + Arrays.toString(dbUids));
-        assertArrayEquals(dbUids, expectedSearchResults);
+
+        assertArrayEquals(dbUids, expectedDbUids);
     }
 
 }

@@ -1,9 +1,9 @@
 package com.cosmian.jna.findex;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import com.cosmian.CosmianException;
 import com.cosmian.jna.FfiException;
@@ -86,7 +86,7 @@ public final class Ffi {
         unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, dbUidsAndWordsJson, fetchEntry, upsertEntry, upsertChain));
     }
 
-    public static String[] search(MasterKeys masterKeys, String[] words, int loopIterationLimit,
+    public static List<byte[]> search(MasterKeys masterKeys, String[] words, int loopIterationLimit,
         FetchEntryCallback fetchEntry, FetchChainCallback fetchChain) throws FfiException, CosmianException {
         //
         // Prepare outputs
@@ -113,19 +113,15 @@ public final class Ffi {
             throw new FfiException("Invalid words", e);
         }
 
-        String[] dbUids = null;
-
         // Indexes creation + insertion/update
         unwrap(Ffi.INSTANCE.h_search(dbUidsBuffer, dbUidsBufferSize, masterKeysJson, wordsJson, loopIterationLimit,
             fetchEntry, fetchChain));
 
         byte[] dbUidsBytes = Arrays.copyOfRange(dbUidsBuffer, 0, dbUidsBufferSize.getValue());
-        try {
-            dbUids = mapper.readValue(dbUidsBytes, String[].class);
-        } catch (IOException e) {
-            throw new FfiException("DB UIDs deserialization failed", e);
-        }
-        return dbUids;
+
+        List<byte[]> dbUidsList = Leb128Serializer.deserialize(dbUidsBytes);
+
+        return dbUidsList;
     }
 
     /**

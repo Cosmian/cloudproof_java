@@ -67,6 +67,11 @@
             <artifactId>jna</artifactId>
             <version>${jna.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.rover12421.android</groupId>
+            <artifactId>dx</artifactId>
+            <version>1.16</version>
+        </dependency>
         <!-- Scope test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

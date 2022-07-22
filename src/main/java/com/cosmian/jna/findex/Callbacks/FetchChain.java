@@ -1,13 +1,11 @@
 package com.cosmian.jna.findex.Callbacks;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.List;
 
 import com.cosmian.jna.FfiException;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainInterface;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.cosmian.jna.findex.Leb128Serializer;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
@@ -28,36 +26,22 @@ public class FetchChain implements FetchChainCallback {
         byte[] uids = new byte[uidsLength];
         uidsPointer.read(0, uids, 0, uidsLength);
 
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
-
         //
-        // Deserialize vector Chain Table `uid`
+        // Deserialize Chain Table uids
         //
-        String[] chainTableUids = null;
-        try {
-            chainTableUids = mapper.readValue(uids, String[].class);
-        } catch (IOException e) {
-            throw new FfiException("Failed deserializing uids in FetchChain callback: " + e.toString());
-        }
+        List<byte[]> chainTableUids = Leb128Serializer.deserialize(uids);
 
         //
         // Select uid and value in EntryTable
         //
-        String[] values = this.fetch.fetch(chainTableUids);
+        List<byte[]> values = this.fetch.fetch(chainTableUids);
 
         //
-        // Set outputs
+        // Serialize results
         //
-        if (values.length > 0) {
-            String valuesJson;
-            try {
-                valuesJson = mapper.writeValueAsString(values);
-            } catch (JsonProcessingException e) {
-                throw new FfiException("Failed serializing FetchChain results callback: " + e.toString());
-            }
+        if (values.size() > 0) {
+            byte[] valuesBytes = Leb128Serializer.serialize(values);
 
-            byte[] valuesBytes = valuesJson.getBytes(Charset.defaultCharset());
             output.write(0, valuesBytes, 0, valuesBytes.length);
             outputSize.setValue(valuesBytes.length);
         } else {

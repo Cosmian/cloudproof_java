@@ -2,13 +2,14 @@ package com.cosmian.findex;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Sqlite {
 
@@ -27,8 +28,8 @@ public class Sqlite {
         Statement stat = this.connection.createStatement();
         stat.executeUpdate(
             "CREATE TABLE IF NOT EXISTS users (id integer PRIMARY KEY, firstName text NOT NULL, lastName text NOT NULL, email text NOT NULL, phone text NOT NULL, country text NOT NULL, region text NOT NULL, employeeNumber text NOT NULL, security text NOT NULL)");
-        stat.execute("CREATE TABLE IF NOT EXISTS entry_table (uid text PRIMARY KEY,value text NOT NULL)");
-        stat.execute("CREATE TABLE IF NOT EXISTS chain_table (uid text PRIMARY KEY,value text NOT NULL)");
+        stat.execute("CREATE TABLE IF NOT EXISTS entry_table (uid BLOB PRIMARY KEY,value BLOB NOT NULL)");
+        stat.execute("CREATE TABLE IF NOT EXISTS chain_table (uid BLOB PRIMARY KEY,value BLOB NOT NULL)");
     }
 
     public void insertUsers(UsersDataset[] testFindexDataset) throws SQLException {
@@ -41,74 +42,81 @@ public class Sqlite {
         }
     }
 
-    public String[] fetchChainTableItems(String[] uids) throws SQLException {
-        Statement stat = this.connection.createStatement();
-        String quotedUids = "";
-        for (int i = 0; i < uids.length; i++) {
-            quotedUids += "\"" + uids[i] + "\"";
-            if (i != uids.length - 1) {
-                quotedUids += ",";
+    public List<byte[]> fetchChainTableItems(List<byte[]> uids) throws SQLException {
+        String lotsOfQuestions = "";
+        for (int i = 0; i < uids.size(); i++) {
+            lotsOfQuestions += "?";
+            if (i != uids.size() - 1) {
+                lotsOfQuestions += ",";
             }
         }
-        quotedUids += "";
 
-        String sql = "SELECT uid, value FROM chain_table WHERE uid IN (" + quotedUids + ")";
+        PreparedStatement pstmt =
+            this.connection.prepareStatement("SELECT value FROM chain_table WHERE uid IN (" + lotsOfQuestions + ")");
 
-        ResultSet rs = stat.executeQuery(sql);
+        int count = 1;
+        for (byte[] bs : uids) {
+            pstmt.setBytes(count, bs);
+            count += 1;
+        }
+        ResultSet rs = pstmt.executeQuery();
 
         //
         // Recover all results
         //
-        List<String> where = new ArrayList<String>();
+        List<byte[]> values = new ArrayList<byte[]>();
         while (rs.next()) {
-            where.add(rs.getString("value"));
+            values.add(rs.getBytes("value"));
         }
-        String[] uidsAndValues = new String[where.size()];
-        where.toArray(uidsAndValues);
-
-        return uidsAndValues;
+        return values;
     }
 
-    public HashMap<String, String> fetchEntryTableItems(String[] uids) throws SQLException {
-        Statement stat = this.connection.createStatement();
-        String quotedUids = "";
-        for (int i = 0; i < uids.length; i++) {
-            quotedUids += "\"" + uids[i] + "\"";
-            if (i != uids.length - 1) {
-                quotedUids += ",";
+    public HashMap<byte[], byte[]> fetchEntryTableItems(List<byte[]> uids) throws SQLException {
+        String lotsOfQuestions = "";
+        for (int i = 0; i < uids.size(); i++) {
+            lotsOfQuestions += "?";
+            if (i != uids.size() - 1) {
+                lotsOfQuestions += ",";
             }
         }
-        quotedUids += "";
 
-        String sql = "SELECT uid, value FROM entry_table WHERE uid IN (" + quotedUids + ")";
+        PreparedStatement pstmt = this.connection
+            .prepareStatement("SELECT uid, value FROM entry_table WHERE uid IN (" + lotsOfQuestions + ")");
 
-        ResultSet rs = stat.executeQuery(sql);
+        int count = 1;
+        for (byte[] bs : uids) {
+            System.out.println("count=" + count);
+            System.out.println("bs=" + Arrays.toString(bs));
+            pstmt.setBytes(count, bs);
+            count += 1;
+        }
+        ResultSet rs = pstmt.executeQuery();
 
         //
         // Recover all results
         //
-        HashMap<String, String> uidsAndValues = new HashMap<String, String>();
+        HashMap<byte[], byte[]> uidsAndValues = new HashMap<byte[], byte[]>();
         while (rs.next()) {
-            uidsAndValues.put(rs.getString("uid"), rs.getString("value"));
+            uidsAndValues.put(rs.getBytes("uid"), rs.getBytes("value"));
         }
         return uidsAndValues;
     }
 
-    public void databaseUpsert(HashMap<String, String> uidsAndValues, String tableName) throws SQLException {
-        Statement stat = this.connection.createStatement();
-        for (Map.Entry<String, String> set : uidsAndValues.entrySet()) {
-            stat.executeUpdate("INSERT OR REPLACE INTO " + tableName + "(uid, value) VALUES ('" + set.getKey() + "', '"
-                + set.getValue() + "')");
-        }
+    public void databaseUpsert(byte[] uid, byte[] value, String tableName) throws SQLException {
+        PreparedStatement pstmt =
+            this.connection.prepareStatement("INSERT OR REPLACE INTO " + tableName + "(uid, value) VALUES (?,?)");
+        pstmt.setBytes(1, uid);
+        pstmt.setBytes(2, value);
+        pstmt.executeUpdate();
     }
 
-    public HashMap<String, String> getAllKeyValueItems(String tableName) throws SQLException {
+    public HashMap<byte[], byte[]> getAllKeyValueItems(String tableName) throws SQLException {
         Statement stat = this.connection.createStatement();
         String sql = "SELECT uid, value FROM " + tableName;
         ResultSet rs = stat.executeQuery(sql);
-        HashMap<String, String> uidsAndValues = new HashMap<String, String>();
+        HashMap<byte[], byte[]> uidsAndValues = new HashMap<byte[], byte[]>();
         while (rs.next()) {
-            uidsAndValues.put(rs.getString("uid"), rs.getString("value"));
+            uidsAndValues.put(rs.getBytes("uid"), rs.getBytes("value"));
         }
         return uidsAndValues;
     }

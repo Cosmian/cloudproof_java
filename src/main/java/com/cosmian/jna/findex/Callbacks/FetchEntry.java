@@ -1,14 +1,12 @@
 package com.cosmian.jna.findex.Callbacks;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.List;
 
 import com.cosmian.jna.FfiException;
 import com.cosmian.jna.findex.FfiWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchEntryInterface;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.cosmian.jna.findex.Leb128Serializer;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
@@ -28,36 +26,21 @@ public class FetchEntry implements FetchEntryCallback {
         byte[] uids = new byte[uidsLength];
         uidsPointer.read(0, uids, 0, uidsLength);
 
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
+        //
+        // Deserialize Entry Table uids
+        //
+        List<byte[]> entryTableUids = Leb128Serializer.deserialize(uids);
 
         //
-        // Deserialize vector Entry Table `uid`
+        // Select uids and values in EntryTable
         //
-        String[] entryTableUids = null;
-        try {
-            entryTableUids = mapper.readValue(uids, String[].class);
-        } catch (IOException e) {
-            throw new FfiException("Failed deserializing uids in FetchEntry callback: ", e);
-        }
+        HashMap<byte[], byte[]> uidsAndValues = this.fetch.fetch(entryTableUids);
 
         //
-        // Select uid and value in EntryTable
-        //
-        HashMap<String, String> uidsAndValues = this.fetch.fetch(entryTableUids);
-
-        //
-        // Set outputs
+        // Serialize results
         //
         if (uidsAndValues.size() > 0) {
-            String uidsAndValuesJson;
-            try {
-                uidsAndValuesJson = mapper.writeValueAsString(uidsAndValues);
-            } catch (JsonProcessingException e) {
-                throw new FfiException("Failed serializing FetchEntry results callback: ", e);
-            }
-
-            byte[] uidsAndValuesBytes = uidsAndValuesJson.getBytes(Charset.defaultCharset());
+            byte[] uidsAndValuesBytes = Leb128Serializer.serialize(uidsAndValues);
             output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
             outputSize.setValue(uidsAndValuesBytes.length);
         } else {

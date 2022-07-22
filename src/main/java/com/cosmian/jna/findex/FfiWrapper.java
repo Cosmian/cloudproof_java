@@ -1,6 +1,7 @@
 package com.cosmian.jna.findex;
 
 import java.util.HashMap;
+import java.util.List;
 
 import com.cosmian.jna.FfiException;
 import com.sun.jna.Callback;
@@ -25,24 +26,24 @@ public interface FfiWrapper extends Library {
         int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength) throws FfiException;
     }
     interface UpsertEntryCallback extends Callback {
-        int apply(Pointer entries, int entriesLength) throws FfiException;
+        int apply(Pointer uid, int uidLength, Pointer value, int valueLength) throws FfiException;
     }
     interface UpsertChainCallback extends Callback {
-        int apply(Pointer chains, int chainsLength) throws FfiException;
+        int apply(Pointer uid, int uidLength, Pointer value, int valueLength) throws FfiException;
     }
 
     /* Customer high-level callbacks */
     interface FetchEntryInterface {
-        public HashMap<String, String> fetch(String[] uids) throws FfiException;
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException;
     }
     interface FetchChainInterface {
-        public String[] fetch(String[] uids) throws FfiException;
+        public List<byte[]> fetch(List<byte[]> uids) throws FfiException;
     }
     interface UpsertEntryInterface {
-        public void upsert(HashMap<String, String> uidsAndValues) throws FfiException;
+        public void upsert(byte[] uid, byte[] value) throws FfiException;
     }
     interface UpsertChainInterface {
-        public void upsert(HashMap<String, String> uidsAndValues) throws FfiException;
+        public void upsert(byte[] uid, byte[] value) throws FfiException;
     }
 
     int h_upsert(String masterKeysJson, String dbUidsAndWordsJson, FetchEntryCallback fetchEntry,

@@ -1,12 +1,8 @@
 package com.cosmian.jna.findex.Callbacks;
 
-import java.io.IOException;
-import java.util.HashMap;
-
 import com.cosmian.jna.FfiException;
 import com.cosmian.jna.findex.FfiWrapper.UpsertEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Pointer;
 
 public class UpsertEntry implements UpsertEntryCallback {
@@ -18,30 +14,19 @@ public class UpsertEntry implements UpsertEntryCallback {
     }
 
     @Override
-    public int apply(Pointer entries, int entriesLength) throws FfiException {
+    public int apply(Pointer uid, int uidLength, Pointer value, int valueLength) throws FfiException {
         //
-        // Read `entries` until `entriesLength`
+        // Read `uid` until `uidLength` and `value` until `valueLength`
         //
-        byte[] entriesBytes = new byte[entriesLength];
-        entries.read(0, entriesBytes, 0, entriesLength);
-
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
-
-        //
-        // Deserialize vector Entry Table `uid`
-        //
-        HashMap<String, String> uidsAndValues = new HashMap<String, String>();
-        try {
-            uidsAndValues = mapper.readValue(entriesBytes, HashMap.class);
-        } catch (IOException e) {
-            throw new FfiException("Failed deserializing UpsertChain callback: ", e);
-        }
+        byte[] uidBytes = new byte[uidLength];
+        uid.read(0, uidBytes, 0, uidLength);
+        byte[] valueBytes = new byte[valueLength];
+        value.read(0, valueBytes, 0, valueLength);
 
         //
         // Insert in database
         //
-        this.upsert.upsert(uidsAndValues);
+        this.upsert.upsert(uidBytes, valueBytes);
 
         return 0;
     }

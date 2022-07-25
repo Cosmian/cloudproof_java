@@ -11,24 +11,50 @@ import com.android.dx.util.ByteArrayAnnotatedOutput;
 
 public class Leb128Serializer {
 
-    public static List<byte[]> deserialize(byte[] serializedUids) {
-        List<byte[]> uids = new ArrayList<byte[]>();
+    public static List<byte[]> deserializeList(byte[] serializedUids) {
+        List<byte[]> result = new ArrayList<byte[]>();
         ByteArrayByteInput in = new ByteArrayByteInput(serializedUids);
         int len = 0;
         while ((len = Leb128.readUnsignedLeb128(in)) >= 0) {
             if (len == 0) {
                 break;
             }
-            byte[] uid = new byte[len];
+            byte[] element = new byte[len];
             for (int i = 0; i < len; i++) {
-                uid[i] = in.readByte();
+                element[i] = in.readByte();
             }
-            uids.add(uid);
+            result.add(element);
         }
-        return uids;
+        return result;
     }
 
-    public static byte[] serialize(HashMap<byte[], byte[]> uidsAndValues) {
+    public static HashMap<byte[], byte[]> deserializeHashmap(byte[] serializedUids) {
+        HashMap<byte[], byte[]> result = new HashMap<byte[], byte[]>();
+        ByteArrayByteInput in = new ByteArrayByteInput(serializedUids);
+        int len = 0;
+        while ((len = Leb128.readUnsignedLeb128(in)) >= 0) {
+            if (len == 0) {
+                break;
+            }
+            byte[] key = new byte[len];
+            for (int i = 0; i < len; i++) {
+                key[i] = in.readByte();
+            }
+
+            len = Leb128.readUnsignedLeb128(in);
+            if (len == 0) {
+                throw new IllegalArgumentException("HashMap `value` should be serialized after `key`");
+            }
+            byte[] value = new byte[len];
+            for (int i = 0; i < len; i++) {
+                value[i] = in.readByte();
+            }
+            result.put(key, value);
+        }
+        return result;
+    }
+
+    public static byte[] serializeHashMap(HashMap<byte[], byte[]> uidsAndValues) {
         ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput();
         for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
             byte[] uid = entry.getKey();
@@ -45,7 +71,7 @@ public class Leb128Serializer {
         return uidsAndValuesBytes;
     }
 
-    public static byte[] serialize(List<byte[]> values) {
+    public static byte[] serializeList(List<byte[]> values) {
         ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput();
         for (byte[] bs : values) {
             Leb128.writeUnsignedLeb128(out, bs.length);

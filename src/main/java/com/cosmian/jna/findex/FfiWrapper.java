@@ -26,10 +26,10 @@ public interface FfiWrapper extends Library {
         int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength) throws FfiException;
     }
     interface UpsertEntryCallback extends Callback {
-        int apply(Pointer uid, int uidLength, Pointer value, int valueLength) throws FfiException;
+        int apply(Pointer entries, int entriesLength) throws FfiException;
     }
     interface UpsertChainCallback extends Callback {
-        int apply(Pointer uid, int uidLength, Pointer value, int valueLength) throws FfiException;
+        int apply(Pointer chains, int chainsLength) throws FfiException;
     }
 
     /* Customer high-level callbacks */
@@ -40,10 +40,10 @@ public interface FfiWrapper extends Library {
         public List<byte[]> fetch(List<byte[]> uids) throws FfiException;
     }
     interface UpsertEntryInterface {
-        public void upsert(byte[] uid, byte[] value) throws FfiException;
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException;
     }
     interface UpsertChainInterface {
-        public void upsert(byte[] uid, byte[] value) throws FfiException;
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException;
     }
 
     int h_upsert(String masterKeysJson, String dbUidsAndWordsJson, FetchEntryCallback fetchEntry,

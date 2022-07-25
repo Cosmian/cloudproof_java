@@ -87,8 +87,8 @@ public class TestGpsw {
     @Test
     public void test_keys_import_export() throws Exception {
 
-        if (!TestUtils.isGitlab()) {
-            System.out.println("Ignoring this test since not on Gitlab CI");
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            System.out.println("No KMS Server: ignoring");
             return;
         }
 
@@ -146,8 +146,8 @@ public class TestGpsw {
     @Test
     public void test_user_decryption_keys() throws Exception {
 
-        if (!TestUtils.isGitlab()) {
-            System.out.println("Ignoring this test since not on Gitlab CI");
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            System.out.println("No KMS Server: ignoring");
             return;
         }
 

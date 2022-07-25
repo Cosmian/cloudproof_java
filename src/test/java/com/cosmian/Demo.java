@@ -32,8 +32,8 @@ public class Demo {
     @Test
     public void test_abe() throws Exception {
 
-        if (!TestUtils.isGitlab()) {
-            System.out.println("Ignoring this test since not on Gitlab CI");
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            System.out.println("Demo: No KMS Server: ignoring");
             return;
         }
 

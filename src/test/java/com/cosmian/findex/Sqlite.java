@@ -7,9 +7,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 public class Sqlite {
 
@@ -85,8 +85,6 @@ public class Sqlite {
 
         int count = 1;
         for (byte[] bs : uids) {
-            System.out.println("count=" + count);
-            System.out.println("bs=" + Arrays.toString(bs));
             pstmt.setBytes(count, bs);
             count += 1;
         }
@@ -102,12 +100,17 @@ public class Sqlite {
         return uidsAndValues;
     }
 
-    public void databaseUpsert(byte[] uid, byte[] value, String tableName) throws SQLException {
-        PreparedStatement pstmt =
-            this.connection.prepareStatement("INSERT OR REPLACE INTO " + tableName + "(uid, value) VALUES (?,?)");
-        pstmt.setBytes(1, uid);
-        pstmt.setBytes(2, value);
-        pstmt.executeUpdate();
+    public void databaseUpsert(HashMap<byte[], byte[]> uidsAndValues, String tableName) throws SQLException {
+        PreparedStatement pstmt = connection.prepareStatement("INSERT OR REPLACE INTO " + tableName + "(uid, value) VALUES (?,?)");
+        this.connection.setAutoCommit(false);
+        for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
+            pstmt.setBytes(1, entry.getKey());
+            pstmt.setBytes(2, entry.getValue());
+            pstmt.addBatch();
+        }
+        int[] result = pstmt.executeBatch();
+        this.connection.commit();
+        System.out.println("The number of rows inserted: " + result.length);
     }
 
     public HashMap<byte[], byte[]> getAllKeyValueItems(String tableName) throws SQLException {

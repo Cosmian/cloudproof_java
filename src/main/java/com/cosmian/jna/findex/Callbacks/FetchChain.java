@@ -29,7 +29,7 @@ public class FetchChain implements FetchChainCallback {
         //
         // Deserialize Chain Table uids
         //
-        List<byte[]> chainTableUids = Leb128Serializer.deserialize(uids);
+        List<byte[]> chainTableUids = Leb128Serializer.deserializeList(uids);
 
         //
         // Select uid and value in EntryTable
@@ -40,7 +40,7 @@ public class FetchChain implements FetchChainCallback {
         // Serialize results
         //
         if (values.size() > 0) {
-            byte[] valuesBytes = Leb128Serializer.serialize(values);
+            byte[] valuesBytes = Leb128Serializer.serializeList(values);
 
             output.write(0, valuesBytes, 0, valuesBytes.length);
             outputSize.setValue(valuesBytes.length);

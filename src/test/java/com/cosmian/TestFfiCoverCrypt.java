@@ -322,8 +322,8 @@ public class TestFfiCoverCrypt {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (!TestUtils.isGitlab()) {
-            System.out.println("Ignoring this test since not on Gitlab CI");
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            System.out.println("No KMS Server: ignoring");
             return;
         }
 
@@ -399,8 +399,8 @@ public class TestFfiCoverCrypt {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (!TestUtils.isGitlab()) {
-            System.out.println("Ignoring this test since not on Gitlab CI");
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            System.out.println("No KMS Server: ignoring");
             return;
         }
 
@@ -470,8 +470,8 @@ public class TestFfiCoverCrypt {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (!TestUtils.isGitlab()) {
-            System.out.println("Ignoring this test since not on Gitlab CI");
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            System.out.println("No KMS Server: ignoring");
             return;
         }
 
@@ -539,8 +539,8 @@ public class TestFfiCoverCrypt {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        if (!TestUtils.isGitlab()) {
-            System.out.println("Ignoring this test since not on Gitlab CI");
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            System.out.println("No KMS Server: ignoring");
             return;
         }
 

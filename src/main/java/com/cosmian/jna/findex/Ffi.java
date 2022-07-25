@@ -119,7 +119,7 @@ public final class Ffi {
 
         byte[] dbUidsBytes = Arrays.copyOfRange(dbUidsBuffer, 0, dbUidsBufferSize.getValue());
 
-        List<byte[]> dbUidsList = Leb128Serializer.deserialize(dbUidsBytes);
+        List<byte[]> dbUidsList = Leb128Serializer.deserializeList(dbUidsBytes);
 
         return dbUidsList;
     }

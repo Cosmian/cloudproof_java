@@ -110,9 +110,9 @@ public class TestFfiFindex {
 
         UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface() {
             @Override
-            public void upsert(byte[] uid, byte[] value) throws FfiException {
+            public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException {
                 try {
-                    db.databaseUpsert(uid, value, "entry_table");
+                    db.databaseUpsert(uidsAndValues, "entry_table");
                 } catch (SQLException e) {
                     throw new FfiException("Failed chain upsert: " + e.toString());
                 }
@@ -120,9 +120,9 @@ public class TestFfiFindex {
         });
         UpsertChain upsertChain = new UpsertChain(new com.cosmian.jna.findex.FfiWrapper.UpsertChainInterface() {
             @Override
-            public void upsert(byte[] uid, byte[] value) throws FfiException {
+            public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException {
                 try {
-                    db.databaseUpsert(uid, value, "chain_table");
+                    db.databaseUpsert(uidsAndValues, "chain_table");
                 } catch (SQLException e) {
                     throw new FfiException("Failed chain upsert: " + e.toString());
                 }

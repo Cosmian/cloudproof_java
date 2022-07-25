@@ -13,7 +13,7 @@ public final class TestUtils {
         logger.setLevel(Level.ALL);
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new SimpleFormatter());
-        handler.setLevel(Level.ALL);
+        handler.setLevel(Level.FINE);
         logger.setUseParentHandlers(false);
         logger.addHandler(handler);
         logger.fine("Logger was setup");
@@ -52,18 +52,5 @@ public final class TestUtils {
             System.out.println("ERROR: " + e.getMessage());
             return false;
         }
-    }
-
-    /*
-     * This function is made for CI purpose:
-     * - if running on Gitlab, force KMS tests
-     * - ignore KMS test otherwise
-     */
-    public static boolean isGitlab() {
-        String isGitlab = System.getenv("GITLAB_CI");
-        if (isGitlab != null && isGitlab.length() != 0) {
-            return true;
-        }
-        return false;
     }
 }

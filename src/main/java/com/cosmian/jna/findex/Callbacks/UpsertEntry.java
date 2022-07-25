@@ -1,8 +1,11 @@
 package com.cosmian.jna.findex.Callbacks;
 
+import java.util.HashMap;
+
 import com.cosmian.jna.FfiException;
 import com.cosmian.jna.findex.FfiWrapper.UpsertEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface;
+import com.cosmian.jna.findex.Leb128Serializer;
 import com.sun.jna.Pointer;
 
 public class UpsertEntry implements UpsertEntryCallback {
@@ -14,19 +17,22 @@ public class UpsertEntry implements UpsertEntryCallback {
     }
 
     @Override
-    public int apply(Pointer uid, int uidLength, Pointer value, int valueLength) throws FfiException {
+    public int apply(Pointer items, int itemsLength) throws FfiException {
         //
-        // Read `uid` until `uidLength` and `value` until `valueLength`
+        // Read `items` until `itemsLength`
         //
-        byte[] uidBytes = new byte[uidLength];
-        uid.read(0, uidBytes, 0, uidLength);
-        byte[] valueBytes = new byte[valueLength];
-        value.read(0, valueBytes, 0, valueLength);
+        byte[] itemsBytes = new byte[itemsLength];
+        items.read(0, itemsBytes, 0, itemsLength);
+
+        //
+        // Deserialize the entry table items
+        //
+        HashMap<byte[], byte[]> uidsAndValues = Leb128Serializer.deserializeHashmap(itemsBytes);
 
         //
         // Insert in database
         //
-        this.upsert.upsert(uidBytes, valueBytes);
+        this.upsert.upsert(uidsAndValues);
 
         return 0;
     }

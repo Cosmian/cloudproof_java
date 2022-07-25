@@ -29,7 +29,7 @@ public class FetchEntry implements FetchEntryCallback {
         //
         // Deserialize Entry Table uids
         //
-        List<byte[]> entryTableUids = Leb128Serializer.deserialize(uids);
+        List<byte[]> entryTableUids = Leb128Serializer.deserializeList(uids);
 
         //
         // Select uids and values in EntryTable
@@ -40,7 +40,7 @@ public class FetchEntry implements FetchEntryCallback {
         // Serialize results
         //
         if (uidsAndValues.size() > 0) {
-            byte[] uidsAndValuesBytes = Leb128Serializer.serialize(uidsAndValues);
+            byte[] uidsAndValuesBytes = Leb128Serializer.serializeHashMap(uidsAndValues);
             output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
             outputSize.setValue(uidsAndValuesBytes.length);
         } else {

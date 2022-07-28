@@ -2,8 +2,8 @@ package com.cosmian.rest.kmip;
 
 import com.cosmian.CosmianException;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
+import com.cosmian.rest.kmip.data_structures.KeyValue;
 import com.cosmian.rest.kmip.data_structures.KeyWrappingData;
-import com.cosmian.rest.kmip.data_structures.PlainTextKeyValue;
 import com.cosmian.rest.kmip.data_structures.TransparentSymmetricKey;
 
 public class KmipUtils {
@@ -16,13 +16,8 @@ public class KmipUtils {
      * @throws CosmianException if the {@link KeyBlock} is malformed the bytes cannot be found
      */
     public static byte[] bytesFromKeyBlock(KeyBlock keyBlock) throws CosmianException {
-        Object keyValueContent = keyBlock.getKeyValue().get();
-        if (keyValueContent instanceof byte[]) {
-            return (byte[]) keyValueContent;
-        } else if (!(keyValueContent instanceof PlainTextKeyValue)) {
-            throw new CosmianException("Unknown KeyValue type: " + keyValueContent.getClass().getName());
-        }
-        Object keyMaterialContent = ((PlainTextKeyValue) keyValueContent).getKeyMaterial().get();
+        Object keyValueContent = keyBlock.getKeyValue();
+        Object keyMaterialContent = ((KeyValue) keyValueContent).getKeyMaterial().get();
         byte[] bytes;
         if (keyMaterialContent instanceof byte[]) {
             bytes = (byte[]) keyMaterialContent;
@@ -41,7 +36,7 @@ public class KmipUtils {
      */
     /**
      * Extract the nonce/iv/counter bytes from a {@link KeyWrappingData} for those made of byte arrays
-     * 
+     *
      * @param keyWrappingData the {@link KeyWrappingData}
      * @return the bytes of the Nonce
      * @throws CosmianException if no Noce is available

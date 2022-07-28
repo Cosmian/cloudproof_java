@@ -21,7 +21,7 @@ import com.cosmian.rest.abe.access_policy.And;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.access_policy.Or;
 import com.cosmian.rest.abe.policy.Policy;
-import com.cosmian.rest.kmip.data_structures.PlainTextKeyValue;
+import com.cosmian.rest.kmip.data_structures.KeyValue;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
 import com.cosmian.rest.kmip.types.Attributes;
@@ -136,8 +136,8 @@ public class TestGpsw {
         PrivateKey userDecryptionKey = abe.retrieveUserDecryptionKey(userDecryptionKeyUniqueIdentifier);
         assertEquals(KeyFormatType.AbeUserDecryptionKey, userDecryptionKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.ABE, userDecryptionKey.getKeyBlock().getCryptographicAlgorithm());
-        PlainTextKeyValue plainTextKeyValue = (PlainTextKeyValue) userDecryptionKey.getKeyBlock().getKeyValue().get();
-        VendorAttribute[] vendorAttributes = plainTextKeyValue.getAttributes().get().getVendorAttributes().get();
+        KeyValue keyValue = (KeyValue) userDecryptionKey.getKeyBlock().getKeyValue();
+        VendorAttribute[] vendorAttributes = keyValue.getAttributes().get().getVendorAttributes().get();
         // TODO better check on Vendor Attributes
         logger.info(() -> Arrays.asList(vendorAttributes).toString());
 

@@ -10,7 +10,6 @@ import com.cosmian.rest.kmip.types.KeyCompressionType;
 import com.cosmian.rest.kmip.types.KeyFormatType;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * A Key Block object is a structure used to encapsulate all of the information that is closely associated with a
  * cryptographic key.
@@ -37,14 +36,14 @@ public class KeyBlock implements KmipStruct {
 
     /**
      * Return {@link KeyBlock} {@link Attributes} or a set of empty {@link Attributes} for the given {@link ObjectType}
-     * 
+     *
      * @param objectType the {@link ObjectType}
      * @return the {@link Attributes}
      */
     public Attributes attributes(ObjectType objectType) {
-        Object kv = this.keyValue.get();
-        if (kv instanceof PlainTextKeyValue) {
-            Optional<Attributes> oa = ((PlainTextKeyValue) kv).getAttributes();
+        Object kv = this.keyValue;
+        if (kv instanceof KeyValue) {
+            Optional<Attributes> oa = ((KeyValue) kv).getAttributes();
             if (oa.isPresent()) {
                 return oa.get();
             }

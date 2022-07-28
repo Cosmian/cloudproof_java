@@ -31,7 +31,7 @@ This library free software and is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.7.6</version>
+    <version>0.7.7</version>
 </dependency>
 ```
 
@@ -51,7 +51,7 @@ KMS Server | Java Lib  | GPSW lib  | CoverCrypt lib | Findex
 1.2.1      | 0.6.1     | 0.6.1     | N/A            | N/A
 2.0.1      | 0.7.2     | 0.6.5     | 1.0.2          | N/A
 2.0.2      | 0.7.5     | 0.6.10    | 2.0.0          | N/A
-2.1.0      | 0.7.6     | 1.1.1     | 4.0.0          | 0.2.3
+2.1.0      | 0.7.7     | 1.1.1     | 4.0.0          | 0.2.3
 
 ## Update native libraries
 

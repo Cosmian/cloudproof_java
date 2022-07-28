@@ -13,7 +13,6 @@ import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.data_structures.KeyMaterial;
 import com.cosmian.rest.kmip.data_structures.KeyValue;
-import com.cosmian.rest.kmip.data_structures.PlainTextKeyValue;
 import com.cosmian.rest.kmip.data_structures.TransparentSymmetricKey;
 import com.cosmian.rest.kmip.json.KmipStruct;
 import com.cosmian.rest.kmip.objects.SymmetricKey;
@@ -36,7 +35,6 @@ import com.fasterxml.classmate.TypeResolver;
 import com.fasterxml.classmate.members.ResolvedField;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class TestKmip {
 
     @BeforeAll
@@ -45,10 +43,10 @@ public class TestKmip {
     }
 
     private SymmetricKey symmetricKey() {
-        PlainTextKeyValue pt_kv =
-            new PlainTextKeyValue(new KeyMaterial(new TransparentSymmetricKey("bytes".getBytes())), Optional.empty());
+        KeyValue kv =
+            new KeyValue(new KeyMaterial(new TransparentSymmetricKey("bytes".getBytes())), Optional.empty());
         SymmetricKey symmetricKey = new SymmetricKey(new KeyBlock(KeyFormatType.TransparentSymmetricKey,
-            Optional.empty(), new KeyValue(pt_kv), CryptographicAlgorithm.AES, 256, Optional.empty()
+            Optional.empty(), kv, CryptographicAlgorithm.AES, 256, Optional.empty()
 
         ));
         return symmetricKey;

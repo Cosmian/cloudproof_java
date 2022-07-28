@@ -4,15 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import java.nio.charset.StandardCharsets;
 
+import org.junit.jupiter.api.Test;
+
 import com.cosmian.rest.abe.Abe;
-import com.cosmian.rest.abe.acccess_policy.AccessPolicy;
-import com.cosmian.rest.abe.acccess_policy.And;
-import com.cosmian.rest.abe.acccess_policy.Attr;
-import com.cosmian.rest.abe.acccess_policy.Or;
+import com.cosmian.rest.abe.Implementation;
+import com.cosmian.rest.abe.Specifications;
+import com.cosmian.rest.abe.access_policy.AccessPolicy;
+import com.cosmian.rest.abe.access_policy.And;
+import com.cosmian.rest.abe.access_policy.Attr;
+import com.cosmian.rest.abe.access_policy.Or;
 import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
-
-import org.junit.jupiter.api.Test;
 
 /**
  * This class contains demos of the Java API. Demos are written as tests so that they can be easily launched from an IDE
@@ -36,7 +38,8 @@ public class Demo {
         }
 
         // Change the Cosmian Server Server URL and API key as appropriate
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()),
+            new Specifications(Implementation.GPSW));
 
         // ## Policy
         // In this demo, we will create a Policy which combines two axes, a

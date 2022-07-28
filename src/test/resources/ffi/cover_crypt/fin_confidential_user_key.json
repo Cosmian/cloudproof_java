@@ -11,7 +11,7 @@
       "value" : [ {
         "tag" : "KeyMaterial",
         "type" : "ByteString",
-        "value" : "02010420A294E38730C628CC388FF7DC3752DA1D95B6FA540904C9305F0F6B4C4E75050E02020420E506E820140C741C11311E76C5DC4916FEF889D0B2AE6F48CFBFF4696021B00300"
+        "value" : "20E155B51D4A145FACD96CAD535779164DD604032A177F6AABB54CF36052BCCA04201F692C61B2CA55F87D95B4C58F67123BCD5387ABF5FEC66ADF7614AE86EFD305040000000202010420D64E020BD8536BC49DACE46D1C54A3ED655D95B50BB7C3671C5390351413020E0202042070F7CA054D4EE3DABC43F942B77C544F623CE185A55CEE011F70F500E579D90D"
       }, {
         "tag" : "Attributes",
         "value" : [ {
@@ -33,7 +33,7 @@
             }, {
               "tag" : "LinkedObjectIdentifier",
               "type" : "TextString",
-              "value" : "b7ef1b9d-4bdd-4e76-b826-dde2fed0a003"
+              "value" : "ab68a0d4-968d-4b26-8e7d-b0a9a0f5a36a"
             } ]
           } ]
         }, {
@@ -67,7 +67,7 @@
     }, {
       "tag" : "CryptographicLength",
       "type" : "Integer",
-      "value" : 584
+      "value" : 1144
     } ]
   } ]
 }

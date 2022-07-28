@@ -49,4 +49,11 @@ public interface FfiWrapper extends Library {
         IntByReference uidLen, byte[] additionalDataPointer, IntByReference additionalDataLength,
         Pointer encryptedHeaderBytes, int encryptedHeaderBytesSize, int cacheHandle);
 
+    int h_generate_master_keys(byte[] masterKeys, IntByReference masterKeysSize, String policyJson);
+
+    int h_generate_user_private_key(byte[] userPrivateKeyPtr, IntByReference userPrivateKeySize,
+        Pointer masterPrivateKeyPtr, int masterPrivateKeyLen, String accessPolicyJson, String policyJson);
+
+    int h_rotate_attributes(byte[] policyBuffer, IntByReference policyBufferSize, String attributesJson,
+        String policyJson);
 }

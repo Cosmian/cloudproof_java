@@ -18,17 +18,17 @@ public class PolicyDeserializer extends KmipJsonDeserializer<Policy> {
     @Override
     public Policy deserialize(JsonNode node, DeserializationContext ctxt) throws IOException, JacksonException {
 
-        JsonNode lastAttributeNode = node.get("last_attribute");
-        if (lastAttributeNode == null) {
+        JsonNode lastAttributeValueNode = node.get("last_attribute_value");
+        if (lastAttributeValueNode == null) {
             throw new IOException("Invalid KMIP Json " + node.toPrettyString() + ". No last_attribute");
         }
-        int lastAttribute = lastAttributeNode.asInt();
+        int lastAttributeValue = lastAttributeValueNode.asInt();
 
-        JsonNode maxNumberOfRevocationsNode = node.get("max_attribute");
-        if (maxNumberOfRevocationsNode == null) {
+        JsonNode maxAttributeValueNode = node.get("max_attribute_value");
+        if (maxAttributeValueNode == null) {
             throw new IOException("Invalid KMIP Json " + node.toPrettyString() + ". No max_attribute");
         }
-        int maxNumberOfRevocations = maxNumberOfRevocationsNode.asInt();
+        int maxAttributeValue = maxAttributeValueNode.asInt();
 
         JsonNode storeNode = node.get("store");
         if (storeNode == null) {
@@ -65,7 +65,7 @@ public class PolicyDeserializer extends KmipJsonDeserializer<Policy> {
             }
         }
 
-        return new Policy(lastAttribute, maxNumberOfRevocations, store, attributeToInt);
+        return new Policy(lastAttributeValue, maxAttributeValue, store, attributeToInt);
     }
 
     static <T> Iterable<T> toIterable(Iterator<T> it) {

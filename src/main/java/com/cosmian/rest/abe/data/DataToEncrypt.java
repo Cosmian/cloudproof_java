@@ -1,8 +1,9 @@
 package com.cosmian.rest.abe.data;
 
+import java.util.Arrays;
 import java.util.Objects;
 
-import com.cosmian.rest.abe.acccess_policy.Attr;
+import com.cosmian.rest.abe.access_policy.Attr;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(using = DataToEncryptSerializer.class)
@@ -54,18 +55,19 @@ public class DataToEncrypt {
             return false;
         }
         DataToEncrypt dataToEncrypt = (DataToEncrypt) o;
-        return Objects.equals(policyAttributes, dataToEncrypt.policyAttributes)
-            && Objects.equals(data, dataToEncrypt.data);
+        return Arrays.equals(policyAttributes, dataToEncrypt.policyAttributes)
+            && Arrays.equals(data, dataToEncrypt.data);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(policyAttributes, data);
+        return Objects.hash(Arrays.hashCode(policyAttributes), Arrays.hashCode(data));
     }
 
     @Override
     public String toString() {
-        return "{" + " policyAttributes='" + getPolicyAttributes() + "'" + ", data='" + getData() + "'" + "}";
+        return "{" + " policyAttributes='" + Arrays.toString(getPolicyAttributes()) + "'" + ", data='"
+            + Arrays.toString(getData()) + "'" + "}";
     }
 
 }

@@ -11,18 +11,17 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 public class PolicySerializer extends JsonSerializer<Policy> {
 
     @Override
-    public void serialize(Policy policyGroup, JsonGenerator generator, SerializerProvider serializers)
-        throws IOException {
+    public void serialize(Policy policy, JsonGenerator generator, SerializerProvider serializers) throws IOException {
 
         generator.writeStartObject();
-        generator.writeFieldName("last_attribute");
-        generator.writeNumber(policyGroup.getLastAttributeValue());
-        generator.writeFieldName("max_attribute");
-        generator.writeNumber(policyGroup.getMaxNumberOfRevocations());
+        generator.writeFieldName("last_attribute_value");
+        generator.writeNumber(policy.getLastAttributeValue());
+        generator.writeFieldName("max_attribute_value");
+        generator.writeNumber(policy.getMaxAttributeValue());
         // store
         generator.writeFieldName("store");
         generator.writeStartObject();
-        for (Entry<String, PolicyAxis> entry : policyGroup.getStore().entrySet()) {
+        for (Entry<String, PolicyAxis> entry : policy.getStore().entrySet()) {
             generator.writeFieldName(entry.getKey());
             generator.writeStartArray();
             generator.writeStartArray();
@@ -37,7 +36,7 @@ public class PolicySerializer extends JsonSerializer<Policy> {
         // attribute_to_int
         generator.writeFieldName("attribute_to_int");
         generator.writeStartObject();
-        for (Entry<PolicyAttributeUid, TreeSet<Integer>> entry : policyGroup.getAttributeToInt().entrySet()) {
+        for (Entry<PolicyAttributeUid, TreeSet<Integer>> entry : policy.getAttributeToInt().entrySet()) {
             generator.writeFieldName(entry.getKey().toString());
             generator.writeStartArray();
             for (int value : entry.getValue()) {

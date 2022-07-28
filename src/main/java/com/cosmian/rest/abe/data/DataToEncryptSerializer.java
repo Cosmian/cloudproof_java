@@ -3,12 +3,12 @@ package com.cosmian.rest.abe.data;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import com.cosmian.rest.abe.acccess_policy.Attr;
+import org.apache.commons.codec.binary.Hex;
+
+import com.cosmian.rest.abe.access_policy.Attr;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-
-import org.apache.commons.codec.binary.Hex;
 
 public class DataToEncryptSerializer extends JsonSerializer<DataToEncrypt> {
 

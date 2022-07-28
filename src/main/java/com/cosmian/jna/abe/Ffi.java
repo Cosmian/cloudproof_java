@@ -1,5 +1,7 @@
 package com.cosmian.jna.abe;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,45 +9,54 @@ import java.util.Optional;
 
 import com.cosmian.CosmianException;
 import com.cosmian.jna.FfiException;
-import com.cosmian.rest.abe.acccess_policy.Attr;
+import com.cosmian.rest.abe.Specifications;
+import com.cosmian.rest.abe.access_policy.AccessPolicy;
+import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
-import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 public final class Ffi {
+    private FfiWrapper instance;
 
-    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("abe_gpsw", FfiWrapper.class);
+    private Specifications abeSpecifications;
+
+    public Ffi(FfiWrapper instance, Specifications abeSpecifications) {
+        this.instance = instance;
+        this.abeSpecifications = abeSpecifications;
+    }
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes
-     * 
+     *
      * @return the last error recorded by the native library
      * @throws FfiException in case of native library error
      */
-    public static String get_last_error() throws FfiException {
+    public String get_last_error() throws FfiException {
         return get_last_error(1023);
     }
 
     /**
      * Return the last error in a String that does not exceed `max_len` bytes
-     * 
+     *
      * @param max_len the maximum number of bytes to return
      * @throws FfiException in case of native library error
      * @return the error
      */
-    public static String get_last_error(int max_len) throws FfiException {
+    public String get_last_error(int max_len) throws FfiException {
         if (max_len < 1) {
             throw new FfiException("get_last_error: max_lem must be at least one");
         }
         byte[] output = new byte[max_len + 1];
         IntByReference outputSize = new IntByReference(output.length);
-        if (Ffi.INSTANCE.get_last_error(output, outputSize) == 0) {
+        if (this.instance.get_last_error(output, outputSize) == 0) {
             return new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
         }
         throw new FfiException("Failed retrieving the last error; check the debug logs");
@@ -53,12 +64,12 @@ public final class Ffi {
 
     /**
      * Set the last error on the native lib
-     * 
+     *
      * @param error_msg the last error to set on the native lib
      * @throws FfiException n case of native library error
      */
-    public static void set_error(String error_msg) throws FfiException {
-        unwrap(Ffi.INSTANCE.set_error(error_msg));
+    public void set_error(String error_msg) throws FfiException {
+        unwrap(this.instance.set_error(error_msg));
     }
 
     /**
@@ -71,9 +82,10 @@ public final class Ffi {
      * @throws FfiException on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static int createEncryptionCache(PublicKey publicKey) throws FfiException, CosmianException {
+    public int createEncryptionCache(PublicKey publicKey) throws FfiException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
-        Policy policy = Policy.fromVendorAttributes(publicKey.attributes());
+        Policy policy =
+            Policy.fromVendorAttributes(publicKey.attributes(), this.abeSpecifications.getPolicyVendorAttribute());
         return createEncryptionCache(policy, publicKeyBytes);
     }
 
@@ -88,8 +100,7 @@ public final class Ffi {
      * @throws FfiException on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static int createEncryptionCache(Policy policy, byte[] publicKeyBytes)
-        throws FfiException, CosmianException {
+    public int createEncryptionCache(Policy policy, byte[] publicKeyBytes) throws FfiException, CosmianException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -99,7 +110,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         // Public Key
@@ -110,7 +121,7 @@ public final class Ffi {
         IntByReference cacheHandle = new IntByReference();
 
         // cache ptr ptr
-        unwrap(Ffi.INSTANCE.h_aes_create_encryption_cache(cacheHandle, policyJson, publicKeyPointer,
+        unwrap(this.instance.h_aes_create_encryption_cache(cacheHandle, policyJson, publicKeyPointer,
             publicKeyBytes.length));
 
         return cacheHandle.getValue();
@@ -123,21 +134,21 @@ public final class Ffi {
      * @throws FfiException on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static void destroyEncryptionCache(int cacheHandle) throws FfiException, CosmianException {
-        unwrap(Ffi.INSTANCE.h_aes_destroy_encryption_cache(cacheHandle));
+    public void destroyEncryptionCache(int cacheHandle) throws FfiException, CosmianException {
+        unwrap(this.instance.h_aes_destroy_encryption_cache(cacheHandle));
     }
 
     /**
      * Generate an hybrid encryption header using a pre-cached Public Key and Policy. A symmetric key is randomly
-     * generated and encrypted using the ABE schemes and the provided policy attributes for the given policy
-     * 
+     * generated and encrypted using the ABEschemes and the provided policy attributes for the given policy
+     *
      * @param cacheHandle the pointer to the {@link int}
      * @param attributes the policy attributes used to encrypt the generated symmetric key
      * @return the encrypted header, bytes and symmetric key
      * @throws FfiException in case of native library error
      * @throws CosmianException in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
      */
-    public static EncryptedHeader encryptHeaderUsingCache(int cacheHandle, Attr[] attributes)
+    public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, Attr[] attributes)
         throws FfiException, CosmianException {
         return encryptHeaderUsingCache(cacheHandle, attributes, Optional.empty(), Optional.empty());
     }
@@ -147,7 +158,7 @@ public final class Ffi {
      * generated and encrypted using the ABE schemes and the provided policy attributes for the given policy. . If
      * provided, the resource `uid` and the `additionalData` are symmetrically encrypted and appended to the encrypted
      * header.
-     * 
+     *
      * @param cacheHandle the pointer to the {@link int}
      * @param attributes the policy attributes used to encrypt the generated symmetric key
      * @param uid the optional resource uid
@@ -156,7 +167,7 @@ public final class Ffi {
      * @throws FfiException in case of native library error
      * @throws CosmianException in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
      */
-    public static EncryptedHeader encryptHeaderUsingCache(int cacheHandle, Attr[] attributes, Optional<byte[]> uid,
+    public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, Attr[] attributes, Optional<byte[]> uid,
         Optional<byte[]> additionalData) throws FfiException, CosmianException {
         // Is a resource UID supplied
         int uidLength;
@@ -195,7 +206,7 @@ public final class Ffi {
         try {
             attributesJson = mapper.writeValueAsString(attributesArray);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         // Uid
@@ -217,7 +228,7 @@ public final class Ffi {
         }
 
         try {
-            unwrap(Ffi.INSTANCE.h_aes_encrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
+            unwrap(this.instance.h_aes_encrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
                 headerBytesBuffer, headerBytesBufferSize, cacheHandle, attributesJson, uidPointer, uidLength,
                 additionalDataPointer, adLength));
         } catch (Throwable e) {
@@ -232,17 +243,17 @@ public final class Ffi {
     /**
      * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the ABE schemes
      * and the provided policy attributes for the given policy
-     * 
+     *
      * @param publicKey the ABE public key also holds the {@link Policy}
      * @param attributes the policy attributes used to encrypt the generated symmetric key
      * @return the encrypted header, bytes and symmetric key
      * @throws FfiException in case of native library error
      * @throws CosmianException in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
      */
-    public static EncryptedHeader encryptHeader(PublicKey publicKey, Attr[] attributes)
-        throws FfiException, CosmianException {
+    public EncryptedHeader encryptHeader(PublicKey publicKey, Attr[] attributes) throws FfiException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
-        Policy policy = Policy.fromVendorAttributes(publicKey.attributes());
+        Policy policy =
+            Policy.fromVendorAttributes(publicKey.attributes(), this.abeSpecifications.getPolicyVendorAttribute());
         return encryptHeader(policy, publicKeyBytes, attributes, Optional.empty(), Optional.empty());
     }
 
@@ -250,7 +261,7 @@ public final class Ffi {
      * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the ABE schemes
      * and the provided policy attributes for the given policy. . If provided, the resource `uid` and the
      * `additionalData` are symmetrically encrypted and appended to the encrypted header.
-     * 
+     *
      * @param publicKey the ABE public key also holds the {@link Policy}
      * @param attributes the policy attributes used to encrypt the generated symmetric key
      * @param uid the optional resource uid
@@ -259,10 +270,11 @@ public final class Ffi {
      * @throws FfiException in case of native library error
      * @throws CosmianException in case the {@link Policy} and key bytes cannot be recovered from the {@link PublicKey}
      */
-    public static EncryptedHeader encryptHeader(PublicKey publicKey, Attr[] attributes, Optional<byte[]> uid,
+    public EncryptedHeader encryptHeader(PublicKey publicKey, Attr[] attributes, Optional<byte[]> uid,
         Optional<byte[]> additionalData) throws FfiException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
-        Policy policy = Policy.fromVendorAttributes(publicKey.attributes());
+        Policy policy =
+            Policy.fromVendorAttributes(publicKey.attributes(), this.abeSpecifications.getPolicyVendorAttribute());
         return encryptHeader(policy, publicKeyBytes, attributes, uid, additionalData);
     }
 
@@ -270,7 +282,7 @@ public final class Ffi {
      * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the ABE schemes
      * and the provided policy attributes for the given policy. If provided, the resource `uid` and the `additionalData`
      * are symmetrically encrypted and appended to the encrypted header.
-     * 
+     *
      * @param policy the policy to use
      * @param publicKeyBytes the ABE public key bytes
      * @param attributes the policy attributes used to encrypt the generated symmetric key
@@ -279,8 +291,8 @@ public final class Ffi {
      * @return the encrypted header, bytes and symmetric key
      * @throws FfiException in case of native library error
      */
-    public static EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, Attr[] attributes,
-        Optional<byte[]> uid, Optional<byte[]> additionalData) throws FfiException {
+    public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, Attr[] attributes, Optional<byte[]> uid,
+        Optional<byte[]> additionalData) throws FfiException {
 
         // Is a resource UID supplied
         int uidLength;
@@ -314,7 +326,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         // Public Key
@@ -331,7 +343,7 @@ public final class Ffi {
         try {
             attributesJson = mapper.writeValueAsString(attributesArray);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy");
+            throw new FfiException("Invalid Policy", e);
         }
 
         // Uid
@@ -352,7 +364,7 @@ public final class Ffi {
             additionalDataPointer.write(0, additionalData.get(), 0, adLength);
         }
 
-        unwrap(Ffi.INSTANCE.h_aes_encrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, headerBytesBuffer,
+        unwrap(this.instance.h_aes_encrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, headerBytesBuffer,
             headerBytesBufferSize, policyJson, publicKeyPointer, publicKeyBytes.length, attributesJson, uidPointer,
             uidLength, additionalDataPointer, adLength));
 
@@ -374,7 +386,7 @@ public final class Ffi {
      * @throws FfiException on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static int createDecryptionCache(PrivateKey userDecryptionKey) throws FfiException, CosmianException {
+    public int createDecryptionCache(PrivateKey userDecryptionKey) throws FfiException, CosmianException {
         byte[] userDecryptionKeyBytes = userDecryptionKey.bytes();
         return createDecryptionCache(userDecryptionKeyBytes);
     }
@@ -389,7 +401,7 @@ public final class Ffi {
      * @throws FfiException on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static int createDecryptionCache(byte[] userDecryptionKeyBytes) throws FfiException, CosmianException {
+    public int createDecryptionCache(byte[] userDecryptionKeyBytes) throws FfiException, CosmianException {
 
         // Public Key
         final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKeyBytes.length);
@@ -398,7 +410,7 @@ public final class Ffi {
         // Cache Handle
         IntByReference cacheHandle = new IntByReference();
 
-        unwrap(Ffi.INSTANCE.h_aes_create_decryption_cache(cacheHandle, userDecryptionKeyPointer,
+        unwrap(this.instance.h_aes_create_decryption_cache(cacheHandle, userDecryptionKeyPointer,
             userDecryptionKeyBytes.length));
 
         return cacheHandle.getValue();
@@ -411,20 +423,20 @@ public final class Ffi {
      * @throws FfiException on Rust lib errors
      * @throws CosmianException in case of other errors
      */
-    public static void destroyDecryptionCache(int cacheHandle) throws FfiException, CosmianException {
-        unwrap(Ffi.INSTANCE.h_aes_destroy_decryption_cache(cacheHandle));
+    public void destroyDecryptionCache(int cacheHandle) throws FfiException, CosmianException {
+        unwrap(this.instance.h_aes_destroy_decryption_cache(cacheHandle));
     }
 
     /**
      * Decrypt a hybrid header using a cache, recovering the symmetric key
-     * 
+     *
      * @param cacheHandle the cache to the user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws FfiException in case of native library error
      * @throws CosmianException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
-    public static DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes)
+    public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes)
         throws FfiException, CosmianException {
         return decryptHeaderUsingCache(cacheHandle, encryptedHeaderBytes, 0, 0);
     }
@@ -432,7 +444,7 @@ public final class Ffi {
     /**
      * Decrypt a hybrid header using a cache, recovering the symmetric key, and optionally, the resource UID and
      * additional data
-     * 
+     *
      * @param cacheHandle the cache to the user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @param uidLen the maximum bytes length of the expected UID
@@ -440,7 +452,7 @@ public final class Ffi {
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws FfiException in case of native library error
      */
-    public static DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes, int uidLen,
+    public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes, int uidLen,
         int additionalDataLen) throws FfiException {
 
         // Symmetric Key OUT
@@ -459,7 +471,7 @@ public final class Ffi {
         final Pointer encryptedHeaderBytesPointer = new Memory(encryptedHeaderBytes.length);
         encryptedHeaderBytesPointer.write(0, encryptedHeaderBytes, 0, encryptedHeaderBytes.length);
 
-        unwrap(Ffi.INSTANCE.h_aes_decrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize, uidBuffer,
+        unwrap(this.instance.h_aes_decrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize, uidBuffer,
             uidBufferSize, additionalDataBuffer, additionalDataBufferSize, encryptedHeaderBytesPointer,
             encryptedHeaderBytes.length, cacheHandle));
 
@@ -470,21 +482,21 @@ public final class Ffi {
 
     /**
      * Decrypt a hybrid header, recovering the symmetric key
-     * 
+     *
      * @param userDecryptionKey the ABE user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws FfiException in case of native library error
      * @throws CosmianException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
-    public static DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes)
+    public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes)
         throws FfiException, CosmianException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, 0, 0);
     }
 
     /**
      * Decrypt a hybrid header, recovering the symmetric key, and optionally, the resource UID and additional data
-     * 
+     *
      * @param userDecryptionKey the ABE user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @param uidLen the maximum bytes length of the expected UID
@@ -493,14 +505,14 @@ public final class Ffi {
      * @throws FfiException in case of native library error
      * @throws CosmianException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
-    public static DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes, int uidLen,
+    public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes, int uidLen,
         int additionalDataLen) throws FfiException, CosmianException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, uidLen, additionalDataLen);
     }
 
     /**
      * Decrypt a hybrid header, recovering the symmetric key, and optionally, the resource UID and additional data
-     * 
+     *
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
      * @param encryptedHeaderBytes the encrypted header
      * @param uidLen the maximum bytes length of the expected UID
@@ -508,7 +520,7 @@ public final class Ffi {
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws FfiException in case of native library error
      */
-    public static DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes, int uidLen,
+    public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes, int uidLen,
         int additionalDataLen) throws FfiException {
 
         // Symmetric Key OUT
@@ -531,7 +543,7 @@ public final class Ffi {
         final Pointer encryptedHeaderBytesPointer = new Memory(encryptedHeaderBytes.length);
         encryptedHeaderBytesPointer.write(0, encryptedHeaderBytes, 0, encryptedHeaderBytes.length);
 
-        unwrap(Ffi.INSTANCE.h_aes_decrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, uidBuffer, uidBufferSize,
+        unwrap(this.instance.h_aes_decrypt_header(symmetricKeyBuffer, symmetricKeyBufferSize, uidBuffer, uidBufferSize,
             additionalDataBuffer, additionalDataBufferSize, encryptedHeaderBytesPointer, encryptedHeaderBytes.length,
             userDecryptionKeyPointer, userDecryptionKeyBytes.length));
 
@@ -542,30 +554,30 @@ public final class Ffi {
 
     /**
      * The overhead in bytes (over the clear text) generated by the symmetric encryption scheme (AES 256 GCM)
-     * 
+     *
      * @return the overhead bytes
      */
-    public static int symmetricEncryptionOverhead() {
-        return Ffi.INSTANCE.h_aes_symmetric_encryption_overhead();
+    public int symmetricEncryptionOverhead() {
+        return this.instance.h_aes_symmetric_encryption_overhead();
     }
 
     /**
      * Symmetrically encrypt a block of clear text data. No resource UID is used for authentication and the block number
      * is assumed to be zero
-     * 
+     *
      * @param symmetricKey The key to use to symmetrically encrypt the block
      * @param clearText the clear text to encrypt
      * @return the encrypted block
      * @throws FfiException in case of native library error
      */
-    public static byte[] encryptBlock(byte[] symmetricKey, byte[] clearText) throws FfiException {
+    public byte[] encryptBlock(byte[] symmetricKey, byte[] clearText) throws FfiException {
         return encryptBlock(symmetricKey, new byte[] {}, 0, clearText);
     }
 
     /**
      * Symmetrically encrypt a block of clear text data. The UID and Block Number are part of the AEAD of the symmetric
      * scheme.
-     * 
+     *
      * @param symmetricKey The key to use to symmetrically encrypt the block
      * @param uid The resource UID
      * @param blockNumber the block number when the resource is split in multiple blocks
@@ -573,11 +585,10 @@ public final class Ffi {
      * @return the encrypted block
      * @throws FfiException in case of native library error
      */
-    public static byte[] encryptBlock(byte[] symmetricKey, byte[] uid, int blockNumber, byte[] clearText)
-        throws FfiException {
+    public byte[] encryptBlock(byte[] symmetricKey, byte[] uid, int blockNumber, byte[] clearText) throws FfiException {
 
         // Header Bytes OUT
-        byte[] cipherTextBuffer = new byte[Ffi.INSTANCE.h_aes_symmetric_encryption_overhead() + clearText.length];
+        byte[] cipherTextBuffer = new byte[this.instance.h_aes_symmetric_encryption_overhead() + clearText.length];
         IntByReference cipherTextBufferSize = new IntByReference(cipherTextBuffer.length);
 
         // Symmetric Key
@@ -597,7 +608,7 @@ public final class Ffi {
         final Pointer dataPointer = new Memory(clearText.length);
         dataPointer.write(0, clearText, 0, clearText.length);
 
-        unwrap(Ffi.INSTANCE.h_aes_encrypt_block(cipherTextBuffer, cipherTextBufferSize, symmetricKeyPointer,
+        unwrap(this.instance.h_aes_encrypt_block(cipherTextBuffer, cipherTextBufferSize, symmetricKeyPointer,
             symmetricKey.length, uidPointer, uid.length, blockNumber, dataPointer, clearText.length));
 
         return Arrays.copyOfRange(cipherTextBuffer, 0, cipherTextBufferSize.getValue());
@@ -606,13 +617,13 @@ public final class Ffi {
     /**
      * Symmetrically decrypt a block of encrypted data. No resource UID is used for authentication and the block number
      * is assumed to be zero
-     * 
+     *
      * @param symmetricKey the symmetric key to use
      * @param encryptedBytes the encrypted block bytes
      * @return the clear text bytes
      * @throws FfiException in case of native library error
      */
-    public static byte[] decryptBlock(byte[] symmetricKey, byte[] encryptedBytes) throws FfiException {
+    public byte[] decryptBlock(byte[] symmetricKey, byte[] encryptedBytes) throws FfiException {
 
         return decryptBlock(symmetricKey, new byte[] {}, 0, encryptedBytes);
     }
@@ -620,7 +631,7 @@ public final class Ffi {
     /**
      * Symmetrically decrypt a block of encrypted data. The resource UID and block Number must match those supplied on
      * encryption or decryption will fail.
-     * 
+     *
      * @param symmetricKey the symmetric key to use
      * @param uid the resource UID
      * @param blockNumber the block number of the resource
@@ -628,11 +639,11 @@ public final class Ffi {
      * @return the clear text bytes
      * @throws FfiException in case of native library error
      */
-    public static byte[] decryptBlock(byte[] symmetricKey, byte[] uid, int blockNumber, byte[] encryptedBytes)
+    public byte[] decryptBlock(byte[] symmetricKey, byte[] uid, int blockNumber, byte[] encryptedBytes)
         throws FfiException {
 
         // Clear Text Bytes OUT
-        byte[] clearTextBuffer = new byte[encryptedBytes.length - Ffi.INSTANCE.h_aes_symmetric_encryption_overhead()];
+        byte[] clearTextBuffer = new byte[encryptedBytes.length - this.instance.h_aes_symmetric_encryption_overhead()];
         IntByReference clearTextBufferSize = new IntByReference(clearTextBuffer.length);
 
         // Symmetric Key
@@ -652,20 +663,173 @@ public final class Ffi {
         final Pointer encryptedBytesPointer = new Memory(encryptedBytes.length);
         encryptedBytesPointer.write(0, encryptedBytes, 0, encryptedBytes.length);
 
-        unwrap(Ffi.INSTANCE.h_aes_decrypt_block(clearTextBuffer, clearTextBufferSize, symmetricKeyPointer,
+        unwrap(this.instance.h_aes_decrypt_block(clearTextBuffer, clearTextBufferSize, symmetricKeyPointer,
             symmetricKey.length, uidPointer, uid.length, blockNumber, encryptedBytesPointer, encryptedBytes.length));
 
         return Arrays.copyOfRange(clearTextBuffer, 0, clearTextBufferSize.getValue());
     }
 
     /**
+     * Generate the master private and public keys using the ABE policy
+     *
+     * @param policy the policy to use
+     * @return the master private and public keys in raw bytes
+     * @throws FfiException in case of native library error
+     */
+    public MasterKeys generateMasterKeys(Policy policy) throws FfiException {
+        // Master keys Bytes OUT
+        byte[] masterKeysBuffer = new byte[8192];
+        IntByReference masterKeysBufferSize = new IntByReference(masterKeysBuffer.length);
+
+        // For the JSON strings
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Policy
+        String policyJson;
+        try {
+            policyJson = mapper.writeValueAsString(policy);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid Policy", e);
+        }
+
+        int ffiCode = this.instance.h_generate_master_keys(masterKeysBuffer, masterKeysBufferSize, policyJson);
+        if (ffiCode != 0) {
+            // Retry with correct allocated size
+            masterKeysBuffer = new byte[masterKeysBufferSize.getValue()];
+            ffiCode = this.instance.h_generate_master_keys(masterKeysBuffer, masterKeysBufferSize, policyJson);
+            if (ffiCode != 0) {
+                throw new FfiException(get_last_error(4095));
+            }
+        }
+
+        byte[] masterKeysBytes = Arrays.copyOfRange(masterKeysBuffer, 0, masterKeysBufferSize.getValue());
+        if (masterKeysBytes.length < 4) {
+            throw new FfiException("Invalid master key bytes length. Must be at least 4 bytes");
+        }
+
+        int privateKeySize = ByteBuffer.wrap(Arrays.copyOfRange(masterKeysBytes, 0, 4)).getInt();
+        byte[] privateKey = Arrays.copyOfRange(masterKeysBytes, 4, 4 + privateKeySize);
+        byte[] publicKey = Arrays.copyOfRange(masterKeysBytes, 4 + privateKeySize, masterKeysBufferSize.getValue());
+
+        return new MasterKeys(privateKey, publicKey);
+    }
+
+    /**
+     * Generate the user private key
+     *
+     * @param masterPrivateKey the master private key in bytes
+     * @param accessPolicy the access policy of the user private key
+     * @param policy the ABE policy
+     * @return the corresponding user private key
+     * @throws FfiException in case of native library error
+     */
+    public byte[] generateUserPrivateKey(byte[] masterPrivateKey, AccessPolicy accessPolicy, Policy policy)
+        throws FfiException {
+        // User private key Bytes OUT
+        byte[] userPrivateKeyBuffer = new byte[8192];
+        IntByReference userPrivateKeyBufferSize = new IntByReference(userPrivateKeyBuffer.length);
+
+        // Master private key
+        final Pointer masterPrivateKeyPointer = new Memory(masterPrivateKey.length);
+        masterPrivateKeyPointer.write(0, masterPrivateKey, 0, masterPrivateKey.length);
+
+        // For the JSON strings
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Access Policy
+        String accessPolicyJson;
+        try {
+            accessPolicyJson = mapper.writeValueAsString(accessPolicy);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid Access Policy", e);
+        }
+        // Policy
+        String policyJson;
+        try {
+            policyJson = mapper.writeValueAsString(policy);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid Policy", e);
+        }
+
+        int ffiCode = this.instance.h_generate_user_private_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
+            masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
+         if (ffiCode != 0) {
+            // Retry with correct allocated size
+            userPrivateKeyBuffer = new byte[userPrivateKeyBufferSize.getValue()];
+            ffiCode = this.instance.h_generate_user_private_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
+                masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
+            if (ffiCode != 0) {
+                throw new FfiException(get_last_error(4095));
+            }
+        }
+        return Arrays.copyOfRange(userPrivateKeyBuffer, 0, userPrivateKeyBufferSize.getValue());
+    }
+
+    /**
+     * Rotate attributes, changing their underlying value with that of an unused slot
+     *
+     * @param attributes: a list of attributes to rotate
+     * @param policy: the current policy returns the new Policy
+     * @return the new policy
+     * @throws FfiException in case of native library error
+     * @throws IOException standard IO exceptions
+     * @throws DatabindException standard databind exceptions
+     * @throws StreamReadException stream read exceptions
+     */
+    public Policy rotateAttributes(Attr[] attributes, Policy policy)
+        throws FfiException, StreamReadException, DatabindException, IOException {
+        // New policy Bytes OUT
+        byte[] policyBuffer = new byte[4096];
+        IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
+
+        // For the JSON strings
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Attributes
+        // The value must be the JSON array of the String representation of the Attrs
+        ArrayList<String> attributesArray = new ArrayList<String>();
+        for (Attr attr : attributes) {
+            attributesArray.add(attr.toString());
+        }
+        String attributesJson;
+        try {
+            attributesJson = mapper.writeValueAsString(attributesArray);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid Attributes", e);
+        }
+
+        // Policy
+        String policyJson;
+        try {
+            policyJson = mapper.writeValueAsString(policy);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid Policy", e);
+        }
+
+        int ffiCode = this.instance.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson);
+
+        if (ffiCode != 0) {
+            // Retry with correct allocated size
+            policyBuffer = new byte[policyBufferSize.getValue()];
+            ffiCode = this.instance.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson);
+            if (ffiCode != 0) {
+                throw new FfiException(get_last_error(4095));
+            }
+        }
+
+        byte[] policyBytes = Arrays.copyOfRange(policyBuffer, 0, policyBufferSize.getValue());
+        Policy newPolicy = mapper.readValue(policyBytes, Policy.class);
+        return newPolicy;
+    }
+
+    /**
      * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
      * exception wrapping it.
-     * 
+     *
      * @param result the result of the FFI call
      * @throws FfiException in case of native library error
      */
-    public static void unwrap(int result) throws FfiException {
+    public void unwrap(int result) throws FfiException {
         if (result == 1) {
             throw new FfiException(get_last_error(4095));
         }

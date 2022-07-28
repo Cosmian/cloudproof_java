@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Policy implements Serializable {
     private int lastAttributeValue = 0;
 
-    private final int maxNumberOfRevocations;
+    private final int maxAttributeValue;
 
     // store the policies by name
     private HashMap<String, PolicyAxis> store = new HashMap<>();
@@ -32,26 +32,26 @@ public class Policy implements Serializable {
     // mapping between (policy_name, policy_attribute) -> integer
     private HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt = new HashMap<>();
 
-    public Policy(int lastAttributeValue, int maxNumberOfRevocations, HashMap<String, PolicyAxis> store,
+    public Policy(int lastAttributeValue, int maxAttributeValue, HashMap<String, PolicyAxis> store,
         HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt) {
         this.lastAttributeValue = lastAttributeValue;
-        this.maxNumberOfRevocations = maxNumberOfRevocations;
+        this.maxAttributeValue = maxAttributeValue;
         this.store = store;
         this.attributeToInt = attributeToInt;
     }
 
     /**
      * Instantiate an empty policy allowing the given max number of revocations of attributes
-     * 
-     * @param maxNumberOfRevocations the maximum number of attributes revocations
+     *
+     * @param maxAttributeValue the maximum number of possible attributes
      */
-    public Policy(int maxNumberOfRevocations) {
-        this.maxNumberOfRevocations = maxNumberOfRevocations;
+    public Policy(int maxAttributeValue) {
+        this.maxAttributeValue = maxAttributeValue;
     }
 
     /**
      * Add the given Axis to this policy and return the policy
-     * 
+     *
      * @param name axis name
      * @param attributes policy attributes of the axis
      * @param hierarchical whether the axis is hierarchical
@@ -60,7 +60,7 @@ public class Policy implements Serializable {
      */
     public Policy addAxis(String name, String[] attributes, boolean hierarchical) throws CosmianException {
         PolicyAxis axis = new PolicyAxis(name, attributes, hierarchical);
-        if (axis.getLen() + this.lastAttributeValue > this.maxNumberOfRevocations) {
+        if (axis.getLen() + this.lastAttributeValue > this.maxAttributeValue) {
             throw new CosmianException("Attribute capacity overflow");
         }
         if (this.store.get(axis.getName()) != null) {
@@ -77,22 +77,24 @@ public class Policy implements Serializable {
 
     /**
      * Convert the policy to a KMIP Vendor attribute that can be set on a KMIP Object
-     * 
+     *
+     * @param abeImplementation abe_gpsw or cover_crypt
      * @return the {@link VendorAttribute}
      * @throws CosmianException if the JSON cannot be serialized
      */
-    public VendorAttribute toVendorAttribute() throws CosmianException {
+    public VendorAttribute toVendorAttribute(String abeImplementation) throws CosmianException {
         String json;
         try {
             json = new ObjectMapper().writeValueAsString(this);
         } catch (JsonProcessingException e) {
             throw new CosmianException("Failed serializing the Policy to json: " + e.getMessage(), e);
         }
-        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN, VendorAttribute.VENDOR_ATTR_ABE_POLICY,
+        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN,
+            abeImplementation,
             json.getBytes(StandardCharsets.UTF_8));
     }
 
-    public static Policy fromVendorAttributes(Attributes attributes) throws CosmianException {
+    public static Policy fromVendorAttributes(Attributes attributes,String abeImplementation) throws CosmianException {
         VendorAttribute[] vas;
         if (attributes.getVendorAttributes().isPresent()) {
             vas = attributes.getVendorAttributes().get();
@@ -101,7 +103,7 @@ public class Policy implements Serializable {
         }
         for (VendorAttribute va : vas) {
             if (va.getVendor_identification().equals(VendorAttribute.VENDOR_ID_COSMIAN)) {
-                if (va.getAttribute_name().equals(VendorAttribute.VENDOR_ATTR_ABE_POLICY)) {
+                if (va.getAttribute_name().equals(abeImplementation)) {
                     String policyJson = new String(va.getAttribute_value(), StandardCharsets.UTF_8);
                     ObjectMapper mapper = new ObjectMapper();
                     try {
@@ -117,8 +119,8 @@ public class Policy implements Serializable {
 
     /**
      * The last attribute value that was assigned. This value is usually incremented as attributes are revoked. The
-     * value should therefore no exceed the value returned by {@link #getMaxNumberOfRevocations()}
-     * 
+     * value should therefore no exceed the value returned by {@link #getMaxAttributeValue()}
+     *
      * @return the last attribute value
      */
     public int getLastAttributeValue() {
@@ -126,14 +128,14 @@ public class Policy implements Serializable {
     }
 
     /**
-     * @param lastAttributeValue
+     * @param lastAttributeValue the last attribute value that was assigned.
      */
     void setLastAttributeValue(int lastAttributeValue) {
         this.lastAttributeValue = lastAttributeValue;
     }
 
-    public int getMaxNumberOfRevocations() {
-        return this.maxNumberOfRevocations;
+    public int getMaxAttributeValue() {
+        return this.maxAttributeValue;
     }
 
     public HashMap<String, PolicyAxis> getStore() {
@@ -176,20 +178,20 @@ public class Policy implements Serializable {
         }
         Policy policyGroup = (Policy) o;
         return lastAttributeValue == policyGroup.lastAttributeValue
-            && maxNumberOfRevocations == policyGroup.maxNumberOfRevocations && Objects.equals(store, policyGroup.store)
+            && maxAttributeValue == policyGroup.maxAttributeValue && Objects.equals(store, policyGroup.store)
             && Objects.equals(attributeToInt, policyGroup.attributeToInt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(lastAttributeValue, maxNumberOfRevocations, store, attributeToInt);
+        return Objects.hash(lastAttributeValue, maxAttributeValue, store, attributeToInt);
     }
 
     @Override
     public String toString() {
-        return "{" + " lastAttribute='" + getLastAttributeValue() + "'" + ", maxNumberOfRevocations='"
-            + getMaxNumberOfRevocations() + "'" + ", store='" + getStore() + "'" + ", attributeToInt='"
-            + getAttributeToInt() + "'" + "}";
+        return "{" + " last Attribute='" + getLastAttributeValue() + "'" + ", maxAttributeValue='"
+            + getMaxAttributeValue() + "'" + ", store='" + getStore() + "'" + ", attributeToInt='" + getAttributeToInt()
+            + "'" + "}";
     }
 
 }

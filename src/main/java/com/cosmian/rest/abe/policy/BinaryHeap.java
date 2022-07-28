@@ -21,7 +21,7 @@ public class BinaryHeap {
 
     /**
      * This will initialize our heap with default size.
-     * 
+     *
      * @param capacity the capacity of the heap
      */
     public BinaryHeap(int capacity) {
@@ -33,7 +33,7 @@ public class BinaryHeap {
 
     /**
      * This will check if the heap is empty or not Complexity: O(1)
-     * 
+     *
      * @return true if empty
      */
     public boolean isEmpty() {
@@ -42,7 +42,7 @@ public class BinaryHeap {
 
     /**
      * This will check if the heap is full or not Complexity: O(1)
-     * 
+     *
      * @return true if full
      */
     public boolean isFull() {
@@ -60,7 +60,7 @@ public class BinaryHeap {
     /**
      * This will insert new element in to heap Complexity: O(log N) As worst case scenario, we need to traverse till the
      * root
-     * 
+     *
      * @param x the value to insert
      */
     public void insert(int x) {
@@ -72,7 +72,7 @@ public class BinaryHeap {
 
     /**
      * This will delete element at index x Complexity: O(log N)
-     * 
+     *
      * @param x the value to delete
      * @return the key
      */
@@ -133,7 +133,7 @@ public class BinaryHeap {
 
     /**
      * This method returns the max element of the heap. complexity: O(1)
-     * 
+     *
      * @return the max element of the heap
      */
     public int findMax() {
@@ -150,12 +150,12 @@ public class BinaryHeap {
             return false;
         }
         BinaryHeap binaryHeap = (BinaryHeap) o;
-        return Objects.equals(heap, binaryHeap.heap) && heapSize == binaryHeap.heapSize;
+        return Arrays.equals(heap, binaryHeap.heap) && heapSize == binaryHeap.heapSize;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(heap, heapSize);
+        return Objects.hash(Arrays.hashCode(heap), heapSize);
     }
 
     @Override

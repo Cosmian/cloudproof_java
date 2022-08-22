@@ -7,24 +7,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MasterKeys {
     @JsonProperty("k")
-    private  byte[] k;
+    private byte[] k;
 
     @JsonProperty("k_star")
-    private  byte[] kStar;
+    private byte[] k_star;
 
-    public MasterKeys() {}
+    public MasterKeys() {
+    }
 
-    public MasterKeys(byte[] k, byte[] kStar) {
+    public MasterKeys(byte[] k, byte[] k_star) {
         this.k = k;
-        this.kStar = kStar;
+        this.k_star = k_star;
     }
 
     public byte[] getK() {
         return k;
     }
 
-    public byte[] getKStar() {
-        return kStar;
+    public byte[] getK_star() {
+        return k_star;
     }
 
     /**

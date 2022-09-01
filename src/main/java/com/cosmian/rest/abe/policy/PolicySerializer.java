@@ -16,12 +16,12 @@ public class PolicySerializer extends JsonSerializer<Policy> {
         generator.writeStartObject();
         generator.writeFieldName("last_attribute_value");
         generator.writeNumber(policy.getLastAttributeValue());
-        generator.writeFieldName("max_attribute_value");
-        generator.writeNumber(policy.getMaxAttributeValue());
+        generator.writeFieldName("max_attribute_creations");
+        generator.writeNumber(policy.getMaxAttributeCreations());
         // store
-        generator.writeFieldName("store");
+        generator.writeFieldName("axes");
         generator.writeStartObject();
-        for (Entry<String, PolicyAxis> entry : policy.getStore().entrySet()) {
+        for (Entry<String, PolicyAxis> entry : policy.getAxes().entrySet()) {
             generator.writeFieldName(entry.getKey());
             generator.writeStartArray();
             generator.writeStartArray();

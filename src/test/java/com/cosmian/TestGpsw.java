@@ -64,8 +64,8 @@ public class TestGpsw {
         // make sure the correct serializer is used
         JSONObject json = new JSONObject(str);
         assertTrue(json.has("last_attribute_value"));
-        assertTrue(json.has("max_attribute_value"));
-        assertTrue(json.has("store"));
+        assertTrue(json.has("max_attribute_creations"));
+        assertTrue(json.has("axes"));
     }
 
     @Test

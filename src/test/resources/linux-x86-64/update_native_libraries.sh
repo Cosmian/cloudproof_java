@@ -24,9 +24,9 @@ build_native_library() {
   popd
 }
 
-build_native_library git@github.com:Cosmian abe_gpsw v1.1.1 libabe_gpsw.so
-build_native_library git@github.com:Cosmian cover_crypt v4.0.0 libcover_crypt.so
-build_native_library git@gitlab.cosmian.com:core findex v0.4.0 libcosmian_findex.so
+build_native_library git@github.com:Cosmian abe_gpsw v2.0.0 libabe_gpsw.so
+build_native_library git@github.com:Cosmian cover_crypt v5.0.0 libcover_crypt.so
+build_native_library git@gitlab.cosmian.com:core findex v0.4.1 libcosmian_findex.so
 
 # Since docker user is root, restore local permissions to current user
 sudo chown -R "$(whoami)" .

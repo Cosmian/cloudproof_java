@@ -14,7 +14,7 @@ stages:
 build:
   stage: build
   services:
-    - name: gitlab.cosmian.com:5000/core/kms:2.1.0_ci
+    - name: gitlab.cosmian.com:5000/core/kms:2.2.0_ci
       alias: kms_ci
   script:
     - mvn package

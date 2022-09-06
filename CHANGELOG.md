@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Update Policy according to new Format
   * `maxAttributeValue` becomes `maxAttributesCreations`
   * `store` becomes `axes`
+- Update to `kms` 2.2.0
 
 ---
 ## [0.7.8] - 2022-08-22

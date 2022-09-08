@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.8.1] - 2022-09-08
+### Added
+- Publish to Maven Central on tags creation
+
+---
 ## [0.8.0] - 2022-09-02
 ### Changed
 - Rename Findex native shared library to `cosmian_findex`

@@ -24,29 +24,29 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Policy implements Serializable {
     private int lastAttributeValue = 0;
 
-    private final int maxAttributeValue;
+    private final int maxAttributeCreations;
 
     // store the policies by name
-    private HashMap<String, PolicyAxis> store = new HashMap<>();
+    private HashMap<String, PolicyAxis> axes = new HashMap<>();
 
     // mapping between (policy_name, policy_attribute) -> integer
     private HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt = new HashMap<>();
 
-    public Policy(int lastAttributeValue, int maxAttributeValue, HashMap<String, PolicyAxis> store,
+    public Policy(int lastAttributeValue, int maxAttributeCreations, HashMap<String, PolicyAxis> axes,
         HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt) {
         this.lastAttributeValue = lastAttributeValue;
-        this.maxAttributeValue = maxAttributeValue;
-        this.store = store;
+        this.maxAttributeCreations = maxAttributeCreations;
+        this.axes = axes;
         this.attributeToInt = attributeToInt;
     }
 
     /**
      * Instantiate an empty policy allowing the given max number of revocations of attributes
      *
-     * @param maxAttributeValue the maximum number of possible attributes
+     * @param maxAttributeCreations the maximum number of possible attributes
      */
-    public Policy(int maxAttributeValue) {
-        this.maxAttributeValue = maxAttributeValue;
+    public Policy(int maxAttributeCreations) {
+        this.maxAttributeCreations = maxAttributeCreations;
     }
 
     /**
@@ -60,13 +60,13 @@ public class Policy implements Serializable {
      */
     public Policy addAxis(String name, String[] attributes, boolean hierarchical) throws CosmianException {
         PolicyAxis axis = new PolicyAxis(name, attributes, hierarchical);
-        if (axis.getLen() + this.lastAttributeValue > this.maxAttributeValue) {
+        if (axis.getLen() + this.lastAttributeValue > this.maxAttributeCreations) {
             throw new CosmianException("Attribute capacity overflow");
         }
-        if (this.store.get(axis.getName()) != null) {
+        if (this.axes.get(axis.getName()) != null) {
             throw new CosmianException("Policy " + axis.getName() + " already exists");
         }
-        this.store.put(axis.getName(), axis);
+        this.axes.put(axis.getName(), axis);
         for (String attribute : axis.getAttributes()) {
             this.lastAttributeValue += 1;
             this.attributeToInt.put(new PolicyAttributeUid(axis.getName(), attribute),
@@ -89,12 +89,11 @@ public class Policy implements Serializable {
         } catch (JsonProcessingException e) {
             throw new CosmianException("Failed serializing the Policy to json: " + e.getMessage(), e);
         }
-        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN,
-            abeImplementation,
+        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN, abeImplementation,
             json.getBytes(StandardCharsets.UTF_8));
     }
 
-    public static Policy fromVendorAttributes(Attributes attributes,String abeImplementation) throws CosmianException {
+    public static Policy fromVendorAttributes(Attributes attributes, String abeImplementation) throws CosmianException {
         VendorAttribute[] vas;
         if (attributes.getVendorAttributes().isPresent()) {
             vas = attributes.getVendorAttributes().get();
@@ -119,7 +118,7 @@ public class Policy implements Serializable {
 
     /**
      * The last attribute value that was assigned. This value is usually incremented as attributes are revoked. The
-     * value should therefore no exceed the value returned by {@link #getMaxAttributeValue()}
+     * value should therefore no exceed the value returned by {@link #getMaxAttributeCreations()}
      *
      * @return the last attribute value
      */
@@ -134,16 +133,16 @@ public class Policy implements Serializable {
         this.lastAttributeValue = lastAttributeValue;
     }
 
-    public int getMaxAttributeValue() {
-        return this.maxAttributeValue;
+    public int getMaxAttributeCreations() {
+        return this.maxAttributeCreations;
     }
 
-    public HashMap<String, PolicyAxis> getStore() {
-        return this.store;
+    public HashMap<String, PolicyAxis> getAxes() {
+        return this.axes;
     }
 
-    void setStore(HashMap<String, PolicyAxis> store) {
-        this.store = store;
+    void setAxes(HashMap<String, PolicyAxis> axes) {
+        this.axes = axes;
     }
 
     public HashMap<PolicyAttributeUid, TreeSet<Integer>> getAttributeToInt() {
@@ -159,8 +158,8 @@ public class Policy implements Serializable {
         return this;
     }
 
-    Policy store(HashMap<String, PolicyAxis> store) {
-        setStore(store);
+    Policy axes(HashMap<String, PolicyAxis> axes) {
+        setAxes(axes);
         return this;
     }
 
@@ -178,20 +177,20 @@ public class Policy implements Serializable {
         }
         Policy policyGroup = (Policy) o;
         return lastAttributeValue == policyGroup.lastAttributeValue
-            && maxAttributeValue == policyGroup.maxAttributeValue && Objects.equals(store, policyGroup.store)
+            && maxAttributeCreations == policyGroup.maxAttributeCreations && Objects.equals(axes, policyGroup.axes)
             && Objects.equals(attributeToInt, policyGroup.attributeToInt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(lastAttributeValue, maxAttributeValue, store, attributeToInt);
+        return Objects.hash(lastAttributeValue, maxAttributeCreations, axes, attributeToInt);
     }
 
     @Override
     public String toString() {
-        return "{" + " last Attribute='" + getLastAttributeValue() + "'" + ", maxAttributeValue='"
-            + getMaxAttributeValue() + "'" + ", store='" + getStore() + "'" + ", attributeToInt='" + getAttributeToInt()
-            + "'" + "}";
+        return "{" + " last Attribute='" + getLastAttributeValue() + "'" + ", maxAttributeCreations='"
+            + getMaxAttributeCreations() + "'" + ", axes='" + getAxes() + "'" + ", attributeToInt='"
+            + getAttributeToInt() + "'" + "}";
     }
 
 }

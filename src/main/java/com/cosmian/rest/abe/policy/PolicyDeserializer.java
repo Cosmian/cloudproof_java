@@ -24,21 +24,21 @@ public class PolicyDeserializer extends KmipJsonDeserializer<Policy> {
         }
         int lastAttributeValue = lastAttributeValueNode.asInt();
 
-        JsonNode maxAttributeValueNode = node.get("max_attribute_value");
-        if (maxAttributeValueNode == null) {
+        JsonNode maxAttributeCreationsNode = node.get("max_attribute_creations");
+        if (maxAttributeCreationsNode == null) {
             throw new IOException("Invalid KMIP Json " + node.toPrettyString() + ". No max_attribute");
         }
-        int maxAttributeValue = maxAttributeValueNode.asInt();
+        int maxAttributeCreations = maxAttributeCreationsNode.asInt();
 
-        JsonNode storeNode = node.get("store");
-        if (storeNode == null) {
-            throw new IOException("Invalid KMIP Json " + node.toPrettyString() + ". No store");
+        JsonNode axesNode = node.get("axes");
+        if (axesNode == null) {
+            throw new IOException("Invalid KMIP Json " + node.toPrettyString() + ". No axis");
         }
 
         // PolicyAxis has a non standard deserialization
         // ==> do it manually
-        HashMap<String, PolicyAxis> store = new HashMap<>();
-        for (Entry<String, JsonNode> entry : toIterable(storeNode.fields())) {
+        HashMap<String, PolicyAxis> axes = new HashMap<>();
+        for (Entry<String, JsonNode> entry : toIterable(axesNode.fields())) {
 
             JsonNode axisNode = entry.getValue();
             ArrayList<String> values = new ArrayList<>();
@@ -47,7 +47,7 @@ public class PolicyDeserializer extends KmipJsonDeserializer<Policy> {
             }
             PolicyAxis axis =
                 new PolicyAxis(entry.getKey(), values.toArray(new String[values.size()]), axisNode.get(1).asBoolean());
-            store.put(entry.getKey(), axis);
+            axes.put(entry.getKey(), axis);
         }
 
         // PolicyAttributeUid has a non standard Json deserialization
@@ -65,7 +65,7 @@ public class PolicyDeserializer extends KmipJsonDeserializer<Policy> {
             }
         }
 
-        return new Policy(lastAttributeValue, maxAttributeValue, store, attributeToInt);
+        return new Policy(lastAttributeValue, maxAttributeCreations, axes, attributeToInt);
     }
 
     static <T> Iterable<T> toIterable(Iterator<T> it) {

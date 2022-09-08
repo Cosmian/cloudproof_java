@@ -18,7 +18,7 @@ import com.sun.jna.ptr.IntByReference;
 
 public final class Ffi {
 
-    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("findex", FfiWrapper.class);
+    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("cosmian_findex", FfiWrapper.class);
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes

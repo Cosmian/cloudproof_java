@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.8.2] - 2022-09-14
+### Added
+### Changed
+### Fixed
+- Findex->search: retry FFI call with adjusted allocated size
+### Removed
+---
+
+
+---
 ## [0.8.1] - 2022-09-08
 ### Added
 - Publish to Maven Central on tags creation

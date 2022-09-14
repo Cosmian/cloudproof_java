@@ -114,8 +114,17 @@ public final class Ffi {
         }
 
         // Indexes creation + insertion/update
-        unwrap(Ffi.INSTANCE.h_search(dbUidsBuffer, dbUidsBufferSize, masterKeysJson, wordsJson, loopIterationLimit,
-            fetchEntry, fetchChain));
+        int ffiCode = Ffi.INSTANCE.h_search(dbUidsBuffer, dbUidsBufferSize, masterKeysJson, wordsJson,
+            loopIterationLimit, fetchEntry, fetchChain);
+        if (ffiCode != 0) {
+            // Retry with correct allocated size
+            dbUidsBuffer = new byte[dbUidsBufferSize.getValue()];
+            ffiCode = Ffi.INSTANCE.h_search(dbUidsBuffer, dbUidsBufferSize, masterKeysJson, wordsJson,
+                loopIterationLimit, fetchEntry, fetchChain);
+            if (ffiCode != 0) {
+                throw new FfiException(get_last_error(4095));
+            }
+        }
 
         byte[] dbUidsBytes = Arrays.copyOfRange(dbUidsBuffer, 0, dbUidsBufferSize.getValue());
 

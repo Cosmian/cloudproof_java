@@ -114,7 +114,7 @@ public class TestFfiFindex {
                 try {
                     db.databaseUpsert(uidsAndValues, "entry_table");
                 } catch (SQLException e) {
-                    throw new FfiException("Failed chain upsert: " + e.toString());
+                    throw new FfiException("Failed entry upsert: " + e.toString());
                 }
             }
         });

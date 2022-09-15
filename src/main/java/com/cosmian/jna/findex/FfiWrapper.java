@@ -49,6 +49,7 @@ public interface FfiWrapper extends Library {
     int h_upsert(String masterKeysJson, String dbUidsAndWordsJson, FetchEntryCallback fetchEntry,
         UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
 
-    int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, String masterKeysJson, String words,
+    int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer,
+        int keyKLength, String words,
         int loopIterationLimit, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain);
 }

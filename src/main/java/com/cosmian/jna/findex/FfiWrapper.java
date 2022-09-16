@@ -37,7 +37,7 @@ public interface FfiWrapper extends Library {
         public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException;
     }
     interface FetchChainInterface {
-        public List<byte[]> fetch(List<byte[]> uids) throws FfiException;
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException;
     }
     interface UpsertEntryInterface {
         public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException;
@@ -46,10 +46,10 @@ public interface FfiWrapper extends Library {
         public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException;
     }
 
-    int h_upsert(String masterKeysJson, String dbUidsAndWordsJson, FetchEntryCallback fetchEntry,
+    int h_upsert(String masterKeysJson, Pointer publicLabelTPointer, int publicLabelTSize, String dbUidsAndWordsJson, FetchEntryCallback fetchEntry,
         UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
 
     int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer,
-        int keyKLength, String words,
+        int keyKLength, Pointer publicLabelTPointer, int publicLabelTSize, String words,
         int loopIterationLimit, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain);
 }

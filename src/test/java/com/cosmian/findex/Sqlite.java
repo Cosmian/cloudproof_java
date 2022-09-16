@@ -6,7 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -42,7 +41,7 @@ public class Sqlite {
         }
     }
 
-    public List<byte[]> fetchChainTableItems(List<byte[]> uids) throws SQLException {
+    public HashMap<byte[], byte[]> fetchChainTableItems(List<byte[]> uids) throws SQLException {
         String lotsOfQuestions = "";
         for (int i = 0; i < uids.size(); i++) {
             lotsOfQuestions += "?";
@@ -51,8 +50,8 @@ public class Sqlite {
             }
         }
 
-        PreparedStatement pstmt =
-            this.connection.prepareStatement("SELECT value FROM chain_table WHERE uid IN (" + lotsOfQuestions + ")");
+        PreparedStatement pstmt = this.connection
+            .prepareStatement("SELECT uid, value FROM chain_table WHERE uid IN (" + lotsOfQuestions + ")");
 
         int count = 1;
         for (byte[] bs : uids) {
@@ -64,11 +63,11 @@ public class Sqlite {
         //
         // Recover all results
         //
-        List<byte[]> values = new ArrayList<byte[]>();
+        HashMap<byte[], byte[]> uidsAndValues = new HashMap<byte[], byte[]>();
         while (rs.next()) {
-            values.add(rs.getBytes("value"));
+            uidsAndValues.put(rs.getBytes("uid"), rs.getBytes("value"));
         }
-        return values;
+        return uidsAndValues;
     }
 
     public HashMap<byte[], byte[]> fetchEntryTableItems(List<byte[]> uids) throws SQLException {
@@ -101,7 +100,8 @@ public class Sqlite {
     }
 
     public void databaseUpsert(HashMap<byte[], byte[]> uidsAndValues, String tableName) throws SQLException {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT OR REPLACE INTO " + tableName + "(uid, value) VALUES (?,?)");
+        PreparedStatement pstmt =
+            connection.prepareStatement("INSERT OR REPLACE INTO " + tableName + "(uid, value) VALUES (?,?)");
         this.connection.setAutoCommit(false);
         for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
             pstmt.setBytes(1, entry.getKey());

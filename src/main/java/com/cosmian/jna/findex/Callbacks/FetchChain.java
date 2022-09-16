@@ -1,5 +1,6 @@
 package com.cosmian.jna.findex.Callbacks;
 
+import java.util.HashMap;
 import java.util.List;
 
 import com.cosmian.jna.FfiException;
@@ -34,13 +35,13 @@ public class FetchChain implements FetchChainCallback {
         //
         // Select uid and value in EntryTable
         //
-        List<byte[]> values = this.fetch.fetch(chainTableUids);
+        HashMap<byte[], byte[]> values = this.fetch.fetch(chainTableUids);
 
         //
         // Serialize results
         //
         if (values.size() > 0) {
-            byte[] valuesBytes = Leb128Serializer.serializeList(values);
+            byte[] valuesBytes = Leb128Serializer.serializeHashMap(values);
 
             output.write(0, valuesBytes, 0, valuesBytes.length);
             outputSize.setValue(valuesBytes.length);

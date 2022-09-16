@@ -56,6 +56,8 @@ public class TestFfiFindex {
         String masterKeysJson = Resources.load_resource("findex/keys.json");
         MasterKeys masterKeys = MasterKeys.fromJson(masterKeysJson);
 
+        byte[] publicLabelT = Resources.load_resource_as_bytes("findex/public_label_t");
+
         //
         // Recover test vectors
         //
@@ -105,7 +107,7 @@ public class TestFfiFindex {
 
         FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FfiWrapper.FetchChainInterface() {
             @Override
-            public List<byte[]> fetch(List<byte[]> uids) throws FfiException {
+            public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException {
                 try {
                     return db.fetchChainTableItems(uids);
                 } catch (SQLException e) {
@@ -137,7 +139,7 @@ public class TestFfiFindex {
         //
         // Upsert
         //
-        Ffi.upsert(masterKeys, indexedValuesAndWords, fetchEntry, upsertEntry, upsertChain);
+        Ffi.upsert(masterKeys, publicLabelT, indexedValuesAndWords, fetchEntry, upsertEntry, upsertChain);
         System.out.println("After insertion: entry_table: nb indexes: " + db.getAllKeyValueItems("entry_table").size());
         System.out.println("After insertion: chain_table: nb indexes: " + db.getAllKeyValueItems("chain_table").size());
 
@@ -151,7 +153,7 @@ public class TestFfiFindex {
         System.out.println("");
 
         List<byte[]> indexedValuesList =
-            Ffi.search(masterKeys.getK(), new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+            Ffi.search(masterKeys.getK(), publicLabelT, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
 
         // Get DbUids from IndexedValues
         List<String> dbUidsStringList = new ArrayList<String>();

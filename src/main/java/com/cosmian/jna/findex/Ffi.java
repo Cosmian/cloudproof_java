@@ -62,9 +62,9 @@ public final class Ffi {
         unwrap(Ffi.INSTANCE.set_error(error_msg));
     }
 
-    public static void upsert(MasterKeys masterKeys, HashMap<IndexedValue, Word[]> indexedValuesAndWords,
-        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
-        throws FfiException, CosmianException {
+    public static void upsert(MasterKeys masterKeys, byte[] publicLabelT,
+        HashMap<IndexedValue, Word[]> indexedValuesAndWords, FetchEntryCallback fetchEntry,
+        UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain) throws FfiException, CosmianException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -76,6 +76,9 @@ public final class Ffi {
         } catch (JsonProcessingException e) {
             throw new FfiException("Invalid master keys", e);
         }
+
+        final Pointer publicLabelTPointer = new Memory(publicLabelT.length);
+        publicLabelTPointer.write(0, publicLabelT, 0, publicLabelT.length);
 
         // Findex indexed values and words
         HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
@@ -96,10 +99,11 @@ public final class Ffi {
         }
 
         // Indexes creation + insertion/update
-        unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, indexedValuesAndWordsJson, fetchEntry, upsertEntry, upsertChain));
+        unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, publicLabelTPointer, publicLabelT.length,
+            indexedValuesAndWordsJson, fetchEntry, upsertEntry, upsertChain));
     }
 
-    public static List<byte[]> search(byte[] keyK, Word[] words, int loopIterationLimit,
+    public static List<byte[]> search(byte[] keyK, byte[] publicLabelT, Word[] words, int loopIterationLimit,
         FetchEntryCallback fetchEntry, FetchChainCallback fetchChain) throws FfiException, CosmianException {
         //
         // Prepare outputs
@@ -118,6 +122,9 @@ public final class Ffi {
         final Pointer keyKeyPointer = new Memory(keyK.length);
         keyKeyPointer.write(0, keyK, 0, keyK.length);
 
+        final Pointer publicLabelTPointer = new Memory(publicLabelT.length);
+        publicLabelTPointer.write(0, publicLabelT, 0, publicLabelT.length);
+
         // Findex words
         String[] wordsString = new String[words.length];
         int i = 0;
@@ -133,12 +140,12 @@ public final class Ffi {
 
         // Indexes creation + insertion/update
         int ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
-            wordsJson, loopIterationLimit, fetchEntry, fetchChain);
+            publicLabelTPointer, publicLabelT.length, wordsJson, loopIterationLimit, fetchEntry, fetchChain);
         if (ffiCode != 0) {
             // Retry with correct allocated size
             indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
             ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
-                wordsJson, loopIterationLimit, fetchEntry, fetchChain);
+                publicLabelTPointer, publicLabelT.length, wordsJson, loopIterationLimit, fetchEntry, fetchChain);
             if (ffiCode != 0) {
                 throw new FfiException(get_last_error(4095));
             }

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import com.cosmian.CosmianException;
 import com.cosmian.jna.FfiException;
@@ -13,7 +14,9 @@ import com.cosmian.jna.findex.FfiWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertEntryCallback;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jna.Memory;
 import com.sun.jna.Native;
+import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 public final class Ffi {
@@ -59,7 +62,7 @@ public final class Ffi {
         unwrap(Ffi.INSTANCE.set_error(error_msg));
     }
 
-    public static void upsert(MasterKeys masterKeys, HashMap<String, String[]> dbUidsAndWords,
+    public static void upsert(MasterKeys masterKeys, HashMap<IndexedValue, Word[]> indexedValuesAndWords,
         FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
         throws FfiException, CosmianException {
 
@@ -74,63 +77,76 @@ public final class Ffi {
             throw new FfiException("Invalid master keys", e);
         }
 
-        // Findex db UIDS and words
-        String dbUidsAndWordsJson;
+        // Findex indexed values and words
+        HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
+        for (Entry<IndexedValue, Word[]> entry : indexedValuesAndWords.entrySet()) {
+            String[] words = new String[entry.getValue().length];
+            int i = 0;
+            for (Word word : entry.getValue()) {
+                words[i++] = word.toString();
+            }
+            indexedValuesAndWordsString.put(entry.getKey().toString(), words);
+        }
+
+        String indexedValuesAndWordsJson;
         try {
-            dbUidsAndWordsJson = mapper.writeValueAsString(dbUidsAndWords);
+            indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid db uids and words", e);
+            throw new FfiException("Invalid indexed values and words", e);
         }
 
         // Indexes creation + insertion/update
-        unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, dbUidsAndWordsJson, fetchEntry, upsertEntry, upsertChain));
+        unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, indexedValuesAndWordsJson, fetchEntry, upsertEntry, upsertChain));
     }
 
-    public static List<byte[]> search(MasterKeys masterKeys, String[] words, int loopIterationLimit,
+    public static List<byte[]> search(byte[] keyK, Word[] words, int loopIterationLimit,
         FetchEntryCallback fetchEntry, FetchChainCallback fetchChain) throws FfiException, CosmianException {
         //
         // Prepare outputs
         //
-        byte[] dbUidsBuffer = new byte[8192];
-        IntByReference dbUidsBufferSize = new IntByReference(dbUidsBuffer.length);
+        // start with an arbitration buffer allocation size of 131072 (around 4096 indexedValues)
+        byte[] indexedValuesBuffer = new byte[131072];
+        IntByReference indexedValuesBufferSize = new IntByReference(indexedValuesBuffer.length);
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
 
         // Findex master keys
-        String masterKeysJson;
-        try {
-            masterKeysJson = mapper.writeValueAsString(masterKeys);
-        } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid master keys", e);
+        if (keyK == null) {
+            throw new FfiException("Key k cannot be null");
         }
+        final Pointer keyKeyPointer = new Memory(keyK.length);
+        keyKeyPointer.write(0, keyK, 0, keyK.length);
 
         // Findex words
+        String[] wordsString = new String[words.length];
+        int i = 0;
+        for (Word word : words) {
+            wordsString[i++] = word.toString();
+        }
         String wordsJson;
         try {
-            wordsJson = mapper.writeValueAsString(words);
+            wordsJson = mapper.writeValueAsString(wordsString);
         } catch (JsonProcessingException e) {
             throw new FfiException("Invalid words", e);
         }
 
         // Indexes creation + insertion/update
-        int ffiCode = Ffi.INSTANCE.h_search(dbUidsBuffer, dbUidsBufferSize, masterKeysJson, wordsJson,
-            loopIterationLimit, fetchEntry, fetchChain);
+        int ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
+            wordsJson, loopIterationLimit, fetchEntry, fetchChain);
         if (ffiCode != 0) {
             // Retry with correct allocated size
-            dbUidsBuffer = new byte[dbUidsBufferSize.getValue()];
-            ffiCode = Ffi.INSTANCE.h_search(dbUidsBuffer, dbUidsBufferSize, masterKeysJson, wordsJson,
-                loopIterationLimit, fetchEntry, fetchChain);
+            indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
+            ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
+                wordsJson, loopIterationLimit, fetchEntry, fetchChain);
             if (ffiCode != 0) {
                 throw new FfiException(get_last_error(4095));
             }
         }
 
-        byte[] dbUidsBytes = Arrays.copyOfRange(dbUidsBuffer, 0, dbUidsBufferSize.getValue());
+        byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
 
-        List<byte[]> dbUidsList = Leb128Serializer.deserializeList(dbUidsBytes);
-
-        return dbUidsList;
+        return Leb128Serializer.deserializeList(indexedValuesBytes);
     }
 
     /**

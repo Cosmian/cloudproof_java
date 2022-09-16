@@ -1,6 +1,7 @@
 package com.cosmian.findex;
 
 import com.cosmian.CosmianException;
+import com.cosmian.jna.findex.Word;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,9 +35,10 @@ public class UsersDataset {
     public UsersDataset() {
     }
 
-    public String[] values() {
-        return new String[] {this.firstName, this.lastName, this.phone, this.email, this.country, this.region,
-            this.employeeNumber, this.security};
+    public Word[] values() {
+        return new Word[] {new Word(this.firstName), new Word(this.lastName), new Word(this.phone),
+            new Word(this.email), new Word(this.country), new Word(this.region), new Word(this.employeeNumber),
+            new Word(this.security)};
     }
 
     /**

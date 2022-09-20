@@ -70,6 +70,21 @@ public class Sqlite {
         return uidsAndValues;
     }
 
+    public HashMap<byte[], byte[]> fetchAllEntryTableItems() throws SQLException {
+        PreparedStatement pstmt = this.connection.prepareStatement("SELECT uid, value FROM entry_table");
+        ResultSet rs = pstmt.executeQuery();
+
+        //
+        // Recover all results
+        //
+        HashMap<byte[], byte[]> uidsAndValues = new HashMap<byte[], byte[]>();
+        while (rs.next()) {
+            uidsAndValues.put(rs.getBytes("uid"), rs.getBytes("value"));
+        }
+
+        return uidsAndValues;
+    }
+
     public HashMap<byte[], byte[]> fetchEntryTableItems(List<byte[]> uids) throws SQLException {
         String lotsOfQuestions = "";
         for (int i = 0; i < uids.size(); i++) {
@@ -110,7 +125,32 @@ public class Sqlite {
         }
         int[] result = pstmt.executeBatch();
         this.connection.commit();
-        System.out.println("The number of rows inserted: " + result.length);
+        System.out.println("The number of rows in " + tableName + " inserted: " + result.length);
+    }
+
+    public void databaseRemove(List<byte[]> uids, String tableName) throws SQLException {
+        String lotsOfQuestions = "";
+        for (int i = 0; i < uids.size(); i++) {
+            lotsOfQuestions += "?";
+            if (i != uids.size() - 1) {
+                lotsOfQuestions += ",";
+            }
+        }
+
+        PreparedStatement pstmt =
+            this.connection.prepareStatement("DELETE FROM " + tableName + " WHERE uid IN (" + lotsOfQuestions + ")");
+
+        int count = 1;
+        for (byte[] bs : uids) {
+            pstmt.setBytes(count, bs);
+            count += 1;
+        }
+        pstmt.execute();
+    }
+
+    public void databaseTruncate(String tableName) throws SQLException {
+        connection.createStatement().execute("DELETE FROM " + tableName);
+        System.out.println("Table " + tableName + " has been truncated");
     }
 
     public HashMap<byte[], byte[]> getAllKeyValueItems(String tableName) throws SQLException {

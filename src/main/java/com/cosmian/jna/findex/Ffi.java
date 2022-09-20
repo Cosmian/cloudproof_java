@@ -8,8 +8,10 @@ import java.util.Map.Entry;
 
 import com.cosmian.CosmianException;
 import com.cosmian.jna.FfiException;
+import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchEntryCallback;
+import com.cosmian.jna.findex.FfiWrapper.UpdateLinesCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertEntryCallback;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -154,6 +156,28 @@ public final class Ffi {
         byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
 
         return Leb128Serializer.deserializeList(indexedValuesBytes);
+    }
+
+    public static void compact(int numberOfReindexingPhasesBeforeFullSet, MasterKeys masterKeys, byte[] publicLabelT,
+        FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
+        UpdateLinesCallback updateLines) throws FfiException, CosmianException {
+        // For the JSON strings
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Findex master keys
+        String masterKeysJson;
+        try {
+            masterKeysJson = mapper.writeValueAsString(masterKeys);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid master keys", e);
+        }
+
+        final Pointer publicLabelTPointer = new Memory(publicLabelT.length);
+        publicLabelTPointer.write(0, publicLabelT, 0, publicLabelT.length);
+
+        // Indexes creation + insertion/update
+        unwrap(Ffi.INSTANCE.h_compact(numberOfReindexingPhasesBeforeFullSet, masterKeysJson, publicLabelTPointer,
+            publicLabelT.length, fetchEntry, fetchChain, fetchAllEntry, updateLines));
     }
 
     /**

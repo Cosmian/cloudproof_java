@@ -1,6 +1,7 @@
 package com.cosmian;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -23,8 +25,10 @@ import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.MasterKeys;
 import com.cosmian.jna.findex.Word;
+import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
 import com.cosmian.jna.findex.Callbacks.FetchChain;
 import com.cosmian.jna.findex.Callbacks.FetchEntry;
+import com.cosmian.jna.findex.Callbacks.UpdateLines;
 import com.cosmian.jna.findex.Callbacks.UpsertChain;
 import com.cosmian.jna.findex.Callbacks.UpsertEntry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -105,6 +109,17 @@ public class TestFfiFindex {
             }
         });
 
+        FetchAllEntry fetchAllEntry = new FetchAllEntry(new com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface() {
+            @Override
+            public HashMap<byte[], byte[]> fetch() throws FfiException {
+                try {
+                    return db.fetchAllEntryTableItems();
+                } catch (SQLException e) {
+                    throw new FfiException("Failed fetch entry: " + e.toString());
+                }
+            }
+        });
+
         FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FfiWrapper.FetchChainInterface() {
             @Override
             public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException {
@@ -136,6 +151,21 @@ public class TestFfiFindex {
                 }
             }
         });
+        UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FfiWrapper.UpdateLinesInterface() {
+            @Override
+            public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
+                HashMap<byte[], byte[]> newChains) throws FfiException {
+                try {
+                    db.databaseTruncate("entry_table");
+                    db.databaseUpsert(newEntries, "entry_table");
+                    db.databaseUpsert(newChains, "chain_table");
+                    db.databaseRemove(removedChains, "chain_table");
+                } catch (SQLException e) {
+                    throw new FfiException("Failed update lines: " + e.toString());
+                }
+            }
+        });
+
         //
         // Upsert
         //
@@ -152,10 +182,34 @@ public class TestFfiFindex {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        List<byte[]> indexedValuesList =
-            Ffi.search(masterKeys.getK(), publicLabelT, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+        {
+            List<byte[]> indexedValuesList =
+                Ffi.search(masterKeys.getK(), publicLabelT, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+            String[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
-        // Get DbUids from IndexedValues
+            assertArrayEquals(dbUids, expectedDbUids);
+        }
+
+        Ffi.compact(100, masterKeys, "NewPublicLabelT".getBytes(), fetchEntry, fetchChain, fetchAllEntry, updateLines);
+
+        {
+            List<byte[]> indexedValuesList =
+                Ffi.search(masterKeys.getK(), publicLabelT, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+            String[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+
+            assertEquals(0, dbUids.length);
+        }
+
+        {
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewPublicLabelT".getBytes(),
+                new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+            String[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+
+            assertArrayEquals(dbUids, expectedDbUids);
+        }
+    }
+
+    String[] indexedValuesBytesListToArray(List<byte[]> indexedValuesList) throws Exception {
         List<String> dbUidsStringList = new ArrayList<String>();
         for (byte[] dbUidBytes : indexedValuesList) {
             byte[] location = new IndexedValue(dbUidBytes).getLocation().getBytes();
@@ -165,9 +219,8 @@ public class TestFfiFindex {
         String[] dbUids = new String[dbUidsStringList.size()];
         dbUidsStringList.toArray(dbUids);
         Arrays.sort(dbUids);
-        System.out.println("DB UIDS found: " + Arrays.toString(dbUids));
 
-        assertArrayEquals(dbUids, expectedDbUids);
+        return dbUids;
     }
 
 }

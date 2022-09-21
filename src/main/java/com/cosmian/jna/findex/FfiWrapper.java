@@ -1,7 +1,6 @@
 package com.cosmian.jna.findex;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import com.cosmian.jna.FfiException;
@@ -39,6 +38,10 @@ public interface FfiWrapper extends Library {
         int apply(Pointer removedChains, int removedChainsLength, Pointer newEntries, int newEntriesLength,
             Pointer newChains, int newChainsLength) throws FfiException;
     }
+    interface ListRemovedLocationsCallback extends Callback {
+        int apply(Pointer output, IntByReference outputSize, Pointer locations, int locationsLength)
+            throws FfiException;
+    }
 
     /* Customer high-level callbacks */
     interface FetchEntryInterface {
@@ -60,13 +63,17 @@ public interface FfiWrapper extends Library {
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
             HashMap<byte[], byte[]> newChains) throws FfiException;
     }
+    interface ListRemovedLocationsInterface {
+        public List<Location> list(List<Location> locations) throws FfiException;
+    }
 
     int h_upsert(String masterKeysJson, Pointer publicLabelTPointer, int publicLabelTSize, String dbUidsAndWordsJson,
         FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
 
     int h_compact(int numberOfReindexingPhasesBeforeFullSet, String masterKeysJson, Pointer publicLabelTPointer,
         int publicLabelTSize, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain,
-        FetchAllEntryCallback fetchAllEntry, UpdateLinesCallback updateLines);
+        FetchAllEntryCallback fetchAllEntry, UpdateLinesCallback updateLines,
+        ListRemovedLocationsCallback listRemovedLocations);
 
     int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer, int keyKLength,
         Pointer publicLabelTPointer, int publicLabelTSize, String words, int loopIterationLimit,

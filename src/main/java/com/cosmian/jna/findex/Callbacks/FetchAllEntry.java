@@ -1,6 +1,5 @@
 package com.cosmian.jna.findex.Callbacks;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -29,7 +28,7 @@ public class FetchAllEntry implements FetchAllEntryCallback {
             entrySetIterator = this.fetch.fetch().entrySet().iterator();
         }
 
-        Set<Entry<byte[], byte[]>> chunk = new HashSet();
+        Set<Entry<byte[], byte[]>> chunk = new HashSet<>();
         while (chunk.size() < numberOfEntries && entrySetIterator.hasNext()) {
             chunk.add(entrySetIterator.next());
         }
@@ -42,7 +41,12 @@ public class FetchAllEntry implements FetchAllEntryCallback {
             outputSize.setValue(0);
         }
 
-        return entrySetIterator.hasNext() ? 1 : 0;
+        if (entrySetIterator.hasNext()) {
+            return 1;
+        } else {
+            entrySetIterator = null; // Reset the iterator to fetch new entries if multiple compact.
+            return 0;
+        }
     }
 
 }

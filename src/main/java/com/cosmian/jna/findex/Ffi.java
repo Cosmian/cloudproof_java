@@ -11,6 +11,7 @@ import com.cosmian.jna.FfiException;
 import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchEntryCallback;
+import com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpdateLinesCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertEntryCallback;
@@ -160,7 +161,8 @@ public final class Ffi {
 
     public static void compact(int numberOfReindexingPhasesBeforeFullSet, MasterKeys masterKeys, byte[] publicLabelT,
         FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
-        UpdateLinesCallback updateLines) throws FfiException, CosmianException {
+        UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations)
+        throws FfiException, CosmianException {
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
 
@@ -177,7 +179,7 @@ public final class Ffi {
 
         // Indexes creation + insertion/update
         unwrap(Ffi.INSTANCE.h_compact(numberOfReindexingPhasesBeforeFullSet, masterKeysJson, publicLabelTPointer,
-            publicLabelT.length, fetchEntry, fetchChain, fetchAllEntry, updateLines));
+            publicLabelT.length, fetchEntry, fetchChain, fetchAllEntry, updateLines, listRemovedLocations));
     }
 
     /**

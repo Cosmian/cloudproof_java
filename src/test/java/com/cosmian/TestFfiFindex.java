@@ -3,17 +3,12 @@ package com.cosmian;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -208,10 +203,13 @@ public class TestFfiFindex {
             assertArrayEquals(expectedDbUids, dbUids);
         }
 
+        // This compact should do nothing except changing the public label T since the users table didn't change.
         Ffi.compact(1, masterKeys, "NewPublicLabelT".getBytes(), fetchEntry, fetchChain, fetchAllEntry, updateLines,
             listRemovedLocations);
 
         {
+            // Search with old public label T
+
             List<byte[]> indexedValuesList =
                 Ffi.search(masterKeys.getK(), publicLabelT, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
@@ -220,6 +218,8 @@ public class TestFfiFindex {
         }
 
         {
+            // Search with new public label T and without user changes
+
             List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewPublicLabelT".getBytes(),
                 new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
@@ -227,6 +227,7 @@ public class TestFfiFindex {
             assertArrayEquals(expectedDbUids, dbUids);
         }
 
+        // Delete the user n°17 to test the compact indexes
         db.deleteUser(17);
         int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbUids, 17);
 
@@ -234,6 +235,8 @@ public class TestFfiFindex {
             listRemovedLocations);
 
         {
+            // Search should return everyone instead of n°17
+
             List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewPublicLabelT".getBytes(),
                 new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
@@ -242,7 +245,11 @@ public class TestFfiFindex {
         }
     }
 
-    int[] indexedValuesBytesListToArray(List<byte[]> indexedValuesList) throws Exception {
+    /*
+     * Helper function to transform the list of bytes returned by the FFI (representing `IndexedValue`) to a sorted
+     * array of int (representing the DB id of users).
+     */
+    private int[] indexedValuesBytesListToArray(List<byte[]> indexedValuesList) throws Exception {
         int[] dbUids = new int[indexedValuesList.size()];
         int count = 0;
         for (byte[] dbUidBytes : indexedValuesList) {

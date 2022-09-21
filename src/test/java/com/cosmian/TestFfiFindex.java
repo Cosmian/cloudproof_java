@@ -115,7 +115,7 @@ public class TestFfiFindex {
                 try {
                     return db.fetchAllEntryTableItems();
                 } catch (SQLException e) {
-                    throw new FfiException("Failed fetch entry: " + e.toString());
+                    throw new FfiException("Failed fetch all entry: " + e.toString());
                 }
             }
         });

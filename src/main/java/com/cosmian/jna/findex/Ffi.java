@@ -65,9 +65,9 @@ public final class Ffi {
         unwrap(Ffi.INSTANCE.set_error(error_msg));
     }
 
-    public static void upsert(MasterKeys masterKeys, byte[] publicLabelT,
-        HashMap<IndexedValue, Word[]> indexedValuesAndWords, FetchEntryCallback fetchEntry,
-        UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain) throws FfiException, CosmianException {
+    public static void upsert(MasterKeys masterKeys, byte[] label, HashMap<IndexedValue, Word[]> indexedValuesAndWords,
+        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
+        throws FfiException, CosmianException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -80,8 +80,8 @@ public final class Ffi {
             throw new FfiException("Invalid master keys", e);
         }
 
-        final Pointer publicLabelTPointer = new Memory(publicLabelT.length);
-        publicLabelTPointer.write(0, publicLabelT, 0, publicLabelT.length);
+        final Pointer labelPointer = new Memory(label.length);
+        labelPointer.write(0, label, 0, label.length);
 
         // Findex indexed values and words
         HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
@@ -102,11 +102,11 @@ public final class Ffi {
         }
 
         // Indexes creation + insertion/update
-        unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, publicLabelTPointer, publicLabelT.length,
-            indexedValuesAndWordsJson, fetchEntry, upsertEntry, upsertChain));
+        unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson, fetchEntry,
+            upsertEntry, upsertChain));
     }
 
-    public static List<byte[]> search(byte[] keyK, byte[] publicLabelT, Word[] words, int loopIterationLimit,
+    public static List<byte[]> search(byte[] keyK, byte[] label, Word[] words, int loopIterationLimit,
         FetchEntryCallback fetchEntry, FetchChainCallback fetchChain) throws FfiException, CosmianException {
         //
         // Prepare outputs
@@ -125,8 +125,8 @@ public final class Ffi {
         final Pointer keyKeyPointer = new Memory(keyK.length);
         keyKeyPointer.write(0, keyK, 0, keyK.length);
 
-        final Pointer publicLabelTPointer = new Memory(publicLabelT.length);
-        publicLabelTPointer.write(0, publicLabelT, 0, publicLabelT.length);
+        final Pointer labelPointer = new Memory(label.length);
+        labelPointer.write(0, label, 0, label.length);
 
         // Findex words
         String[] wordsString = new String[words.length];
@@ -143,12 +143,12 @@ public final class Ffi {
 
         // Indexes creation + insertion/update
         int ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
-            publicLabelTPointer, publicLabelT.length, wordsJson, loopIterationLimit, fetchEntry, fetchChain);
+            labelPointer, label.length, wordsJson, loopIterationLimit, fetchEntry, fetchChain);
         if (ffiCode != 0) {
             // Retry with correct allocated size
             indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
             ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
-                publicLabelTPointer, publicLabelT.length, wordsJson, loopIterationLimit, fetchEntry, fetchChain);
+                labelPointer, label.length, wordsJson, loopIterationLimit, fetchEntry, fetchChain);
             if (ffiCode != 0) {
                 throw new FfiException(get_last_error(4095));
             }
@@ -159,7 +159,7 @@ public final class Ffi {
         return Leb128Serializer.deserializeList(indexedValuesBytes);
     }
 
-    public static void compact(int numberOfReindexingPhasesBeforeFullSet, MasterKeys masterKeys, byte[] publicLabelT,
+    public static void compact(int numberOfReindexingPhasesBeforeFullSet, MasterKeys masterKeys, byte[] label,
         FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
         UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations)
         throws FfiException, CosmianException {
@@ -174,12 +174,12 @@ public final class Ffi {
             throw new FfiException("Invalid master keys", e);
         }
 
-        final Pointer publicLabelTPointer = new Memory(publicLabelT.length);
-        publicLabelTPointer.write(0, publicLabelT, 0, publicLabelT.length);
+        final Pointer labelPointer = new Memory(label.length);
+        labelPointer.write(0, label, 0, label.length);
 
         // Indexes creation + insertion/update
-        unwrap(Ffi.INSTANCE.h_compact(numberOfReindexingPhasesBeforeFullSet, masterKeysJson, publicLabelTPointer,
-            publicLabelT.length, fetchEntry, fetchChain, fetchAllEntry, updateLines, listRemovedLocations));
+        unwrap(Ffi.INSTANCE.h_compact(numberOfReindexingPhasesBeforeFullSet, masterKeysJson, labelPointer, label.length,
+            fetchEntry, fetchChain, fetchAllEntry, updateLines, listRemovedLocations));
     }
 
     /**

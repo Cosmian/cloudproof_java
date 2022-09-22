@@ -67,15 +67,14 @@ public interface FfiWrapper extends Library {
         public List<Location> list(List<Location> locations) throws FfiException;
     }
 
-    int h_upsert(String masterKeysJson, Pointer publicLabelTPointer, int publicLabelTSize, String dbUidsAndWordsJson,
+    int h_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,
         FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
 
-    int h_compact(int numberOfReindexingPhasesBeforeFullSet, String masterKeysJson, Pointer publicLabelTPointer,
-        int publicLabelTSize, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain,
-        FetchAllEntryCallback fetchAllEntry, UpdateLinesCallback updateLines,
-        ListRemovedLocationsCallback listRemovedLocations);
+    int h_compact(int numberOfReindexingPhasesBeforeFullSet, String masterKeysJson, Pointer labelPointer, int labelSize,
+        FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
+        UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations);
 
-    int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer, int keyKLength,
-        Pointer publicLabelTPointer, int publicLabelTSize, String words, int loopIterationLimit,
-        FetchEntryCallback fetchEntry, FetchChainCallback fetchChain);
+    int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer, int keyKLength, Pointer labelPointer,
+        int labelSize, String words, int loopIterationLimit, FetchEntryCallback fetchEntry,
+        FetchChainCallback fetchChain);
 }

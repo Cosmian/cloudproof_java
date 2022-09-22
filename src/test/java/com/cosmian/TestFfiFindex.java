@@ -60,7 +60,7 @@ public class TestFfiFindex {
         String masterKeysJson = Resources.load_resource("findex/keys.json");
         MasterKeys masterKeys = MasterKeys.fromJson(masterKeysJson);
 
-        byte[] publicLabelT = Resources.load_resource_as_bytes("findex/public_label_t");
+        byte[] label = Resources.load_resource_as_bytes("findex/label");
 
         //
         // Recover test vectors
@@ -182,7 +182,7 @@ public class TestFfiFindex {
         //
         // Upsert
         //
-        Ffi.upsert(masterKeys, publicLabelT, indexedValuesAndWords, fetchEntry, upsertEntry, upsertChain);
+        Ffi.upsert(masterKeys, label, indexedValuesAndWords, fetchEntry, upsertEntry, upsertChain);
         System.out.println("After insertion: entry_table: nb indexes: " + db.getAllKeyValueItems("entry_table").size());
         System.out.println("After insertion: chain_table: nb indexes: " + db.getAllKeyValueItems("chain_table").size());
 
@@ -197,30 +197,30 @@ public class TestFfiFindex {
 
         {
             List<byte[]> indexedValuesList =
-                Ffi.search(masterKeys.getK(), publicLabelT, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(expectedDbUids, dbUids);
         }
 
-        // This compact should do nothing except changing the public label T since the users table didn't change.
-        Ffi.compact(1, masterKeys, "NewPublicLabelT".getBytes(), fetchEntry, fetchChain, fetchAllEntry, updateLines,
+        // This compact should do nothing except changing the label since the users table didn't change.
+        Ffi.compact(1, masterKeys, "NewLabel".getBytes(), fetchEntry, fetchChain, fetchAllEntry, updateLines,
             listRemovedLocations);
 
         {
-            // Search with old public label T
+            // Search with old label
 
             List<byte[]> indexedValuesList =
-                Ffi.search(masterKeys.getK(), publicLabelT, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertEquals(0, dbUids.length);
         }
 
         {
-            // Search with new public label T and without user changes
+            // Search with new label and without user changes
 
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewPublicLabelT".getBytes(),
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
                 new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
@@ -231,13 +231,13 @@ public class TestFfiFindex {
         db.deleteUser(17);
         int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbUids, 17);
 
-        Ffi.compact(1, masterKeys, "NewPublicLabelT".getBytes(), fetchEntry, fetchChain, fetchAllEntry, updateLines,
+        Ffi.compact(1, masterKeys, "NewLabel".getBytes(), fetchEntry, fetchChain, fetchAllEntry, updateLines,
             listRemovedLocations);
 
         {
             // Search should return everyone instead of n°17
 
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewPublicLabelT".getBytes(),
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
                 new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 

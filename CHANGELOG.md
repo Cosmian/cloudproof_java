@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.10.0]
+### Added
+- Add `compact` function to FFI to compact indexes
+### Changed
+- Add `label` to `search` and `update` functions
+### Fixed
+### Removed
+
+---
 ## [0.9.0] - 2022-09-15
 ### Added
 - Update `findex` shared library to 0.5.0

@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class UsersDataset {
+    @JsonProperty("id")
+    public int id;
 
     @JsonProperty("firstName")
     public String firstName;

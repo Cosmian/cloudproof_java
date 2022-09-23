@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.9.0</version>
+    <version>0.10.0</version>
 
     <name>cosmian_java_lib</name>
     <description>The Cosmian Java Lib provides local encryption/decyption and access to the Cosmian public platform APIs</description>
@@ -60,6 +60,11 @@
             <groupId>com.fasterxml</groupId>
             <artifactId>classmate</artifactId>
             <version>1.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
         </dependency>
         <dependency>
             <!-- JNA dependency -->

@@ -22,6 +22,9 @@ public interface FfiWrapper extends Library {
     interface FetchEntryCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength) throws FfiException;
     }
+    interface FetchAllEntryCallback extends Callback {
+        int apply(Pointer output, IntByReference outputSize, int numberOfEntries) throws FfiException;
+    }
     interface FetchChainCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength) throws FfiException;
     }
@@ -31,13 +34,24 @@ public interface FfiWrapper extends Library {
     interface UpsertChainCallback extends Callback {
         int apply(Pointer chains, int chainsLength) throws FfiException;
     }
+    interface UpdateLinesCallback extends Callback {
+        int apply(Pointer removedChains, int removedChainsLength, Pointer newEntries, int newEntriesLength,
+            Pointer newChains, int newChainsLength) throws FfiException;
+    }
+    interface ListRemovedLocationsCallback extends Callback {
+        int apply(Pointer output, IntByReference outputSize, Pointer locations, int locationsLength)
+            throws FfiException;
+    }
 
     /* Customer high-level callbacks */
     interface FetchEntryInterface {
         public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException;
     }
+    interface FetchAllEntryInterface {
+        public HashMap<byte[], byte[]> fetch() throws FfiException;
+    }
     interface FetchChainInterface {
-        public List<byte[]> fetch(List<byte[]> uids) throws FfiException;
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException;
     }
     interface UpsertEntryInterface {
         public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException;
@@ -45,11 +59,22 @@ public interface FfiWrapper extends Library {
     interface UpsertChainInterface {
         public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException;
     }
+    interface UpdateLinesInterface {
+        public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
+            HashMap<byte[], byte[]> newChains) throws FfiException;
+    }
+    interface ListRemovedLocationsInterface {
+        public List<Location> list(List<Location> locations) throws FfiException;
+    }
 
-    int h_upsert(String masterKeysJson, String dbUidsAndWordsJson, FetchEntryCallback fetchEntry,
-        UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
+    int h_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,
+        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
 
-    int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer,
-        int keyKLength, String words,
-        int loopIterationLimit, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain);
+    int h_compact(int numberOfReindexingPhasesBeforeFullSet, String masterKeysJson, Pointer labelPointer, int labelSize,
+        FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
+        UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations);
+
+    int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer, int keyKLength, Pointer labelPointer,
+        int labelSize, String words, int loopIterationLimit, FetchEntryCallback fetchEntry,
+        FetchChainCallback fetchChain);
 }

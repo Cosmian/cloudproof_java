@@ -1,17 +1,18 @@
 package com.cosmian;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -23,8 +24,11 @@ import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.MasterKeys;
 import com.cosmian.jna.findex.Word;
+import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
 import com.cosmian.jna.findex.Callbacks.FetchChain;
 import com.cosmian.jna.findex.Callbacks.FetchEntry;
+import com.cosmian.jna.findex.Callbacks.ListRemovedLocations;
+import com.cosmian.jna.findex.Callbacks.UpdateLines;
 import com.cosmian.jna.findex.Callbacks.UpsertChain;
 import com.cosmian.jna.findex.Callbacks.UpsertEntry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,12 +60,14 @@ public class TestFfiFindex {
         String masterKeysJson = Resources.load_resource("findex/keys.json");
         MasterKeys masterKeys = MasterKeys.fromJson(masterKeysJson);
 
+        byte[] label = Resources.load_resource_as_bytes("findex/label");
+
         //
         // Recover test vectors
         //
         ObjectMapper mapper = new ObjectMapper();
-        String expectedSearchResultsString = Resources.load_resource("findex/expected_db_uids.json");
-        String[] expectedDbUids = mapper.readValue(expectedSearchResultsString, String[].class);
+        String expectedSearchResultsInt = Resources.load_resource("findex/expected_db_uids.json");
+        int[] expectedDbUids = mapper.readValue(expectedSearchResultsInt, int[].class);
         Arrays.sort(expectedDbUids);
 
         //
@@ -70,17 +76,12 @@ public class TestFfiFindex {
         String dataJson = Resources.load_resource("findex/data.json");
         UsersDataset[] testFindexDataset = UsersDataset.fromJson(dataJson);
         HashMap<IndexedValue, Word[]> indexedValuesAndWords = new HashMap<>();
-        int count = 1;
         for (UsersDataset user : testFindexDataset) {
-            byte[] dbUid = new byte[32];
-            byte[] pattern =
-                String.format("%02X", count).replace(' ', '0').toLowerCase().getBytes(Charset.defaultCharset());
-            for (int i = 0; i < 32; i = i + 2) {
-                dbUid[i] = pattern[0];
-                dbUid[i + 1] = pattern[1];
-            }
+            ByteBuffer dbuf = ByteBuffer.allocate(32);
+            dbuf.putInt(user.id);
+            byte[] dbUid = dbuf.array();
+
             indexedValuesAndWords.put(new Location(dbUid), user.values());
-            count++;
         }
 
         //
@@ -103,9 +104,20 @@ public class TestFfiFindex {
             }
         });
 
+        FetchAllEntry fetchAllEntry = new FetchAllEntry(new com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface() {
+            @Override
+            public HashMap<byte[], byte[]> fetch() throws FfiException {
+                try {
+                    return db.fetchAllEntryTableItems();
+                } catch (SQLException e) {
+                    throw new FfiException("Failed fetch all entry: " + e.toString());
+                }
+            }
+        });
+
         FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FfiWrapper.FetchChainInterface() {
             @Override
-            public List<byte[]> fetch(List<byte[]> uids) throws FfiException {
+            public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException {
                 try {
                     return db.fetchChainTableItems(uids);
                 } catch (SQLException e) {
@@ -134,10 +146,43 @@ public class TestFfiFindex {
                 }
             }
         });
+        UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FfiWrapper.UpdateLinesInterface() {
+            @Override
+            public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
+                HashMap<byte[], byte[]> newChains) throws FfiException {
+                try {
+                    db.databaseTruncate("entry_table");
+                    db.databaseUpsert(newEntries, "entry_table");
+                    db.databaseUpsert(newChains, "chain_table");
+                    db.databaseRemove(removedChains, "chain_table");
+                } catch (SQLException e) {
+                    throw new FfiException("Failed update lines: " + e.toString());
+                }
+            }
+        });
+        ListRemovedLocations listRemovedLocations =
+            new ListRemovedLocations(new com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsInterface() {
+                @Override
+                public List<Location> list(List<Location> locations) throws FfiException {
+                    List<Integer> ids =
+                        locations.stream().map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
+                            .collect(Collectors.toList());
+
+                    try {
+                        return db.listRemovedIds("users", ids).stream()
+                            .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
+                            .collect(Collectors.toList());
+                    } catch (SQLException e) {
+                        throw new FfiException("Failed update lines: " + e.toString());
+                    }
+
+                }
+            });
+
         //
         // Upsert
         //
-        Ffi.upsert(masterKeys, indexedValuesAndWords, fetchEntry, upsertEntry, upsertChain);
+        Ffi.upsert(masterKeys, label, indexedValuesAndWords, fetchEntry, upsertEntry, upsertChain);
         System.out.println("After insertion: entry_table: nb indexes: " + db.getAllKeyValueItems("entry_table").size());
         System.out.println("After insertion: chain_table: nb indexes: " + db.getAllKeyValueItems("chain_table").size());
 
@@ -150,22 +195,72 @@ public class TestFfiFindex {
         System.out.println("---------------------------------------");
         System.out.println("");
 
-        List<byte[]> indexedValuesList =
-            Ffi.search(masterKeys.getK(), new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+        {
+            List<byte[]> indexedValuesList =
+                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
-        // Get DbUids from IndexedValues
-        List<String> dbUidsStringList = new ArrayList<String>();
+            assertArrayEquals(expectedDbUids, dbUids);
+        }
+
+        // This compact should do nothing except changing the label since the users table didn't change.
+        Ffi.compact(1, masterKeys, "NewLabel".getBytes(), fetchEntry, fetchChain, fetchAllEntry, updateLines,
+            listRemovedLocations);
+
+        {
+            // Search with old label
+
+            List<byte[]> indexedValuesList =
+                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+
+            assertEquals(0, dbUids.length);
+        }
+
+        {
+            // Search with new label and without user changes
+
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
+                new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+
+            assertArrayEquals(expectedDbUids, dbUids);
+        }
+
+        // Delete the user n°17 to test the compact indexes
+        db.deleteUser(17);
+        int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbUids, 17);
+
+        Ffi.compact(1, masterKeys, "NewLabel".getBytes(), fetchEntry, fetchChain, fetchAllEntry, updateLines,
+            listRemovedLocations);
+
+        {
+            // Search should return everyone instead of n°17
+
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
+                new Word[] {new Word("France")}, 0, fetchEntry, fetchChain);
+            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+
+            assertArrayEquals(newExpectedDbUids, dbUids);
+        }
+    }
+
+    /*
+     * Helper function to transform the list of bytes returned by the FFI (representing `IndexedValue`) to a sorted
+     * array of int (representing the DB id of users).
+     */
+    private int[] indexedValuesBytesListToArray(List<byte[]> indexedValuesList) throws Exception {
+        int[] dbUids = new int[indexedValuesList.size()];
+        int count = 0;
         for (byte[] dbUidBytes : indexedValuesList) {
             byte[] location = new IndexedValue(dbUidBytes).getLocation().getBytes();
-            String dbUid = new String(location, StandardCharsets.UTF_8);
-            dbUidsStringList.add(dbUid);
-        }
-        String[] dbUids = new String[dbUidsStringList.size()];
-        dbUidsStringList.toArray(dbUids);
-        Arrays.sort(dbUids);
-        System.out.println("DB UIDS found: " + Arrays.toString(dbUids));
 
-        assertArrayEquals(dbUids, expectedDbUids);
+            dbUids[count] = ByteBuffer.wrap(location).getInt();
+            count++;
+        }
+
+        Arrays.sort(dbUids);
+        return dbUids;
     }
 
 }

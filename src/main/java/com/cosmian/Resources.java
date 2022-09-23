@@ -22,10 +22,14 @@ public class Resources {
         return outputStream.toByteArray();
     }
 
-    public static String load_resource(String resource_name) throws IOException {
+    public static byte[] load_resource_as_bytes(String resource_name) throws IOException {
         try (InputStream is = Resources.class.getClassLoader().getResourceAsStream(resource_name)) {
-            return new String(read_all_bytes(is), StandardCharsets.UTF_8);
+            return read_all_bytes(is);
         }
+    }
+
+    public static String load_resource(String resource_name) throws IOException {
+        return new String(load_resource_as_bytes(resource_name), StandardCharsets.UTF_8);
     }
 
     public static String load_file(String file_path) throws IOException {

@@ -3,6 +3,7 @@ package com.cosmian.jna.findex;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import com.android.dex.Leb128;
@@ -55,8 +56,12 @@ public class Leb128Serializer {
     }
 
     public static byte[] serializeHashMap(HashMap<byte[], byte[]> uidsAndValues) {
+        return serializeEntrySet(uidsAndValues.entrySet());
+    }
+
+    public static byte[] serializeEntrySet(Set<Entry<byte[], byte[]>> uidsAndValues) {
         ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput();
-        for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
+        for (Entry<byte[], byte[]> entry : uidsAndValues) {
             byte[] uid = entry.getKey();
             Leb128.writeUnsignedLeb128(out, uid.length);
             out.write(uid);

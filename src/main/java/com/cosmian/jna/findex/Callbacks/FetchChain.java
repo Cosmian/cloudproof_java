@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.cosmian.jna.FfiException;
+import com.cosmian.jna.findex.Ffi;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
@@ -33,23 +34,14 @@ public class FetchChain implements FetchChainCallback {
         List<byte[]> chainTableUids = Leb128Serializer.deserializeList(uids);
 
         //
-        // Select uid and value in EntryTable
+        // Select uid and value in ChainTable
         //
-        HashMap<byte[], byte[]> values = this.fetch.fetch(chainTableUids);
+        HashMap<byte[], byte[]> uidsAndValues = this.fetch.fetch(chainTableUids);
 
         //
         // Serialize results
         //
-        if (values.size() > 0) {
-            byte[] valuesBytes = Leb128Serializer.serializeHashMap(values);
-
-            output.write(0, valuesBytes, 0, valuesBytes.length);
-            outputSize.setValue(valuesBytes.length);
-        } else {
-            outputSize.setValue(0);
-        }
-
-        return 0;
+        return Ffi.writeOutputPointerAndSize(uidsAndValues, output, outputSize);
     }
 
 }

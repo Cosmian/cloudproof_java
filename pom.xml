@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.cosmian</groupId>
     <artifactId>cosmian_java_lib</artifactId>
-    <version>0.10.0</version>
+    <version>0.10.1</version>
 
     <name>cosmian_java_lib</name>
     <description>The Cosmian Java Lib provides local encryption/decyption and access to the Cosmian public platform APIs</description>
@@ -100,6 +100,12 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.8.7</version>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>4.1.1</version>
+            <type>jar</type>
             <scope>test</scope>
         </dependency>
 

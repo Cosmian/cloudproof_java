@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.10.1]
+### Added
+- Add Findex callbacks implementations for indexes compaction usage
+### Changed
+- Test Findex with Redis callbacks
+### Fixed
+- FFI: fetch callbacks: send correct allocation size in case of insufficient allocated size in order to retry in Rust code
+### Removed
+
+---
 ## [0.10.0]
 ### Added
 - Add `compact` function to FFI to compact indexes

@@ -43,6 +43,11 @@ public class UsersDataset {
             new Word(this.security)};
     }
 
+    public String toString() {
+        return this.firstName + this.lastName + this.phone + this.email + this.country + this.region
+            + this.employeeNumber + this.security;
+    }
+
     /**
      * This method is mostly used for local tests and serialization.
      *

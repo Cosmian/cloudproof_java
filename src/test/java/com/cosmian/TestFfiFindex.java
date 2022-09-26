@@ -3,6 +3,8 @@ package com.cosmian;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -153,8 +155,37 @@ public class TestFfiFindex {
         }
     }
 
+    private static boolean available(int port) {
+        System.out.println("--------------Testing port " + port);
+        Socket s = null;
+        try {
+            s = new Socket("localhost", port);
+            // If the code makes it this far without an exception it means
+            // something is using the port and has responded.
+            System.out.println("--------------Port " + port + " is not available");
+            return false;
+        } catch (IOException e) {
+            System.out.println("--------------Port " + port + " is available");
+            return true;
+        } finally {
+            if (s != null) {
+                try {
+                    s.close();
+                } catch (IOException e) {
+                    throw new RuntimeException("Error not handled.", e);
+                }
+            }
+        }
+    }
+
     @Test
     public void testUpsertAndSearchRedis() throws Exception {
+
+        if (!available(6379)) {
+            System.out.println("Ignore test since Redis is down");
+            return;
+        }
+
         System.out.println("");
         System.out.println("---------------------------------------");
         System.out.println("Findex Upsert Redis");
@@ -228,26 +259,26 @@ public class TestFfiFindex {
 
         // This compact should do nothing except changing the label since the users table didn't change.
         Ffi.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
-        db.updateLines, db.listRemovedLocations);
+            db.updateLines, db.listRemovedLocations);
 
         {
-        // Search with old label
+            // Search with old label
 
-        List<byte[]> indexedValuesList =
-        Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
-        int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+            List<byte[]> indexedValuesList =
+                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
-        assertEquals(0, dbUids.length);
+            assertEquals(0, dbUids.length);
         }
 
         {
-        // Search with new label and without user changes
+            // Search with new label and without user changes
 
-        List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-        new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
-        int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
+                new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
-        assertArrayEquals(expectedDbUids, dbUids);
+            assertArrayEquals(expectedDbUids, dbUids);
         }
 
         // Delete the user n°17 to test the compact indexes
@@ -255,16 +286,16 @@ public class TestFfiFindex {
         int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbUids, 17);
 
         Ffi.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
-        db.updateLines, db.listRemovedLocations);
+            db.updateLines, db.listRemovedLocations);
 
         {
-        // Search should return everyone instead of n°17
+            // Search should return everyone instead of n°17
 
-        List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-        new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
-        int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
+                new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
-        assertArrayEquals(newExpectedDbUids, dbUids);
+            assertArrayEquals(newExpectedDbUids, dbUids);
         }
 
         // Check allocation problem during insertions. Allocation problem could occur when fetching entry table
@@ -272,9 +303,8 @@ public class TestFfiFindex {
         // whose sizes depend on words being indexed: the Entry Table Encrypted value is:
         // `EncSym(𝐾value, (ict_uid𝑥𝑤𝑖, 𝐾𝑤𝑖 , 𝑤𝑖))`
         for (int i = 0; i < 100; i++) {
-        Ffi.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
+            Ffi.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
         }
-
     }
 
     /*

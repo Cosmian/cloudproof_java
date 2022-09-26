@@ -180,8 +180,7 @@ public class TestFfiFindex {
 
     @Test
     public void testUpsertAndSearchRedis() throws Exception {
-
-        if (!available(6379)) {
+        if (available(6379)) {
             System.out.println("Ignore test since Redis is down");
             return;
         }

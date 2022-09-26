@@ -17,6 +17,7 @@ build:
   services:
     - name: gitlab.cosmian.com:5000/core/kms:2.2.0_ci
       alias: kms_ci
+    - redis:latest
   script:
     - mvn package
   artifacts:

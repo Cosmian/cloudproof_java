@@ -222,10 +222,8 @@ public class TestFfiFindex {
         }
 
         //
-        // Prepare Sqlite tables and users
+        // Prepare Redis tables and users
         //
-        // Sqlite db = new Sqlite();
-        // db.insertUsers(testFindexDataset);
         Redis db = new Redis();
         db.jedis.flushAll();
         db.insertUsers(testFindexDataset);
@@ -303,6 +301,10 @@ public class TestFfiFindex {
         // `EncSym(𝐾value, (ict_uid𝑥𝑤𝑖, 𝐾𝑤𝑖 , 𝑤𝑖))`
         for (int i = 0; i < 100; i++) {
             Ffi.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
+            List<byte[]> indexedValuesList =
+                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+            assertArrayEquals(expectedDbUids, dbUids);
         }
     }
 

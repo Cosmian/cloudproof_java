@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.cosmian.jna.FfiException;
+import com.cosmian.jna.findex.Ffi;
 import com.cosmian.jna.findex.FfiWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchEntryInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
@@ -39,15 +40,7 @@ public class FetchEntry implements FetchEntryCallback {
         //
         // Serialize results
         //
-        if (uidsAndValues.size() > 0) {
-            byte[] uidsAndValuesBytes = Leb128Serializer.serializeHashMap(uidsAndValues);
-            output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
-            outputSize.setValue(uidsAndValuesBytes.length);
-        } else {
-            outputSize.setValue(0);
-        }
-
-        return 0;
+        return Ffi.writeOutputPointerAndSize(uidsAndValues, output, outputSize);
     }
 
 }

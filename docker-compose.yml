@@ -23,3 +23,8 @@ services:
       - "9998:9998"
     depends_on:
       - db
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"

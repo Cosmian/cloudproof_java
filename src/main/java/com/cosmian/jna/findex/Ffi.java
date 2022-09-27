@@ -65,6 +65,22 @@ public final class Ffi {
         unwrap(Ffi.INSTANCE.set_error(error_msg));
     }
 
+    public static int writeOutputPointerAndSize(HashMap<byte[], byte[]> uidsAndValues, Pointer output,
+        IntByReference outputSize) {
+        if (uidsAndValues.size() > 0) {
+            byte[] uidsAndValuesBytes = Leb128Serializer.serializeHashMap(uidsAndValues);
+            if (outputSize.getValue() < uidsAndValuesBytes.length) {
+                outputSize.setValue(uidsAndValuesBytes.length);
+                return 1;
+            }
+            outputSize.setValue(uidsAndValuesBytes.length);
+            output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
+        } else {
+            outputSize.setValue(0);
+        }
+        return 0;
+    }
+
     public static void upsert(MasterKeys masterKeys, byte[] label, HashMap<IndexedValue, Word[]> indexedValuesAndWords,
         FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
         throws FfiException, CosmianException {

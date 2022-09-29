@@ -231,7 +231,7 @@ public class TestFfiFindex {
         //
         // Upsert
         //
-        Ffi.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
+        Ffi.graph_upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
         System.out.println("After insertion: entry_table: nb indexes: "
             + db.getAllKeysAndValues(Redis.INDEX_TABLE_ENTRY_STORAGE).size());
         System.out.println("After insertion: chain_table: nb indexes: "

@@ -77,6 +77,9 @@ public interface FfiWrapper extends Library {
     int h_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,
         FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
 
+    int h_graph_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,
+        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
+
     int h_compact(int numberOfReindexingPhasesBeforeFullSet, String masterKeysJson, Pointer labelPointer, int labelSize,
         FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
         UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations);

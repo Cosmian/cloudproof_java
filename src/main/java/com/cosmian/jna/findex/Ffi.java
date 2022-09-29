@@ -123,6 +123,47 @@ public final class Ffi {
             upsertEntry, upsertChain));
     }
 
+    public static void graph_upsert(MasterKeys masterKeys, byte[] label, HashMap<IndexedValue, Word[]> indexedValuesAndWords,
+        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
+        throws FfiException, CosmianException {
+
+        // For the JSON strings
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Findex master keys
+        String masterKeysJson;
+        try {
+            masterKeysJson = mapper.writeValueAsString(masterKeys);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid master keys", e);
+        }
+
+        final Pointer labelPointer = new Memory(label.length);
+        labelPointer.write(0, label, 0, label.length);
+
+        // Findex indexed values and words
+        HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
+        for (Entry<IndexedValue, Word[]> entry : indexedValuesAndWords.entrySet()) {
+            String[] words = new String[entry.getValue().length];
+            int i = 0;
+            for (Word word : entry.getValue()) {
+                words[i++] = word.toString();
+            }
+            indexedValuesAndWordsString.put(entry.getKey().toString(), words);
+        }
+
+        String indexedValuesAndWordsJson;
+        try {
+            indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid indexed values and words", e);
+        }
+
+        // Indexes creation + insertion/update
+        unwrap(Ffi.INSTANCE.h_graph_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson, fetchEntry,
+            upsertEntry, upsertChain));
+    }
+
     public static List<byte[]> search(byte[] keyK, byte[] label, Word[] words, int loopIterationLimit, int maxDepth,
         ProgressCallback progress, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain)
         throws FfiException, CosmianException {

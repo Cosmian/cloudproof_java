@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -14,12 +15,15 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import com.cosmian.CosmianException;
 import com.cosmian.jna.FfiException;
+import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
 import com.cosmian.jna.findex.Callbacks.FetchChain;
 import com.cosmian.jna.findex.Callbacks.FetchEntry;
 import com.cosmian.jna.findex.Callbacks.ListRemovedLocations;
+import com.cosmian.jna.findex.Callbacks.Progress;
 import com.cosmian.jna.findex.Callbacks.UpdateLines;
 import com.cosmian.jna.findex.Callbacks.UpsertChain;
 import com.cosmian.jna.findex.Callbacks.UpsertEntry;
@@ -42,16 +46,17 @@ public class Sqlite {
         }
     });
 
-    public FetchAllEntry fetchAllEntry = new FetchAllEntry(new com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface() {
-        @Override
-        public HashMap<byte[], byte[]> fetch() throws FfiException {
-            try {
-                return fetchAllEntryTableItems();
-            } catch (SQLException e) {
-                throw new FfiException("Failed fetch all entry: " + e.toString());
+    public FetchAllEntry fetchAllEntry =
+        new FetchAllEntry(new com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface() {
+            @Override
+            public HashMap<byte[], byte[]> fetch() throws FfiException {
+                try {
+                    return fetchAllEntryTableItems();
+                } catch (SQLException e) {
+                    throw new FfiException("Failed fetch all entry: " + e.toString());
+                }
             }
-        }
-    });
+        });
 
     public FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FfiWrapper.FetchChainInterface() {
         @Override
@@ -120,6 +125,25 @@ public class Sqlite {
             }
         });
 
+    public Progress progress = new Progress(new com.cosmian.jna.findex.FfiWrapper.ProgressInterface() {
+        @Override
+        public boolean list(List<byte[]> indexedValues) throws FfiException {
+
+            try {
+                //
+                // Convert indexed values from bytes
+                //
+                List<IndexedValue> indexedValuesBytes = new ArrayList<>();
+                for (byte[] iv : indexedValues) {
+                    indexedValuesBytes.add(new IndexedValue(iv));
+                }
+                return true;
+            } catch (CosmianException e) {
+                throw new FfiException("Failed getting search results: " + e.toString());
+            }
+
+        }
+    });
 
     public Sqlite() throws SQLException {
         this.connection = DriverManager.getConnection("jdbc:sqlite::memory:");

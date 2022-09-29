@@ -100,8 +100,8 @@ public class TestFfiFindex {
         System.out.println("");
 
         {
-            List<byte[]> indexedValuesList =
-                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
+                -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(expectedDbUids, dbUids);
@@ -113,8 +113,8 @@ public class TestFfiFindex {
 
         {
             // Search with old label
-            List<byte[]> indexedValuesList =
-                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
+                -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertEquals(0, dbUids.length);
@@ -123,7 +123,7 @@ public class TestFfiFindex {
         {
             // Search with new label and without user changes
             List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-                new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(expectedDbUids, dbUids);
@@ -140,7 +140,7 @@ public class TestFfiFindex {
             // Search should return everyone instead of n°17
 
             List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-                new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(newExpectedDbUids, dbUids);
@@ -247,8 +247,8 @@ public class TestFfiFindex {
         System.out.println("");
 
         {
-            List<byte[]> indexedValuesList =
-                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
+                -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(expectedDbUids, dbUids);
@@ -261,8 +261,8 @@ public class TestFfiFindex {
         {
             // Search with old label
 
-            List<byte[]> indexedValuesList =
-                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
+                -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertEquals(0, dbUids.length);
@@ -272,7 +272,7 @@ public class TestFfiFindex {
             // Search with new label and without user changes
 
             List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-                new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(expectedDbUids, dbUids);
@@ -289,7 +289,7 @@ public class TestFfiFindex {
             // Search should return everyone instead of n°17
 
             List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-                new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(newExpectedDbUids, dbUids);
@@ -301,8 +301,8 @@ public class TestFfiFindex {
         // `EncSym(𝐾value, (ict_uid𝑥𝑤𝑖, 𝐾𝑤𝑖 , 𝑤𝑖))`
         for (int i = 0; i < 100; i++) {
             Ffi.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
-            List<byte[]> indexedValuesList =
-                Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
+                -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
             assertArrayEquals(expectedDbUids, dbUids);
         }

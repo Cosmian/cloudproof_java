@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.11.0]
+### Added
+### Changed
+- Findex: change search signature for graph compliance
+### Fixed
+### Removed
+
+---
 ## [0.10.1]
 ### Added
 - Add Findex callbacks implementations for indexes compaction usage

@@ -42,6 +42,10 @@ public interface FfiWrapper extends Library {
         int apply(Pointer output, IntByReference outputSize, Pointer locations, int locationsLength)
             throws FfiException;
     }
+    interface ProgressCallback extends Callback {
+        boolean apply(Pointer output, int outputSize)
+            throws FfiException;
+    }
 
     /* Customer high-level callbacks */
     interface FetchEntryInterface {
@@ -66,6 +70,9 @@ public interface FfiWrapper extends Library {
     interface ListRemovedLocationsInterface {
         public List<Location> list(List<Location> locations) throws FfiException;
     }
+    interface ProgressInterface {
+        public boolean list(List<byte[]> indexedValues) throws FfiException;
+    }
 
     int h_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,
         FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
@@ -75,6 +82,6 @@ public interface FfiWrapper extends Library {
         UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations);
 
     int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer, int keyKLength, Pointer labelPointer,
-        int labelSize, String words, int loopIterationLimit, FetchEntryCallback fetchEntry,
+        int labelSize, String words, int loopIterationLimit, int maxDepth, ProgressCallback progress, FetchEntryCallback fetchEntry,
         FetchChainCallback fetchChain);
 }

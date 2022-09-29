@@ -12,6 +12,7 @@ import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsCallback;
+import com.cosmian.jna.findex.FfiWrapper.ProgressCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpdateLinesCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertEntryCallback;
@@ -122,8 +123,9 @@ public final class Ffi {
             upsertEntry, upsertChain));
     }
 
-    public static List<byte[]> search(byte[] keyK, byte[] label, Word[] words, int loopIterationLimit,
-        FetchEntryCallback fetchEntry, FetchChainCallback fetchChain) throws FfiException, CosmianException {
+    public static List<byte[]> search(byte[] keyK, byte[] label, Word[] words, int loopIterationLimit, int maxDepth,
+        ProgressCallback progress, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain)
+        throws FfiException, CosmianException {
         //
         // Prepare outputs
         //
@@ -159,12 +161,12 @@ public final class Ffi {
 
         // Indexes creation + insertion/update
         int ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
-            labelPointer, label.length, wordsJson, loopIterationLimit, fetchEntry, fetchChain);
+            labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry, fetchChain);
         if (ffiCode != 0) {
             // Retry with correct allocated size
             indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
             ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
-                labelPointer, label.length, wordsJson, loopIterationLimit, fetchEntry, fetchChain);
+                labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry, fetchChain);
             if (ffiCode != 0) {
                 throw new FfiException(get_last_error(4095));
             }
@@ -175,6 +177,9 @@ public final class Ffi {
         return Leb128Serializer.deserializeList(indexedValuesBytes);
     }
 
+    /// `number_of_reindexing_phases_before_full_set`: if you compact the indexes every night
+    /// this is the number of days to wait before be sure that a big portion of the indexes were checked
+    /// (see the coupon problem to understand why it's not 100% sure)
     public static void compact(int numberOfReindexingPhasesBeforeFullSet, MasterKeys masterKeys, byte[] label,
         FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
         UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations)

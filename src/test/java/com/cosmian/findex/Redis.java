@@ -15,11 +15,13 @@ import java.util.stream.Collectors;
 
 import com.cosmian.CosmianException;
 import com.cosmian.jna.FfiException;
+import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
 import com.cosmian.jna.findex.Callbacks.FetchChain;
 import com.cosmian.jna.findex.Callbacks.FetchEntry;
 import com.cosmian.jna.findex.Callbacks.ListRemovedLocations;
+import com.cosmian.jna.findex.Callbacks.Progress;
 import com.cosmian.jna.findex.Callbacks.UpdateLines;
 import com.cosmian.jna.findex.Callbacks.UpsertChain;
 import com.cosmian.jna.findex.Callbacks.UpsertEntry;
@@ -234,6 +236,26 @@ public class Redis {
 
             }
         });
+
+    public Progress progress = new Progress(new com.cosmian.jna.findex.FfiWrapper.ProgressInterface() {
+        @Override
+        public boolean list(List<byte[]> indexedValues) throws FfiException {
+
+            try {
+                //
+                // Convert indexed values from bytes
+                //
+                List<IndexedValue> indexedValuesBytes = new ArrayList<>();
+                for (byte[] iv : indexedValues) {
+                    indexedValuesBytes.add(new IndexedValue(iv));
+                }
+                return true;
+            } catch (CosmianException e) {
+                throw new FfiException("Failed getting search results: " + e.toString());
+            }
+
+        }
+    });
 
     public List<Integer> listRemovedIds(List<Integer> ids) throws CosmianException {
         HashSet<Integer> removedIds = new HashSet<>(ids);

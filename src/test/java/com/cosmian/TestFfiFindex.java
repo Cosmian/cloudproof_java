@@ -178,6 +178,15 @@ public class TestFfiFindex {
         }
     }
 
+    private void verifyFindexSearch(MasterKeys masterKeys, byte[] label, String word, Redis db,
+        int expectedResultsNumber) throws Exception {
+        List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word(word)}, 0, -1,
+            db.progress, db.fetchEntry, db.fetchChain);
+        int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+
+        assertEquals(expectedResultsNumber, dbUids.length);
+    }
+
     @Test
     public void testUpsertAndSearchRedis() throws Exception {
         if (available(6379)) {
@@ -254,19 +263,18 @@ public class TestFfiFindex {
             assertArrayEquals(expectedDbUids, dbUids);
         }
 
+        // With graph upsertions, we can search from 3-letters words
+        verifyFindexSearch(masterKeys, label, "fel", db, 2);
+        verifyFindexSearch(masterKeys, label, "Fel", db, 3);
+        verifyFindexSearch(masterKeys, label, "Fra", db, 30);
+        verifyFindexSearch(masterKeys, label, "Kia", db, 1);
+        verifyFindexSearch(masterKeys, label, "vit", db, 2); // 2 emails starting with `vit`
+
         // This compact should do nothing except changing the label since the users table didn't change.
         Ffi.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
             db.updateLines, db.listRemovedLocations);
 
-        {
-            // Search with old label
-
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
-                -1, db.progress, db.fetchEntry, db.fetchChain);
-            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
-
-            assertEquals(0, dbUids.length);
-        }
+        verifyFindexSearch(masterKeys, label, "France", db, 0);
 
         {
             // Search with new label and without user changes

@@ -1,16 +1,15 @@
-# Cosmian Java Lib
+# Cloudproof Java Library
 
-![workflow](https://github.com/Cosmian/cosmian_java_lib/actions/workflows/maven.yml/badge.svg)
+![workflow](https://github.com/Cosmian/cloudproof-java/actions/workflows/maven.yml/badge.svg)
 
-The library provides a Java friendly API to the [Cosmian Ubiquitous Encryption platform](https://cosmian.com),
-the CloudProof product in particular.
+The Cloudproof Java library provides a Java friendly API to the [Cosmian Cloudproof Encryption product](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/).
 
+In summary, Cloudproof Encryption product secures data repositories in the cloud with attributes-based access control encryption and encrypted search.
 
 ## Getting started
 
 
-Please [check the online documentation](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/) for details
-on using the CloudProof APIs
+Please [check the online documentation](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/) for details on using the CloudProof APIs
 
 
 In addition, please have a look at the following tests for implementation examples:
@@ -20,7 +19,7 @@ In addition, please have a look at the following tests for implementation exampl
  - [TestGpsw](./src/test/java/com/cosmian/TestAbe.java) for using the ABE GPSW scheme with Cosmian KMS
  - [TestFfiGpsw](./src/test/java/com/cosmian/TestFfiAbe.java) for using the ABE GPSW scheme with the local native library
  - [TestKmip](./src/test/java/com/cosmian/TestKmip.java) for using the KMIP 2.1 interface with the Cosmian KMS
- - [TestFfiFindex](./src/test/java/com/cosmian/TestFfiAbe.java) for using the SSE Findex scheme with the local native library
+ - [TestFfiFindex](./src/test/java/com/cosmian/TestFfiFindex.java) for using the SSE Findex scheme with the local native library
 
 
 ## Using in Java projects
@@ -30,8 +29,8 @@ This library free software and is available on Maven Central
 ```xml
 <dependency>
     <groupId>com.cosmian</groupId>
-    <artifactId>cosmian_java_lib</artifactId>
-    <version>0.11.0</version>
+    <artifactId>cloudproof-java</artifactId>
+    <version>0.11.1</version>
 </dependency>
 ```
 
@@ -59,9 +58,13 @@ KMS Server | Java Lib  | GPSW lib  | CoverCrypt lib | Findex
 
 ## Update native libraries
 
-The Cosmian Java lib uses JNA to access functions of the 2 native shared libraries `CoverCrypt` and `ABE GPSW`.
+The Cloudproof Java lib uses JNA to access functions of 3 native shared libraries:
+- `CoverCrypt`
+- `ABE GPSW`
+- `Findex`
 
-On Linux, those 2 libraries must be found in 1 of these folders:
+
+On Linux, those libraries must be found in 1 of these folders:
 - src/resources/linux-x86-64
 - src/test/resources/linux-x86-64
 

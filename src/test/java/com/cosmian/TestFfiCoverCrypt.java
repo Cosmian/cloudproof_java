@@ -38,7 +38,7 @@ import com.sun.jna.Native;
 public class TestFfiCoverCrypt {
     static final Implementation abeImplementation = Implementation.CoverCrypt;
 
-    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("cover_crypt", FfiWrapper.class);
+    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("cosmian_cover_crypt", FfiWrapper.class);
 
     static final Ffi ffi = new Ffi(INSTANCE, new Specifications(abeImplementation));
 

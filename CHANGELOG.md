@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ## [0.11.1]
 ### Added
 ### Changed
-- Rename `cosmian_java_lib` to `cloudproof-java`
+- Rename `cosmian_java_lib` to `cloudproof_java`
 ### Fixed
 ### Removed
 

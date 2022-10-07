@@ -2,12 +2,12 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.cosmian</groupId>
-    <artifactId>cloudproof-java</artifactId>
+    <artifactId>cloudproof_java</artifactId>
     <version>0.11.1</version>
 
-    <name>cloudproof-java</name>
+    <name>cloudproof_java</name>
     <description>The Cloudproof Java Lib secures data repositories in the cloud with attributes-based access control encryption and encrypted search</description>
-    <url>https://github.com/Cosmian/cloudproof-java</url>
+    <url>https://github.com/Cosmian/cloudproof_java</url>
     <licenses>
         <license>
             <name>MIT</name>
@@ -16,9 +16,9 @@
         </license>
     </licenses>
     <scm>
-        <url>https://github.com/Cosmian/cloudproof-java</url>
-        <connection>scm:git:https://github.com/Cosmian/cloudproof-java.git</connection>
-        <developerConnection>scm:git:git@github.com:Cosmian/cloudproof-java.git</developerConnection>
+        <url>https://github.com/Cosmian/cloudproof_java</url>
+        <connection>scm:git:https://github.com/Cosmian/cloudproof_java.git</connection>
+        <developerConnection>scm:git:git@github.com:Cosmian/cloudproof_java.git</developerConnection>
     </scm>
     <developers>
         <developer>

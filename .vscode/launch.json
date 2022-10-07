@@ -15,7 +15,7 @@
             "name": "Launch BinaryHeap",
             "request": "launch",
             "mainClass": "com.cosmian.rest.abe.policy.BinaryHeap",
-            "projectName": "cloudproof-java"
+            "projectName": "cloudproof_java"
         }
     ]
 }

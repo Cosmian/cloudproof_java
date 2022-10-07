@@ -1,6 +1,6 @@
 # Cloudproof Java Library
 
-![workflow](https://github.com/Cosmian/cloudproof-java/actions/workflows/maven.yml/badge.svg)
+![workflow](https://github.com/Cosmian/cloudproof_java/actions/workflows/maven.yml/badge.svg)
 
 The Cloudproof Java library provides a Java friendly API to the [Cosmian Cloudproof Encryption product](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/).
 
@@ -29,7 +29,7 @@ This library free software and is available on Maven Central
 ```xml
 <dependency>
     <groupId>com.cosmian</groupId>
-    <artifactId>cloudproof-java</artifactId>
+    <artifactId>cloudproof_java</artifactId>
     <version>0.11.1</version>
 </dependency>
 ```

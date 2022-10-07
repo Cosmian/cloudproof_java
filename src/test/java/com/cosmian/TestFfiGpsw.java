@@ -39,7 +39,7 @@ public class TestFfiGpsw {
 
     static final Implementation abeImplementation = Implementation.GPSW;
 
-    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("abe_gpsw", FfiWrapper.class);
+    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("cosmian_abe_gpsw", FfiWrapper.class);
 
     static final Ffi ffi = new Ffi(INSTANCE, new Specifications(abeImplementation));
 

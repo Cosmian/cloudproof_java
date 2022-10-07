@@ -20,9 +20,13 @@ build:
     - redis:latest
   script:
     - mvn package
+    - mvn dependency:copy-dependencies
+    - git archive --verbose --format=zip --output=${CI_PROJECT_NAME}.zip HEAD
   artifacts:
     paths:
       - target/*.jar
+      - target/dependency/*.jar
+      - ${CI_PROJECT_NAME}.zip
     expire_in: 3 mos
 
 publish:

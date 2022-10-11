@@ -1,23 +1,26 @@
 package com.cosmian;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
- t com.cosmian.rest.abe.policy.Policy;
- t com.c
-  
+import java.nio.charset.StandardCharsets;
+
+import org.junit.jupiter.api.Test;
+
+import com.cosmian.rest.abe.Abe;
+import com.cosmian.rest.abe.Implementation;
+import com.cosmian.rest.abe.Specifications;
+import com.cosmian.rest.abe.access_policy.AccessPolicy;
+import com.cosmian.rest.abe.access_policy.And;
+import com.cosmian.rest.abe.access_policy.Or;
+
+
+*is clas
+
+c
+/**
+ * br>demo demonstrates how data can be encrypted with polwhen itb toid test_ab 
+ * if (!Te      return;
  * 
- is clas
- 
- c 
- /**
-
-br>demo demonstrates how data can be encrypted with polwhen itb
-
-
-toid test_abe() throws Exception {
-
-if (!TestUti
-    System.out.println("Demo: No KMS Server: ignoring");
-    return;
 }
 
 //
@@ -171,3 +174,48 @@ Attr[] medium_secret_mkg_attributes =
 
 
 
+ 
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+
+
+
+    
+     
+    //   
+    // 
+
+    
+
+       
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+    

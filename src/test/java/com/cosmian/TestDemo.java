@@ -39,7 +39,7 @@ public class TestDemo {
 
         // Change the Cosmian Server Server URL and API key as appropriate
         Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()),
-            new Specifications(Implementation.GPSW));
+            new Specifications(Implementation.CoverCrypt));
 
         // ## Policy
         // In this demo, we will create a Policy which combines two axes, a

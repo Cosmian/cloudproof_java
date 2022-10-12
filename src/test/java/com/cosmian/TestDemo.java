@@ -13,16 +13,12 @@ import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.And;
 import com.cosmian.rest.abe.access_policy.Or;
 
-
 *is clas
 
 c
-/**
- * br>demo demonstrates how data can be encrypted with polwhen itb toid test_ab 
- * if (!Te      return;
- * 
-}
 
+/**
+ *  * br>demo d if (!Te      return;   
 //
 Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey
     new Specifications(Implementation.GPSW));
@@ -219,3 +215,55 @@ Attr[] medium_secret_mkg_attributes =
 
     
     
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+
+
+
+    
+     
+    //   
+    // 
+
+    
+
+       
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+    
+
+
+

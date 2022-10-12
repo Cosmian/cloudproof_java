@@ -72,8 +72,20 @@ public class TestDemo {
         // attribute. Each attribute must be granted individually.
         Policy policy = new Policy(20)
             .addAxis("Security Level",
-                new String[] {"Protected", "Low Secret", "Medium Secret", "High Secret", "Top Secret",}, true)
-            .addAxis("Department", new String[] {"R&D", "HR", "MKG", "FIN"}, false);
+                new String[] {
+                    "Protected",
+                    "Low Secret",
+                    "Medium Secret",
+                    "High Secret",
+                    "Top Secret",
+                },
+                true)
+            .addAxis("Department", new String[] {
+                "R&D",
+                "HR",
+                "MKG",
+                "FIN"
+            }, false);
 
         // ## Master Authority
         // The Master Authority possesses the keys for the given Policy:
@@ -96,19 +108,28 @@ public class TestDemo {
         // - a low secret marketing message
         byte[] low_secret_mkg_data = "low_secret_mkg_message".getBytes(StandardCharsets.UTF_8);
         Attr[] low_secret_mkg_attributes =
-            new Attr[] {new Attr("Department", "MKG"), new Attr("Security Level", "Low Secret")};
+            new Attr[] {
+                new Attr("Department", "MKG"),
+                new Attr("Security Level", "Low Secret")
+            };
         byte[] low_secret_mkg_ct = abe.kmsEncrypt(publicMasterKeyUID, low_secret_mkg_data, low_secret_mkg_attributes);
 
         // - a top secret marketing message
         byte[] top_secret_mkg_data = "top_secret_mkg_message".getBytes(StandardCharsets.UTF_8);
         Attr[] top_secret_mkg_attributes =
-            new Attr[] {new Attr("Department", "MKG"), new Attr("Security Level", "Top Secret")};
+            new Attr[] {
+                new Attr("Department", "MKG"),
+                new Attr("Security Level", "Top Secret")
+            };
         byte[] top_secret_mkg_ct = abe.kmsEncrypt(publicMasterKeyUID, top_secret_mkg_data, top_secret_mkg_attributes);
 
         // - and a low secret finance message
         byte[] low_secret_fin_data = "low_secret_fin_message".getBytes(StandardCharsets.UTF_8);
         Attr[] low_secret_fin_attributes =
-            new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Low Secret")};
+            new Attr[] {
+                new Attr("Department", "FIN"),
+                new Attr("Security Level", "Low Secret")
+            };
         byte[] low_secret_fin_ct = abe.kmsEncrypt(publicMasterKeyUID, low_secret_fin_data, low_secret_fin_attributes);
 
         // ## User Decryption Keys
@@ -116,14 +137,15 @@ public class TestDemo {
         // Policies.
         // Access Policies are monotonous boolean expressions combining attributes.
 
-        // Let us create 3 users to illustrate the relationship between their Key
-        // Policies and the message Attributes
+        // Let us create 2 users with their different access policies to illustrate their effect.
 
         // ### The medium secret marketing user
         // This user can decrypt messages from the marketing department only with a
         // security level of Medium Secret or below
         AccessPolicy medium_secret_mkg_access =
-            new And(new Attr("Department", "MKG"), new Attr("Security Level", "Medium Secret"));
+            new And(
+                new Attr("Department", "MKG"),
+                new Attr("Security Level", "Medium Secret"));
         String medium_secret_mkg_user_key_uid =
             abe.createUserDecryptionKey(medium_secret_mkg_access, privateMasterKeyUID);
 
@@ -132,14 +154,18 @@ public class TestDemo {
         assertArrayEquals(low_secret_mkg_data, abe.kmsDecrypt(medium_secret_mkg_user_key_uid, low_secret_mkg_ct));
         // ... however it can neither decrypt a marketing message with higher security
         try {
-            abe.kmsDecrypt(medium_secret_mkg_user_key_uid, top_secret_mkg_ct);
+            abe.kmsDecrypt(
+                medium_secret_mkg_user_key_uid,
+                top_secret_mkg_ct);
             throw new RuntimeException("Oh... something is wrong !");
         } catch (CosmianException e) {
             // fine: the user is not be able to decrypt
         }
         // ... nor decrypt a message from another department even with a lower security
         try {
-            abe.kmsDecrypt(medium_secret_mkg_user_key_uid, low_secret_fin_ct);
+            abe.kmsDecrypt(
+                medium_secret_mkg_user_key_uid,
+                low_secret_fin_ct);
             throw new RuntimeException("Oh... something is wrong !");
         } catch (CosmianException e) {
             // fine: the user is not be able to decrypt
@@ -155,9 +181,18 @@ public class TestDemo {
             abe.createUserDecryptionKey(top_secret_mkg_fin_access, privateMasterKeyUID);
         // As expected, the top secret marketing financial user can successfully decrypt
         // all messages
-        assertArrayEquals(low_secret_mkg_data, abe.kmsDecrypt(top_secret_mkg_fin_user_key_uid, low_secret_mkg_ct));
-        assertArrayEquals(top_secret_mkg_data, abe.kmsDecrypt(top_secret_mkg_fin_user_key_uid, top_secret_mkg_ct));
-        assertArrayEquals(low_secret_fin_data, abe.kmsDecrypt(top_secret_mkg_fin_user_key_uid, low_secret_fin_ct));
+        assertArrayEquals(low_secret_mkg_data,
+            abe.kmsDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                low_secret_mkg_ct));
+        assertArrayEquals(top_secret_mkg_data,
+            abe.kmsDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                top_secret_mkg_ct));
+        assertArrayEquals(low_secret_fin_data,
+            abe.kmsDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                low_secret_fin_ct));
 
         // ## Revocation
         // At anytime the Master Authority can revoke an attribute.
@@ -181,7 +216,9 @@ public class TestDemo {
         // finally let us create a new medium secret marketing message
         byte[] medium_secret_mkg_data = "medium_secret_mkg_message".getBytes(StandardCharsets.UTF_8);
         Attr[] medium_secret_mkg_attributes =
-            new Attr[] {new Attr("Department", "MKG"), new Attr("Security Level", "Low Secret")};
+            new Attr[] {
+                new Attr("Department", "MKG"),
+                new Attr("Security Level", "Low Secret")};
         byte[] medium_secret_mkg_ct =
             abe.kmsEncrypt(publicMasterKeyUID, medium_secret_mkg_data, medium_secret_mkg_attributes);
 
@@ -193,20 +230,35 @@ public class TestDemo {
 
         // Likewise, the top secret marketing financial user can decrypt all messages
         // ... old
-        assertArrayEquals(low_secret_mkg_data, abe.kmsDecrypt(top_secret_mkg_fin_user_key_uid, low_secret_mkg_ct));
-        assertArrayEquals(top_secret_mkg_data, abe.kmsDecrypt(top_secret_mkg_fin_user_key_uid, top_secret_mkg_ct));
-        assertArrayEquals(low_secret_fin_data, abe.kmsDecrypt(top_secret_mkg_fin_user_key_uid, low_secret_fin_ct));
+        assertArrayEquals(low_secret_mkg_data,
+            abe.kmsDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                low_secret_mkg_ct));
+        assertArrayEquals(top_secret_mkg_data,
+            abe.kmsDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                top_secret_mkg_ct));
+        assertArrayEquals(low_secret_fin_data,
+            abe.kmsDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                low_secret_fin_ct));
         // ..and new
         assertArrayEquals(medium_secret_mkg_data,
-            abe.kmsDecrypt(top_secret_mkg_fin_user_key_uid, medium_secret_mkg_ct));
+            abe.kmsDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                medium_secret_mkg_ct));
 
         // However, the old, non rekeyed medium secret marketing user key
         // ...can still decrypt the old low secret marketing message
         assertArrayEquals(low_secret_mkg_data,
-            abe.kmsDecrypt("original_medium_secret_mkg_user_key_uid", low_secret_mkg_ct));
+            abe.kmsDecrypt(
+                "original_medium_secret_mkg_user_key_uid",
+                low_secret_mkg_ct));
         // ... but NOT the new medium secret marketing message
         try {
-            abe.kmsDecrypt("original_medium_secret_mkg_user_key_uid", medium_secret_mkg_ct);
+            abe.kmsDecrypt(
+                "original_medium_secret_mkg_user_key_uid",
+                medium_secret_mkg_ct);
             throw new RuntimeException("Oh... something is wrong !");
         } catch (CosmianException e) {
             // fine: the user is not be able to decrypt

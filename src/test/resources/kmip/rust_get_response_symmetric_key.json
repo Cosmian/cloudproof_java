@@ -1,0 +1,91 @@
+{
+        "tag": "GetResponse",
+        "type": "Structure",
+        "value": [
+            {
+                "tag": "ObjectType",
+                "type": "Enumeration",
+                "value": "SymmetricKey"
+            },
+            {
+                "tag": "UniqueIdentifier",
+                "type": "TextString",
+                "value": "53b77ccf-1d26-4107-a0db-c18326a27085"
+            },
+            {
+                "tag": "Object",
+                "type": "Structure",
+                "value": [
+                    {
+                        "tag": "KeyBlock",
+                        "type": "Structure",
+                        "value": [
+                            {
+                                "tag": "KeyFormatType",
+                                "type": "Enumeration",
+                                "value": "TransparentSymmetricKey"
+                            },
+                            {
+                                "tag": "KeyValue",
+                                "type": "Structure",
+                                "value": [
+                                    {
+                                        "tag": "KeyMaterial",
+                                        "type": "Structure",
+                                        "value": [
+                                            {
+                                                "tag": "Key",
+                                                "type": "ByteString",
+                                                "value": "A1F8E0454D88793FC478B27FDC995405182D141C3C7D38F9B4562C9280FBAF5D240645AC07B07A6C7C350011FB452D488DC0D310E6FF7F75DB6D29B6FA97C5E3E6AB0BA78A5D6C2395D1814F2C09203A7220C28EC4A32DBE075875AE38FF5CFABCB386C63B9E2C7B065F3A84D5C5BD46B4092B2669EA52994748B7F713C474330E83DA88235706352AD9BE92B3199867A398ED1158AE4E333B899E3429DD4CC425056B4A0EFF0F4717F4C5815A34ADCDDEDEF7978C7F94A3E52E6008C143A8975DAC730463E9F8F0CFB2B70ACA95311586AE394E2D77B4ADE2968B6BC4C466616D052F4025E34EEA6B3D40C1F26EFEABE8D5436EBB561E6FF8E4DF1DE81CD7FB"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "tag": "Attributes",
+                                        "type": "Structure",
+                                        "value": [
+                                            {
+                                                "tag": "CryptographicAlgorithm",
+                                                "type": "Enumeration",
+                                                "value": "AES"
+                                            },
+                                            {
+                                                "tag": "CryptographicLength",
+                                                "type": "Integer",
+                                                "value": 256
+                                            },
+                                            {
+                                                "tag": "CryptographicUsageMask",
+                                                "type": "Integer",
+                                                "value":4
+                                            },
+                                            {
+                                                "tag": "KeyFormatType",
+                                                "type": "Enumeration",
+                                                "value": "TransparentSymmetricKey"
+                                            },
+                                            {
+                                                "tag": "ObjectType",
+                                                "type": "Enumeration",
+                                                "value": "SymmetricKey"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "tag": "CryptographicAlgorithm",
+                                "type": "Enumeration",
+                                "value": "AES"
+                            },
+                            {
+                                "tag": "CryptographicLength",
+                                "type": "Integer",
+                                "value": 256
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }

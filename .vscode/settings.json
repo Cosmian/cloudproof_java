@@ -5,6 +5,7 @@
         "Cosmian",
         "Deserialization",
         "deserializers",
+        "instanceof",
         "Kmip",
         "serializers"
     ],

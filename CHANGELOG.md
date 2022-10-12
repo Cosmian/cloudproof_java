@@ -3,9 +3,10 @@
 All notable changes to this project will be documented in this file.
 
 ---
-## [1.11.0] - 2022-10-11
+## [1.11.0] - 2022-10-13
 ### Added
 - Native libraries for Windows and MacOs
+- Add Destroy method on Abe class
 ### Changed
 - Update KMS version to 2.3
 - Add ABE Demo class to continuous integration

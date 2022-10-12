@@ -18,6 +18,8 @@ import com.cosmian.rest.kmip.operations.CreateKeyPairResponse;
 import com.cosmian.rest.kmip.operations.CreateResponse;
 import com.cosmian.rest.kmip.operations.Decrypt;
 import com.cosmian.rest.kmip.operations.DecryptResponse;
+import com.cosmian.rest.kmip.operations.Destroy;
+import com.cosmian.rest.kmip.operations.DestroyResponse;
 import com.cosmian.rest.kmip.operations.Encrypt;
 import com.cosmian.rest.kmip.operations.EncryptResponse;
 import com.cosmian.rest.kmip.operations.Get;
@@ -461,6 +463,31 @@ public class Abe {
             throw e;
         } catch (Exception e) {
             String err = impl.getImplementation() + " key revocation failed: " + e.getMessage() + "  " + e.getClass();
+            logger.severe(err);
+            throw new CosmianException(err, e);
+        }
+    }
+
+    /**
+     * Destroy a key in the KMS which makes it unavailable to use in the KMS to perform
+     * {@link #kmsEncrypt(String, byte[], Attr[])} or {@link #kmsDecrypt(String, byte[])} operations. <br>
+     * <br>
+     * Note: this destroy the key **inside** the KMS: it does not prevent an user who has a local copy of a User
+     * Decryption Key to perform decryption operations.
+     *
+     * @param uniqueIdentifier the UID of the key to revoke
+     * @return the UID of the destroyed key
+     * @throws CosmianException if the destruction fails
+     */
+    public String destroy(String uniqueIdentifier) throws CosmianException {
+        try {
+            Destroy request = new Destroy(Optional.of(uniqueIdentifier));
+            DestroyResponse response = kmip.destroy(request);
+            return response.getUniqueIdentifier();
+        } catch (CosmianException e) {
+            throw e;
+        } catch (Exception e) {
+            String err = impl.getImplementation() + " destroy key failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }

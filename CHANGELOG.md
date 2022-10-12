@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Update KMS version to 2.3
 - Add ABE Demo class to continuous integration
 ### Fixed
+- Make Link[] optional for KMIP Attributes
 ### Removed
 
 ---

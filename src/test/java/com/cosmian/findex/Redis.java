@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.cosmian.CosmianException;
@@ -33,7 +32,7 @@ import redis.clients.jedis.Transaction;
 
 public class Redis {
 
-    private static final Logger logger = Logger.getLogger(Redis.class.getName());
+    // private static final Logger logger = Logger.getLogger(Redis.class.getName());
 
     public static final String PREFIX_STORAGE = "cosmian";
 

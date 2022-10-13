@@ -69,7 +69,7 @@ public class Attributes implements KmipStruct {
      * The Cryptographic Usage Mask attribute defines the cryptographic usage of a key. This is a bit mask that
      * indicates to the client which cryptographic functions MAY be performed using the key, and which ones SHALL NOT be
      * performed.
-     * 
+     *
      * @see CryptographicUsageMask
      */
     @JsonProperty(value = "CryptographicUsageMask")
@@ -104,7 +104,7 @@ public class Attributes implements KmipStruct {
      * corresponding private key is held in a different manner)
      */
     @JsonProperty(value = "Link")
-    private Link[] link = new Link[] {};
+    private Optional<Link[]> link = Optional.empty();
 
     /**
      * The Object Typeof a Managed Object (e.g., public key, private key, symmetric key, etc.) SHALL be set by the
@@ -140,7 +140,7 @@ public class Attributes implements KmipStruct {
     public Attributes(Optional<Integer> activationDate, Optional<CryptographicAlgorithm> cryptographicAlgorithm,
         Optional<Integer> cryptographicLength, Optional<CryptographicDomainParameters> cryptographicDomainParameters,
         Optional<CryptographicParameters> cryptographicParameters, Optional<Integer> cryptographicUsageMask,
-        Optional<KeyFormatType> keyFormatType, Link[] link, ObjectType objectType,
+        Optional<KeyFormatType> keyFormatType, Optional<Link[]> link, ObjectType objectType,
         Optional<VendorAttribute[]> vendorAttributes) {
         this.activationDate = activationDate;
         this.cryptographicAlgorithm = cryptographicAlgorithm;
@@ -211,11 +211,11 @@ public class Attributes implements KmipStruct {
         this.keyFormatType = keyFormatType;
     }
 
-    public Link[] getLink() {
+    public Optional<Link[]> getLink() {
         return this.link;
     }
 
-    public void setLink(Link[] link) {
+    public void setLink(Optional<Link[]> link) {
         this.link = link;
     }
 
@@ -271,7 +271,7 @@ public class Attributes implements KmipStruct {
         return this;
     }
 
-    public Attributes link(Link[] link) {
+    public Attributes link(Optional<Link[]> link) {
         setLink(link);
         return this;
     }

@@ -1,6 +1,7 @@
 package com.cosmian;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -16,6 +17,7 @@ import com.cosmian.rest.kmip.data_structures.KeyValue;
 import com.cosmian.rest.kmip.data_structures.TransparentSymmetricKey;
 import com.cosmian.rest.kmip.json.KmipStruct;
 import com.cosmian.rest.kmip.objects.SymmetricKey;
+import com.cosmian.rest.kmip.operations.GetResponse;
 import com.cosmian.rest.kmip.operations.Import;
 import com.cosmian.rest.kmip.operations.ImportResponse;
 import com.cosmian.rest.kmip.operations.TestStruct;
@@ -35,6 +37,7 @@ import com.fasterxml.classmate.TypeResolver;
 import com.fasterxml.classmate.members.ResolvedField;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class TestKmip {
 
     @BeforeAll
@@ -173,6 +176,22 @@ public class TestKmip {
         // deserialize
         Policy policy_ = mapper.readValue(json, Policy.class);
         assertEquals(policy, policy_);
+    }
+
+    @Test
+    public void deserialize_rust_symmetric_key_response() throws Exception {
+        String response_json = Resources.load_resource("kmip/rust_get_response_symmetric_key.json");
+        ObjectMapper mapper = new ObjectMapper();
+        GetResponse gr = mapper.readValue(response_json, GetResponse.class);
+        assertEquals(ObjectType.Symmetric_Key, gr.getObjectType());
+        SymmetricKey key = (SymmetricKey) gr.getObject();
+        Attributes attributes = key.attributes();
+        assertEquals(4, attributes.getCryptographicUsageMask().get());
+        KeyMaterial material = key.getKeyBlock().getKeyValue().getKeyMaterial();
+        assertTrue(material.get() instanceof TransparentSymmetricKey);
+        TransparentSymmetricKey tsk = (TransparentSymmetricKey) material.get();
+        assertNotNull(tsk.getKey());
+        assertTrue(tsk.getKey().length > 0);
     }
 
 }

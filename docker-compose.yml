@@ -12,9 +12,8 @@ services:
       - PGDATA=/tmp/postgres2
   kms:
     container_name: kms
-    image: gitlab.cosmian.com:5000/core/kms:2.2.0_ci
+    image: gitlab.cosmian.com:5000/core/kms:2.3.0_ci
     environment:
-      - KMS_POSTGRES_URL=postgres://kms:kms@db/kms
       - KMS_HOSTNAME=0.0.0.0
       - KMS_PUBLIC_PATH=/tmp
       - KMS_PRIVATE_PATH=/tmp

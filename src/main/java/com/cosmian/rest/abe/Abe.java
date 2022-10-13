@@ -218,7 +218,9 @@ public class Abe {
         throws CosmianException {
         try {
             Attributes commonAttributes =
-                new Attributes(ObjectType.Private_Key, Optional.of(impl.getCryptographicAlgorithm()));
+                new Attributes(
+                    ObjectType.Private_Key,
+                    Optional.of(impl.getCryptographicAlgorithm()));
             commonAttributes.setKeyFormatType(Optional.of(impl.getKeyFormatTypeDecryptionKey()));
 
             // convert the Access Policy to attributes and attach it to the common
@@ -227,8 +229,11 @@ public class Abe {
                 accessPolicy.toVendorAttribute(this.impl.getAccessPolicyVendorAttribute());
             commonAttributes.setVendorAttributes(Optional.of(new VendorAttribute[] {accessPolicyAttribute}));
             // link to the master private key
-            commonAttributes.setLink(new Link[] {
-                new Link(LinkType.Parent_Link, new LinkedObjectIdentifier(privateMasterKeyUniqueIdentifier))});
+            commonAttributes.setLink(Optional.of(new Link[] {
+                new Link(
+                    LinkType.Parent_Link,
+                    new LinkedObjectIdentifier(privateMasterKeyUniqueIdentifier))
+            }));
 
             Create request = new Create(ObjectType.Private_Key, commonAttributes, Optional.empty());
             CreateResponse response = this.kmip.create(request);

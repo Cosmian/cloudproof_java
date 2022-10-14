@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [1.11.1] - 2022-10-14
+### Added
+### Changed
+- Update license
+- CI: use KMS version from Gitlab variable
+### Fixed
+### Removed
+
+---
 ## [1.11.0] - 2022-10-13
 ### Added
 - Native libraries for Windows and MacOs

@@ -9,7 +9,6 @@ import java.util.Optional;
 
 import com.cosmian.CosmianException;
 import com.cosmian.jna.FfiException;
-import com.cosmian.rest.abe.Specifications;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
@@ -26,11 +25,8 @@ import com.sun.jna.ptr.IntByReference;
 public final class Ffi {
     private FfiWrapper instance;
 
-    private Specifications abeSpecifications;
-
-    public Ffi(FfiWrapper instance, Specifications abeSpecifications) {
+    public Ffi(FfiWrapper instance) {
         this.instance = instance;
-        this.abeSpecifications = abeSpecifications;
     }
 
     /**
@@ -85,7 +81,7 @@ public final class Ffi {
     public int createEncryptionCache(PublicKey publicKey) throws FfiException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy =
-            Policy.fromVendorAttributes(publicKey.attributes(), this.abeSpecifications.getPolicyVendorAttribute());
+            Policy.fromAttributes(publicKey.attributes());
         return createEncryptionCache(policy, publicKeyBytes);
     }
 
@@ -253,7 +249,7 @@ public final class Ffi {
     public EncryptedHeader encryptHeader(PublicKey publicKey, Attr[] attributes) throws FfiException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy =
-            Policy.fromVendorAttributes(publicKey.attributes(), this.abeSpecifications.getPolicyVendorAttribute());
+            Policy.fromAttributes(publicKey.attributes());
         return encryptHeader(policy, publicKeyBytes, attributes, Optional.empty(), Optional.empty());
     }
 
@@ -274,7 +270,7 @@ public final class Ffi {
         Optional<byte[]> additionalData) throws FfiException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy =
-            Policy.fromVendorAttributes(publicKey.attributes(), this.abeSpecifications.getPolicyVendorAttribute());
+            Policy.fromAttributes(publicKey.attributes());
         return encryptHeader(policy, publicKeyBytes, attributes, uid, additionalData);
     }
 
@@ -753,7 +749,7 @@ public final class Ffi {
 
         int ffiCode = this.instance.h_generate_user_private_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
             masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
-         if (ffiCode != 0) {
+        if (ffiCode != 0) {
             // Retry with correct allocated size
             userPrivateKeyBuffer = new byte[userPrivateKeyBufferSize.getValue()];
             ffiCode = this.instance.h_generate_user_private_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,

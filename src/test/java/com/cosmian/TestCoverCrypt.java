@@ -56,16 +56,20 @@ public class TestCoverCrypt {
 
     @Test
     public void test_policy() throws Exception {
-        Policy pg = policy();
+        Policy policy = policy();
 
         ObjectMapper mapper = new ObjectMapper();
-        String str = mapper.writeValueAsString(pg);
+        String str = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(policy);
         logger.info(str);
         // make sure the correct serializer is used
         JSONObject json = new JSONObject(str);
         assertTrue(json.has("last_attribute_value"));
         assertTrue(json.has("max_attribute_creations"));
         assertTrue(json.has("axes"));
+
+        VendorAttribute va = policy.toVendorAttribute(VendorAttribute.VENDOR_ATTR_COVER_CRYPT_POLICY);
+        String vaStr = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(va);
+        logger.info(vaStr);
     }
 
     @Test

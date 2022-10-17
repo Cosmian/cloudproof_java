@@ -27,7 +27,7 @@ This library is free software and is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>1.11.1</version>
+    <version>1.11.2</version>
 </dependency>
 ```
 
@@ -40,7 +40,7 @@ Check the main pages of the respective projects to build the native librairies a
 This table shows the minimum versions correspondences between the various components
 
 | KMS Server | Java Lib  | GPSW lib  | CoverCrypt lib | Findex |
-| ---------- | --------- | --------- | -------------- | ------ |
+|------------|-----------|-----------|----------------|--------|
 | 1.2.0      | 0.5.0     | 0.3.0     | N/A            | N/A    |
 | 1.2.1      | 0.5.2     | 0.4.0     | N/A            | N/A    |
 | 1.2.1      | ~~0.6.0~~ | ~~0.6.0~~ | N/A            | N/A    |

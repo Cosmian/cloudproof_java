@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.2] - 2022-10-16
+
+### Added
+
+### Changed
+
+### Fixed
+
+- renamed revoke attributes, rotate attributes and fixed documentation
+
+### Removed
+
 ---
 
 ## [1.11.1] - 2022-10-14

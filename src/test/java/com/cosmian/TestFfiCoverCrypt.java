@@ -40,7 +40,7 @@ public class TestFfiCoverCrypt {
 
     static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("cosmian_cover_crypt", FfiWrapper.class);
 
-    static final Ffi ffi = new Ffi(INSTANCE, new Specifications(abeImplementation));
+    static final Ffi ffi = new Ffi(INSTANCE);
 
     @BeforeAll
     public static void before_all() {

@@ -206,7 +206,7 @@ public class TestDemo {
         PrivateKey original_medium_secret_mkg_user_key = abe.retrieveUserDecryptionKey(medium_secret_mkg_user_key_uid);
 
         // Now revoke the MKG attribute
-        abe.revokeAttributes(privateMasterKeyUID, new Attr[] {new Attr("Department", "MKG")});
+        abe.rotateAttributes(privateMasterKeyUID, new Attr[] {new Attr("Department", "MKG")});
 
         // ... and reimport the non rekeyed original medium secret marketing user key
         // under a new UID
@@ -255,6 +255,7 @@ public class TestDemo {
                 "original_medium_secret_mkg_user_key_uid",
                 low_secret_mkg_ct));
         // ... but NOT the new medium secret marketing message
+
         try {
             abe.kmsDecrypt(
                 "original_medium_secret_mkg_user_key_uid",

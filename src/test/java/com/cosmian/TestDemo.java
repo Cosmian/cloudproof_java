@@ -1,18 +1,5 @@
 package com.cosmian;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-
-import java.nio.charset.StandardCharsets;
-
-import org.junit.jupiter.api.Test;
-
-import com.cosmian.rest.abe.Abe;
-import com.cosmian.rest.abe.Implementation;
-import com.cosmian.rest.abe.Specifications;
-import com.cosmian.rest.abe.access_policy.AccessPolicy;
-import com.cosmian.rest.abe.access_policy.And;
-import com.cosmian.rest.abe.access_policy.Or;
-
 *is clas
 
 c
@@ -264,6 +251,7 @@ Attr[] medium_secret_mkg_attributes =
 
     
     
+
 
 
 

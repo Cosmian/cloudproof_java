@@ -405,10 +405,10 @@ public class Abe {
     }
 
     /**
-     * Revoke the given policy attributes. This will rekey in the KMS:
+     * Rotate the given policy attributes. This will rekey in the KMS:
      * <ul>
-     * <li>the Master Public Key</li>
-     * <li>all User Decryption Keys that contain one of these attributes in their policy and are not revoked.</li>
+     * <li>the Master Keys</li>
+     * <li>all User Decryption Keys that contain one of these attributes in their policy and are not rotated.</li>
      * </ul>
      * Non Rekeyed User Decryption Keys cannot decrypt ata encrypted with the rekeyed Master Public Key and the given
      * attributes. <br>
@@ -422,7 +422,7 @@ public class Abe {
      * @return the Master Public Key UID
      * @throws CosmianException if the revocation fails
      */
-    public String revokeAttributes(String privateMasterKeyUniqueIdentifier, Attr[] policyAttributes)
+    public String rotateAttributes(String privateMasterKeyUniqueIdentifier, Attr[] policyAttributes)
         throws CosmianException {
         try {
             Attributes attributes =

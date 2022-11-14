@@ -4,13 +4,13 @@ public class DecryptedHeader {
 
     private final byte[] symmetricKey;
 
-    private final byte[] uid;
+    private final byte[] authenticationData;
 
     private final byte[] additionalData;
 
-    public DecryptedHeader(byte[] symmetricKey, byte[] uid, byte[] additional_data) {
+    public DecryptedHeader(byte[] symmetricKey, byte[] authenticationData, byte[] additional_data) {
         this.symmetricKey = symmetricKey;
-        this.uid = uid;
+        this.authenticationData = authenticationData;
         this.additionalData = additional_data;
     }
 
@@ -19,7 +19,7 @@ public class DecryptedHeader {
     }
 
     public byte[] getUid() {
-        return this.uid;
+        return this.authenticationData;
     }
 
     public byte[] getAdditionalData() {

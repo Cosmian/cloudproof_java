@@ -71,6 +71,53 @@ public class TestFfiCoverCrypt {
     }
 
     @Test
+    public void testHeaderSimple() throws Exception {
+
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println(" Simple                                ");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        // Declare the CoverCrypt Policy
+        Policy policy = policy();
+
+        // Generate the master keys
+        MasterKeys masterKeys = ffi.generateMasterKeys(policy);
+
+        // Generate an user decryption key
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        byte[] userDecryptionKey = ffi.generateUserPrivateKey(
+            masterKeys.getPrivateKey(),
+            accessPolicy,
+            policy);
+
+        // Rotate attributes
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
+
+        // Now generate the header which contains the ABE encryption of the randomly
+        // generated AES key.
+        EncryptedHeader encryptedHeader =
+            ffi.encryptHeader(
+                policy,
+                masterKeys.getPublicKey(),
+                encryptionPolicy,
+                Optional.empty(),
+                Optional.empty());
+
+        System.out.println("USER KEY SIZE: " + userDecryptionKey.length);
+        System.out.println("HEADER BYTES SIZE: " + encryptedHeader.getEncryptedHeaderBytes().length);
+        System.out.println("SYMMETRIC KEY SIZE: " + encryptedHeader.getSymmetricKey().length);
+
+        // Decrypt the header to recover the symmetric AES key
+        DecryptedHeader decryptedHeader = ffi.decryptHeader(
+            userDecryptionKey,
+            encryptedHeader.getEncryptedHeaderBytes());
+
+        assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
+    }
+
+    @Test
     public void testKeysGeneration() throws Exception {
 
         System.out.println("");
@@ -90,6 +137,7 @@ public class TestFfiCoverCrypt {
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
 
         // Rotate attributes
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
         Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
         Policy newPolicy = ffi.rotateAttributes(attributes, policy);
 
@@ -99,15 +147,19 @@ public class TestFfiCoverCrypt {
         // Now generate the header which contains the ABE encryption of the randomly
         // generated AES key.
         EncryptedHeader encryptedHeader =
-            ffi.encryptHeader(newPolicy, masterKeys.getPublicKey(), attributes, Optional.empty(), Optional.empty());
+            ffi.encryptHeader(
+                newPolicy,
+                masterKeys.getPublicKey(),
+                encryptionPolicy);
 
         // Decrypt the header to recover the symmetric AES key
         // Should fail since user decryption key has not been refreshed
         try {
-            ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(), 0, 0);
+            ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes());
         } catch (Exception ex) {
             System.out.println(
-                "As expected, user cannot be decrypt CoverCrypt Header since his user decryption key has not been refreshed");
+                "As expected, user cannot be decrypt CoverCrypt Header since his user decryption key has not been refreshed: "
+                    + ex.getMessage());
         }
 
         // Generate an user decryption key
@@ -115,7 +167,11 @@ public class TestFfiCoverCrypt {
             ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, newPolicy);
 
         // Decrypt the header to recover the symmetric AES key
-        ffi.decryptHeader(userDecryptionKeyRefreshed, encryptedHeader.getEncryptedHeaderBytes(), 0, 0);
+        DecryptedHeader decryptedHeader = ffi.decryptHeader(
+            userDecryptionKeyRefreshed,
+            encryptedHeader.getEncryptedHeaderBytes());
+
+        assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
     }
 
     @Test
@@ -162,19 +218,21 @@ public class TestFfiCoverCrypt {
         // The data we want to encrypt/decrypt
         byte[] data = "This s a test message".getBytes(StandardCharsets.UTF_8);
 
+        // Declare the CoverCrypt Policy
+        Policy policy = policy();
+
+        // Generate the master keys
+        MasterKeys masterKeys = ffi.generateMasterKeys(policy);
+
         // A unique ID associated with this message. The unique id is used to
         // authenticate the message in the AES encryption scheme.
         // Typically this will be a hash of the content if it is unique, a unique
         // filename or a database unique key
         byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
 
-        // Load an existing public key
-        String publicKeyJson = Resources.load_resource("ffi/cover_crypt/public_master_key.json");
-        PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-
         // The policy attributes that will be used to encrypt the content. They must
         // exist in the policy associated with the Public Key
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
 
         // Now generate the header which contains the ABE encryption of the randomly
         // generated AES key.
@@ -182,11 +240,12 @@ public class TestFfiCoverCrypt {
         // decryption, and is thus not stored as part of the encrypted header.
         // If that is not the case check the other signature of #ffi.encryptedHeader()
         // to inject the unique id.
-        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, attributes);
+        EncryptedHeader encryptedHeader =
+            ffi.encryptHeader(policy, masterKeys.getPublicKey(), encryptionPolicy);
 
         // The data can now be encrypted with the generated key
         // The block number is also part of the authentication of the AES scheme
-        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, data);
 
         // Create a full message with header+encrypted data. The length of the header
         // is pre-pended.
@@ -204,9 +263,12 @@ public class TestFfiCoverCrypt {
         // Decryption
         //
 
-        // Load an existing user decryption key
-        String userDecryptionKeyJson = Resources.load_resource("ffi/cover_crypt/fin_confidential_user_key.json");
-        PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+        // Generate an user decryption key
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        byte[] userDecryptionKey = ffi.generateUserPrivateKey(
+            masterKeys.getPrivateKey(),
+            accessPolicy,
+            policy);
 
         // Parse the message by first recovering the header length
         int headerSize_ = ByteBuffer.wrap(ciphertext).order(ByteOrder.BIG_ENDIAN).getInt(0);
@@ -218,45 +280,55 @@ public class TestFfiCoverCrypt {
         DecryptedHeader decryptedHeader = ffi.decryptHeader(userDecryptionKey, encryptedHeader_);
 
         // decrypt the content, passing the unique id and block number
-        byte[] data_ = ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+        byte[] data_ = ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, encryptedContent);
 
         // Verify everything is correct
         assertTrue(Arrays.equals(data, data_));
     }
 
     @Test
-    public void testHybridCryptoWithMetaData() throws Exception {
+    public void testHybridCryptoWithAdditionalData() throws Exception {
 
         System.out.println("");
-        System.out.println("---------------------------------------");
-        System.out.println(" Hybrid Crypto Test With Meta Data");
-        System.out.println("---------------------------------------");
+        System.out.println("-----------------------------------------");
+        System.out.println(" Hybrid Crypto Test With Additional Data ");
+        System.out.println("-----------------------------------------");
         System.out.println("");
 
-        String publicKeyJson = Resources.load_resource("ffi/cover_crypt/public_master_key.json");
-        PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+        byte[] data = new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
-        byte[] uid = new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9};
+        // Declare the CoverCrypt Policy
+        Policy policy = policy();
+
+        // Generate the master keys
+        MasterKeys masterKeys = ffi.generateMasterKeys(policy);
+
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
+        byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
         byte[] additionalData = new byte[] {10, 11, 12, 13, 14};
         EncryptedHeader encryptedHeader =
-            ffi.encryptHeader(publicKey, attributes, Optional.of(uid), Optional.of(additionalData));
+            ffi.encryptHeader(policy, masterKeys.getPublicKey(), encryptionPolicy, Optional.of(additionalData),
+                Optional.of(uid));
 
         System.out.println("Symmetric Key length " + encryptedHeader.getSymmetricKey().length);
         System.out.println("Encrypted Header length " + encryptedHeader.getEncryptedHeaderBytes().length);
 
-        byte[] data = new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9};
-        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, data);
         System.out.println("Clear Text Length " + data.length);
         System.out.println("Symmetric Crypto Overhead " + ffi.symmetricEncryptionOverhead());
         System.out.println("Encrypted Block Length " + encryptedBlock.length);
 
-        // Decryption
-        String userDecryptionKeyJson = Resources.load_resource("ffi/cover_crypt/fin_confidential_user_key.json");
-        PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+        // Generate an user decryption key
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        byte[] userDecryptionKey = ffi.generateUserPrivateKey(
+            masterKeys.getPrivateKey(),
+            accessPolicy,
+            policy);
 
-        DecryptedHeader header_ = ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(),
-            uid.length, additionalData.length);
+        // Decryption
+        DecryptedHeader header_ =
+            ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(),
+                additionalData.length, Optional.of(uid));
 
         System.out.println("Decrypted Header: Symmetric Key Length " + header_.getSymmetricKey().length);
         System.out.println("Decrypted Header: UID Length " + header_.getUid().length);
@@ -266,42 +338,8 @@ public class TestFfiCoverCrypt {
         assertTrue(Arrays.equals(uid, header_.getUid()));
         assertTrue(Arrays.equals(additionalData, header_.getAdditionalData()));
 
-        byte[] data_ = ffi.decryptBlock(header_.getSymmetricKey(), header_.getUid(), 0, encryptedBlock);
+        byte[] data_ = ffi.decryptBlock(header_.getSymmetricKey(), header_.getUid(), encryptedBlock);
         assertTrue(Arrays.equals(data, data_));
-    }
-
-    @Test
-    public void testEmptyMetaData() throws Exception {
-
-        System.out.println("");
-        System.out.println("---------------------------------------");
-        System.out.println(" Simple header tests");
-        System.out.println("---------------------------------------");
-        System.out.println("");
-
-        String publicKeyJson = Resources.load_resource("ffi/cover_crypt/public_master_key.json");
-        PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
-        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, attributes);
-
-        System.out.println("Symmetric Key length " + encryptedHeader.getSymmetricKey().length);
-        System.out.println("Encrypted Header length " + encryptedHeader.getEncryptedHeaderBytes().length);
-
-        // Decryption
-        String userDecryptionKeyJson = Resources.load_resource("ffi/cover_crypt/fin_confidential_user_key.json");
-        PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
-
-        DecryptedHeader header_ = ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes());
-
-        System.out.println("Decrypted Header: Symmetric Key Length " + header_.getSymmetricKey().length);
-        System.out.println("Decrypted Header: UID Length " + header_.getUid().length);
-        System.out.println("Decrypted Header: Additional Data Length " + header_.getAdditionalData());
-
-        assertTrue(Arrays.equals(encryptedHeader.getSymmetricKey(), header_.getSymmetricKey()));
-        assertTrue(Arrays.equals(new byte[] {}, header_.getUid()));
-        assertTrue(Arrays.equals(new byte[] {}, header_.getAdditionalData()));
-
     }
 
     private Policy policy() throws CosmianException {
@@ -356,7 +394,7 @@ public class TestFfiCoverCrypt {
 
         // The policy attributes that will be used to encrypt the content. They must
         // exist in the policy associated with the Public Key
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
 
         // Now generate the header which contains the ABE encryption of the randomly
         // generated AES key.
@@ -364,11 +402,11 @@ public class TestFfiCoverCrypt {
         // decryption, and is thus not stored as part of the encrypted header.
         // If that is not the case check the other signature of #ffi.encryptedHeader()
         // to inject the unique id.
-        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, attributes);
+        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, encryptionPolicy);
 
         // The data can now be encrypted with the generated key
         // The block number is also part of the authentication of the AES scheme
-        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, 0, data);
+        byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(), uid, data);
 
         // Create a full message with header+encrypted data. The length of the header
         // is pre-pended.
@@ -427,7 +465,8 @@ public class TestFfiCoverCrypt {
 
         // The policy attributes that will be used to encrypt the content. They must
         // exist in the policy associated with the Public Key
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
+        // Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
 
         // Now generate the header which contains the ABE encryption of the randomly
         // generated AES key.
@@ -435,7 +474,7 @@ public class TestFfiCoverCrypt {
         // decryption, and is thus not stored as part of the encrypted header.
         // If that is not the case check the other signature of #ffi.encryptedHeader()
         // to inject the unique id.
-        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, attributes);
+        EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey, encryptionPolicy);
 
         // The data can now be encrypted with the generated key
         // The block number is also part of the authentication of the AES scheme
@@ -523,7 +562,7 @@ public class TestFfiCoverCrypt {
         DecryptedHeader decryptedHeader = ffi.decryptHeader(userKey, encryptedHeader);
 
         // decrypt the content, passing the unique id and block number
-        byte[] data_ = ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, 0, encryptedContent);
+        byte[] data_ = ffi.decryptBlock(decryptedHeader.getSymmetricKey(), uid, encryptedContent);
 
         // Verify everything is correct
         assertTrue(Arrays.equals(data, data_));
@@ -596,29 +635,39 @@ public class TestFfiCoverCrypt {
     @Test
     public void testHybridEncryptionDecryptionUsingCacheLocal() throws Exception {
 
-        // encrypt
+        // Declare the CoverCrypt Policy
+        Policy policy = policy();
 
-        String publicKeyJson = Resources.load_resource("ffi/cover_crypt/public_master_key.json");
-        PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-        int encryptionCacheHandle = ffi.createEncryptionCache(publicKey);
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+        // Generate the master keys
+        MasterKeys masterKeys = ffi.generateMasterKeys(policy);
+
+        // create encryption cache
+        int encryptionCacheHandle = ffi.createEncryptionCache(policy, masterKeys.getPublicKey());
+
+        // encrypt
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
         byte[] uid = new byte[] {1, 2, 3, 4, 5};
         byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
 
-        EncryptedHeader encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes,
+        EncryptedHeader encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy,
             Optional.of(uid), Optional.of(additional_data));
 
         ffi.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
-        String userDecryptionKeyJson = Resources.load_resource("ffi/cover_crypt/fin_confidential_user_key.json");
-        PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+        // Generate an user decryption key
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        byte[] userDecryptionKey = ffi.generateUserPrivateKey(
+            masterKeys.getPrivateKey(),
+            accessPolicy,
+            policy);
 
         int decryptionCacheHandle = ffi.createDecryptionCache(userDecryptionKey);
 
         DecryptedHeader decryptedHeader =
-            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10,
+                Optional.of(uid));
 
         ffi.destroyDecryptionCache(decryptionCacheHandle);
 
@@ -632,28 +681,38 @@ public class TestFfiCoverCrypt {
     @Test
     public void testHybridEncryptionDecryptionUsingCacheLocalNoUid() throws Exception {
 
-        // encrypt
+        // Declare the CoverCrypt Policy
+        Policy policy = policy();
 
-        String publicKeyJson = Resources.load_resource("ffi/cover_crypt/public_master_key.json");
-        PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-        int encryptionCacheHandle = ffi.createEncryptionCache(publicKey);
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+        // Generate the master keys
+        MasterKeys masterKeys = ffi.generateMasterKeys(policy);
+
+        // create encryption cache
+        int encryptionCacheHandle = ffi.createEncryptionCache(policy, masterKeys.getPublicKey());
+
+        // encrypt
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
         byte[] uid = new byte[] {1, 2, 3, 4, 5};
 
         EncryptedHeader encryptedHeader =
-            ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes, Optional.of(uid), Optional.empty());
+            ffi.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy, Optional.of(uid), Optional.empty());
 
         ffi.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
-        String userDecryptionKeyJson = Resources.load_resource("ffi/cover_crypt/fin_confidential_user_key.json");
-        PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+        // Generate an user decryption key
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        byte[] userDecryptionKey = ffi.generateUserPrivateKey(
+            masterKeys.getPrivateKey(),
+            accessPolicy,
+            policy);
 
         int decryptionCacheHandle = ffi.createDecryptionCache(userDecryptionKey);
 
         DecryptedHeader decryptedHeader =
-            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10,
+                Optional.of(uid));
 
         ffi.destroyDecryptionCache(decryptionCacheHandle);
 
@@ -667,28 +726,38 @@ public class TestFfiCoverCrypt {
     @Test
     public void testHybridEncryptionDecryptionUsingCacheLocalUidNoData() throws Exception {
 
-        // encrypt
+        // Declare the CoverCrypt Policy
+        Policy policy = policy();
 
-        String publicKeyJson = Resources.load_resource("ffi/cover_crypt/public_master_key.json");
-        PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-        int encryptionCacheHandle = ffi.createEncryptionCache(publicKey);
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+        // Generate the master keys
+        MasterKeys masterKeys = ffi.generateMasterKeys(policy);
+
+        // create encryption cache
+        int encryptionCacheHandle = ffi.createEncryptionCache(policy, masterKeys.getPublicKey());
+
+        // encrypt
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
         byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
 
-        EncryptedHeader encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes,
+        EncryptedHeader encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy,
             Optional.empty(), Optional.of(additional_data));
 
         ffi.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
-        String userDecryptionKeyJson = Resources.load_resource("ffi/cover_crypt/fin_confidential_user_key.json");
-        PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+        // Generate an user decryption key
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        byte[] userDecryptionKey = ffi.generateUserPrivateKey(
+            masterKeys.getPrivateKey(),
+            accessPolicy,
+            policy);
 
         int decryptionCacheHandle = ffi.createDecryptionCache(userDecryptionKey);
 
         DecryptedHeader decryptedHeader =
-            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10,
+                Optional.empty());
 
         ffi.destroyDecryptionCache(decryptionCacheHandle);
 
@@ -702,26 +771,36 @@ public class TestFfiCoverCrypt {
     @Test
     public void testHybridEncryptionDecryptionUsingCacheLocalNoUidNoData() throws Exception {
 
+        // Declare the CoverCrypt Policy
+        Policy policy = policy();
+
+        // Generate the master keys
+        MasterKeys masterKeys = ffi.generateMasterKeys(policy);
+
+        // create encryption cache
+        int encryptionCacheHandle = ffi.createEncryptionCache(policy, masterKeys.getPublicKey());
+
         // encrypt
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
 
-        String publicKeyJson = Resources.load_resource("ffi/cover_crypt/public_master_key.json");
-        PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-        int encryptionCacheHandle = ffi.createEncryptionCache(publicKey);
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
-
-        EncryptedHeader encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCacheHandle, attributes);
+        EncryptedHeader encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy);
 
         ffi.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
-        String userDecryptionKeyJson = Resources.load_resource("ffi/cover_crypt/fin_confidential_user_key.json");
-        PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+        // Generate an user decryption key
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        byte[] userDecryptionKey = ffi.generateUserPrivateKey(
+            masterKeys.getPrivateKey(),
+            accessPolicy,
+            policy);
 
         int decryptionCacheHandle = ffi.createDecryptionCache(userDecryptionKey);
 
         DecryptedHeader decryptedHeader =
-            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+            ffi.decryptHeaderUsingCache(decryptionCacheHandle, encryptedHeader.getEncryptedHeaderBytes(), 10,
+                Optional.empty());
 
         ffi.destroyDecryptionCache(decryptionCacheHandle);
 
@@ -733,48 +812,31 @@ public class TestFfiCoverCrypt {
     }
 
     @Test
-    public void testHybridEncryptionDecryptionNoCacheLocal() throws Exception {
-        String publicKeyJson = Resources.load_resource("ffi/cover_crypt/public_master_key.json");
-        PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
-
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
-        byte[] uid = new byte[] {1, 2, 3, 4, 5};
-        byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
-
-        EncryptedHeader encryptedHeader =
-            ffi.encryptHeader(publicKey, attributes, Optional.of(uid), Optional.of(additional_data));
-
-        // decrypt
-
-        String userDecryptionKeyJson = Resources.load_resource("ffi/cover_crypt/fin_confidential_user_key.json");
-        PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
-
-        DecryptedHeader decryptedHeader =
-            ffi.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
-
-        assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
-        assertArrayEquals(uid, decryptedHeader.getUid());
-        assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
-    }
-
-    @Test
     public void testHybridEncryptionCacheSerialization() throws Exception {
 
-        String publicKeyJson = Resources.load_resource("ffi/cover_crypt/public_master_key.json");
-        PublicKey publicKey = PublicKey.fromJson(publicKeyJson);
+        // Declare the CoverCrypt Policy
+        Policy policy = policy();
 
-        // serialize encryption cache
-        int e_cache = ffi.createEncryptionCache(publicKey);
+        // Generate the master keys
+        MasterKeys masterKeys = ffi.generateMasterKeys(policy);
 
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
+        // create encryption cache
+        int encryptionCache = ffi.createEncryptionCache(policy, masterKeys.getPublicKey());
+
+        // encrypt
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
         byte[] uid = new byte[] {1, 2, 3, 4, 5};
         byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
 
-        String userDecryptionKeyJson = Resources.load_resource("ffi/cover_crypt/fin_confidential_user_key.json");
-        PrivateKey userDecryptionKey = PrivateKey.fromJson(userDecryptionKeyJson);
+        // Generate an user decryption key
+        AccessPolicy accessPolicy = accessPolicyConfidential();
+        byte[] userDecryptionKey = ffi.generateUserPrivateKey(
+            masterKeys.getPrivateKey(),
+            accessPolicy,
+            policy);
 
         // serialize decryption cache
-        int d_cache = ffi.createDecryptionCache(userDecryptionKey);
+        int decryptionCache = ffi.createDecryptionCache(userDecryptionKey);
 
         int threads = 4;
         ExecutorService executor = Executors.newFixedThreadPool(threads);
@@ -788,10 +850,11 @@ public class TestFfiCoverCrypt {
                 DecryptedHeader decryptedHeader;
                 try {
 
-                    encryptedHeader = ffi.encryptHeaderUsingCache(e_cache, attributes, Optional.of(uid),
+                    encryptedHeader = ffi.encryptHeaderUsingCache(encryptionCache, encryptionPolicy, Optional.of(uid),
                         Optional.of(additional_data));
                     decryptedHeader =
-                        ffi.decryptHeaderUsingCache(d_cache, encryptedHeader.getEncryptedHeaderBytes(), 10, 10);
+                        ffi.decryptHeaderUsingCache(decryptionCache, encryptedHeader.getEncryptedHeaderBytes(), 10,
+                            Optional.of(uid));
 
                     assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
                     assertArrayEquals(uid, decryptedHeader.getUid());
@@ -819,8 +882,8 @@ public class TestFfiCoverCrypt {
             System.out.println("shutdown finished");
         }
 
-        ffi.destroyEncryptionCache(e_cache);
-        ffi.destroyDecryptionCache(d_cache);
+        ffi.destroyEncryptionCache(encryptionCache);
+        ffi.destroyDecryptionCache(decryptionCache);
 
     }
 

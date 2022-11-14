@@ -17,19 +17,27 @@ public interface FfiWrapper extends Library {
 
     int h_aes_encrypt_header(byte[] symmetricKey, IntByReference symmetricKeySize, byte[] headerBytes,
         IntByReference headerBytesSize, String policyJson, Pointer publicKeyPointer, int publicKeyLength,
-        String attributesJson, Pointer uidPointer, int uidLen, Pointer additionalDataPointer, int additionalDataLength);
+        String encryptionPolicy, Pointer additionalDataPointer, int additionalDataLen, Pointer authenticatedDataPointer,
+        int authenticatedDataLength);
 
-    int h_aes_decrypt_header(byte[] symmetricKey, IntByReference symmetricKeySize, byte[] uidPointer,
-        IntByReference uidLen, byte[] additionalDataPointer, IntByReference additionalDataLength,
-        Pointer encryptedHeaderBytes, int encryptedHeaderBytesSize, Pointer userDecryptionKeyPointer,
-        int userDecryptionKeyLength);
+    int h_aes_decrypt_header(
+        byte[] symmetricKey, IntByReference symmetricKeySize,
+        byte[] additionalDataPointer, IntByReference additionalDataLen,
+        Pointer encryptedHeaderBytes, int encryptedHeaderBytesSize,
+        Pointer authenticatedDataPointer, int authenticatedDataLength,
+        Pointer userDecryptionKeyPointer, int userDecryptionKeyLength);
 
-    int h_aes_encrypt_block(byte[] encrypted, IntByReference encryptedSize, Pointer symmetricKeyPointer,
-        int symmetricKeyLength, Pointer uidPointer, int uidLen, int blockNumber, Pointer dataPointer, int dataLength);
+    int h_aes_encrypt_block(
+        byte[] encrypted, IntByReference encryptedSize,
+        Pointer symmetricKeyPointer, int symmetricKeyLength,
+        Pointer associatedDatePointer, int associatedDateLen,
+        Pointer dataPointer, int dataLength);
 
-    int h_aes_decrypt_block(byte[] clearText, IntByReference clearTextSize, Pointer symmetricKeyPointer,
-        int symmetricKeyLength, Pointer uidPointer, int uidLen, int blockNumber, Pointer clearTextPointer,
-        int clearTextLength);
+    int h_aes_decrypt_block(
+        byte[] clearText, IntByReference clearTextSize,
+        Pointer symmetricKeyPointer, int symmetricKeyLength,
+        Pointer authenticationDataPointer, int authenticationDataLen,
+        Pointer clearTextPointer, int clearTextLength);
 
     int h_aes_create_encryption_cache(IntByReference cacheHandle, String policyJson, Pointer publicKeyPointer,
         int publicKeyLength);
@@ -37,21 +45,24 @@ public interface FfiWrapper extends Library {
     int h_aes_destroy_encryption_cache(int cacheHandle);
 
     int h_aes_encrypt_header_using_cache(byte[] symmetricKey, IntByReference symmetricKeySize, byte[] headerBytes,
-        IntByReference headerBytesSize, int cacheHandle, String attributesJson, Pointer uidPointer, int uidLen,
-        Pointer additionalDataPointer, int additionalDataLength);
+        IntByReference headerBytesSize, int cacheHandle, String encryptionPolicy, Pointer additionalDataPointer,
+        int additionalDataLength, Pointer authenticatedPointer,
+        int authenticatedLen);
 
     int h_aes_create_decryption_cache(IntByReference cacheHandle, Pointer userDecryptionKeyPointer,
         int userDecryptionKeyLength);
 
     int h_aes_destroy_decryption_cache(int cacheHandle);
 
-    int h_aes_decrypt_header_using_cache(byte[] symmetricKey, IntByReference symmetricKeySize, byte[] uidPointer,
-        IntByReference uidLen, byte[] additionalDataPointer, IntByReference additionalDataLength,
-        Pointer encryptedHeaderBytes, int encryptedHeaderBytesSize, int cacheHandle);
+    int h_aes_decrypt_header_using_cache(byte[] symmetricKey, IntByReference symmetricKeySize,
+        byte[] additionalDataPointer, IntByReference additionalDataLen,
+        Pointer encryptedHeaderBytes, int encryptedHeaderBytesSize,
+        Pointer authenticatedDataPointer, int authenticatedDataLength,
+        int cacheHandle);
 
     int h_generate_master_keys(byte[] masterKeys, IntByReference masterKeysSize, String policyJson);
 
-    int h_generate_user_private_key(byte[] userPrivateKeyPtr, IntByReference userPrivateKeySize,
+    int h_generate_user_secret_key(byte[] userPrivateKeyPtr, IntByReference userPrivateKeySize,
         Pointer masterPrivateKeyPtr, int masterPrivateKeyLen, String accessPolicyJson, String policyJson);
 
     int h_rotate_attributes(byte[] policyBuffer, IntByReference policyBufferSize, String attributesJson,

@@ -1058,7 +1058,7 @@ public final class Ffi {
      * @return A tuple of [plaintext, additional data]
      * @throws FfiException in case of native library error
      */
-    protected byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
+    byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
         Optional<byte[]> authenticationData) throws FfiException {
 
         // plaintext OUT

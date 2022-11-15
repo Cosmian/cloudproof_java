@@ -15,10 +15,14 @@ public interface FfiWrapper extends Library {
 
     int h_aes_symmetric_encryption_overhead();
 
-    int h_aes_encrypt_header(byte[] symmetricKey, IntByReference symmetricKeySize, byte[] headerBytes,
-        IntByReference headerBytesSize, String policyJson, Pointer publicKeyPointer, int publicKeyLength,
-        String encryptionPolicy, Pointer additionalDataPointer, int additionalDataLen, Pointer authenticatedDataPointer,
-        int authenticatedDataLength);
+    int h_aes_encrypt_header(
+        byte[] symmetricKey, IntByReference symmetricKeySize,
+        byte[] headerBytes, IntByReference headerBytesSize,
+        String policyJson,
+        Pointer publicKeyPointer, int publicKeyLength,
+        String encryptionPolicy,
+        Pointer additionalDataPointer, int additionalDataLen,
+        Pointer authenticatedDataPointer, int authenticatedDataLength);
 
     int h_aes_decrypt_header(
         byte[] symmetricKey, IntByReference symmetricKeySize,
@@ -67,4 +71,20 @@ public interface FfiWrapper extends Library {
 
     int h_rotate_attributes(byte[] policyBuffer, IntByReference policyBufferSize, String attributesJson,
         String policyJson);
+
+    int h_aes_encrypt(
+        byte[] ciphertext, IntByReference ciphertextSize,
+        String policyJson,
+        Pointer publicKeyPointer, int publicKeyLength,
+        String encryptionPolicy,
+        Pointer plaintextPointer, int plaintextLen,
+        Pointer additionalDataPointer, int additionalDataLen,
+        Pointer authenticatedDataPointer, int authenticatedDataLength);
+
+    int h_aes_decrypt(
+        byte[] plaintext, IntByReference plaintextSize,
+        byte[] additionalData, IntByReference additionalDataSize,
+        Pointer ciphertextBytes, int ciphertextBytesSize,
+        Pointer authenticatedDataPointer, int authenticatedDataLength,
+        Pointer userDecryptionKeyPointer, int userDecryptionKeyLength);
 }

@@ -9,8 +9,6 @@ import org.apache.commons.codec.binary.Hex;
 import com.cosmian.CosmianException;
 import com.cosmian.RestClient;
 import com.cosmian.rest.abe.Abe;
-import com.cosmian.rest.abe.Implementation;
-import com.cosmian.rest.abe.Specifications;
 import com.cosmian.rest.kmip.Kmip;
 
 public class Cosmian {
@@ -67,7 +65,7 @@ public class Cosmian {
      * @return an Abe instance exposing the endpoints
      */
     public Abe abe() {
-        return new Abe(this.rest_client, new Specifications(Implementation.GPSW));
+        return new Abe(this.rest_client);
     }
 
     /**

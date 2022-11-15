@@ -628,9 +628,9 @@ public final class Ffi {
     public byte[] encryptBlock(byte[] symmetricKey, byte[] authenticationData, byte[] clearText)
         throws FfiException {
 
-        // Header Bytes OUT
-        byte[] cipherTextBuffer = new byte[this.instance.h_aes_symmetric_encryption_overhead() + clearText.length];
-        IntByReference cipherTextBufferSize = new IntByReference(cipherTextBuffer.length);
+        // Ciphertext OUT
+        byte[] ciphertextBuffer = new byte[this.instance.h_aes_symmetric_encryption_overhead() + clearText.length];
+        IntByReference ciphertextBufferSize = new IntByReference(ciphertextBuffer.length);
 
         // Symmetric Key
         final Pointer symmetricKeyPointer = new Memory(symmetricKey.length);
@@ -650,12 +650,12 @@ public final class Ffi {
         dataPointer.write(0, clearText, 0, clearText.length);
 
         unwrap(this.instance.h_aes_encrypt_block(
-            cipherTextBuffer, cipherTextBufferSize,
+            ciphertextBuffer, ciphertextBufferSize,
             symmetricKeyPointer, symmetricKey.length,
             associatedDataPointer, authenticationData.length,
             dataPointer, clearText.length));
 
-        return Arrays.copyOfRange(cipherTextBuffer, 0, cipherTextBufferSize.getValue());
+        return Arrays.copyOfRange(ciphertextBuffer, 0, ciphertextBufferSize.getValue());
     }
 
     /**
@@ -879,5 +879,226 @@ public final class Ffi {
         if (result == 1) {
             throw new FfiException(get_last_error(4095));
         }
+    }
+
+    /**
+     * Generate an hybrid encryption of a plaintext.
+     *
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param plaintext the plaintext to encrypt
+     * @return the ciphertext
+     * @throws FfiException in case of native library error
+     */
+    public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
+        byte[] plaintext) throws FfiException {
+
+        return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.empty(),
+            Optional.empty());
+    }
+
+    /**
+     * Generate an hybrid encryption of a plaintext. The `authenticationData` are used as part of the authentication of
+     * the symmetric encryption scheme.
+     *
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param plaintext the plaintext to encrypt
+     * @param authenticationData data used to authenticate the symmetric encryption
+     * @return the ciphertext
+     * @throws FfiException in case of native library error
+     */
+    public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
+        byte[] plaintext, byte[] authenticationData) throws FfiException {
+
+        return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.empty(),
+            Optional.of(authenticationData));
+    }
+
+    /**
+     * Generate an hybrid encryption of a plaintext. The `authenticationData` are used as part of the authentication of
+     * the symmetric encryption scheme.
+     *
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param plaintext the plaintext to encrypt
+     * @param additionalData additional data to encrypt and add to the header
+     * @param authenticationData data used to authenticate the symmetric encryption
+     * @return the ciphertext
+     * @throws FfiException in case of native library error
+     */
+    public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
+        byte[] plaintext, byte[] additionalData, byte[] authenticationData) throws FfiException {
+
+        return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.of(additionalData),
+            Optional.of(authenticationData));
+    }
+
+    /**
+     * Generate an hybrid encryption of a plaintext. If provided, the additionalData` are symmetrically encrypted and
+     * appended to the encrypted header. If provided the `authenticationData` are used as part of the authentication of
+     * the symmetric encryption scheme.
+     *
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param plaintext the plaintext to encrypt
+     * @param additionalData the additional data to encrypt and add to the header
+     * @param authenticationData optional data used to authenticate the symmetric encryption
+     * @return the ciphertext
+     * @throws FfiException in case of native library error
+     */
+    protected byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
+        byte[] plaintext, Optional<byte[]> additionalData, Optional<byte[]> authenticationData) throws FfiException {
+
+        // Is additional data supplied
+        int additionalDataLength;
+        if (additionalData.isPresent()) {
+            additionalDataLength = additionalData.get().length;
+        } else {
+            additionalDataLength = 0;
+        }
+
+        // Is authenticated data supplied
+        int authenticationDataLength;
+        if (authenticationData.isPresent()) {
+            authenticationDataLength = authenticationData.get().length;
+        } else {
+            authenticationDataLength = 0;
+        }
+
+        // For the JSON strings
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Ciphertext OUT
+        byte[] ciphertext = new byte[8192 + plaintext.length];
+        IntByReference ciphertextSize = new IntByReference(ciphertext.length);
+
+        // Policy
+        String policyJson;
+        try {
+            policyJson = mapper.writeValueAsString(policy);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid Policy", e);
+        }
+
+        // Public Key
+        final Pointer publicKeyPointer = new Memory(publicKeyBytes.length);
+        publicKeyPointer.write(0, publicKeyBytes, 0, publicKeyBytes.length);
+
+        // plaintext
+        final Pointer plaintextPointer = new Memory(plaintext.length);
+        plaintextPointer.write(0, plaintext, 0, plaintext.length);
+
+        // additional data
+        final Pointer additionalDataPointer;
+        if (additionalDataLength == 0) {
+            additionalDataPointer = Pointer.NULL;
+        } else {
+            additionalDataPointer = new Memory(additionalDataLength);
+            additionalDataPointer.write(0, additionalData.get(), 0, additionalDataLength);
+        }
+
+        // Additional Data
+        final Pointer authenticationDataPointer;
+        if (authenticationDataLength == 0) {
+            authenticationDataPointer = Pointer.NULL;
+        } else {
+            authenticationDataPointer = new Memory(authenticationDataLength);
+            authenticationDataPointer.write(0, authenticationData.get(), 0, authenticationDataLength);
+        }
+
+        unwrap(this.instance.h_aes_encrypt(
+            ciphertext, ciphertextSize,
+            policyJson,
+            publicKeyPointer, publicKeyBytes.length,
+            encryptionPolicy,
+            plaintextPointer, plaintext.length,
+            additionalDataPointer, additionalDataLength,
+            authenticationDataPointer, authenticationDataLength));
+
+        return Arrays.copyOfRange(ciphertext, 0, ciphertextSize.getValue());
+    }
+
+    /**
+     * Decrypt a hybrid encryption
+     *
+     * @param userDecryptionKeyBytes the ABE user decryption key bytes
+     * @param ciphertext the ciphertext to decrypt
+     * @return A tuple of [plaintext, additional data]
+     * @throws FfiException in case of native library error
+     */
+    public byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext) throws FfiException {
+        return decrypt(userDecryptionKeyBytes, ciphertext, Optional.empty());
+    }
+
+    /**
+     * Decrypt a hybrid encryption
+     *
+     * @param userDecryptionKeyBytes the ABE user decryption key bytes
+     * @param ciphertext the ciphertext to decrypt
+     * @param authenticationData data used to authenticate the symmetric encryption
+     * @return A tuple of [plaintext, additional data]
+     * @throws FfiException in case of native library error
+     */
+    public byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
+        byte[] authenticationData) throws FfiException {
+        return decrypt(userDecryptionKeyBytes, ciphertext, Optional.of(authenticationData));
+    }
+
+    /**
+     * Decrypt a hybrid encryption
+     *
+     * @param userDecryptionKeyBytes the ABE user decryption key bytes
+     * @param ciphertext the ciphertext to decrypt
+     * @param authenticationData optional data used to authenticate the symmetric encryption
+     * @return A tuple of [plaintext, additional data]
+     * @throws FfiException in case of native library error
+     */
+    protected byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
+        Optional<byte[]> authenticationData) throws FfiException {
+
+        // plaintext OUT
+        byte[] plaintext = new byte[ciphertext.length]; // safe: plaintext should be smaller than cipher text
+        IntByReference plaintextSize = new IntByReference(plaintext.length);
+
+        // additional OUT
+        byte[] additionalData = new byte[4096 * 4]; // size ?
+        IntByReference additionalDataSize = new IntByReference(additionalData.length);
+
+        // encrypted bytes
+        final Pointer ciphertextPointer = new Memory(ciphertext.length);
+        ciphertextPointer.write(0, ciphertext, 0, ciphertext.length);
+
+        // Is authenticated data supplied
+        final Pointer authenticationDataPointer;
+        final int authenticationDataLen;
+        if (authenticationData.isPresent()) {
+            authenticationDataLen = authenticationData.get().length;
+            authenticationDataPointer = new Memory(authenticationDataLen);
+            authenticationDataPointer.write(0, authenticationData.get(), 0, authenticationDataLen);
+        } else {
+            authenticationDataPointer = Pointer.NULL;
+            authenticationDataLen = 0;
+        }
+
+        // User Decryption Key
+        final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKeyBytes.length);
+        userDecryptionKeyPointer.write(0, userDecryptionKeyBytes, 0, userDecryptionKeyBytes.length);
+
+        unwrap(this.instance.h_aes_decrypt(
+            plaintext, plaintextSize,
+            additionalData, additionalDataSize,
+            ciphertextPointer, ciphertext.length,
+            authenticationDataPointer, authenticationDataLen,
+            userDecryptionKeyPointer, userDecryptionKeyBytes.length));
+
+        return new byte[][] {
+            Arrays.copyOfRange(plaintext, 0, plaintextSize.getValue()),
+            Arrays.copyOfRange(additionalData, 0, additionalDataSize.getValue())
+        };
     }
 }

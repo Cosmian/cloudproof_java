@@ -14,8 +14,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.rest.abe.Abe;
-import com.cosmian.rest.abe.Implementation;
-import com.cosmian.rest.abe.Specifications;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.And;
 import com.cosmian.rest.abe.access_policy.Attr;
@@ -99,8 +97,7 @@ public class TestCoverCrypt {
 
         Policy pg = policy();
 
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()),
-            new Specifications(Implementation.CoverCrypt));
+        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
         String[] ids = abe.createMasterKeyPair(pg);
         logger.info("Created Master Key: Private Key ID: " + ids[0] + ", Public Key ID: " + ids[1]);
@@ -158,8 +155,7 @@ public class TestCoverCrypt {
 
         Policy pg = policy();
 
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()),
-            new Specifications(Implementation.CoverCrypt));
+        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
         String[] ids = abe.createMasterKeyPair(pg);
         logger.info("Created Master Key: Private Key ID: " + ids[0] + ", Public Key ID: " + ids[1]);
@@ -242,16 +238,4 @@ public class TestCoverCrypt {
         assertEquals(expected, actual);
     }
 
-    @Test
-    public void testObjectsSerDe() throws Exception {
-        String private_key_json = Resources.load_resource("abe/private_key.json");
-        PrivateKey sk1 = PrivateKey.fromJson(private_key_json);
-        PrivateKey sk2 = PrivateKey.fromJson(sk1.toJson());
-        assertEquals(sk1.toJson(), sk2.toJson());
-
-        String public_key_json = Resources.load_resource("abe/public_key.json");
-        PublicKey pk1 = PublicKey.fromJson(public_key_json);
-        PublicKey pk2 = PublicKey.fromJson(pk1.toJson());
-        assertEquals(pk1.toJson(), pk2.toJson());
-    }
 }

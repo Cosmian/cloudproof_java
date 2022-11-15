@@ -27,7 +27,7 @@ This library is free software and is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>1.11.2</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 

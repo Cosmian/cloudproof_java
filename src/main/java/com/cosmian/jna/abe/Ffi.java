@@ -260,7 +260,7 @@ public final class Ffi {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy =
             Policy.fromAttributes(publicKey.attributes());
-        return encryptHeader(policy, publicKeyBytes, encryptionPolicy, authenticationData, additionalData);
+        return encryptHeader(policy, publicKeyBytes, encryptionPolicy, additionalData, authenticationData);
     }
 
     /**
@@ -951,7 +951,7 @@ public final class Ffi {
      * @return the ciphertext
      * @throws FfiException in case of native library error
      */
-    protected byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
+    byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
         byte[] plaintext, Optional<byte[]> additionalData, Optional<byte[]> authenticationData) throws FfiException {
 
         // Is additional data supplied

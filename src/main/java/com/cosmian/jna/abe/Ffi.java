@@ -69,7 +69,7 @@ public final class Ffi {
     }
 
     /**
-     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, Attr[])} se of the cache
+     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, String)} se of the cache
      * speeds up the encryption of the header. WARN: the cache MUST be destroyed after use with
      * {@link #destroyEncryptionCache(int)}
      *
@@ -86,7 +86,7 @@ public final class Ffi {
     }
 
     /**
-     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, Attr[])} Use of the cache
+     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, String)} Use of the cache
      * speeds up the encryption of the header. WARN: the cache MUST be destroyed after use with
      * {@link #destroyEncryptionCache(int)}
      *

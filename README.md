@@ -27,7 +27,7 @@ This library is free software and is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>1.11.2</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -35,12 +35,12 @@ This library is free software and is available on Maven Central
 
 When using local encryption and decryption with [GPSW](https://github.com/Cosmian/abe_gpsw) and [CoverCrypt](https://github.com/Cosmian/cover_crypt), native libraries are required.
 
-Check the main pages of the respective projects to build the native librairies appropriate for your systems. The [test directory](./src/test/resources/linux-x86-64/) provides pre-built libraries for Linux GLIBC 2.17. These librairies should run fine on a system with a more recent GLIBC version.
+Check the main pages of the respective projects to build the native libraries appropriate for your systems. The [test directory](./src/test/resources/linux-x86-64/) provides pre-built libraries for Linux GLIBC 2.17. These librairies should run fine on a system with a more recent GLIBC version.
 
 This table shows the minimum versions correspondences between the various components
 
 | KMS Server | Java Lib  | GPSW lib  | CoverCrypt lib | Findex |
-|------------|-----------|-----------|----------------|--------|
+| ---------- | --------- | --------- | -------------- | ------ |
 | 1.2.0      | 0.5.0     | 0.3.0     | N/A            | N/A    |
 | 1.2.1      | 0.5.2     | 0.4.0     | N/A            | N/A    |
 | 1.2.1      | ~~0.6.0~~ | ~~0.6.0~~ | N/A            | N/A    |
@@ -53,6 +53,7 @@ This table shows the minimum versions correspondences between the various compon
 | 2.2.0      | 0.10.1    | 2.0.1     | 6.0.1          | 0.6.1  |
 | 2.2.0      | 0.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
 | 2.3.0      | 1.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
+| 3.0.0      | 2.0.0     | N/A       | 7.0.2          | 0.10.0 |
 
 ## Update native libraries
 

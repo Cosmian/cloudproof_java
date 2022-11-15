@@ -1,21 +1,24 @@
 {
-    "java.configuration.updateBuildConfiguration": "automatic",
-    "cSpell.words": [
-        "ciphertext",
-        "Cosmian",
-        "Deserialization",
-        "deserializers",
-        "instanceof",
-        "Kmip",
-        "serializers"
-    ],
-    "java.format.settings.url": ".vscode/codestyle-java.xml",
-    "[java]": {
-        "editor.detectIndentation": false,
-        "editor.insertSpaces": true,
-        "editor.tabSize": 4,
-    },
-    "files.watcherExclude": {
-        "**/target": true
-    }
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "cSpell.words": [
+    "ciphertext",
+    "Cloudproof",
+    "cosmian",
+    "Cosmian",
+    "Deserialization",
+    "deserializers",
+    "instanceof",
+    "kmip",
+    "Kmip",
+    "serializers"
+  ],
+  "java.format.settings.url": ".vscode/codestyle-java.xml",
+  "[java]": {
+    "editor.detectIndentation": false,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4
+  },
+  "files.watcherExclude": {
+    "**/target": true
+  }
 }

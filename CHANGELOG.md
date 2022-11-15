@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2022-11-15
+
+### Added
+
+### Changed
+
+- updated CoverCrypt to 7 and Findex to 0.10
+
+### Fixed
+
+### Removed
+
 ## [1.11.2] - 2022-10-16
 
 ### Added

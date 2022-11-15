@@ -3,15 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>1.11.2</version>
+    <version>2.0.0</version>
 
     <name>cloudproof_java</name>
     <description>The Cloudproof Java Lib secures data repositories in the cloud with attributes-based access control encryption and encrypted search</description>
     <url>https://github.com/Cosmian/cloudproof_java</url>
     <licenses>
         <license>
-            <name>MIT</name>
-            <url>https://mit-license.org/</url>
+            <name>Dual License</name>
             <distribution>repo</distribution>
         </license>
     </licenses>

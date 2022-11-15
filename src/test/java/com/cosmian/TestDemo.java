@@ -7,8 +7,6 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.rest.abe.Abe;
-import com.cosmian.rest.abe.Implementation;
-import com.cosmian.rest.abe.Specifications;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.And;
 import com.cosmian.rest.abe.access_policy.Attr;
@@ -38,8 +36,7 @@ public class TestDemo {
         }
 
         // Change the Cosmian Server Server URL and API key as appropriate
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()),
-            new Specifications(Implementation.CoverCrypt));
+        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
         // ## Policy
         // In this demo, we will create a Policy which combines two axes, a

@@ -53,7 +53,7 @@ This table shows the minimum versions correspondences between the various compon
 | 2.2.0      | 0.10.1    | 2.0.1     | 6.0.1          | 0.6.1  |
 | 2.2.0      | 0.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
 | 2.3.0      | 1.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
-| 3.0.0      | 2.0.0     | N/A       | 7.0.2          | 0.10.0 |
+| 3.0.0      | 2.0.0     | N/A       | 7.1.0          | 0.10.0 |
 
 ## Update native libraries
 

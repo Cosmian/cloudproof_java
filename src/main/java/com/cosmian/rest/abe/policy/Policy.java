@@ -16,7 +16,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * A policy group is a set of fixed policy axis, defining an inner attribute element for each policy axis attribute a
+ * A policy group is a set of fixed policy axis, defining an inner attribute
+ * element for each policy axis attribute a
  * fixed number of revocation / addition of attributes is allowed
  */
 @JsonSerialize(using = PolicySerializer.class)
@@ -33,7 +34,7 @@ public class Policy implements Serializable {
     private HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt = new HashMap<>();
 
     public Policy(int lastAttributeValue, int maxAttributeCreations, HashMap<String, PolicyAxis> axes,
-        HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt) {
+            HashMap<PolicyAttributeUid, TreeSet<Integer>> attributeToInt) {
         this.lastAttributeValue = lastAttributeValue;
         this.maxAttributeCreations = maxAttributeCreations;
         this.axes = axes;
@@ -41,7 +42,8 @@ public class Policy implements Serializable {
     }
 
     /**
-     * Instantiate an empty policy allowing the given max number of revocations of attributes
+     * Instantiate an empty policy allowing the given max number of revocations of
+     * attributes
      *
      * @param maxAttributeCreations the maximum number of possible attributes
      */
@@ -52,8 +54,8 @@ public class Policy implements Serializable {
     /**
      * Add the given Axis to this policy and return the policy
      *
-     * @param name axis name
-     * @param attributes policy attributes of the axis
+     * @param name         axis name
+     * @param attributes   policy attributes of the axis
      * @param hierarchical whether the axis is hierarchical
      * @return the update Policy
      * @throws CosmianException if the addition fails
@@ -70,28 +72,28 @@ public class Policy implements Serializable {
         for (String attribute : axis.getAttributes()) {
             this.lastAttributeValue += 1;
             this.attributeToInt.put(new PolicyAttributeUid(axis.getName(), attribute),
-                new TreeSet<>(Arrays.asList(new Integer[] {this.lastAttributeValue})));
+                    new TreeSet<>(Arrays.asList(new Integer[] { this.lastAttributeValue })));
         }
         return this;
     }
 
     /**
-     * Convert the policy to a KMIP Vendor attribute that can be set on a KMIP Object
+     * Convert the policy to a KMIP Vendor attribute that can be set on a KMIP
+     * Object
      *
-     * @param policyVendorAttribute {@link VendorAttribute#VENDOR_ATTR_COVER_CRYPT_POLICY} or
-     *            {@link VendorAttribute#VENDOR_ATTR_ABE_POLICY}
      * @return the {@link VendorAttribute}
      * @throws CosmianException if the JSON cannot be serialized
      */
-    public VendorAttribute toVendorAttribute(String policyVendorAttribute) throws CosmianException {
+    public VendorAttribute toVendorAttribute() throws CosmianException {
         String json;
         try {
             json = new ObjectMapper().writeValueAsString(this);
         } catch (JsonProcessingException e) {
             throw new CosmianException("Failed serializing the Policy to json: " + e.getMessage(), e);
         }
-        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN, policyVendorAttribute,
-            json.getBytes(StandardCharsets.UTF_8));
+        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN,
+                VendorAttribute.VENDOR_ATTR_COVER_CRYPT_POLICY,
+                json.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -111,7 +113,7 @@ public class Policy implements Serializable {
         for (VendorAttribute va : vas) {
             if (va.getVendor_identification().equals(VendorAttribute.VENDOR_ID_COSMIAN)) {
                 if (va.getAttribute_name().equals(VendorAttribute.VENDOR_ATTR_ABE_POLICY) || va.getAttribute_name()
-                    .equals(VendorAttribute.VENDOR_ATTR_COVER_CRYPT_POLICY)) {
+                        .equals(VendorAttribute.VENDOR_ATTR_COVER_CRYPT_POLICY)) {
                     String policyJson = new String(va.getAttribute_value(), StandardCharsets.UTF_8);
                     ObjectMapper mapper = new ObjectMapper();
                     try {
@@ -126,8 +128,10 @@ public class Policy implements Serializable {
     }
 
     /**
-     * The last attribute value that was assigned. This value is usually incremented as attributes are revoked. The
-     * value should therefore no exceed the value returned by {@link #getMaxAttributeCreations()}
+     * The last attribute value that was assigned. This value is usually incremented
+     * as attributes are revoked. The
+     * value should therefore no exceed the value returned by
+     * {@link #getMaxAttributeCreations()}
      *
      * @return the last attribute value
      */
@@ -186,8 +190,8 @@ public class Policy implements Serializable {
         }
         Policy policyGroup = (Policy) o;
         return lastAttributeValue == policyGroup.lastAttributeValue
-            && maxAttributeCreations == policyGroup.maxAttributeCreations && Objects.equals(axes, policyGroup.axes)
-            && Objects.equals(attributeToInt, policyGroup.attributeToInt);
+                && maxAttributeCreations == policyGroup.maxAttributeCreations && Objects.equals(axes, policyGroup.axes)
+                && Objects.equals(attributeToInt, policyGroup.attributeToInt);
     }
 
     @Override
@@ -198,8 +202,8 @@ public class Policy implements Serializable {
     @Override
     public String toString() {
         return "{" + " last Attribute='" + getLastAttributeValue() + "'" + ", maxAttributeCreations='"
-            + getMaxAttributeCreations() + "'" + ", axes='" + getAxes() + "'" + ", attributeToInt='"
-            + getAttributeToInt() + "'" + "}";
+                + getMaxAttributeCreations() + "'" + ", axes='" + getAxes() + "'" + ", attributeToInt='"
+                + getAttributeToInt() + "'" + "}";
     }
 
 }

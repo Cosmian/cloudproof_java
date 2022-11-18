@@ -31,6 +31,8 @@ import com.cosmian.rest.kmip.operations.ReKeyKeyPairResponse;
 import com.cosmian.rest.kmip.operations.Revoke;
 import com.cosmian.rest.kmip.operations.RevokeResponse;
 import com.cosmian.rest.kmip.types.Attributes;
+import com.cosmian.rest.kmip.types.CryptographicAlgorithm;
+import com.cosmian.rest.kmip.types.KeyFormatType;
 import com.cosmian.rest.kmip.types.Link;
 import com.cosmian.rest.kmip.types.LinkType;
 import com.cosmian.rest.kmip.types.LinkedObjectIdentifier;
@@ -48,11 +50,8 @@ public class Abe {
 
     private final Kmip kmip;
 
-    private final Specifications impl;
-
     public Abe(RestClient rest_client) {
         this.kmip = new Kmip(rest_client);
-        this.impl = new Specifications(Implementation.CoverCrypt);
     }
 
     // public Abe(RestClient rest_client, Specifications abeSpecifications) {
@@ -61,31 +60,33 @@ public class Abe {
     // }
 
     /**
-     * Generate inside the KMS, a master private and public key pair for the {@link Policy}
+     * Generate inside the KMS, a master private and public key pair for the
+     * {@link Policy}
      *
      * @param policy the Key Policy
-     * @return a tuple containing the master private key UID and the master public key UID
+     * @return a tuple containing the master private key UID and the master public
+     *         key UID
      * @throws CosmianException if the creation fails
      */
     public String[] createMasterKeyPair(Policy policy) throws CosmianException {
         try {
-            Attributes commonAttributes =
-                new Attributes(ObjectType.Private_Key, Optional.of(impl.getCryptographicAlgorithm()));
-            commonAttributes.setKeyFormatType(Optional.of(impl.getKeyFormatTypeMasterSecretKey()));
+            Attributes commonAttributes = new Attributes(ObjectType.Private_Key,
+                    Optional.of(CryptographicAlgorithm.CoverCrypt));
+            commonAttributes.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
 
             // convert the Policy to attributes and attach it to the common attributes
-            VendorAttribute policy_attribute = policy.toVendorAttribute(this.impl.getPolicyVendorAttribute());
+            VendorAttribute policy_attribute = policy.toVendorAttribute();
 
-            commonAttributes.setVendorAttributes(Optional.of(new VendorAttribute[] {policy_attribute}));
+            commonAttributes.setVendorAttributes(Optional.of(new VendorAttribute[] { policy_attribute }));
 
             CreateKeyPair request = new CreateKeyPair(Optional.of(commonAttributes), Optional.empty());
             CreateKeyPairResponse response = this.kmip.createKeyPair(request);
-            return new String[] {response.getPrivateKeyUniqueIdentifier(), response.getPublicKeyUniqueIdentifier()};
+            return new String[] { response.getPrivateKeyUniqueIdentifier(), response.getPublicKeyUniqueIdentifier() };
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err =
-                impl.getImplementation() + ": Master Key generation failed: " + e.getMessage() + "  " + e.getClass();
+            String err = "CoverCrypt" + ": Master Key generation failed: " + e.getMessage() + "  "
+                    + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
@@ -101,25 +102,25 @@ public class Abe {
     public PrivateKey retrievePrivateMasterKey(String privateMasterKeyUniqueIdentifier) throws CosmianException {
         try {
             Get request = new Get(privateMasterKeyUniqueIdentifier);
-            request.setKeyFormatType(Optional.of(impl.getKeyFormatTypeMasterSecretKey()));
+            request.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
             //
             GetResponse response = this.kmip.get(request);
             Object object = response.getObject();
             if (!(object instanceof PrivateKey)) {
-                throw new CosmianException("No " + impl.getImplementation() + " Private Master Key at identifier "
-                    + privateMasterKeyUniqueIdentifier);
+                throw new CosmianException("No " + "CoverCrypt" + " Private Master Key at identifier "
+                        + privateMasterKeyUniqueIdentifier);
             }
             PrivateKey sk = (PrivateKey) object;
-            if (!sk.getKeyBlock().getKeyFormatType().equals(impl.getKeyFormatTypeMasterSecretKey())) {
-                throw new CosmianException("No " + impl.getImplementation() + " Private Master Key at identifier "
-                    + privateMasterKeyUniqueIdentifier);
+            if (!sk.getKeyBlock().getKeyFormatType().equals(KeyFormatType.CoverCryptSecretKey)) {
+                throw new CosmianException("No " + "CoverCrypt" + " Private Master Key at identifier "
+                        + privateMasterKeyUniqueIdentifier);
             }
             return sk;
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + ": Private Master Key could not be retrieved: " + e.getMessage()
-                + "  " + e.getClass();
+            String err = "CoverCrypt" + ": Private Master Key could not be retrieved: " + e.getMessage()
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
@@ -130,22 +131,22 @@ public class Abe {
      *
      * @param uniqueIdentifier the UID of the key
      * @param privateMasterKey the key
-     * @param replaceExisting if a key exists under this UID, replace it
+     * @param replaceExisting  if a key exists under this UID, replace it
      * @return the UID of the imported key
      * @throws CosmianException if the import fails
      */
     public String importPrivateMasterKey(String uniqueIdentifier, PrivateKey privateMasterKey, boolean replaceExisting)
-        throws CosmianException {
+            throws CosmianException {
         try {
             Import request = new Import(uniqueIdentifier, ObjectType.Private_Key, Optional.of(replaceExisting),
-                Optional.empty(), privateMasterKey.attributes(), privateMasterKey);
+                    Optional.empty(), privateMasterKey.attributes(), privateMasterKey);
             ImportResponse response = this.kmip.importObject(request);
             return response.getUniqueIdentifier();
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + ": Private Master Key could not be imported: " + e.getMessage()
-                + "  " + e.getClass();
+            String err = "CoverCrypt" + ": Private Master Key could not be imported: " + e.getMessage()
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
@@ -161,25 +162,25 @@ public class Abe {
     public PublicKey retrievePublicMasterKey(String publicMasterKeyUniqueIdentifier) throws CosmianException {
         try {
             Get request = new Get(publicMasterKeyUniqueIdentifier);
-            request.setKeyFormatType(Optional.of(impl.getKeyFormatTypePublicKey()));
+            request.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptPublicKey));
             //
             GetResponse response = this.kmip.get(request);
             Object object = response.getObject();
             if (!(object instanceof PublicKey)) {
-                throw new CosmianException("No " + impl.getImplementation() + " Public Master Key at identifier "
-                    + publicMasterKeyUniqueIdentifier);
+                throw new CosmianException("No " + "CoverCrypt" + " Public Master Key at identifier "
+                        + publicMasterKeyUniqueIdentifier);
             }
             PublicKey sk = (PublicKey) object;
-            if (!sk.getKeyBlock().getKeyFormatType().equals(impl.getKeyFormatTypePublicKey())) {
-                throw new CosmianException("No " + impl.getImplementation() + " Public Master Key at identifier "
-                    + publicMasterKeyUniqueIdentifier);
+            if (!sk.getKeyBlock().getKeyFormatType().equals(KeyFormatType.CoverCryptPublicKey)) {
+                throw new CosmianException("No " + "CoverCrypt" + " Public Master Key at identifier "
+                        + publicMasterKeyUniqueIdentifier);
             }
             return sk;
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + ": Public Master Key could not be retrieved: " + e.getMessage()
-                + "  " + e.getClass();
+            String err = "CoverCrypt" + ": Public Master Key could not be retrieved: " + e.getMessage()
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
@@ -189,23 +190,23 @@ public class Abe {
      * Import a Public Master Key in the KMS
      *
      * @param uniqueIdentifier the UID of the key
-     * @param publicMasterKey the key
-     * @param replaceExisting if a key exists under this UID, replace it
+     * @param publicMasterKey  the key
+     * @param replaceExisting  if a key exists under this UID, replace it
      * @return the UID of the imported key
      * @throws CosmianException if the import fails
      */
     public String importPublicMasterKey(String uniqueIdentifier, PublicKey publicMasterKey, boolean replaceExisting)
-        throws CosmianException {
+            throws CosmianException {
         try {
             Import request = new Import(uniqueIdentifier, ObjectType.Public_Key, Optional.of(replaceExisting),
-                Optional.empty(), publicMasterKey.attributes(), publicMasterKey);
+                    Optional.empty(), publicMasterKey.attributes(), publicMasterKey);
             ImportResponse response = this.kmip.importObject(request);
             return response.getUniqueIdentifier();
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + ": Public Master Key could not be imported: " + e.getMessage()
-                + "  " + e.getClass();
+            String err = "CoverCrypt" + ": Public Master Key could not be imported: " + e.getMessage()
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
@@ -214,30 +215,29 @@ public class Abe {
     /**
      * Create a User Decryption Key for the given {@link AccessPolicy} in the KMS
      *
-     * @param accessPolicy the {@link AccessPolicy}
+     * @param accessPolicy                     the {@link AccessPolicy}
      * @param privateMasterKeyUniqueIdentifier the UID of the Master Private Key
      * @return the UID of the newly created key
      * @throws CosmianException if the creation fails
      */
     public String createUserDecryptionKey(AccessPolicy accessPolicy, String privateMasterKeyUniqueIdentifier)
-        throws CosmianException {
+            throws CosmianException {
         try {
-            Attributes commonAttributes =
-                new Attributes(
+            Attributes commonAttributes = new Attributes(
                     ObjectType.Private_Key,
-                    Optional.of(impl.getCryptographicAlgorithm()));
-            commonAttributes.setKeyFormatType(Optional.of(impl.getKeyFormatTypeDecryptionKey()));
+                    Optional.of(CryptographicAlgorithm.CoverCrypt));
+            commonAttributes.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
 
             // convert the Access Policy to attributes and attach it to the common
             // attributes
-            VendorAttribute accessPolicyAttribute =
-                accessPolicy.toVendorAttribute(this.impl.getAccessPolicyVendorAttribute());
-            commonAttributes.setVendorAttributes(Optional.of(new VendorAttribute[] {accessPolicyAttribute}));
+            VendorAttribute accessPolicyAttribute = accessPolicy
+                    .toVendorAttribute(VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ACCESS_POLICY);
+            commonAttributes.setVendorAttributes(Optional.of(new VendorAttribute[] { accessPolicyAttribute }));
             // link to the master private key
             commonAttributes.setLink(Optional.of(new Link[] {
-                new Link(
-                    LinkType.Parent_Link,
-                    new LinkedObjectIdentifier(privateMasterKeyUniqueIdentifier))
+                    new Link(
+                            LinkType.Parent_Link,
+                            new LinkedObjectIdentifier(privateMasterKeyUniqueIdentifier))
             }));
 
             Create request = new Create(ObjectType.Private_Key, commonAttributes, Optional.empty());
@@ -246,8 +246,8 @@ public class Abe {
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err =
-                impl.getImplementation() + ": Master Key generation failed: " + e.getMessage() + " " + e.getClass();
+            String err = "CoverCrypt" + ": Master Key generation failed: " + e.getMessage() + " "
+                    + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
@@ -263,25 +263,25 @@ public class Abe {
     public PrivateKey retrieveUserDecryptionKey(String userDecryptionKeyUniqueIdentifier) throws CosmianException {
         try {
             Get request = new Get(userDecryptionKeyUniqueIdentifier);
-            request.setKeyFormatType(Optional.of(impl.getKeyFormatTypeDecryptionKey()));
+            request.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
             //
             GetResponse response = this.kmip.get(request);
             Object object = response.getObject();
             if (!(object instanceof PrivateKey)) {
-                throw new CosmianException("No " + impl.getImplementation() + " User Decryption Key at identifier "
-                    + userDecryptionKeyUniqueIdentifier);
+                throw new CosmianException("No " + "CoverCrypt" + " User Decryption Key at identifier "
+                        + userDecryptionKeyUniqueIdentifier);
             }
             PrivateKey sk = (PrivateKey) object;
-            if (!sk.getKeyBlock().getKeyFormatType().equals(impl.getKeyFormatTypeDecryptionKey())) {
-                throw new CosmianException("No " + impl.getImplementation() + " User Decryption Key at identifier "
-                    + userDecryptionKeyUniqueIdentifier);
+            if (!sk.getKeyBlock().getKeyFormatType().equals(KeyFormatType.CoverCryptSecretKey)) {
+                throw new CosmianException("No " + "CoverCrypt" + " User Decryption Key at identifier "
+                        + userDecryptionKeyUniqueIdentifier);
             }
             return sk;
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + ": User Decryption Key could not be retrieved: " + e.getMessage()
-                + "  " + e.getClass();
+            String err = "CoverCrypt" + ": User Decryption Key could not be retrieved: " + e.getMessage()
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
@@ -290,67 +290,75 @@ public class Abe {
     /**
      * Import a User Decryption Key in the KMS
      *
-     * @param uniqueIdentifier the UID of the key
+     * @param uniqueIdentifier  the UID of the key
      * @param userDecryptionKey the key
-     * @param replaceExisting if a key exists under this UID, replace it
+     * @param replaceExisting   if a key exists under this UID, replace it
      * @return the UID of the imported key
      * @throws CosmianException if the import fails
      */
     public String importUserDecryptionKey(String uniqueIdentifier, PrivateKey userDecryptionKey,
-        boolean replaceExisting) throws CosmianException {
+            boolean replaceExisting) throws CosmianException {
         try {
             Import request = new Import(uniqueIdentifier, ObjectType.Private_Key, Optional.of(replaceExisting),
-                Optional.empty(), userDecryptionKey.attributes(), userDecryptionKey);
+                    Optional.empty(), userDecryptionKey.attributes(), userDecryptionKey);
             ImportResponse response = this.kmip.importObject(request);
             return response.getUniqueIdentifier();
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + ": User Decryption Key could not be imported: " + e.getMessage()
-                + "  " + e.getClass();
+            String err = "CoverCrypt" + ": User Decryption Key could not be imported: " + e.getMessage()
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
     }
 
     /**
-     * Encrypt data in the KMS using the given Policy Attributes (@see {@link Attr}) and Public Master Key. The data is
-     * encrypted using an hybrid encryption scheme + AÉS 256 GCM. No Metadata is added to the header and no resource uid
-     * is used in the AES AEAD scheme. The generated cipher text is made of 3 parts - the length of the encrypted header
-     * as a u32 in big endian format (4 bytes) - the header - the AES GCM encrypted content
+     * Encrypt data in the KMS using the given Policy Attributes (@see {@link Attr})
+     * and Public Master Key. The data is
+     * encrypted using an hybrid encryption scheme + AÉS 256 GCM. No Metadata is
+     * added to the header and no resource uid
+     * is used in the AES AEAD scheme. The generated cipher text is made of 3 parts
+     * - the length of the encrypted header
+     * as a u32 in big endian format (4 bytes) - the header - the AES GCM encrypted
+     * content
      *
      * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
-     * @param data the data to encrypt
-     * @param attributes the Policy Attributes
+     * @param data                            the data to encrypt
+     * @param attributes                      the Policy Attributes
      * @return the encrypted data
      * @throws CosmianException if the encryption fails
      */
     public byte[] kmsEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes)
-        throws CosmianException {
+            throws CosmianException {
         return kmsEncrypt(publicMasterKeyUniqueIdentifier, data, attributes, Optional.empty());
     }
 
     /**
-     * Encrypt data in the KMS using the given Policy Attributes (@see {@link Attr}) and Public Master Key. The data is
-     * encrypted using an hybrid encryption scheme + AÉS 256 GCM. The uid is used in the authentication of the AES GCM
-     * scheme. The generated cipher text is made of 3 parts - the length of the encrypted header as a u32 in big endian
+     * Encrypt data in the KMS using the given Policy Attributes (@see {@link Attr})
+     * and Public Master Key. The data is
+     * encrypted using an hybrid encryption scheme + AÉS 256 GCM. The uid is used in
+     * the authentication of the AES GCM
+     * scheme. The generated cipher text is made of 3 parts - the length of the
+     * encrypted header as a u32 in big endian
      * format (4 bytes) - the header - the AES GCM encrypted content
      *
      * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
-     * @param data the data to encrypt
-     * @param attributes the Policy Attributes
-     * @param authenticationData the UID uses in the AEAD of the symmetric scheme
+     * @param data                            the data to encrypt
+     * @param attributes                      the Policy Attributes
+     * @param authenticationData              the UID uses in the AEAD of the
+     *                                        symmetric scheme
      * @return the encrypted data
      * @throws CosmianException if the encryption fails
      */
     public byte[] kmsEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes,
-        Optional<byte[]> authenticationData) throws CosmianException {
+            Optional<byte[]> authenticationData) throws CosmianException {
         try {
             DataToEncrypt dataToEncrypt = new DataToEncrypt(attributes, data);
             ObjectMapper mapper = new ObjectMapper();
             byte[] bytes = mapper.writeValueAsBytes(dataToEncrypt);
             Encrypt request = new Encrypt(publicMasterKeyUniqueIdentifier, bytes, Optional.empty(),
-                authenticationData.isPresent() ? Optional.of(authenticationData.get()) : Optional.empty());
+                    authenticationData.isPresent() ? Optional.of(authenticationData.get()) : Optional.empty());
             EncryptResponse response = this.kmip.encrypt(request);
             if (response.getData().isPresent()) {
                 return response.getData().get();
@@ -359,19 +367,21 @@ public class Abe {
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + " encryption failed: " + e.getMessage() + "  " + e.getClass();
+            String err = "CoverCrypt" + " encryption failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
     }
 
     /**
-     * Decrypt the data in the KMS using the given User Decryption Key The encryptedData should be made of 3 parts: -
-     * the length of the encrypted header as a u32 in big endian format (4 bytes) - the header - the AES GCM encrypted
+     * Decrypt the data in the KMS using the given User Decryption Key The
+     * encryptedData should be made of 3 parts: -
+     * the length of the encrypted header as a u32 in big endian format (4 bytes) -
+     * the header - the AES GCM encrypted
      * content
      *
      * @param userDecryptionKeyUniqueIdentifier the key UID
-     * @param encryptedData the cipher text
+     * @param encryptedData                     the cipher text
      * @return the clear text data
      * @throws CosmianException if the decryption fails
      */
@@ -380,19 +390,23 @@ public class Abe {
     }
 
     /**
-     * Decrypt the data in the KMS using the given User Decryption Key The encryptedData should be made of 3 parts: -
-     * the length of the encrypted header as a u32 in big endian format (4 bytes) - the header - the AES GCM encrypted
+     * Decrypt the data in the KMS using the given User Decryption Key The
+     * encryptedData should be made of 3 parts: -
+     * the length of the encrypted header as a u32 in big endian format (4 bytes) -
+     * the header - the AES GCM encrypted
      * content
      *
      * @param userDecryptionKeyUniqueIdentifier the key UID
-     * @param encryptedData the cipher text
-     * @param authenticationData the data to use in the authentication of the symmetric scheme
+     * @param encryptedData                     the cipher text
+     * @param authenticationData                the data to use in the
+     *                                          authentication of the symmetric
+     *                                          scheme
      * @return the clear text data
      * @throws CosmianException if the decryption fails
      */
     public byte[] kmsDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData,
-        Optional<byte[]> authenticationData)
-        throws CosmianException {
+            Optional<byte[]> authenticationData)
+            throws CosmianException {
         try {
             Decrypt request = new Decrypt(userDecryptionKeyUniqueIdentifier, encryptedData, authenticationData);
             DecryptResponse response = this.kmip.decrypt(request);
@@ -403,7 +417,7 @@ public class Abe {
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + " decryption failed: " + e.getMessage() + "  " + e.getClass();
+            String err = "CoverCrypt" + " decryption failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
@@ -413,50 +427,58 @@ public class Abe {
      * Rotate the given policy attributes. This will rekey in the KMS:
      * <ul>
      * <li>the Master Keys</li>
-     * <li>all User Decryption Keys that contain one of these attributes in their policy and are not rotated.</li>
+     * <li>all User Decryption Keys that contain one of these attributes in their
+     * policy and are not rotated.</li>
      * </ul>
-     * Non Rekeyed User Decryption Keys cannot decrypt ata encrypted with the rekeyed Master Public Key and the given
+     * Non Rekeyed User Decryption Keys cannot decrypt ata encrypted with the
+     * rekeyed Master Public Key and the given
      * attributes. <br>
-     * Rekeyed User Decryption Keys however will be able to decrypt data encrypted by the previous Master Public Key and
+     * Rekeyed User Decryption Keys however will be able to decrypt data encrypted
+     * by the previous Master Public Key and
      * the rekeyed one. <br>
-     * Note: there is a limit on the number of revocations that can be performed which is set in the {@link Policy} when
+     * Note: there is a limit on the number of revocations that can be performed
+     * which is set in the {@link Policy} when
      * Master Keys are created
      *
      * @param privateMasterKeyUniqueIdentifier the UID of the private master key
-     * @param policyAttributes the array of {@link Attr}
+     * @param policyAttributes                 the array of {@link Attr}
      * @return the Master Public Key UID
      * @throws CosmianException if the revocation fails
      */
     public String rotateAttributes(String privateMasterKeyUniqueIdentifier, Attr[] policyAttributes)
-        throws CosmianException {
+            throws CosmianException {
         try {
-            Attributes attributes =
-                new Attributes(ObjectType.Private_Key, Optional.of(impl.getCryptographicAlgorithm()));
-            attributes.keyFormatType(Optional.of(impl.getKeyFormatTypeMasterSecretKey()));
+            Attributes attributes = new Attributes(ObjectType.Private_Key,
+                    Optional.of(CryptographicAlgorithm.CoverCrypt));
+            attributes.keyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
             attributes.vendorAttributes(Optional.of(new VendorAttribute[] {
-                Attr.toVendorAttribute(policyAttributes, this.impl.getAbeAttrVendorAttribute())}));
-            ReKeyKeyPair request =
-                new ReKeyKeyPair(Optional.of(privateMasterKeyUniqueIdentifier), Optional.empty(), Optional.empty(),
+                    Attr.toVendorAttribute(policyAttributes, VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ATTR) }));
+            ReKeyKeyPair request = new ReKeyKeyPair(Optional.of(privateMasterKeyUniqueIdentifier), Optional.empty(),
+                    Optional.empty(),
                     Optional.of(attributes), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
             ReKeyKeyPairResponse response = this.kmip.reKeyKeyPair(request);
             return response.getPublicKeyUniqueIdentifier();
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = "Revocation of " + this.impl.getImplementation() + "policy attributes failed: "
-                + e.getMessage() + "  " + e.getClass();
+            String err = "Revocation of CoverCrypt policy attributes failed: "
+                    + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
     }
 
     /**
-     * Revoke a key in the KMS which makes it unavailable to use in the KMS to perform
-     * {@link #kmsEncrypt(String, byte[], Attr[])} or {@link #kmsDecrypt(String, byte[])} operations. <br>
+     * Revoke a key in the KMS which makes it unavailable to use in the KMS to
+     * perform
+     * {@link #kmsEncrypt(String, byte[], Attr[])} or
+     * {@link #kmsDecrypt(String, byte[])} operations. <br>
      * <br>
-     * If this key is a User Decryption Key, it will not be rekeyed in case of attribute revocation. <br>
+     * If this key is a User Decryption Key, it will not be rekeyed in case of
+     * attribute revocation. <br>
      * <br>
-     * Note: this revokes the key **inside** the KMS: it does not prevent an user who has a local copy of a User
+     * Note: this revokes the key **inside** the KMS: it does not prevent an user
+     * who has a local copy of a User
      * Decryption Key to perform decryption operations.
      *
      * @param keyUniqueIdentifier the UID of the key to revoke
@@ -465,24 +487,27 @@ public class Abe {
      */
     public String revokeKey(String keyUniqueIdentifier) throws CosmianException {
         try {
-            Revoke request =
-                new Revoke(Optional.of(keyUniqueIdentifier), new RevocationReason("Revoked"), Optional.empty());
+            Revoke request = new Revoke(Optional.of(keyUniqueIdentifier), new RevocationReason("Revoked"),
+                    Optional.empty());
             RevokeResponse response = this.kmip.revoke(request);
             return response.getUniqueIdentifier();
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + " key revocation failed: " + e.getMessage() + "  " + e.getClass();
+            String err = "CoverCrypt" + " key revocation failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }
     }
 
     /**
-     * Destroy a key in the KMS which makes it unavailable to use in the KMS to perform
-     * {@link #kmsEncrypt(String, byte[], Attr[])} or {@link #kmsDecrypt(String, byte[])} operations. <br>
+     * Destroy a key in the KMS which makes it unavailable to use in the KMS to
+     * perform
+     * {@link #kmsEncrypt(String, byte[], Attr[])} or
+     * {@link #kmsDecrypt(String, byte[])} operations. <br>
      * <br>
-     * Note: this destroy the key **inside** the KMS: it does not prevent an user who has a local copy of a User
+     * Note: this destroy the key **inside** the KMS: it does not prevent an user
+     * who has a local copy of a User
      * Decryption Key to perform decryption operations.
      *
      * @param uniqueIdentifier the UID of the key to revoke
@@ -497,7 +522,7 @@ public class Abe {
         } catch (CosmianException e) {
             throw e;
         } catch (Exception e) {
-            String err = impl.getImplementation() + " destroy key failed: " + e.getMessage() + "  " + e.getClass();
+            String err = "CoverCrypt" + " destroy key failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
             throw new CosmianException(err, e);
         }

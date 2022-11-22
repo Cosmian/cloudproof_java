@@ -35,7 +35,7 @@ This library is free software and is available on Maven Central
 
 When using local encryption and decryption with [GPSW](https://github.com/Cosmian/abe_gpsw) and [CoverCrypt](https://github.com/Cosmian/cover_crypt), native libraries are required.
 
-Check the main pages of the respective projects to build the native libraries appropriate for your systems. The [test directory](./src/test/resources/linux-x86-64/) provides pre-built libraries for Linux GLIBC 2.17. These librairies should run fine on a system with a more recent GLIBC version.
+Check the main pages of the respective projects to build the native libraries appropriate for your systems. The [test directory](./src/test/resources/linux-x86-64/) provides pre-built libraries for Linux GLIBC 2.17. These libraries should run fine on a system with a more recent GLIBC version.
 
 This table shows the minimum versions correspondences between the various components
 
@@ -54,18 +54,22 @@ This table shows the minimum versions correspondences between the various compon
 | 2.2.0      | 0.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
 | 2.3.0      | 1.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
 | 3.0.0      | 2.0.0     | N/A       | 7.1.0          | 0.10.0 |
+| 3.0.0      | 2.1.0     | N/A       | 7.2.0          | 0.10.0 |
 
 ## Update native libraries
 
-The Cloudproof Java lib uses JNA to access functions of 3 native shared libraries:
+The Cloudproof Java lib uses JNA to access functions of 2 native shared libraries:
 
 - `CoverCrypt`
-- `ABE GPSW`
 - `Findex`
 
-On Linux, those libraries must be found in 1 of these folders:
+Those libraries must be found either in the classpath or in subfolders of `src/resources/`
 
-- src/resources/linux-x86-64
-- src/test/resources/linux-x86-64
+- src/resources/
+  - `linux-x86-64` for Linux 64bit architecture
+  - `darwin-x86-64` for MacOS Intel
+  - `win32-x86-64` for windows
+
+For tests, it is possible to override these libraries by placing them in the equivalent sub-folders of `src/test/resources`
 
 To update those native libraries, the script `src/test/resources/linux-x86-64/update_native_libraries.sh`

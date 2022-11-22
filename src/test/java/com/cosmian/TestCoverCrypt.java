@@ -44,9 +44,8 @@ public class TestCoverCrypt {
                 .addAxis("Department", new String[] { "FIN", "MKG", "HR" }, false);
     }
 
-    private AccessPolicy accessPolicyProtected() throws CosmianException {
-        return new And(new Or(new Attr("Department", "FIN"), new Attr("Department", "MKG")),
-                new Attr("Security Level", "Protected"));
+    private String accessPolicyProtected() throws CosmianException {
+        return "(Department::FIN || Department::MKG) && Security Level::Protected";
     }
 
     private AccessPolicy accessPolicyConfidential() throws CosmianException {
@@ -189,7 +188,8 @@ public class TestCoverCrypt {
                 confidential_fin_data.getBytes(StandardCharsets.UTF_8), confidential_fin_attributes);
 
         // User decryption key Protected, FIN, MKG
-        String fin_mkg_protected_user_key = abe.createUserDecryptionKey(accessPolicyProtected(), privateMasterKeyID);
+        String fin_mkg_protected_user_key = abe.createUserDecryptionKey(accessPolicyProtected(),
+                privateMasterKeyID);
         PrivateKey userKey_1 = abe.retrieveUserDecryptionKey(fin_mkg_protected_user_key);
         Resources.write_resource("cover_crypt/fin_mkg_protected_user_key.json",
                 userKey_1.toJson().getBytes(StandardCharsets.UTF_8));

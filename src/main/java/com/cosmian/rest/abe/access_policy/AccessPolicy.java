@@ -9,14 +9,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class AccessPolicy {
 
-    public VendorAttribute toVendorAttribute(String abeImplementation) throws CosmianException {
+    public VendorAttribute toVendorAttribute() throws CosmianException {
         String json;
         try {
             json = new ObjectMapper().writeValueAsString(this);
         } catch (JsonProcessingException e) {
             throw new CosmianException("Failed serializing the Access Policy to json: " + e.getMessage(), e);
         }
-        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN, abeImplementation,
-            json.getBytes(StandardCharsets.UTF_8));
+        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN,
+                VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ACCESS_POLICY,
+                json.getBytes(StandardCharsets.UTF_8));
     }
 }

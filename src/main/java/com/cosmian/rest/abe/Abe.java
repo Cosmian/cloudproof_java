@@ -1,10 +1,14 @@
 package com.cosmian.rest.abe;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.logging.Logger;
 
 import com.cosmian.CosmianException;
 import com.cosmian.RestClient;
+import com.cosmian.jna.FfiException;
+import com.cosmian.jna.abe.Ffi;
+import com.cosmian.jna.abe.FfiWrapper;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.data.DataToEncrypt;
@@ -53,11 +57,6 @@ public class Abe {
     public Abe(RestClient rest_client) {
         this.kmip = new Kmip(rest_client);
     }
-
-    // public Abe(RestClient rest_client, Specifications abeSpecifications) {
-    // this.kmip = new Kmip(rest_client);
-    // this.impl = abeSpecifications;
-    // }
 
     /**
      * Generate inside the KMS, a master private and public key pair for the
@@ -213,6 +212,36 @@ public class Abe {
     }
 
     /**
+     * Create a User Decryption Key for the given {@link AccessPolicy}
+     * expressed as a boolean expression
+     *
+     * @param accessPolicy                     the {@link AccessPolicy} as a string
+     * @param privateMasterKeyUniqueIdentifier the UID of the Master Private Key
+     * @return the UID of the newly created key
+     * @throws CosmianException if the creation fails
+     */
+    public String createUserDecryptionKey(String accessPolicy, String privateMasterKeyUniqueIdentifier)
+            throws CosmianException {
+
+        // not qt the class level, so the rest of the methods can be used without a
+        // native library
+        final FfiWrapper INSTANCE = (FfiWrapper) com.sun.jna.Native.load("cosmian_cover_crypt", FfiWrapper.class);
+        final Ffi ffi = new Ffi(INSTANCE);
+        String json;
+        try {
+            json = ffi.booleanAccessPolicyToJson(accessPolicy);
+        } catch (FfiException e) {
+            throw new CosmianException("Failed converting the boolean access policy to a JSON: " + e.getMessage(), e);
+        }
+        VendorAttribute accessPolicyAttribute = new VendorAttribute(
+                VendorAttribute.VENDOR_ID_COSMIAN,
+                VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ACCESS_POLICY,
+                json.getBytes(StandardCharsets.UTF_8));
+
+        return createUserDecryptionKey(accessPolicyAttribute, privateMasterKeyUniqueIdentifier);
+    }
+
+    /**
      * Create a User Decryption Key for the given {@link AccessPolicy} in the KMS
      *
      * @param accessPolicy                     the {@link AccessPolicy}
@@ -222,6 +251,25 @@ public class Abe {
      */
     public String createUserDecryptionKey(AccessPolicy accessPolicy, String privateMasterKeyUniqueIdentifier)
             throws CosmianException {
+        // convert the Access Policy to attributes and attach it to the common
+        // attributes
+        VendorAttribute accessPolicyAttribute = accessPolicy
+                .toVendorAttribute();
+
+        return createUserDecryptionKey(accessPolicyAttribute, privateMasterKeyUniqueIdentifier);
+    }
+
+    /**
+     * Create a User Decryption Key for the given {@link AccessPolicy} in the KMS
+     *
+     * @param accessPolicyAttribute            the {@link AccessPolicy} as a
+     *                                         {@link VendorAttribute}
+     * @param privateMasterKeyUniqueIdentifier the UID of the Master Private Key
+     * @return the UID of the newly created key
+     * @throws CosmianException if the creation fails
+     */
+    String createUserDecryptionKey(VendorAttribute accessPolicyAttribute, String privateMasterKeyUniqueIdentifier)
+            throws CosmianException {
         try {
             Attributes commonAttributes = new Attributes(
                     ObjectType.Private_Key,
@@ -230,8 +278,6 @@ public class Abe {
 
             // convert the Access Policy to attributes and attach it to the common
             // attributes
-            VendorAttribute accessPolicyAttribute = accessPolicy
-                    .toVendorAttribute(VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ACCESS_POLICY);
             commonAttributes.setVendorAttributes(Optional.of(new VendorAttribute[] { accessPolicyAttribute }));
             // link to the master private key
             commonAttributes.setLink(Optional.of(new Link[] {

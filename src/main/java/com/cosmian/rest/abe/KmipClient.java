@@ -48,13 +48,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Attribute Based Encryption endpoints
  */
-public class Abe {
+public class KmipClient {
 
-    private static final Logger logger = Logger.getLogger(Abe.class.getName());
+    private static final Logger logger = Logger.getLogger(KmipClient.class.getName());
 
     private final Kmip kmip;
 
-    public Abe(RestClient rest_client) {
+    /**
+     * Instantiate a new KmipClient with DEFAULT_CONNECT_TIMEOUT and
+     * DEFAULT_READ_TIMEOUT
+     *
+     * @param server_url the REST Server URL e.g. http://localhost:9000
+     * @param api_key    he optional API Key to use to authenticate
+     */
+    public KmipClient(String server_url, Optional<String> api_key) {
+        this(new RestClient(server_url, api_key));
+    }
+
+    /**
+     * Instantiate a new Kmip client using a {@link RestClient}
+     * 
+     * @param rest_client the {@link RestClient}
+     */
+    public KmipClient(RestClient rest_client) {
         this.kmip = new Kmip(rest_client);
     }
 

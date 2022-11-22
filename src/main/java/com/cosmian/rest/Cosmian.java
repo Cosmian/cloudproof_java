@@ -8,7 +8,7 @@ import org.apache.commons.codec.binary.Hex;
 
 import com.cosmian.CosmianException;
 import com.cosmian.RestClient;
-import com.cosmian.rest.abe.Abe;
+import com.cosmian.rest.abe.KmipClient;
 import com.cosmian.rest.kmip.Kmip;
 
 public class Cosmian {
@@ -20,21 +20,25 @@ public class Cosmian {
     /**
      * Instantiate a new Cosmian Server REST Client
      *
-     * @param server_url the REST Server URL e.g. http://localhost:9000
-     * @param api_key the Cosmian API KEY
-     * @param connection_timeout Sets a specified timeout value, in milliseconds, to be used when opening a
-     *            communications link to the resource referenced by this URLConnection.
-     * @param read_timeout Sets the read timeout to a specified timeout, in milliseconds.
+     * @param server_url         the REST Server URL e.g. http://localhost:9000
+     * @param api_key            the Cosmian API KEY
+     * @param connection_timeout Sets a specified timeout value, in milliseconds, to
+     *                           be used when opening a
+     *                           communications link to the resource referenced by
+     *                           this URLConnection.
+     * @param read_timeout       Sets the read timeout to a specified timeout, in
+     *                           milliseconds.
      */
     Cosmian(String server_url, Optional<String> api_key, int connection_timeout, int read_timeout) {
         this.rest_client = new RestClient(server_url, api_key, connection_timeout, read_timeout);
     }
 
     /**
-     * Instantiate a new Cosmian Server REST Client with DEFAULT_CONNECT_TIMEOUT and DEFAULT_READ_TIMEOUT
+     * Instantiate a new Cosmian Server REST Client with DEFAULT_CONNECT_TIMEOUT and
+     * DEFAULT_READ_TIMEOUT
      *
      * @param server_url the REST Server URL e.g. http://localhost:9000
-     * @param api_key the Cosmian API KEY
+     * @param api_key    the Cosmian API KEY
      * @see RestClient
      */
     public Cosmian(String server_url, Optional<String> api_key) {
@@ -64,8 +68,8 @@ public class Cosmian {
      *
      * @return an Abe instance exposing the endpoints
      */
-    public Abe abe() {
-        return new Abe(this.rest_client);
+    public KmipClient abe() {
+        return new KmipClient(this.rest_client);
     }
 
     /**
@@ -87,7 +91,8 @@ public class Cosmian {
      */
     public static byte[] hex_decode(String hex_encoded_string) throws CosmianException {
         try {
-            // conversion to char array to make the library compatible with older versions of commons-codec
+            // conversion to char array to make the library compatible with older versions
+            // of commons-codec
             // such as the ones found in spark-2.7
             return Hex.decodeHex(hex_encoded_string.toCharArray());
         } catch (DecoderException e) {

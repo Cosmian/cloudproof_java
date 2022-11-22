@@ -13,7 +13,7 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.cosmian.rest.abe.Abe;
+import com.cosmian.rest.abe.KmipClient;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.And;
 import com.cosmian.rest.abe.access_policy.Attr;
@@ -97,7 +97,7 @@ public class TestCoverCrypt {
 
         Policy pg = policy();
 
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+        KmipClient abe = new KmipClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
 
         String[] ids = abe.createMasterKeyPair(pg);
         logger.info("Created Master Key: Private Key ID: " + ids[0] + ", Public Key ID: " + ids[1]);
@@ -155,7 +155,7 @@ public class TestCoverCrypt {
 
         Policy pg = policy();
 
-        Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+        KmipClient abe = new KmipClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
 
         String[] ids = abe.createMasterKeyPair(pg);
         logger.info("Created Master Key: Private Key ID: " + ids[0] + ", Public Key ID: " + ids[1]);

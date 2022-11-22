@@ -23,6 +23,10 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 public final class Ffi {
+
+    // For the JSON strings
+    private final static ObjectMapper mapper = new ObjectMapper();
+
     private FfiWrapper instance;
 
     public Ffi(FfiWrapper instance) {
@@ -100,9 +104,6 @@ public final class Ffi {
      * @throws CosmianException in case of other errors
      */
     public int createEncryptionCache(Policy policy, byte[] publicKeyBytes) throws FfiException, CosmianException {
-
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
 
         // Policy
         String policyJson;
@@ -342,9 +343,6 @@ public final class Ffi {
         } else {
             authenticationDataLength = 0;
         }
-
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
 
         // Symmetric Key OUT
         byte[] symmetricKeyBuffer = new byte[1024];
@@ -783,9 +781,6 @@ public final class Ffi {
         byte[] masterKeysBuffer = new byte[8192];
         IntByReference masterKeysBufferSize = new IntByReference(masterKeysBuffer.length);
 
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
-
         // Policy
         String policyJson;
         try {
@@ -820,12 +815,55 @@ public final class Ffi {
      * Generate the user private key
      *
      * @param masterPrivateKey the master private key in bytes
-     * @param accessPolicy     the access policy of the user private key
+     * @param accessPolicy     the access policy of the user private key as a
+     *                         boolean expression
+     * @param policy           the ABE policy
+     * @return the corresponding user private key
+     * @throws FfiException in case of native library error
+     */
+    public byte[] generateUserPrivateKey(byte[] masterPrivateKey, String booleanAccessPolicy, Policy policy)
+            throws FfiException {
+
+        String json = this.booleanAccessPolicyToJson(booleanAccessPolicy);
+        return generateUserPrivateKey_(masterPrivateKey, json, policy);
+    }
+
+    /**
+     * Generate the user private key
+     *
+     * @param masterPrivateKey the master private key in bytes
+     * @param accessPolicy     the access policy of the user private key as an
+     *                         AccessPolicy instance
      * @param policy           the ABE policy
      * @return the corresponding user private key
      * @throws FfiException in case of native library error
      */
     public byte[] generateUserPrivateKey(byte[] masterPrivateKey, AccessPolicy accessPolicy, Policy policy)
+            throws FfiException {
+
+        // Access Policy
+        String accessPolicyJson;
+        try {
+            accessPolicyJson = mapper.writeValueAsString(accessPolicy);
+        } catch (JsonProcessingException e) {
+            throw new FfiException("Invalid Access Policy", e);
+        }
+
+        return generateUserPrivateKey_(masterPrivateKey, accessPolicyJson, policy);
+
+    }
+
+    /**
+     * Generate the user private key
+     *
+     * @param masterPrivateKey the master private key in bytes
+     * @param accessPolicy     the access policy of the user private key as a JSON
+     *                         version of an AccessPolicy instance
+     * @param policy           the ABE policy
+     * @return the corresponding user private key
+     * @throws FfiException in case of native library error
+     */
+    byte[] generateUserPrivateKey_(byte[] masterPrivateKey, String accessPolicyJson, Policy policy)
             throws FfiException {
         // User private key Bytes OUT
         byte[] userPrivateKeyBuffer = new byte[8192];
@@ -835,16 +873,6 @@ public final class Ffi {
         final Pointer masterPrivateKeyPointer = new Memory(masterPrivateKey.length);
         masterPrivateKeyPointer.write(0, masterPrivateKey, 0, masterPrivateKey.length);
 
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
-
-        // Access Policy
-        String accessPolicyJson;
-        try {
-            accessPolicyJson = mapper.writeValueAsString(accessPolicy);
-        } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Access Policy", e);
-        }
         // Policy
         String policyJson;
         try {
@@ -884,9 +912,6 @@ public final class Ffi {
         // New policy Bytes OUT
         byte[] policyBuffer = new byte[4096];
         IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
-
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
 
         // Attributes
         // The value must be the JSON array of the String representation of the Attrs
@@ -1040,9 +1065,6 @@ public final class Ffi {
         } else {
             authenticationDataLength = 0;
         }
-
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
 
         // Ciphertext OUT
         byte[] ciphertext = new byte[8192 + plaintext.length];

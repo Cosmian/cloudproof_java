@@ -23,8 +23,6 @@ import com.cosmian.jna.abe.FfiWrapper;
 import com.cosmian.jna.abe.MasterKeys;
 import com.cosmian.rest.abe.Abe;
 import com.cosmian.rest.abe.Implementation;
-import com.cosmian.rest.abe.access_policy.AccessPolicy;
-import com.cosmian.rest.abe.access_policy.And;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
@@ -81,7 +79,7 @@ public class TestFfiCoverCrypt {
         MasterKeys masterKeys = ffi.generateMasterKeys(policy);
 
         // Generate an user decryption key
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(
                 masterKeys.getPrivateKey(),
                 accessPolicy,
@@ -127,7 +125,7 @@ public class TestFfiCoverCrypt {
         MasterKeys masterKeys = ffi.generateMasterKeys(policy);
 
         // Generate an user decryption key
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
 
         // Rotate attributes
@@ -190,7 +188,7 @@ public class TestFfiCoverCrypt {
         System.out.println("CoverCrypt Master Key generation average time: " + time / nb_occurrences + "ns (or "
                 + time / 1000 / nb_occurrences + "µs)");
 
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         start = System.nanoTime();
         for (int i = 0; i < nb_occurrences; i++) {
             ffi.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
@@ -237,7 +235,7 @@ public class TestFfiCoverCrypt {
         //
 
         // Generate an user decryption key
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(
                 masterKeys.getPrivateKey(),
                 accessPolicy,
@@ -292,7 +290,7 @@ public class TestFfiCoverCrypt {
         //
 
         // Generate an user decryption key
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(
                 masterKeys.getPrivateKey(),
                 accessPolicy,
@@ -315,8 +313,8 @@ public class TestFfiCoverCrypt {
                 .addAxis("Department", new String[] { "FIN", "MKG", "HR" }, false);
     }
 
-    private AccessPolicy accessPolicyConfidential() throws CosmianException {
-        return new And(new Attr("Department", "FIN"), new Attr("Security Level", "Confidential"));
+    private String accessPolicyConfidential() throws CosmianException {
+        return "Department::FIN && Security Level::Confidential";
     }
 
     // TODO fix these tests: likely a KMS issue
@@ -591,7 +589,7 @@ public class TestFfiCoverCrypt {
         // decrypt
 
         // Generate an user decryption key
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(
                 masterKeys.getPrivateKey(),
                 accessPolicy,
@@ -636,7 +634,7 @@ public class TestFfiCoverCrypt {
         // decrypt
 
         // Generate an user decryption key
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(
                 masterKeys.getPrivateKey(),
                 accessPolicy,
@@ -681,7 +679,7 @@ public class TestFfiCoverCrypt {
         // decrypt
 
         // Generate an user decryption key
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(
                 masterKeys.getPrivateKey(),
                 accessPolicy,
@@ -724,7 +722,7 @@ public class TestFfiCoverCrypt {
         // decrypt
 
         // Generate an user decryption key
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(
                 masterKeys.getPrivateKey(),
                 accessPolicy,
@@ -763,7 +761,7 @@ public class TestFfiCoverCrypt {
         byte[] additional_data = new byte[] { 6, 7, 8, 9, 10 };
 
         // Generate an user decryption key
-        AccessPolicy accessPolicy = accessPolicyConfidential();
+        String accessPolicy = accessPolicyConfidential();
         byte[] userDecryptionKey = ffi.generateUserPrivateKey(
                 masterKeys.getPrivateKey(),
                 accessPolicy,

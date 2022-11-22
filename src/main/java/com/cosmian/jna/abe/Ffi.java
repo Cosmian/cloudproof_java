@@ -815,7 +815,7 @@ public final class Ffi {
      * Generate the user private key
      *
      * @param masterPrivateKey the master private key in bytes
-     * @param accessPolicy     the access policy of the user private key as a
+     *
      *                         boolean expression
      * @param policy           the ABE policy
      * @return the corresponding user private key

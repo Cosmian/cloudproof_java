@@ -9,8 +9,10 @@ import com.cosmian.rest.kmip.types.ObjectType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * A Managed Cryptographic Object that is a digital certificate. It is a DER-encoded X.509 public key certificate.
- * Object Encoding REQUIRED Certificate Structure Certificate Type Enumeration Yes Certificate Value Byte String Yes
+ * A Managed Cryptographic Object that is a digital certificate. It is a
+ * DER-encoded X.509 public key certificate.
+ * Object Encoding REQUIRED Certificate Structure Certificate Type Enumeration
+ * Yes Certificate Value Byte String Yes
  */
 public class Certificate extends KmipObject {
 
@@ -28,27 +30,59 @@ public class Certificate extends KmipObject {
         this.certificateValue = certificateValue;
     }
 
+    /**
+     * Get the {@link CertificateType}
+     * 
+     * @return the {@link CertificateType}
+     */
     public CertificateType getCertificateType() {
         return this.certificateType;
     }
 
+    /**
+     * Set the {@link CertificateType}
+     * 
+     * @param certificateType the type
+     */
     public void setCertificateType(CertificateType certificateType) {
         this.certificateType = certificateType;
     }
 
+    /**
+     * Get the {@link Certificate} value
+     * 
+     * @return the value
+     */
     public byte[] getCertificateValue() {
         return this.certificateValue;
     }
 
+    /**
+     * Set the {@link Certificate} value
+     * 
+     * @param certificateValue the value
+     */
     public void setCertificateValue(byte[] certificateValue) {
         this.certificateValue = certificateValue;
     }
 
+    /**
+     * Set the {@link CertificateType}
+     * 
+     * @param certificateType the {@link CertificateType}
+     * @return the {@link Certificate}
+     */
     public Certificate certificateType(CertificateType certificateType) {
         setCertificateType(certificateType);
         return this;
     }
 
+    /**
+     * Set the {@link Certificate} value
+     * 
+     * @param certificateValue the value
+     * @return the {@link Certificate}
+     */
     public Certificate certificateValue(byte[] certificateValue) {
         setCertificateValue(certificateValue);
         return this;
@@ -63,7 +97,7 @@ public class Certificate extends KmipObject {
         }
         Certificate certificate = (Certificate) o;
         return Objects.equals(certificateType, certificate.certificateType)
-            && Arrays.equals(certificateValue, certificate.certificateValue);
+                && Arrays.equals(certificateValue, certificate.certificateValue);
     }
 
     @Override
@@ -74,7 +108,7 @@ public class Certificate extends KmipObject {
     @Override
     public String toString() {
         return "{" + " certificateType='" + getCertificateType() + "'" + ", certificateValue='" + getCertificateValue()
-            + "'" + "}";
+                + "'" + "}";
     }
 
     @Override

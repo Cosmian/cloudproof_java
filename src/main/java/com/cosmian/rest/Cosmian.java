@@ -8,7 +8,7 @@ import org.apache.commons.codec.binary.Hex;
 
 import com.cosmian.CosmianException;
 import com.cosmian.RestClient;
-import com.cosmian.rest.abe.KmipClient;
+import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.kmip.Kmip;
 
 public class Cosmian {
@@ -68,8 +68,8 @@ public class Cosmian {
      *
      * @return an Abe instance exposing the endpoints
      */
-    public KmipClient abe() {
-        return new KmipClient(this.rest_client);
+    public KmsClient abe() {
+        return new KmsClient(this.rest_client);
     }
 
     /**

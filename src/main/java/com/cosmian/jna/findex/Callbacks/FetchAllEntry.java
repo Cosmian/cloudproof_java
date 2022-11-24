@@ -2,10 +2,10 @@ package com.cosmian.jna.findex.Callbacks;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
-import com.cosmian.jna.FfiException;
+import com.cosmian.jna.CoverCryptException;
 import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
@@ -23,7 +23,7 @@ public class FetchAllEntry implements FetchAllEntryCallback {
     }
 
     @Override
-    public int apply(Pointer output, IntByReference outputSize, int numberOfEntries) throws FfiException {
+    public int apply(Pointer output, IntByReference outputSize, int numberOfEntries) throws CoverCryptException {
         if (entrySetIterator == null) {
             entrySetIterator = this.fetch.fetch().entrySet().iterator();
         }

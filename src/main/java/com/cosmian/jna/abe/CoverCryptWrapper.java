@@ -7,7 +7,7 @@ import com.sun.jna.ptr.IntByReference;
 /**
  * This maps the hybrid_gpsw-aes.rs functions in the abe_gpsw Rust library
  */
-public interface FfiWrapper extends Library {
+public interface CoverCryptWrapper extends Library {
 
     int set_error(String errorMsg);
 

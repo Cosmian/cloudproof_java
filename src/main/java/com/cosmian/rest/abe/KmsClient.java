@@ -6,9 +6,8 @@ import java.util.logging.Logger;
 
 import com.cosmian.CosmianException;
 import com.cosmian.RestClient;
-import com.cosmian.jna.FfiException;
-import com.cosmian.jna.abe.Ffi;
-import com.cosmian.jna.abe.FfiWrapper;
+import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.abe.CoverCrypt;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.data.DataToEncrypt;
@@ -48,9 +47,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Attribute Based Encryption endpoints
  */
-public class KmipClient {
+public class KmsClient {
 
-    private static final Logger logger = Logger.getLogger(KmipClient.class.getName());
+    private static final Logger logger = Logger.getLogger(KmsClient.class.getName());
 
     private final Kmip kmip;
 
@@ -61,7 +60,7 @@ public class KmipClient {
      * @param server_url the REST Server URL e.g. http://localhost:9000
      * @param api_key    he optional API Key to use to authenticate
      */
-    public KmipClient(String server_url, Optional<String> api_key) {
+    public KmsClient(String server_url, Optional<String> api_key) {
         this(new RestClient(server_url, api_key));
     }
 
@@ -70,7 +69,7 @@ public class KmipClient {
      * 
      * @param rest_client the {@link RestClient}
      */
-    public KmipClient(RestClient rest_client) {
+    public KmsClient(RestClient rest_client) {
         this.kmip = new Kmip(rest_client);
     }
 
@@ -83,7 +82,7 @@ public class KmipClient {
      *         key UID
      * @throws CosmianException if the creation fails
      */
-    public String[] createMasterKeyPair(Policy policy) throws CosmianException {
+    public String[] createCoverCryptMasterKeyPair(Policy policy) throws CosmianException {
         try {
             Attributes commonAttributes = new Attributes(ObjectType.Private_Key,
                     Optional.of(CryptographicAlgorithm.CoverCrypt));
@@ -114,7 +113,8 @@ public class KmipClient {
      * @return the Private Key
      * @throws CosmianException if the retrieval fails
      */
-    public PrivateKey retrievePrivateMasterKey(String privateMasterKeyUniqueIdentifier) throws CosmianException {
+    public PrivateKey retrieveCoverCryptPrivateMasterKey(String privateMasterKeyUniqueIdentifier)
+            throws CosmianException {
         try {
             Get request = new Get(privateMasterKeyUniqueIdentifier);
             request.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
@@ -150,7 +150,8 @@ public class KmipClient {
      * @return the UID of the imported key
      * @throws CosmianException if the import fails
      */
-    public String importPrivateMasterKey(String uniqueIdentifier, PrivateKey privateMasterKey, boolean replaceExisting)
+    public String importCoverCryptPrivateMasterKey(String uniqueIdentifier, PrivateKey privateMasterKey,
+            boolean replaceExisting)
             throws CosmianException {
         try {
             Import request = new Import(uniqueIdentifier, ObjectType.Private_Key, Optional.of(replaceExisting),
@@ -174,7 +175,7 @@ public class KmipClient {
      * @return the Public Key
      * @throws CosmianException if the retrieval fails
      */
-    public PublicKey retrievePublicMasterKey(String publicMasterKeyUniqueIdentifier) throws CosmianException {
+    public PublicKey retrieveCoverCryptPublicMasterKey(String publicMasterKeyUniqueIdentifier) throws CosmianException {
         try {
             Get request = new Get(publicMasterKeyUniqueIdentifier);
             request.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptPublicKey));
@@ -210,7 +211,8 @@ public class KmipClient {
      * @return the UID of the imported key
      * @throws CosmianException if the import fails
      */
-    public String importPublicMasterKey(String uniqueIdentifier, PublicKey publicMasterKey, boolean replaceExisting)
+    public String importCoverCryptPublicMasterKey(String uniqueIdentifier, PublicKey publicMasterKey,
+            boolean replaceExisting)
             throws CosmianException {
         try {
             Import request = new Import(uniqueIdentifier, ObjectType.Public_Key, Optional.of(replaceExisting),
@@ -236,17 +238,16 @@ public class KmipClient {
      * @return the UID of the newly created key
      * @throws CosmianException if the creation fails
      */
-    public String createUserDecryptionKey(String accessPolicy, String privateMasterKeyUniqueIdentifier)
+    public String createCoverCryptUserDecryptionKey(String accessPolicy, String privateMasterKeyUniqueIdentifier)
             throws CosmianException {
 
         // not qt the class level, so the rest of the methods can be used without a
         // native library
-        final FfiWrapper INSTANCE = (FfiWrapper) com.sun.jna.Native.load("cosmian_cover_crypt", FfiWrapper.class);
-        final Ffi ffi = new Ffi(INSTANCE);
+        final CoverCrypt ffi = new CoverCrypt();
         String json;
         try {
             json = ffi.booleanAccessPolicyToJson(accessPolicy);
-        } catch (FfiException e) {
+        } catch (CoverCryptException e) {
             throw new CosmianException("Failed converting the boolean access policy to a JSON: " + e.getMessage(), e);
         }
         VendorAttribute accessPolicyAttribute = new VendorAttribute(
@@ -254,7 +255,7 @@ public class KmipClient {
                 VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ACCESS_POLICY,
                 json.getBytes(StandardCharsets.UTF_8));
 
-        return createUserDecryptionKey(accessPolicyAttribute, privateMasterKeyUniqueIdentifier);
+        return createCoverCryptUserDecryptionKey(accessPolicyAttribute, privateMasterKeyUniqueIdentifier);
     }
 
     /**
@@ -265,14 +266,14 @@ public class KmipClient {
      * @return the UID of the newly created key
      * @throws CosmianException if the creation fails
      */
-    public String createUserDecryptionKey(AccessPolicy accessPolicy, String privateMasterKeyUniqueIdentifier)
+    public String createCoverCryptUserDecryptionKey(AccessPolicy accessPolicy, String privateMasterKeyUniqueIdentifier)
             throws CosmianException {
         // convert the Access Policy to attributes and attach it to the common
         // attributes
         VendorAttribute accessPolicyAttribute = accessPolicy
                 .toVendorAttribute();
 
-        return createUserDecryptionKey(accessPolicyAttribute, privateMasterKeyUniqueIdentifier);
+        return createCoverCryptUserDecryptionKey(accessPolicyAttribute, privateMasterKeyUniqueIdentifier);
     }
 
     /**
@@ -284,7 +285,8 @@ public class KmipClient {
      * @return the UID of the newly created key
      * @throws CosmianException if the creation fails
      */
-    String createUserDecryptionKey(VendorAttribute accessPolicyAttribute, String privateMasterKeyUniqueIdentifier)
+    String createCoverCryptUserDecryptionKey(VendorAttribute accessPolicyAttribute,
+            String privateMasterKeyUniqueIdentifier)
             throws CosmianException {
         try {
             Attributes commonAttributes = new Attributes(
@@ -322,7 +324,8 @@ public class KmipClient {
      * @return the User Decryption Key
      * @throws CosmianException if the retrieval fails
      */
-    public PrivateKey retrieveUserDecryptionKey(String userDecryptionKeyUniqueIdentifier) throws CosmianException {
+    public PrivateKey retrieveCoverCryptUserDecryptionKey(String userDecryptionKeyUniqueIdentifier)
+            throws CosmianException {
         try {
             Get request = new Get(userDecryptionKeyUniqueIdentifier);
             request.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
@@ -358,7 +361,7 @@ public class KmipClient {
      * @return the UID of the imported key
      * @throws CosmianException if the import fails
      */
-    public String importUserDecryptionKey(String uniqueIdentifier, PrivateKey userDecryptionKey,
+    public String importCoverCryptUserDecryptionKey(String uniqueIdentifier, PrivateKey userDecryptionKey,
             boolean replaceExisting) throws CosmianException {
         try {
             Import request = new Import(uniqueIdentifier, ObjectType.Private_Key, Optional.of(replaceExisting),
@@ -391,9 +394,9 @@ public class KmipClient {
      * @return the encrypted data
      * @throws CosmianException if the encryption fails
      */
-    public byte[] kmsEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes)
+    public byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes)
             throws CosmianException {
-        return kmsEncrypt(publicMasterKeyUniqueIdentifier, data, attributes, Optional.empty());
+        return coverCryptEncrypt(publicMasterKeyUniqueIdentifier, data, attributes, Optional.empty());
     }
 
     /**
@@ -413,7 +416,7 @@ public class KmipClient {
      * @return the encrypted data
      * @throws CosmianException if the encryption fails
      */
-    public byte[] kmsEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes,
+    public byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes,
             Optional<byte[]> authenticationData) throws CosmianException {
         try {
             DataToEncrypt dataToEncrypt = new DataToEncrypt(attributes, data);
@@ -447,8 +450,9 @@ public class KmipClient {
      * @return the clear text data
      * @throws CosmianException if the decryption fails
      */
-    public byte[] kmsDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData) throws CosmianException {
-        return this.kmsDecrypt(userDecryptionKeyUniqueIdentifier, encryptedData, Optional.empty());
+    public byte[] coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData)
+            throws CosmianException {
+        return this.coverCryptDecrypt(userDecryptionKeyUniqueIdentifier, encryptedData, Optional.empty());
     }
 
     /**
@@ -466,7 +470,7 @@ public class KmipClient {
      * @return the clear text data
      * @throws CosmianException if the decryption fails
      */
-    public byte[] kmsDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData,
+    public byte[] coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData,
             Optional<byte[]> authenticationData)
             throws CosmianException {
         try {
@@ -507,7 +511,7 @@ public class KmipClient {
      * @return the Master Public Key UID
      * @throws CosmianException if the revocation fails
      */
-    public String rotateAttributes(String privateMasterKeyUniqueIdentifier, Attr[] policyAttributes)
+    public String rotateCoverCryptAttributes(String privateMasterKeyUniqueIdentifier, Attr[] policyAttributes)
             throws CosmianException {
         try {
             Attributes attributes = new Attributes(ObjectType.Private_Key,
@@ -533,8 +537,8 @@ public class KmipClient {
     /**
      * Revoke a key in the KMS which makes it unavailable to use in the KMS to
      * perform
-     * {@link #kmsEncrypt(String, byte[], Attr[])} or
-     * {@link #kmsDecrypt(String, byte[])} operations. <br>
+     * {@link #coverCryptEncrypt(String, byte[], Attr[])} or
+     * {@link #coverCryptDecrypt(String, byte[])} operations. <br>
      * <br>
      * If this key is a User Decryption Key, it will not be rekeyed in case of
      * attribute revocation. <br>
@@ -565,8 +569,8 @@ public class KmipClient {
     /**
      * Destroy a key in the KMS which makes it unavailable to use in the KMS to
      * perform
-     * {@link #kmsEncrypt(String, byte[], Attr[])} or
-     * {@link #kmsDecrypt(String, byte[])} operations. <br>
+     * {@link #coverCryptEncrypt(String, byte[], Attr[])} or
+     * {@link #coverCryptDecrypt(String, byte[])} operations. <br>
      * <br>
      * Note: this destroy the key **inside** the KMS: it does not prevent an user
      * who has a local copy of a User
@@ -576,7 +580,7 @@ public class KmipClient {
      * @return the UID of the destroyed key
      * @throws CosmianException if the destruction fails
      */
-    public String destroy(String uniqueIdentifier) throws CosmianException {
+    public String destroyKey(String uniqueIdentifier) throws CosmianException {
         try {
             Destroy request = new Destroy(Optional.of(uniqueIdentifier));
             DestroyResponse response = kmip.destroy(request);

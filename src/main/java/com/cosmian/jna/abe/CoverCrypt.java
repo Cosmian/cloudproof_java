@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import com.cosmian.CosmianException;
-import com.cosmian.jna.FfiException;
+import com.cosmian.jna.CoverCryptException;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
@@ -19,17 +19,31 @@ import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
+import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
-public final class Ffi {
+public final class CoverCrypt {
 
     // For the JSON strings
     private final static ObjectMapper mapper = new ObjectMapper();
 
-    private FfiWrapper instance;
+    private CoverCryptWrapper instance;
 
-    public Ffi(FfiWrapper instance) {
+    /**
+     * Instantiate a {@link CoverCrypt} instance by loading the native library
+     * `cosmian_cover_crypt`.
+     * The library must be on the classpath.
+     * 
+     * Native libraries are already included for darwin-x86-64, linux-x86-64 and
+     * win32-x86-64
+     */
+    public CoverCrypt() {
+        this((CoverCryptWrapper) Native.load("cosmian_cover_crypt",
+                CoverCryptWrapper.class));
+    }
+
+    public CoverCrypt(CoverCryptWrapper instance) {
         this.instance = instance;
     }
 
@@ -37,9 +51,9 @@ public final class Ffi {
      * Return the last error in a String that does not exceed 1023 bytes
      *
      * @return the last error recorded by the native library
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
-    public String get_last_error() throws FfiException {
+    public String get_last_error() throws CoverCryptException {
         return get_last_error(1023);
     }
 
@@ -47,28 +61,28 @@ public final class Ffi {
      * Return the last error in a String that does not exceed `max_len` bytes
      *
      * @param max_len the maximum number of bytes to return
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      * @return the error
      */
-    public String get_last_error(int max_len) throws FfiException {
+    public String get_last_error(int max_len) throws CoverCryptException {
         if (max_len < 1) {
-            throw new FfiException("get_last_error: max_lem must be at least one");
+            throw new CoverCryptException("get_last_error: max_lem must be at least one");
         }
         byte[] output = new byte[max_len + 1];
         IntByReference outputSize = new IntByReference(output.length);
         if (this.instance.get_last_error(output, outputSize) == 0) {
             return new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
         }
-        throw new FfiException("Failed retrieving the last error; check the debug logs");
+        throw new CoverCryptException("Failed retrieving the last error; check the debug logs");
     }
 
     /**
      * Set the last error on the native lib
      *
      * @param error_msg the last error to set on the native lib
-     * @throws FfiException n case of native library error
+     * @throws CoverCryptException n case of native library error
      */
-    public void set_error(String error_msg) throws FfiException {
+    public void set_error(String error_msg) throws CoverCryptException {
         unwrap(this.instance.set_error(error_msg));
     }
 
@@ -81,10 +95,10 @@ public final class Ffi {
      *
      * @param publicKey the public key to cache
      * @return the cache handle that can be passed to the encryption routine
-     * @throws FfiException     on Rust lib errors
-     * @throws CosmianException in case of other errors
+     * @throws CoverCryptException on Rust lib errors
+     * @throws CosmianException    in case of other errors
      */
-    public int createEncryptionCache(PublicKey publicKey) throws FfiException, CosmianException {
+    public int createEncryptionCache(PublicKey publicKey) throws CoverCryptException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
         return createEncryptionCache(policy, publicKeyBytes);
@@ -100,17 +114,18 @@ public final class Ffi {
      * @param policy         the {@link Policy} to cache
      * @param publicKeyBytes the public key bytes to cache
      * @return the cache handle that can be passed to the encryption routine
-     * @throws FfiException     on Rust lib errors
-     * @throws CosmianException in case of other errors
+     * @throws CoverCryptException on Rust lib errors
+     * @throws CosmianException    in case of other errors
      */
-    public int createEncryptionCache(Policy policy, byte[] publicKeyBytes) throws FfiException, CosmianException {
+    public int createEncryptionCache(Policy policy, byte[] publicKeyBytes)
+            throws CoverCryptException, CosmianException {
 
         // Policy
         String policyJson;
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy", e);
+            throw new CoverCryptException("Invalid Policy", e);
         }
 
         // Public Key
@@ -131,10 +146,10 @@ public final class Ffi {
      * Destroy the cache created with {@link #createEncryptionCache(Policy, byte[])}
      *
      * @param cacheHandle the pointer to the cache to destroy
-     * @throws FfiException     on Rust lib errors
-     * @throws CosmianException in case of other errors
+     * @throws CoverCryptException on Rust lib errors
+     * @throws CosmianException    in case of other errors
      */
-    public void destroyEncryptionCache(int cacheHandle) throws FfiException, CosmianException {
+    public void destroyEncryptionCache(int cacheHandle) throws CoverCryptException, CosmianException {
         unwrap(this.instance.h_aes_destroy_encryption_cache(cacheHandle));
     }
 
@@ -148,12 +163,13 @@ public final class Ffi {
      * @param encryptionPolicy the encryption policy that determines the partitions
      *                         to encrypt for
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException     in case of native library error
-     * @throws CosmianException in case the {@link Policy} and key bytes cannot be
-     *                          recovered from the {@link PublicKey}
+     * @throws CoverCryptException in case of native library error
+     * @throws CosmianException    in case the {@link Policy} and key bytes
+     *                             cannot be
+     *                             recovered from the {@link PublicKey}
      */
     public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, String encryptionPolicy)
-            throws FfiException, CosmianException {
+            throws CoverCryptException, CosmianException {
         return encryptHeaderUsingCache(cacheHandle, encryptionPolicy, Optional.empty(), Optional.empty());
     }
 
@@ -174,13 +190,14 @@ public final class Ffi {
      * @param authenticationData optional data used to authenticate the encryption
      *                           of the additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException     in case of native library error
-     * @throws CosmianException in case the {@link Policy} and key bytes cannot be
-     *                          recovered from the {@link PublicKey}
+     * @throws CoverCryptException in case of native library error
+     * @throws CosmianException    in case the {@link Policy} and key bytes
+     *                             cannot be
+     *                             recovered from the {@link PublicKey}
      */
     public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, String encryptionPolicy,
             Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
-            throws FfiException, CosmianException {
+            throws CoverCryptException, CosmianException {
         // Is a resource UID supplied
         int authenticationDataLength;
         if (authenticationData.isPresent()) {
@@ -249,12 +266,13 @@ public final class Ffi {
      * @param encryptionPolicy the encryption policy that determines the partitions
      *                         to encrypt for
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException     in case of native library error
-     * @throws CosmianException in case the {@link Policy} and key bytes cannot be
-     *                          recovered from the {@link PublicKey}
+     * @throws CoverCryptException in case of native library error
+     * @throws CosmianException    in case the {@link Policy} and key bytes
+     *                             cannot be
+     *                             recovered from the {@link PublicKey}
      */
     public EncryptedHeader encryptHeader(PublicKey publicKey, String encryptionPolicy)
-            throws FfiException, CosmianException {
+            throws CoverCryptException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, Optional.empty(), Optional.empty());
@@ -276,13 +294,14 @@ public final class Ffi {
      * @param authenticationData optional data used to authenticate the encryption
      *                           of the additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException     in case of native library error
-     * @throws CosmianException in case the {@link Policy} and key bytes cannot be
-     *                          recovered from the {@link PublicKey}
+     * @throws CoverCryptException in case of native library error
+     * @throws CosmianException    in case the {@link Policy} and key bytes
+     *                             cannot be
+     *                             recovered from the {@link PublicKey}
      */
     public EncryptedHeader encryptHeader(PublicKey publicKey, String encryptionPolicy,
             Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
-            throws FfiException, CosmianException {
+            throws CoverCryptException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, additionalData, authenticationData);
@@ -298,10 +317,10 @@ public final class Ffi {
      * @param encryptionPolicy the encryption policy that determines the partitions
      *                         to encrypt for
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, String encryptionPolicy)
-            throws FfiException {
+            throws CoverCryptException {
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, Optional.empty(), Optional.empty());
     }
 
@@ -323,10 +342,10 @@ public final class Ffi {
      * @param authenticationData optional data used to authenticate the encryption
      *                           of the additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            Optional<byte[]> additionalData, Optional<byte[]> authenticationData) throws FfiException {
+            Optional<byte[]> additionalData, Optional<byte[]> authenticationData) throws CoverCryptException {
 
         // Is additional data supplied
         int additionalDataLength;
@@ -357,7 +376,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy", e);
+            throw new CoverCryptException("Invalid Policy", e);
         }
 
         // Public Key
@@ -408,10 +427,10 @@ public final class Ffi {
      *
      * @param userDecryptionKey the public key to cache
      * @return the cache handle that can be passed to the decryption routine
-     * @throws FfiException     on Rust lib errors
-     * @throws CosmianException in case of other errors
+     * @throws CoverCryptException on Rust lib errors
+     * @throws CosmianException    in case of other errors
      */
-    public int createDecryptionCache(PrivateKey userDecryptionKey) throws FfiException, CosmianException {
+    public int createDecryptionCache(PrivateKey userDecryptionKey) throws CoverCryptException, CosmianException {
         byte[] userDecryptionKeyBytes = userDecryptionKey.bytes();
         return createDecryptionCache(userDecryptionKeyBytes);
     }
@@ -425,10 +444,10 @@ public final class Ffi {
      *
      * @param userDecryptionKeyBytes the public key bytes to cache
      * @return the cache handle that can be passed to the decryption routine
-     * @throws FfiException     on Rust lib errors
-     * @throws CosmianException in case of other errors
+     * @throws CoverCryptException on Rust lib errors
+     * @throws CosmianException    in case of other errors
      */
-    public int createDecryptionCache(byte[] userDecryptionKeyBytes) throws FfiException, CosmianException {
+    public int createDecryptionCache(byte[] userDecryptionKeyBytes) throws CoverCryptException, CosmianException {
 
         // Public Key
         final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKeyBytes.length);
@@ -447,10 +466,10 @@ public final class Ffi {
      * Destroy the cache created with {@link #createDecryptionCache(byte[])}
      *
      * @param cacheHandle the pointer to the cache to destroy
-     * @throws FfiException     on Rust lib errors
-     * @throws CosmianException in case of other errors
+     * @throws CoverCryptException on Rust lib errors
+     * @throws CosmianException    in case of other errors
      */
-    public void destroyDecryptionCache(int cacheHandle) throws FfiException, CosmianException {
+    public void destroyDecryptionCache(int cacheHandle) throws CoverCryptException, CosmianException {
         unwrap(this.instance.h_aes_destroy_decryption_cache(cacheHandle));
     }
 
@@ -460,12 +479,13 @@ public final class Ffi {
      * @param cacheHandle          the cache to the user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException     in case of native library error
-     * @throws CosmianException in case the key bytes cannot be recovered from the
-     *                          {@link PrivateKey}
+     * @throws CoverCryptException in case of native library error
+     * @throws CosmianException    in case the key bytes cannot be recovered
+     *                             from the
+     *                             {@link PrivateKey}
      */
     public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes)
-            throws FfiException, CosmianException {
+            throws CoverCryptException, CosmianException {
         return decryptHeaderUsingCache(cacheHandle, encryptedHeaderBytes, 0, Optional.empty());
     }
 
@@ -481,10 +501,10 @@ public final class Ffi {
      * @param authenticationData   optional data used to authenticate the encryption
      *                             of the additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes,
-            int additionalDataLen, Optional<byte[]> authenticationData) throws FfiException {
+            int additionalDataLen, Optional<byte[]> authenticationData) throws CoverCryptException {
 
         // Symmetric Key OUT
         byte[] symmetricKeyBuffer = new byte[1024];
@@ -535,12 +555,13 @@ public final class Ffi {
      * @param userDecryptionKey    the ABE user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException     in case of native library error
-     * @throws CosmianException in case the key bytes cannot be recovered from the
-     *                          {@link PrivateKey}
+     * @throws CoverCryptException in case of native library error
+     * @throws CosmianException    in case the key bytes cannot be recovered
+     *                             from the
+     *                             {@link PrivateKey}
      */
     public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes)
-            throws FfiException, CosmianException {
+            throws CoverCryptException, CosmianException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, 0, Optional.empty());
     }
 
@@ -555,12 +576,14 @@ public final class Ffi {
      * @param authenticationData   optional data used to authenticate the encryption
      *                             of the additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException     in case of native library error
-     * @throws CosmianException in case the key bytes cannot be recovered from the
-     *                          {@link PrivateKey}
+     * @throws CoverCryptException in case of native library error
+     * @throws CosmianException    in case the key bytes cannot be recovered
+     *                             from the
+     *                             {@link PrivateKey}
      */
     public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes,
-            int additionalDataLen, Optional<byte[]> authenticationData) throws FfiException, CosmianException {
+            int additionalDataLen, Optional<byte[]> authenticationData)
+            throws CoverCryptException, CosmianException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, additionalDataLen, authenticationData);
     }
 
@@ -571,10 +594,10 @@ public final class Ffi {
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
      * @param encryptedHeaderBytes   the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes)
-            throws FfiException {
+            throws CoverCryptException {
         return decryptHeader(userDecryptionKeyBytes, encryptedHeaderBytes, 0, Optional.empty());
     }
 
@@ -589,10 +612,10 @@ public final class Ffi {
      * @param authenticationData     optional data used to authenticate the
      *                               encryption of the additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes,
-            int additionalDataLen, Optional<byte[]> authenticationData) throws FfiException {
+            int additionalDataLen, Optional<byte[]> authenticationData) throws CoverCryptException {
 
         // Symmetric Key OUT
         byte[] symmetricKeyBuffer = new byte[1024];
@@ -658,9 +681,9 @@ public final class Ffi {
      * @param symmetricKey The key to use to symmetrically encrypt the block
      * @param clearText    the clear text to encrypt
      * @return the encrypted block
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
-    public byte[] encryptBlock(byte[] symmetricKey, byte[] clearText) throws FfiException {
+    public byte[] encryptBlock(byte[] symmetricKey, byte[] clearText) throws CoverCryptException {
         return encryptBlock(symmetricKey, new byte[] {}, clearText);
     }
 
@@ -674,10 +697,10 @@ public final class Ffi {
      *                           symmetric encryption
      * @param clearText          the clear text to encrypt
      * @return the encrypted block
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public byte[] encryptBlock(byte[] symmetricKey, byte[] authenticationData, byte[] clearText)
-            throws FfiException {
+            throws CoverCryptException {
 
         // Ciphertext OUT
         byte[] ciphertextBuffer = new byte[this.instance.h_aes_symmetric_encryption_overhead() + clearText.length];
@@ -717,9 +740,9 @@ public final class Ffi {
      * @param symmetricKey   the symmetric key to use
      * @param encryptedBytes the encrypted block bytes
      * @return the clear text bytes
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
-    public byte[] decryptBlock(byte[] symmetricKey, byte[] encryptedBytes) throws FfiException {
+    public byte[] decryptBlock(byte[] symmetricKey, byte[] encryptedBytes) throws CoverCryptException {
 
         return decryptBlock(symmetricKey, new byte[] {}, encryptedBytes);
     }
@@ -734,10 +757,10 @@ public final class Ffi {
      *                           symmetric encryption
      * @param encryptedBytes     the encrypted block bytes
      * @return the clear text bytes
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public byte[] decryptBlock(byte[] symmetricKey, byte[] authenticationData, byte[] encryptedBytes)
-            throws FfiException {
+            throws CoverCryptException {
 
         // Clear Text Bytes OUT
         byte[] clearTextBuffer = new byte[encryptedBytes.length - this.instance.h_aes_symmetric_encryption_overhead()];
@@ -774,9 +797,9 @@ public final class Ffi {
      *
      * @param policy the policy to use
      * @return the master private and public keys in raw bytes
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
-    public MasterKeys generateMasterKeys(Policy policy) throws FfiException {
+    public MasterKeys generateMasterKeys(Policy policy) throws CoverCryptException {
         // Master keys Bytes OUT
         byte[] masterKeysBuffer = new byte[8192];
         IntByReference masterKeysBufferSize = new IntByReference(masterKeysBuffer.length);
@@ -786,7 +809,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy", e);
+            throw new CoverCryptException("Invalid Policy", e);
         }
 
         int ffiCode = this.instance.h_generate_master_keys(masterKeysBuffer, masterKeysBufferSize, policyJson);
@@ -795,13 +818,13 @@ public final class Ffi {
             masterKeysBuffer = new byte[masterKeysBufferSize.getValue()];
             ffiCode = this.instance.h_generate_master_keys(masterKeysBuffer, masterKeysBufferSize, policyJson);
             if (ffiCode != 0) {
-                throw new FfiException(get_last_error(4095));
+                throw new CoverCryptException(get_last_error(4095));
             }
         }
 
         byte[] masterKeysBytes = Arrays.copyOfRange(masterKeysBuffer, 0, masterKeysBufferSize.getValue());
         if (masterKeysBytes.length < 4) {
-            throw new FfiException("Invalid master key bytes length. Must be at least 4 bytes");
+            throw new CoverCryptException("Invalid master key bytes length. Must be at least 4 bytes");
         }
 
         int privateKeySize = ByteBuffer.wrap(Arrays.copyOfRange(masterKeysBytes, 0, 4)).getInt();
@@ -819,10 +842,10 @@ public final class Ffi {
      *                         boolean expression
      * @param policy           the ABE policy
      * @return the corresponding user private key
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public byte[] generateUserPrivateKey(byte[] masterPrivateKey, String booleanAccessPolicy, Policy policy)
-            throws FfiException {
+            throws CoverCryptException {
 
         String json = this.booleanAccessPolicyToJson(booleanAccessPolicy);
         return generateUserPrivateKey_(masterPrivateKey, json, policy);
@@ -836,17 +859,17 @@ public final class Ffi {
      *                         AccessPolicy instance
      * @param policy           the ABE policy
      * @return the corresponding user private key
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public byte[] generateUserPrivateKey(byte[] masterPrivateKey, AccessPolicy accessPolicy, Policy policy)
-            throws FfiException {
+            throws CoverCryptException {
 
         // Access Policy
         String accessPolicyJson;
         try {
             accessPolicyJson = mapper.writeValueAsString(accessPolicy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Access Policy", e);
+            throw new CoverCryptException("Invalid Access Policy", e);
         }
 
         return generateUserPrivateKey_(masterPrivateKey, accessPolicyJson, policy);
@@ -857,14 +880,14 @@ public final class Ffi {
      * Generate the user private key
      *
      * @param masterPrivateKey the master private key in bytes
-     * @param accessPolicyJson     the access policy of the user private key as a JSON
+     * @param accessPolicyJson the access policy of the user private key as a JSON
      *                         version of an AccessPolicy instance
      * @param policy           the ABE policy
      * @return the corresponding user private key
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     byte[] generateUserPrivateKey_(byte[] masterPrivateKey, String accessPolicyJson, Policy policy)
-            throws FfiException {
+            throws CoverCryptException {
         // User private key Bytes OUT
         byte[] userPrivateKeyBuffer = new byte[8192];
         IntByReference userPrivateKeyBufferSize = new IntByReference(userPrivateKeyBuffer.length);
@@ -878,7 +901,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy", e);
+            throw new CoverCryptException("Invalid Policy", e);
         }
 
         int ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
@@ -889,7 +912,7 @@ public final class Ffi {
             ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
                     masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
             if (ffiCode != 0) {
-                throw new FfiException(get_last_error(4095));
+                throw new CoverCryptException(get_last_error(4095));
             }
         }
         return Arrays.copyOfRange(userPrivateKeyBuffer, 0, userPrivateKeyBufferSize.getValue());
@@ -902,13 +925,13 @@ public final class Ffi {
      * @param attributes: a list of attributes to rotate
      * @param policy:     the current policy returns the new Policy
      * @return the new policy
-     * @throws FfiException        in case of native library error
+     * @throws CoverCryptException in case of native library error
      * @throws IOException         standard IO exceptions
      * @throws DatabindException   standard databind exceptions
      * @throws StreamReadException stream read exceptions
      */
     public Policy rotateAttributes(Attr[] attributes, Policy policy)
-            throws FfiException, StreamReadException, DatabindException, IOException {
+            throws CoverCryptException, StreamReadException, DatabindException, IOException {
         // New policy Bytes OUT
         byte[] policyBuffer = new byte[4096];
         IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
@@ -923,7 +946,7 @@ public final class Ffi {
         try {
             attributesJson = mapper.writeValueAsString(attributesArray);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Attributes", e);
+            throw new CoverCryptException("Invalid Attributes", e);
         }
 
         // Policy
@@ -931,7 +954,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy", e);
+            throw new CoverCryptException("Invalid Policy", e);
         }
 
         int ffiCode = this.instance.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson);
@@ -941,7 +964,7 @@ public final class Ffi {
             policyBuffer = new byte[policyBufferSize.getValue()];
             ffiCode = this.instance.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson);
             if (ffiCode != 0) {
-                throw new FfiException(get_last_error(4095));
+                throw new CoverCryptException(get_last_error(4095));
             }
         }
 
@@ -957,11 +980,12 @@ public final class Ffi {
      *
      * @param result the result of the FFI call
      * @return the result if it is different from 1
-     * @throws FfiException in case of native library error (result is 1)
+     * @throws CoverCryptException in case of native library error (result is
+     *                             1)
      */
-    public int unwrap(int result) throws FfiException {
+    public int unwrap(int result) throws CoverCryptException {
         if (result == 1) {
-            throw new FfiException(get_last_error(4095));
+            throw new CoverCryptException(get_last_error(4095));
         }
         return result;
     }
@@ -975,10 +999,10 @@ public final class Ffi {
      *                         to encrypt for
      * @param plaintext        the plaintext to encrypt
      * @return the ciphertext
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext) throws FfiException {
+            byte[] plaintext) throws CoverCryptException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.empty(),
                 Optional.empty());
@@ -996,10 +1020,10 @@ public final class Ffi {
      * @param plaintext          the plaintext to encrypt
      * @param authenticationData data used to authenticate the symmetric encryption
      * @return the ciphertext
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext, byte[] authenticationData) throws FfiException {
+            byte[] plaintext, byte[] authenticationData) throws CoverCryptException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.empty(),
                 Optional.of(authenticationData));
@@ -1018,10 +1042,10 @@ public final class Ffi {
      * @param additionalData     additional data to encrypt and add to the header
      * @param authenticationData data used to authenticate the symmetric encryption
      * @return the ciphertext
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext, byte[] additionalData, byte[] authenticationData) throws FfiException {
+            byte[] plaintext, byte[] additionalData, byte[] authenticationData) throws CoverCryptException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.of(additionalData),
                 Optional.of(authenticationData));
@@ -1044,11 +1068,11 @@ public final class Ffi {
      * @param authenticationData optional data used to authenticate the symmetric
      *                           encryption
      * @return the ciphertext
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
             byte[] plaintext, Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
-            throws FfiException {
+            throws CoverCryptException {
 
         // Is additional data supplied
         int additionalDataLength;
@@ -1075,7 +1099,7 @@ public final class Ffi {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid Policy", e);
+            throw new CoverCryptException("Invalid Policy", e);
         }
 
         // Public Key
@@ -1122,9 +1146,9 @@ public final class Ffi {
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
      * @param ciphertext             the ciphertext to decrypt
      * @return A tuple of [plaintext, additional data]
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
-    public byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext) throws FfiException {
+    public byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext) throws CoverCryptException {
         return decrypt(userDecryptionKeyBytes, ciphertext, Optional.empty());
     }
 
@@ -1136,10 +1160,10 @@ public final class Ffi {
      * @param authenticationData     data used to authenticate the symmetric
      *                               encryption
      * @return A tuple of [plaintext, additional data]
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     public byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
-            byte[] authenticationData) throws FfiException {
+            byte[] authenticationData) throws CoverCryptException {
         return decrypt(userDecryptionKeyBytes, ciphertext, Optional.of(authenticationData));
     }
 
@@ -1151,10 +1175,10 @@ public final class Ffi {
      * @param authenticationData     optional data used to authenticate the
      *                               symmetric encryption
      * @return A tuple of [plaintext, additional data]
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
     byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
-            Optional<byte[]> authenticationData) throws FfiException {
+            Optional<byte[]> authenticationData) throws CoverCryptException {
 
         // plaintext OUT
         byte[] plaintext = new byte[ciphertext.length]; // safe: plaintext should be smaller than cipher text
@@ -1202,10 +1226,10 @@ public final class Ffi {
      * that can be used in KMIP calls to create user decryption keys.
      *
      * @param booleanExpression access policy in the form of a boolean expression
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      * @return the JSON expression as a {@link String}
      */
-    public String booleanAccessPolicyToJson(String booleanExpression) throws FfiException {
+    public String booleanAccessPolicyToJson(String booleanExpression) throws CoverCryptException {
         int len = booleanExpression.length() * 2;
         byte[] output = new byte[len];
         IntByReference outputSize = new IntByReference(output.length);

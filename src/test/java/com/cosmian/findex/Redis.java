@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.cosmian.CosmianException;
-import com.cosmian.jna.FfiException;
+import com.cosmian.jna.CoverCryptException;
 import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
@@ -66,7 +66,7 @@ public class Redis {
      * Instantiate a new Redis Client
      *
      * @param hostname the REST Server URL e.g. localhost
-     * @param port Sets a specified port value e.g 6379
+     * @param port     Sets a specified port value e.g 6379
      * @param password the authentication password or token
      */
     public Redis(String hostname, int port, String password) {
@@ -120,56 +120,56 @@ public class Redis {
     //
     public FetchEntry fetchEntry = new FetchEntry(new com.cosmian.jna.findex.FfiWrapper.FetchEntryInterface() {
         @Override
-        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException {
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CoverCryptException {
             try {
                 return getEntries(uids, INDEX_TABLE_ENTRY_STORAGE);
             } catch (CosmianException e) {
-                throw new FfiException("Failed fetch entry: " + e.toString());
+                throw new CoverCryptException("Failed fetch entry: " + e.toString());
             }
         }
     });
 
     public FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FfiWrapper.FetchChainInterface() {
         @Override
-        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException {
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CoverCryptException {
             try {
                 return getEntries(uids, INDEX_TABLE_CHAIN_STORAGE);
             } catch (CosmianException e) {
-                throw new FfiException("Failed chain upsert: " + e.toString());
+                throw new CoverCryptException("Failed chain upsert: " + e.toString());
             }
         }
     });
 
-    public FetchAllEntry fetchAllEntry =
-        new FetchAllEntry(new com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface() {
-            @Override
-            public HashMap<byte[], byte[]> fetch() throws FfiException {
-                try {
-                    return getAllKeysAndValues(INDEX_TABLE_ENTRY_STORAGE);
-                } catch (CosmianException e) {
-                    throw new FfiException("Failed fetch all entry: " + e.toString());
+    public FetchAllEntry fetchAllEntry = new FetchAllEntry(
+            new com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface() {
+                @Override
+                public HashMap<byte[], byte[]> fetch() throws CoverCryptException {
+                    try {
+                        return getAllKeysAndValues(INDEX_TABLE_ENTRY_STORAGE);
+                    } catch (CosmianException e) {
+                        throw new CoverCryptException("Failed fetch all entry: " + e.toString());
+                    }
                 }
-            }
-        });
+            });
 
     public UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface() {
         @Override
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException {
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CoverCryptException {
             try {
                 setEntries(uidsAndValues);
             } catch (CosmianException e) {
-                throw new FfiException("Failed entry upsert: " + e.toString());
+                throw new CoverCryptException("Failed entry upsert: " + e.toString());
             }
         }
     });
 
     public UpsertChain upsertChain = new UpsertChain(new com.cosmian.jna.findex.FfiWrapper.UpsertChainInterface() {
         @Override
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException {
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CoverCryptException {
             try {
                 setChains(uidsAndValues);
             } catch (CosmianException e) {
-                throw new FfiException("Failed chain upsert: " + e.toString());
+                throw new CoverCryptException("Failed chain upsert: " + e.toString());
             }
         }
     });
@@ -184,7 +184,8 @@ public class Redis {
     ///
     /// ### Option 1
     ///
-    /// Keep the database small but prevent using the index during the `update_lines`.
+    /// Keep the database small but prevent using the index during the
+    /// `update_lines`.
     ///
     /// 1. remove all the Index Entry Table
     /// 2. add `new_encrypted_entry_table_items` to the Index Entry Table
@@ -193,7 +194,8 @@ public class Redis {
     ///
     /// ### Option 2
     ///
-    /// During a small duration, the index tables are much bigger but users can continue
+    /// During a small duration, the index tables are much bigger but users can
+    /// continue
     /// using the index during the `update_lines`.
     ///
     /// 1. save all UIDs from the current Index Entry Table
@@ -205,40 +207,40 @@ public class Redis {
     public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FfiWrapper.UpdateLinesInterface() {
         @Override
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
-            HashMap<byte[], byte[]> newChains) throws FfiException {
+                HashMap<byte[], byte[]> newChains) throws CoverCryptException {
             try {
                 delAllEntries(INDEX_TABLE_ENTRY_STORAGE);
                 setEntries(newEntries);
                 setChains(newChains);
                 delEntries(removedChains, INDEX_TABLE_CHAIN_STORAGE);
             } catch (CosmianException e) {
-                throw new FfiException("Failed update lines: " + e.toString());
+                throw new CoverCryptException("Failed update lines: " + e.toString());
             }
         }
     });
 
-    public ListRemovedLocations listRemovedLocations =
-        new ListRemovedLocations(new com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsInterface() {
-            @Override
-            public List<Location> list(List<Location> locations) throws FfiException {
-                List<Integer> ids =
-                    locations.stream().map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
-                        .collect(Collectors.toList());
+    public ListRemovedLocations listRemovedLocations = new ListRemovedLocations(
+            new com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsInterface() {
+                @Override
+                public List<Location> list(List<Location> locations) throws CoverCryptException {
+                    List<Integer> ids = locations.stream()
+                            .map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
+                            .collect(Collectors.toList());
 
-                try {
-                    return listRemovedIds(ids).stream()
-                        .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
-                        .collect(Collectors.toList());
-                } catch (CosmianException e) {
-                    throw new FfiException("Failed update lines: " + e.toString());
+                    try {
+                        return listRemovedIds(ids).stream()
+                                .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
+                                .collect(Collectors.toList());
+                    } catch (CosmianException e) {
+                        throw new CoverCryptException("Failed update lines: " + e.toString());
+                    }
+
                 }
-
-            }
-        });
+            });
 
     public Progress progress = new Progress(new com.cosmian.jna.findex.FfiWrapper.ProgressInterface() {
         @Override
-        public boolean list(List<byte[]> indexedValues) throws FfiException {
+        public boolean list(List<byte[]> indexedValues) throws CoverCryptException {
 
             try {
                 //
@@ -250,7 +252,7 @@ public class Redis {
                 }
                 return true;
             } catch (CosmianException e) {
-                throw new FfiException("Failed getting search results: " + e.toString());
+                throw new CoverCryptException("Failed getting search results: " + e.toString());
             }
 
         }
@@ -273,7 +275,7 @@ public class Redis {
      *
      * @param prefix table prefix (can be 1, 2 or 3)
      * @param number the index of the table
-     * @param uid which is the UID of
+     * @param uid    which is the UID of
      * @return key as prefix|number on 4 bytes|uid
      */
     public static byte[] key(String prefix, int number, byte[] uid) {

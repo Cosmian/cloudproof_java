@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import com.cosmian.CosmianException;
-import com.cosmian.jna.FfiException;
+import com.cosmian.jna.CoverCryptException;
 import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchEntryCallback;
@@ -31,9 +31,9 @@ public final class Ffi {
      * Return the last error in a String that does not exceed 1023 bytes
      *
      * @return the last error recorded by the native library
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
-    public static String get_last_error() throws FfiException {
+    public static String get_last_error() throws CoverCryptException {
         return get_last_error(1023);
     }
 
@@ -41,33 +41,33 @@ public final class Ffi {
      * Return the last error in a String that does not exceed `max_len` bytes
      *
      * @param maxLen the maximum number of bytes to return
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      * @return the error
      */
-    public static String get_last_error(int maxLen) throws FfiException {
+    public static String get_last_error(int maxLen) throws CoverCryptException {
         if (maxLen < 1) {
-            throw new FfiException("get_last_error: maxLen must be at least one");
+            throw new CoverCryptException("get_last_error: maxLen must be at least one");
         }
         byte[] output = new byte[maxLen + 1];
         IntByReference outputSize = new IntByReference(output.length);
         if (Ffi.INSTANCE.get_last_error(output, outputSize) == 0) {
             return new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
         }
-        throw new FfiException("Failed retrieving the last error; check the debug logs");
+        throw new CoverCryptException("Failed retrieving the last error; check the debug logs");
     }
 
     /**
      * Set the last error on the native lib
      *
      * @param error_msg the last error to set on the native lib
-     * @throws FfiException n case of native library error
+     * @throws CoverCryptException n case of native library error
      */
-    public static void set_error(String error_msg) throws FfiException {
+    public static void set_error(String error_msg) throws CoverCryptException {
         unwrap(Ffi.INSTANCE.set_error(error_msg));
     }
 
     public static int writeOutputPointerAndSize(HashMap<byte[], byte[]> uidsAndValues, Pointer output,
-        IntByReference outputSize) {
+            IntByReference outputSize) {
         if (uidsAndValues.size() > 0) {
             byte[] uidsAndValuesBytes = Leb128Serializer.serializeHashMap(uidsAndValues);
             if (outputSize.getValue() < uidsAndValuesBytes.length) {
@@ -83,8 +83,8 @@ public final class Ffi {
     }
 
     public static void upsert(MasterKeys masterKeys, byte[] label, HashMap<IndexedValue, Word[]> indexedValuesAndWords,
-        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
-        throws FfiException, CosmianException {
+            FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
+            throws CoverCryptException, CosmianException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -94,7 +94,7 @@ public final class Ffi {
         try {
             masterKeysJson = mapper.writeValueAsString(masterKeys);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid master keys", e);
+            throw new CoverCryptException("Invalid master keys", e);
         }
 
         final Pointer labelPointer = new Memory(label.length);
@@ -115,17 +115,18 @@ public final class Ffi {
         try {
             indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid indexed values and words", e);
+            throw new CoverCryptException("Invalid indexed values and words", e);
         }
 
         // Indexes creation + insertion/update
         unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson, fetchEntry,
-            upsertEntry, upsertChain));
+                upsertEntry, upsertChain));
     }
 
-    public static void graph_upsert(MasterKeys masterKeys, byte[] label, HashMap<IndexedValue, Word[]> indexedValuesAndWords,
-        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
-        throws FfiException, CosmianException {
+    public static void graph_upsert(MasterKeys masterKeys, byte[] label,
+            HashMap<IndexedValue, Word[]> indexedValuesAndWords,
+            FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
+            throws CoverCryptException, CosmianException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -135,7 +136,7 @@ public final class Ffi {
         try {
             masterKeysJson = mapper.writeValueAsString(masterKeys);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid master keys", e);
+            throw new CoverCryptException("Invalid master keys", e);
         }
 
         final Pointer labelPointer = new Memory(label.length);
@@ -156,21 +157,23 @@ public final class Ffi {
         try {
             indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid indexed values and words", e);
+            throw new CoverCryptException("Invalid indexed values and words", e);
         }
 
         // Indexes creation + insertion/update
-        unwrap(Ffi.INSTANCE.h_graph_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson, fetchEntry,
-            upsertEntry, upsertChain));
+        unwrap(Ffi.INSTANCE.h_graph_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
+                fetchEntry,
+                upsertEntry, upsertChain));
     }
 
     public static List<byte[]> search(byte[] keyK, byte[] label, Word[] words, int loopIterationLimit, int maxDepth,
-        ProgressCallback progress, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain)
-        throws FfiException, CosmianException {
+            ProgressCallback progress, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain)
+            throws CoverCryptException, CosmianException {
         //
         // Prepare outputs
         //
-        // start with an arbitration buffer allocation size of 131072 (around 4096 indexedValues)
+        // start with an arbitration buffer allocation size of 131072 (around 4096
+        // indexedValues)
         byte[] indexedValuesBuffer = new byte[131072];
         IntByReference indexedValuesBufferSize = new IntByReference(indexedValuesBuffer.length);
 
@@ -179,7 +182,7 @@ public final class Ffi {
 
         // Findex master keys
         if (keyK == null) {
-            throw new FfiException("Key k cannot be null");
+            throw new CoverCryptException("Key k cannot be null");
         }
         final Pointer keyKeyPointer = new Memory(keyK.length);
         keyKeyPointer.write(0, keyK, 0, keyK.length);
@@ -197,19 +200,20 @@ public final class Ffi {
         try {
             wordsJson = mapper.writeValueAsString(wordsString);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid words", e);
+            throw new CoverCryptException("Invalid words", e);
         }
 
         // Indexes creation + insertion/update
         int ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
-            labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry, fetchChain);
+                labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry, fetchChain);
         if (ffiCode != 0) {
             // Retry with correct allocated size
             indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
             ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
-                labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry, fetchChain);
+                    labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry,
+                    fetchChain);
             if (ffiCode != 0) {
-                throw new FfiException(get_last_error(4095));
+                throw new CoverCryptException(get_last_error(4095));
             }
         }
 
@@ -218,13 +222,15 @@ public final class Ffi {
         return Leb128Serializer.deserializeList(indexedValuesBytes);
     }
 
-    /// `number_of_reindexing_phases_before_full_set`: if you compact the indexes every night
-    /// this is the number of days to wait before be sure that a big portion of the indexes were checked
+    /// `number_of_reindexing_phases_before_full_set`: if you compact the indexes
+    /// every night
+    /// this is the number of days to wait before be sure that a big portion of the
+    /// indexes were checked
     /// (see the coupon problem to understand why it's not 100% sure)
     public static void compact(int numberOfReindexingPhasesBeforeFullSet, MasterKeys masterKeys, byte[] label,
-        FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
-        UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations)
-        throws FfiException, CosmianException {
+            FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
+            UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations)
+            throws CoverCryptException, CosmianException {
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
 
@@ -233,7 +239,7 @@ public final class Ffi {
         try {
             masterKeysJson = mapper.writeValueAsString(masterKeys);
         } catch (JsonProcessingException e) {
-            throw new FfiException("Invalid master keys", e);
+            throw new CoverCryptException("Invalid master keys", e);
         }
 
         final Pointer labelPointer = new Memory(label.length);
@@ -241,19 +247,20 @@ public final class Ffi {
 
         // Indexes creation + insertion/update
         unwrap(Ffi.INSTANCE.h_compact(numberOfReindexingPhasesBeforeFullSet, masterKeysJson, labelPointer, label.length,
-            fetchEntry, fetchChain, fetchAllEntry, updateLines, listRemovedLocations));
+                fetchEntry, fetchChain, fetchAllEntry, updateLines, listRemovedLocations));
     }
 
     /**
-     * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
+     * If the result of the last FFI call is in Error, recover the last error from
+     * the native code and throw an
      * exception wrapping it.
      *
      * @param result the result of the FFI call
-     * @throws FfiException in case of native library error
+     * @throws CoverCryptException in case of native library error
      */
-    public static void unwrap(int result) throws FfiException {
+    public static void unwrap(int result) throws CoverCryptException {
         if (result == 1) {
-            throw new FfiException(get_last_error(4095));
+            throw new CoverCryptException(get_last_error(4095));
         }
     }
 

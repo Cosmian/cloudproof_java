@@ -1,13 +1,13 @@
 package com.cosmian.jna;
 
-public class FfiException extends Exception {
+public class CoverCryptException extends Exception {
 
     /**
      * Constructs a new exception with {@code null} as its detail message. The cause
      * is not initialized, and may
      * subsequently be initialized by a call to {@link #initCause}.
      */
-    public FfiException() {
+    public CoverCryptException() {
         super();
     }
 
@@ -20,7 +20,7 @@ public class FfiException extends Exception {
      *                retrieval by the {@link #getMessage()}
      *                method.
      */
-    public FfiException(String message) {
+    public CoverCryptException(String message) {
         super(message);
     }
 
@@ -44,7 +44,7 @@ public class FfiException extends Exception {
      *                nonexistent or unknown.)
      * @since 1.4
      */
-    public FfiException(String message, Throwable cause) {
+    public CoverCryptException(String message, Throwable cause) {
         super(message, cause);
     }
 
@@ -76,7 +76,7 @@ public class FfiException extends Exception {
      *              or unknown.)
      * @since 1.4
      */
-    public FfiException(Throwable cause) {
+    public CoverCryptException(Throwable cause) {
         super(cause);
     }
 }

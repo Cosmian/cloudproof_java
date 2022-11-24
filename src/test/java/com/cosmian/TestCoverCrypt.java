@@ -53,7 +53,7 @@ public class TestCoverCrypt {
     }
 
     @Test
-    public void test_policy() throws Exception {
+    public void testPolicy() throws Exception {
         Policy policy = policy();
 
         ObjectMapper mapper = new ObjectMapper();
@@ -71,7 +71,7 @@ public class TestCoverCrypt {
     }
 
     @Test
-    public void test_attributes_serde() throws Exception {
+    public void testAttributesSerde() throws Exception {
         Attributes attributes = new Attributes(ObjectType.Private_Key, Optional.of(CryptographicAlgorithm.CoverCrypt));
         attributes.keyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
         attributes.vendorAttributes(
@@ -88,7 +88,7 @@ public class TestCoverCrypt {
     }
 
     @Test
-    public void test_keys_import_export() throws Exception {
+    public void testKeysImportExport() throws Exception {
 
         if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
             System.out.println("No KMS Server: ignoring");
@@ -97,45 +97,46 @@ public class TestCoverCrypt {
 
         Policy pg = policy();
 
-        KmsClient abe = new KmsClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
+        KmsClient kmsClient = new KmsClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
 
-        String[] ids = abe.createCoverCryptMasterKeyPair(pg);
+        String[] ids = kmsClient.createCoverCryptMasterKeyPair(pg);
         logger.info("Created Master Key: Private Key ID: " + ids[0] + ", Public Key ID: " + ids[1]);
 
         String privateMasterKeyUniqueIdentifier = ids[0];
-        PrivateKey privateMasterKey = abe.retrieveCoverCryptPrivateMasterKey(privateMasterKeyUniqueIdentifier);
+        PrivateKey privateMasterKey = kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyUniqueIdentifier);
         assertEquals(KeyFormatType.CoverCryptSecretKey, privateMasterKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, privateMasterKey.getKeyBlock().getCryptographicAlgorithm());
 
         String publicMasterKeyUniqueIdentifier = ids[1];
-        PublicKey publicMasterKey = abe.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
+        PublicKey publicMasterKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
         assertEquals(KeyFormatType.CoverCryptPublicKey, publicMasterKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, publicMasterKey.getKeyBlock().getCryptographicAlgorithm());
 
         // try reimporting the public key with the same ID
         try {
-            abe.importCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier, publicMasterKey, false);
+            kmsClient.importCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier, publicMasterKey, false);
         } catch (CosmianException e) {
             // expected cannot re-insert with the same id if replaceExisting is false
         } catch (Exception e) {
             throw e;
         }
         // allow overwrite
-        String publicMasterKeyUniqueIdentifier_ = abe.importCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier,
+        String publicMasterKeyUniqueIdentifier_ = kmsClient.importCoverCryptPublicMasterKey(
+                publicMasterKeyUniqueIdentifier,
                 publicMasterKey, true);
         logger.info("Imported Public Key with id: " + publicMasterKeyUniqueIdentifier_);
         // retrieve it again
-        PublicKey publicMasterKey_ = abe.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
+        PublicKey publicMasterKey_ = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
         assertEquals(ObjectType.Public_Key, publicMasterKey_.getObjectType());
         assertEquals(KeyFormatType.CoverCryptPublicKey, publicMasterKey_.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, publicMasterKey_.getKeyBlock().getCryptographicAlgorithm());
 
         // User decryption key
-        String userDecryptionKeyUniqueIdentifier = abe.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
+        String userDecryptionKeyUniqueIdentifier = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
                 privateMasterKeyUniqueIdentifier);
         logger.info("Created User Decryption Key with id: " + userDecryptionKeyUniqueIdentifier);
         // ... retrieve it
-        PrivateKey userDecryptionKey = abe.retrieveCoverCryptUserDecryptionKey(userDecryptionKeyUniqueIdentifier);
+        PrivateKey userDecryptionKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userDecryptionKeyUniqueIdentifier);
         assertEquals(KeyFormatType.CoverCryptSecretKey, userDecryptionKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, userDecryptionKey.getKeyBlock().getCryptographicAlgorithm());
         KeyValue keyValue = (KeyValue) userDecryptionKey.getKeyBlock().getKeyValue();
@@ -146,7 +147,7 @@ public class TestCoverCrypt {
     }
 
     @Test
-    public void test_user_decryption_keys() throws Exception {
+    public void testKmsEncryptDecrypt() throws Exception {
 
         if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
             System.out.println("No KMS Server: ignoring");
@@ -155,20 +156,20 @@ public class TestCoverCrypt {
 
         Policy pg = policy();
 
-        KmsClient abe = new KmsClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
+        KmsClient kmsClient = new KmsClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
 
-        String[] ids = abe.createCoverCryptMasterKeyPair(pg);
+        String[] ids = kmsClient.createCoverCryptMasterKeyPair(pg);
         logger.info("Created Master Key: Private Key ID: " + ids[0] + ", Public Key ID: " + ids[1]);
 
         String privateMasterKeyID = ids[0];
-        PrivateKey privateMasterKey = abe.retrieveCoverCryptPrivateMasterKey(privateMasterKeyID);
+        PrivateKey privateMasterKey = kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyID);
         assertEquals(KeyFormatType.CoverCryptSecretKey, privateMasterKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, privateMasterKey.getKeyBlock().getCryptographicAlgorithm());
         Resources.write_resource("cover_crypt/private_master_key.json",
                 privateMasterKey.toJson().getBytes(StandardCharsets.UTF_8));
 
         String publicMasterKeyUniqueIdentifier = ids[1];
-        PublicKey publicMasterKey = abe.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
+        PublicKey publicMasterKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
         assertEquals(KeyFormatType.CoverCryptPublicKey, publicMasterKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, publicMasterKey.getKeyBlock().getCryptographicAlgorithm());
         Resources.write_resource("cover_crypt/public_master_key.json",
@@ -178,42 +179,43 @@ public class TestCoverCrypt {
         String protected_fin_data = "protected_fin_attributes";
         Attr[] protected_fin_attributes = new Attr[] { new Attr("Department", "FIN"),
                 new Attr("Security Level", "Protected") };
-        byte[] protected_fin_ct = abe.coverCryptEncrypt(publicMasterKeyUniqueIdentifier,
+        byte[] protected_fin_ct = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier,
                 protected_fin_data.getBytes(StandardCharsets.UTF_8), protected_fin_attributes);
 
         String confidential_fin_data = "confidential_fin_attributes";
         Attr[] confidential_fin_attributes = new Attr[] { new Attr("Department", "FIN"),
                 new Attr("Security Level", "Confidential") };
-        byte[] confidential_fin_ct = abe.coverCryptEncrypt(publicMasterKeyUniqueIdentifier,
+        byte[] confidential_fin_ct = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier,
                 confidential_fin_data.getBytes(StandardCharsets.UTF_8), confidential_fin_attributes);
 
         // User decryption key Protected, FIN, MKG
-        String fin_mkg_protected_user_key = abe.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
+        String fin_mkg_protected_user_key = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
                 privateMasterKeyID);
-        PrivateKey userKey_1 = abe.retrieveCoverCryptUserDecryptionKey(fin_mkg_protected_user_key);
+        PrivateKey userKey_1 = kmsClient.retrieveCoverCryptUserDecryptionKey(fin_mkg_protected_user_key);
         Resources.write_resource("cover_crypt/fin_mkg_protected_user_key.json",
                 userKey_1.toJson().getBytes(StandardCharsets.UTF_8));
 
         // User decryption key Confidential, FIN
-        String fin_confidential_user_key = abe.createCoverCryptUserDecryptionKey(accessPolicyConfidential(),
+        String fin_confidential_user_key = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyConfidential(),
                 privateMasterKeyID);
-        PrivateKey userKey_2 = abe.retrieveCoverCryptUserDecryptionKey(fin_confidential_user_key);
+        PrivateKey userKey_2 = kmsClient.retrieveCoverCryptUserDecryptionKey(fin_confidential_user_key);
         Resources.write_resource("cover_crypt/fin_confidential_user_key.json",
                 userKey_2.toJson().getBytes(StandardCharsets.UTF_8));
 
         // User decryption key Protected should be able to decrypt protected_fin_ct
-        String clearText_1_1 = new String(abe.coverCryptDecrypt(fin_mkg_protected_user_key, protected_fin_ct),
+        String clearText_1_1 = new String(kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, protected_fin_ct),
                 StandardCharsets.UTF_8);
         assertEquals(protected_fin_data, clearText_1_1);
         // User decryption key Confidential should be able to decrypt protected_fin_ct
-        String clearText_1_2 = new String(abe.coverCryptDecrypt(fin_confidential_user_key, protected_fin_ct),
+        String clearText_1_2 = new String(kmsClient.coverCryptDecrypt(fin_confidential_user_key, protected_fin_ct),
                 StandardCharsets.UTF_8);
         assertEquals(protected_fin_data, clearText_1_2);
 
         // User decryption key Protected should not be able to decrypt
         // confidential_fin_ct
         try {
-            new String(abe.coverCryptDecrypt(fin_mkg_protected_user_key, confidential_fin_ct), StandardCharsets.UTF_8);
+            new String(kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, confidential_fin_ct),
+                    StandardCharsets.UTF_8);
             throw new RuntimeException("User with key Confidential should not be able to decrypt data Confidential");
         } catch (CosmianException e) {
             // fine: should not be able to decrypt
@@ -221,7 +223,7 @@ public class TestCoverCrypt {
 
         // User decryption key Confidential should not be able to decrypt
         // confidential_fin_ct
-        String clearText_2_2 = new String(abe.coverCryptDecrypt(fin_confidential_user_key, confidential_fin_ct),
+        String clearText_2_2 = new String(kmsClient.coverCryptDecrypt(fin_confidential_user_key, confidential_fin_ct),
                 StandardCharsets.UTF_8);
         assertEquals(confidential_fin_data, clearText_2_2);
     }

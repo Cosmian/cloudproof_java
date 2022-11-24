@@ -20,8 +20,10 @@ import com.cosmian.jna.abe.CoverCrypt;
 import com.cosmian.jna.abe.DecryptedHeader;
 import com.cosmian.jna.abe.EncryptedHeader;
 import com.cosmian.jna.abe.MasterKeys;
+import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.rest.kmip.objects.PublicKey;
 
 public class TestNativeCoverCrypt {
     static final CoverCrypt coverCrypt = new CoverCrypt();
@@ -311,80 +313,59 @@ public class TestNativeCoverCrypt {
 
     // TODO fix these tests: likely a KMS issue
 
-    // @Test
-    // public void testHybridCryptoLocalEncryptServerDecrypt() throws Exception {
+    @Test
+    public void testHybridCryptoLocalEncryptServerDecrypt() throws Exception {
 
-    // System.out.println("");
-    // System.out.println("---------------------------------------");
-    // System.out.println(" Hybrid Crypto Test Local Encrypt + Server Decrypt");
-    // System.out.println("---------------------------------------");
-    // System.out.println("");
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println(" Hybrid Crypto Test Local Encrypt + Server Decrypt");
+        System.out.println("---------------------------------------");
+        System.out.println("");
 
-    // if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-    // System.out.println("No KMS Server: ignoring");
-    // return;
-    // }
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            System.out.println("No KMS Server: ignoring");
+            return;
+        }
 
-    // // The data we want to encrypt/decrypt
-    // byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
+        // The data we want to encrypt/decrypt
+        byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
 
-    // // A unique ID associated with this message. The unique id is used to
-    // // authenticate the message in the AES encryption scheme.
-    // // Typically this will be a hash of the content if it is unique, a unique
-    // // filename or a database unique key
-    // byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
+        // A unique ID associated with this message. The unique id is used to
+        // authenticate the message in the AES encryption scheme.
+        // Typically this will be a hash of the content if it is unique, a unique
+        // filename or a database unique key
+        byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
 
-    // Policy pg = policy();
+        Policy policy = policy();
 
-    // Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(),
-    // TestUtils.apiKey()));
+        KmsClient kmsClient = new KmsClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
 
-    // String[] ids = abe.createMasterKeyPair(pg);
+        String[] ids = kmsClient.createCoverCryptMasterKeyPair(policy);
 
-    // String privateMasterKeyId = ids[0];
-    // String publicMasterKeyId = ids[1];
-    // PublicKey publicKey = abe.retrievePublicMasterKey(publicMasterKeyId);
+        String privateMasterKeyId = ids[0];
+        String publicMasterKeyId = ids[1];
+        PublicKey publicKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyId);
 
-    // // User decryption key Confidential, FIN
-    // String userKeyId = abe.createUserDecryptionKey(accessPolicyConfidential(),
-    // privateMasterKeyId);
+        // User decryption key Confidential, FIN
+        String userKeyId = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyConfidential(),
+                privateMasterKeyId);
 
-    // //
-    // // Local Encryption
-    // //
+        //
+        // Local Encryption
+        //
 
-    // // The policy attributes that will be used to encrypt the content. They must
-    // // exist in the policy associated with the Public Key
-    // String encryptionPolicy = "Department::FIN && Security Level::Confidential";
+        // The encryption policy attributes that will be used to encrypt the content.
+        // Attributes must exist in the policy associated with the Public Key
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
+        byte[] ciphertext = coverCrypt.encrypt(policy, publicKey.bytes(), encryptionPolicy, data, uid);
 
-    // // Now generate the header which contains the ABE encryption of the randomly
-    // // generated AES key.
-    // // This example assumes that the Unique ID can be recovered at time of
-    // // decryption, and is thus not stored as part of the encrypted header.
-    // // If that is not the case check the other signature of
-    // #ffi.encryptedHeader()
-    // // to inject the unique id.
-    // EncryptedHeader encryptedHeader = ffi.encryptHeader(publicKey,
-    // encryptionPolicy);
+        //
+        // KMS Decryption
+        //
+        byte[] data_kms = kmsClient.coverCryptDecrypt(userKeyId, ciphertext, uid);
 
-    // // The data can now be encrypted with the generated key
-    // // The block number is also part of the authentication of the AES scheme
-    // byte[] encryptedBlock = ffi.encryptBlock(encryptedHeader.getSymmetricKey(),
-    // uid, data);
-
-    // // Write the message
-    // ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    // Leb128.writeArray(bao, encryptedHeader.getEncryptedHeaderBytes());
-    // Leb128.writeArray(bao, encryptedBlock);
-    // byte[] ciphertext = bao.toByteArray();
-
-    // //
-    // // KMS Decryption
-    // //
-    // byte[] data_kms = abe.kmsDecrypt(userKeyId, ciphertext, Optional.of(uid));
-
-    // assertArrayEquals(data, data_kms);
-    // }
+        assertArrayEquals(data, data_kms);
+    }
 
     // @Test
     // public void testHybridCryptoLocalEncryptServerDecryptNoUid() throws Exception
@@ -409,14 +390,16 @@ public class TestNativeCoverCrypt {
     // Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(),
     // TestUtils.apiKey()));
 
-    // String[] ids = abe.createMasterKeyPair(policy);
+    // String[] ids = abe.createCoverCryptMasterKeyPair(policy);
 
     // String privateMasterKeyId = ids[0];
     // String publicMasterKeyId = ids[1];
-    // PublicKey publicKey = abe.retrievePublicMasterKey(publicMasterKeyId);
+    // PublicKey publicKey =
+    // abe.retrieveCoverCryptPublicMasterKey(publicMasterKeyId);
 
     // // User decryption key Confidential, FIN
-    // String userKeyId = abe.createUserDecryptionKey(accessPolicyConfidential(),
+    // String userKeyId =
+    // abe.createCoverCryptUserDecryptionKey(accessPolicyConfidential(),
     // privateMasterKeyId);
 
     // //
@@ -429,13 +412,14 @@ public class TestNativeCoverCrypt {
     // // Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new
     // Attr("Security Level", "Confidential")};
 
-    // byte[] ciphertext = ffi.encrypt(policy, publicKey.bytes(), encryptionPolicy,
+    // byte[] ciphertext = coverCrypt.encrypt(policy, publicKey.bytes(),
+    // encryptionPolicy,
     // data);
 
     // //
     // // KMS Decryption
     // //
-    // byte[] data_kms = abe.kmsDecrypt(userKeyId, ciphertext);
+    // byte[] data_kms = abe.coverCryptDecrypt(userKeyId, ciphertext);
 
     // assertArrayEquals(data, data_kms);
     // }
@@ -468,13 +452,14 @@ public class TestNativeCoverCrypt {
     // Abe abe = new Abe(new RestClient(TestUtils.kmsServerUrl(),
     // TestUtils.apiKey()));
 
-    // String[] ids = abe.createMasterKeyPair(pg);
+    // String[] ids = abe.createCoverCryptMasterKeyPair(pg);
 
     // String privateMasterKeyId = ids[0];
     // String publicMasterKeyId = ids[1];
 
-    // // User decryption key Confidential, FIN
-    // String userKeyId = abe.createUserDecryptionKey(accessPolicyConfidential(),
+    // CoverCrypt // User decryption key Confidential, FIN
+    // String userKeyId =
+    // abe.createCoverCryptUserDecryptionKey(accessPolicyConfidential(),
     // privateMasterKeyId);
     // PrivateKey userKey = abe.retrieveUserDecryptionKey(userKeyId);
 
@@ -495,7 +480,7 @@ public class TestNativeCoverCrypt {
     // //
 
     // // decrypt the content, passing the unique id
-    // byte[][] res = ffi.decrypt(userKey.bytes(), ciphertext, uid);
+    // byte[][] res = coverCrypt.decrypt(userKey.bytes(), ciphertext, uid);
     // byte[] data_ = res[0];
 
     // // Verify everything is correct
@@ -526,13 +511,14 @@ public class TestNativeCoverCrypt {
     // KmipClient abe = new KmipClient(TestUtils.kmsServerUrl(),
     // TestUtils.apiKey());
 
-    // String[] ids = abe.createMasterKeyPair(pg);
+    // String[] ids = abe.createCoverCryptMasterKeyPair(pg);
 
     // String privateMasterKeyId = ids[0];
     // String publicMasterKeyId = ids[1];
 
-    // // User decryption key Confidential, FIN
-    // String userKeyId = abe.createUserDecryptionKey(accessPolicyConfidential(),
+    // CoverCrypt // User decryption key Confidential, FIN
+    // String userKeyId =
+    // abe.createCoverCryptUserDecryptionKey(accessPolicyConfidential(),
     // privateMasterKeyId);
     // PrivateKey userKey = abe.retrieveUserDecryptionKey(userKeyId);
 
@@ -552,7 +538,7 @@ public class TestNativeCoverCrypt {
     // //
     // // Parse the message by first recovering the header length
     // // decrypt the content, passing the unique id
-    // byte[][] res = ffi.decrypt(userKey.bytes(), ciphertext);
+    // byte[][] res = coverCrypt.decrypt(userKey.bytes(), ciphertext);
     // byte[] data_ = res[0];
 
     // // Verify everything is correct

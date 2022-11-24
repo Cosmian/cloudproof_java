@@ -26,7 +26,7 @@ import com.cosmian.jna.findex.MasterKeys;
 import com.cosmian.jna.findex.Word;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class TestFfiFindex {
+public class TestNativeFindex {
 
     @BeforeAll
     public static void before_all() {

@@ -411,12 +411,37 @@ public class KmsClient {
      * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
      * @param data                            the data to encrypt
      * @param attributes                      the Policy Attributes
-     * @param authenticationData              the UID uses in the AEAD of the
+     * @param authenticationData              the authentication data used in the
+     *                                        AEAD of the
      *                                        symmetric scheme
      * @return the encrypted data
      * @throws CosmianException if the encryption fails
      */
     public byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes,
+            byte[] authenticationData) throws CosmianException {
+        return coverCryptEncrypt(publicMasterKeyUniqueIdentifier, authenticationData, attributes,
+                Optional.of(authenticationData));
+    }
+
+    /**
+     * Encrypt data in the KMS using the given Policy Attributes (@see {@link Attr})
+     * and Public Master Key. The data is
+     * encrypted using an hybrid encryption scheme + AÉS 256 GCM. The uid is used in
+     * the authentication of the AES GCM
+     * scheme. The generated cipher text is made of 3 parts - the length of the
+     * encrypted header as a u32 in big endian
+     * format (4 bytes) - the header - the AES GCM encrypted content
+     *
+     * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
+     * @param data                            the data to encrypt
+     * @param attributes                      the Policy Attributes
+     * @param authenticationData              the authentication data used in the
+     *                                        AEAD of the
+     *                                        symmetric scheme
+     * @return the encrypted data
+     * @throws CosmianException if the encryption fails
+     */
+    byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier, byte[] data, Attr[] attributes,
             Optional<byte[]> authenticationData) throws CosmianException {
         try {
             DataToEncrypt dataToEncrypt = new DataToEncrypt(attributes, data);
@@ -471,6 +496,27 @@ public class KmsClient {
      * @throws CosmianException if the decryption fails
      */
     public byte[] coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData,
+            byte[] authenticationData)
+            throws CosmianException {
+        return coverCryptDecrypt(userDecryptionKeyUniqueIdentifier, encryptedData, Optional.of(authenticationData));
+    }
+
+    /**
+     * Decrypt the data in the KMS using the given User Decryption Key The
+     * encryptedData should be made of 3 parts: -
+     * the length of the encrypted header as a u32 in big endian format (4 bytes) -
+     * the header - the AES GCM encrypted
+     * content
+     *
+     * @param userDecryptionKeyUniqueIdentifier the key UID
+     * @param encryptedData                     the cipher text
+     * @param authenticationData                the data to use in the
+     *                                          authentication of the symmetric
+     *                                          scheme
+     * @return the clear text data
+     * @throws CosmianException if the decryption fails
+     */
+    byte[] coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData,
             Optional<byte[]> authenticationData)
             throws CosmianException {
         try {

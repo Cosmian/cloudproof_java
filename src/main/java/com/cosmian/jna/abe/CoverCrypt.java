@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import com.cosmian.CosmianException;
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
@@ -51,9 +51,9 @@ public final class CoverCrypt {
      * Return the last error in a String that does not exceed 1023 bytes
      *
      * @return the last error recorded by the native library
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
-    public String get_last_error() throws CoverCryptException {
+    public String get_last_error() throws CloudproofException {
         return get_last_error(1023);
     }
 
@@ -61,28 +61,28 @@ public final class CoverCrypt {
      * Return the last error in a String that does not exceed `max_len` bytes
      *
      * @param max_len the maximum number of bytes to return
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @return the error
      */
-    public String get_last_error(int max_len) throws CoverCryptException {
+    public String get_last_error(int max_len) throws CloudproofException {
         if (max_len < 1) {
-            throw new CoverCryptException("get_last_error: max_lem must be at least one");
+            throw new CloudproofException("get_last_error: max_lem must be at least one");
         }
         byte[] output = new byte[max_len + 1];
         IntByReference outputSize = new IntByReference(output.length);
         if (this.instance.get_last_error(output, outputSize) == 0) {
             return new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
         }
-        throw new CoverCryptException("Failed retrieving the last error; check the debug logs");
+        throw new CloudproofException("Failed retrieving the last error; check the debug logs");
     }
 
     /**
      * Set the last error on the native lib
      *
      * @param error_msg the last error to set on the native lib
-     * @throws CoverCryptException n case of native library error
+     * @throws CloudproofException n case of native library error
      */
-    public void set_error(String error_msg) throws CoverCryptException {
+    public void set_error(String error_msg) throws CloudproofException {
         unwrap(this.instance.set_error(error_msg));
     }
 
@@ -95,10 +95,10 @@ public final class CoverCrypt {
      *
      * @param publicKey the public key to cache
      * @return the cache handle that can be passed to the encryption routine
-     * @throws CoverCryptException on Rust lib errors
+     * @throws CloudproofException on Rust lib errors
      * @throws CosmianException    in case of other errors
      */
-    public int createEncryptionCache(PublicKey publicKey) throws CoverCryptException, CosmianException {
+    public int createEncryptionCache(PublicKey publicKey) throws CloudproofException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
         return createEncryptionCache(policy, publicKeyBytes);
@@ -114,18 +114,18 @@ public final class CoverCrypt {
      * @param policy         the {@link Policy} to cache
      * @param publicKeyBytes the public key bytes to cache
      * @return the cache handle that can be passed to the encryption routine
-     * @throws CoverCryptException on Rust lib errors
+     * @throws CloudproofException on Rust lib errors
      * @throws CosmianException    in case of other errors
      */
     public int createEncryptionCache(Policy policy, byte[] publicKeyBytes)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
 
         // Policy
         String policyJson;
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid Policy", e);
+            throw new CloudproofException("Invalid Policy", e);
         }
 
         // Public Key
@@ -146,10 +146,10 @@ public final class CoverCrypt {
      * Destroy the cache created with {@link #createEncryptionCache(Policy, byte[])}
      *
      * @param cacheHandle the pointer to the cache to destroy
-     * @throws CoverCryptException on Rust lib errors
+     * @throws CloudproofException on Rust lib errors
      * @throws CosmianException    in case of other errors
      */
-    public void destroyEncryptionCache(int cacheHandle) throws CoverCryptException, CosmianException {
+    public void destroyEncryptionCache(int cacheHandle) throws CloudproofException, CosmianException {
         unwrap(this.instance.h_aes_destroy_encryption_cache(cacheHandle));
     }
 
@@ -163,13 +163,13 @@ public final class CoverCrypt {
      * @param encryptionPolicy the encryption policy that determines the partitions
      *                         to encrypt for
      * @return the encrypted header, bytes and symmetric key
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @throws CosmianException    in case the {@link Policy} and key bytes
      *                             cannot be
      *                             recovered from the {@link PublicKey}
      */
     public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, String encryptionPolicy)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
         return encryptHeaderUsingCache(cacheHandle, encryptionPolicy, Optional.empty(), Optional.empty());
     }
 
@@ -190,14 +190,14 @@ public final class CoverCrypt {
      * @param authenticationData optional data used to authenticate the encryption
      *                           of the additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @throws CosmianException    in case the {@link Policy} and key bytes
      *                             cannot be
      *                             recovered from the {@link PublicKey}
      */
     public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, String encryptionPolicy,
             Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
         // Is a resource UID supplied
         int authenticationDataLength;
         if (authenticationData.isPresent()) {
@@ -266,13 +266,13 @@ public final class CoverCrypt {
      * @param encryptionPolicy the encryption policy that determines the partitions
      *                         to encrypt for
      * @return the encrypted header, bytes and symmetric key
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @throws CosmianException    in case the {@link Policy} and key bytes
      *                             cannot be
      *                             recovered from the {@link PublicKey}
      */
     public EncryptedHeader encryptHeader(PublicKey publicKey, String encryptionPolicy)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, Optional.empty(), Optional.empty());
@@ -294,14 +294,14 @@ public final class CoverCrypt {
      * @param authenticationData optional data used to authenticate the encryption
      *                           of the additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @throws CosmianException    in case the {@link Policy} and key bytes
      *                             cannot be
      *                             recovered from the {@link PublicKey}
      */
     public EncryptedHeader encryptHeader(PublicKey publicKey, String encryptionPolicy,
             Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, additionalData, authenticationData);
@@ -317,10 +317,10 @@ public final class CoverCrypt {
      * @param encryptionPolicy the encryption policy that determines the partitions
      *                         to encrypt for
      * @return the encrypted header, bytes and symmetric key
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, String encryptionPolicy)
-            throws CoverCryptException {
+            throws CloudproofException {
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, Optional.empty(), Optional.empty());
     }
 
@@ -342,10 +342,10 @@ public final class CoverCrypt {
      * @param authenticationData optional data used to authenticate the encryption
      *                           of the additional data
      * @return the encrypted header, bytes and symmetric key
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            Optional<byte[]> additionalData, Optional<byte[]> authenticationData) throws CoverCryptException {
+            Optional<byte[]> additionalData, Optional<byte[]> authenticationData) throws CloudproofException {
 
         // Is additional data supplied
         int additionalDataLength;
@@ -376,7 +376,7 @@ public final class CoverCrypt {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid Policy", e);
+            throw new CloudproofException("Invalid Policy", e);
         }
 
         // Public Key
@@ -427,10 +427,10 @@ public final class CoverCrypt {
      *
      * @param userDecryptionKey the public key to cache
      * @return the cache handle that can be passed to the decryption routine
-     * @throws CoverCryptException on Rust lib errors
+     * @throws CloudproofException on Rust lib errors
      * @throws CosmianException    in case of other errors
      */
-    public int createDecryptionCache(PrivateKey userDecryptionKey) throws CoverCryptException, CosmianException {
+    public int createDecryptionCache(PrivateKey userDecryptionKey) throws CloudproofException, CosmianException {
         byte[] userDecryptionKeyBytes = userDecryptionKey.bytes();
         return createDecryptionCache(userDecryptionKeyBytes);
     }
@@ -444,10 +444,10 @@ public final class CoverCrypt {
      *
      * @param userDecryptionKeyBytes the public key bytes to cache
      * @return the cache handle that can be passed to the decryption routine
-     * @throws CoverCryptException on Rust lib errors
+     * @throws CloudproofException on Rust lib errors
      * @throws CosmianException    in case of other errors
      */
-    public int createDecryptionCache(byte[] userDecryptionKeyBytes) throws CoverCryptException, CosmianException {
+    public int createDecryptionCache(byte[] userDecryptionKeyBytes) throws CloudproofException, CosmianException {
 
         // Public Key
         final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKeyBytes.length);
@@ -466,10 +466,10 @@ public final class CoverCrypt {
      * Destroy the cache created with {@link #createDecryptionCache(byte[])}
      *
      * @param cacheHandle the pointer to the cache to destroy
-     * @throws CoverCryptException on Rust lib errors
+     * @throws CloudproofException on Rust lib errors
      * @throws CosmianException    in case of other errors
      */
-    public void destroyDecryptionCache(int cacheHandle) throws CoverCryptException, CosmianException {
+    public void destroyDecryptionCache(int cacheHandle) throws CloudproofException, CosmianException {
         unwrap(this.instance.h_aes_destroy_decryption_cache(cacheHandle));
     }
 
@@ -479,13 +479,13 @@ public final class CoverCrypt {
      * @param cacheHandle          the cache to the user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @throws CosmianException    in case the key bytes cannot be recovered
      *                             from the
      *                             {@link PrivateKey}
      */
     public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
         return decryptHeaderUsingCache(cacheHandle, encryptedHeaderBytes, 0, Optional.empty());
     }
 
@@ -501,10 +501,10 @@ public final class CoverCrypt {
      * @param authenticationData   optional data used to authenticate the encryption
      *                             of the additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes,
-            int additionalDataLen, Optional<byte[]> authenticationData) throws CoverCryptException {
+            int additionalDataLen, Optional<byte[]> authenticationData) throws CloudproofException {
 
         // Symmetric Key OUT
         byte[] symmetricKeyBuffer = new byte[1024];
@@ -555,13 +555,13 @@ public final class CoverCrypt {
      * @param userDecryptionKey    the ABE user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @throws CosmianException    in case the key bytes cannot be recovered
      *                             from the
      *                             {@link PrivateKey}
      */
     public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, 0, Optional.empty());
     }
 
@@ -576,14 +576,14 @@ public final class CoverCrypt {
      * @param authenticationData   optional data used to authenticate the encryption
      *                             of the additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @throws CosmianException    in case the key bytes cannot be recovered
      *                             from the
      *                             {@link PrivateKey}
      */
     public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes,
             int additionalDataLen, Optional<byte[]> authenticationData)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, additionalDataLen, authenticationData);
     }
 
@@ -594,10 +594,10 @@ public final class CoverCrypt {
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
      * @param encryptedHeaderBytes   the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes)
-            throws CoverCryptException {
+            throws CloudproofException {
         return decryptHeader(userDecryptionKeyBytes, encryptedHeaderBytes, 0, Optional.empty());
     }
 
@@ -612,10 +612,10 @@ public final class CoverCrypt {
      * @param authenticationData     optional data used to authenticate the
      *                               encryption of the additional data
      * @return The decrypted header: symmetric key, uid and additional data
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes,
-            int additionalDataLen, Optional<byte[]> authenticationData) throws CoverCryptException {
+            int additionalDataLen, Optional<byte[]> authenticationData) throws CloudproofException {
 
         // Symmetric Key OUT
         byte[] symmetricKeyBuffer = new byte[1024];
@@ -681,9 +681,9 @@ public final class CoverCrypt {
      * @param symmetricKey The key to use to symmetrically encrypt the block
      * @param clearText    the clear text to encrypt
      * @return the encrypted block
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
-    public byte[] encryptBlock(byte[] symmetricKey, byte[] clearText) throws CoverCryptException {
+    public byte[] encryptBlock(byte[] symmetricKey, byte[] clearText) throws CloudproofException {
         return encryptBlock(symmetricKey, new byte[] {}, clearText);
     }
 
@@ -697,10 +697,10 @@ public final class CoverCrypt {
      *                           symmetric encryption
      * @param clearText          the clear text to encrypt
      * @return the encrypted block
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public byte[] encryptBlock(byte[] symmetricKey, byte[] authenticationData, byte[] clearText)
-            throws CoverCryptException {
+            throws CloudproofException {
 
         // Ciphertext OUT
         byte[] ciphertextBuffer = new byte[this.instance.h_aes_symmetric_encryption_overhead() + clearText.length];
@@ -740,9 +740,9 @@ public final class CoverCrypt {
      * @param symmetricKey   the symmetric key to use
      * @param encryptedBytes the encrypted block bytes
      * @return the clear text bytes
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
-    public byte[] decryptBlock(byte[] symmetricKey, byte[] encryptedBytes) throws CoverCryptException {
+    public byte[] decryptBlock(byte[] symmetricKey, byte[] encryptedBytes) throws CloudproofException {
 
         return decryptBlock(symmetricKey, new byte[] {}, encryptedBytes);
     }
@@ -757,10 +757,10 @@ public final class CoverCrypt {
      *                           symmetric encryption
      * @param encryptedBytes     the encrypted block bytes
      * @return the clear text bytes
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public byte[] decryptBlock(byte[] symmetricKey, byte[] authenticationData, byte[] encryptedBytes)
-            throws CoverCryptException {
+            throws CloudproofException {
 
         // Clear Text Bytes OUT
         byte[] clearTextBuffer = new byte[encryptedBytes.length - this.instance.h_aes_symmetric_encryption_overhead()];
@@ -797,9 +797,9 @@ public final class CoverCrypt {
      *
      * @param policy the policy to use
      * @return the master private and public keys in raw bytes
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
-    public MasterKeys generateMasterKeys(Policy policy) throws CoverCryptException {
+    public MasterKeys generateMasterKeys(Policy policy) throws CloudproofException {
         // Master keys Bytes OUT
         byte[] masterKeysBuffer = new byte[8192];
         IntByReference masterKeysBufferSize = new IntByReference(masterKeysBuffer.length);
@@ -809,7 +809,7 @@ public final class CoverCrypt {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid Policy", e);
+            throw new CloudproofException("Invalid Policy", e);
         }
 
         int ffiCode = this.instance.h_generate_master_keys(masterKeysBuffer, masterKeysBufferSize, policyJson);
@@ -818,13 +818,13 @@ public final class CoverCrypt {
             masterKeysBuffer = new byte[masterKeysBufferSize.getValue()];
             ffiCode = this.instance.h_generate_master_keys(masterKeysBuffer, masterKeysBufferSize, policyJson);
             if (ffiCode != 0) {
-                throw new CoverCryptException(get_last_error(4095));
+                throw new CloudproofException(get_last_error(4095));
             }
         }
 
         byte[] masterKeysBytes = Arrays.copyOfRange(masterKeysBuffer, 0, masterKeysBufferSize.getValue());
         if (masterKeysBytes.length < 4) {
-            throw new CoverCryptException("Invalid master key bytes length. Must be at least 4 bytes");
+            throw new CloudproofException("Invalid master key bytes length. Must be at least 4 bytes");
         }
 
         int privateKeySize = ByteBuffer.wrap(Arrays.copyOfRange(masterKeysBytes, 0, 4)).getInt();
@@ -842,10 +842,10 @@ public final class CoverCrypt {
      *                         boolean expression
      * @param policy           the ABE policy
      * @return the corresponding user private key
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public byte[] generateUserPrivateKey(byte[] masterPrivateKey, String booleanAccessPolicy, Policy policy)
-            throws CoverCryptException {
+            throws CloudproofException {
 
         String json = this.booleanAccessPolicyToJson(booleanAccessPolicy);
         return generateUserPrivateKey_(masterPrivateKey, json, policy);
@@ -859,17 +859,17 @@ public final class CoverCrypt {
      *                         AccessPolicy instance
      * @param policy           the ABE policy
      * @return the corresponding user private key
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public byte[] generateUserPrivateKey(byte[] masterPrivateKey, AccessPolicy accessPolicy, Policy policy)
-            throws CoverCryptException {
+            throws CloudproofException {
 
         // Access Policy
         String accessPolicyJson;
         try {
             accessPolicyJson = mapper.writeValueAsString(accessPolicy);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid Access Policy", e);
+            throw new CloudproofException("Invalid Access Policy", e);
         }
 
         return generateUserPrivateKey_(masterPrivateKey, accessPolicyJson, policy);
@@ -884,38 +884,39 @@ public final class CoverCrypt {
      *                         version of an AccessPolicy instance
      * @param policy           the ABE policy
      * @return the corresponding user private key
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     byte[] generateUserPrivateKey_(byte[] masterPrivateKey, String accessPolicyJson, Policy policy)
-            throws CoverCryptException {
+            throws CloudproofException {
         // User private key Bytes OUT
         byte[] userPrivateKeyBuffer = new byte[8192];
         IntByReference userPrivateKeyBufferSize = new IntByReference(userPrivateKeyBuffer.length);
 
         // Master private key
-        final Pointer masterPrivateKeyPointer = new Memory(masterPrivateKey.length);
-        masterPrivateKeyPointer.write(0, masterPrivateKey, 0, masterPrivateKey.length);
+        try (final Memory masterPrivateKeyPointer = new Memory(masterPrivateKey.length)) {
+            masterPrivateKeyPointer.write(0, masterPrivateKey, 0, masterPrivateKey.length);
 
-        // Policy
-        String policyJson;
-        try {
-            policyJson = mapper.writeValueAsString(policy);
-        } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid Policy", e);
-        }
+            // Policy
+            String policyJson;
+            try {
+                policyJson = mapper.writeValueAsString(policy);
+            } catch (JsonProcessingException e) {
+                throw new CloudproofException("Invalid Policy", e);
+            }
 
-        int ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
-                masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
-        if (ffiCode != 0) {
-            // Retry with correct allocated size
-            userPrivateKeyBuffer = new byte[userPrivateKeyBufferSize.getValue()];
-            ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
+            int ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
                     masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
             if (ffiCode != 0) {
-                throw new CoverCryptException(get_last_error(4095));
+                // Retry with correct allocated size
+                userPrivateKeyBuffer = new byte[userPrivateKeyBufferSize.getValue()];
+                ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
+                        masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
+                if (ffiCode != 0) {
+                    throw new CloudproofException(get_last_error(4095));
+                }
             }
+            return Arrays.copyOfRange(userPrivateKeyBuffer, 0, userPrivateKeyBufferSize.getValue());
         }
-        return Arrays.copyOfRange(userPrivateKeyBuffer, 0, userPrivateKeyBufferSize.getValue());
     }
 
     /**
@@ -925,13 +926,13 @@ public final class CoverCrypt {
      * @param attributes: a list of attributes to rotate
      * @param policy:     the current policy returns the new Policy
      * @return the new policy
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @throws IOException         standard IO exceptions
      * @throws DatabindException   standard databind exceptions
      * @throws StreamReadException stream read exceptions
      */
     public Policy rotateAttributes(Attr[] attributes, Policy policy)
-            throws CoverCryptException, StreamReadException, DatabindException, IOException {
+            throws CloudproofException, StreamReadException, DatabindException, IOException {
         // New policy Bytes OUT
         byte[] policyBuffer = new byte[4096];
         IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
@@ -946,7 +947,7 @@ public final class CoverCrypt {
         try {
             attributesJson = mapper.writeValueAsString(attributesArray);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid Attributes", e);
+            throw new CloudproofException("Invalid Attributes", e);
         }
 
         // Policy
@@ -954,7 +955,7 @@ public final class CoverCrypt {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid Policy", e);
+            throw new CloudproofException("Invalid Policy", e);
         }
 
         int ffiCode = this.instance.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson);
@@ -964,7 +965,7 @@ public final class CoverCrypt {
             policyBuffer = new byte[policyBufferSize.getValue()];
             ffiCode = this.instance.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson);
             if (ffiCode != 0) {
-                throw new CoverCryptException(get_last_error(4095));
+                throw new CloudproofException(get_last_error(4095));
             }
         }
 
@@ -980,12 +981,12 @@ public final class CoverCrypt {
      *
      * @param result the result of the FFI call
      * @return the result if it is different from 1
-     * @throws CoverCryptException in case of native library error (result is
+     * @throws CloudproofException in case of native library error (result is
      *                             1)
      */
-    public int unwrap(int result) throws CoverCryptException {
+    public int unwrap(int result) throws CloudproofException {
         if (result == 1) {
-            throw new CoverCryptException(get_last_error(4095));
+            throw new CloudproofException(get_last_error(4095));
         }
         return result;
     }
@@ -999,10 +1000,10 @@ public final class CoverCrypt {
      *                         to encrypt for
      * @param plaintext        the plaintext to encrypt
      * @return the ciphertext
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext) throws CoverCryptException {
+            byte[] plaintext) throws CloudproofException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.empty(),
                 Optional.empty());
@@ -1020,10 +1021,10 @@ public final class CoverCrypt {
      * @param plaintext          the plaintext to encrypt
      * @param authenticationData data used to authenticate the symmetric encryption
      * @return the ciphertext
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext, byte[] authenticationData) throws CoverCryptException {
+            byte[] plaintext, byte[] authenticationData) throws CloudproofException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.empty(),
                 Optional.of(authenticationData));
@@ -1042,10 +1043,10 @@ public final class CoverCrypt {
      * @param additionalData     additional data to encrypt and add to the header
      * @param authenticationData data used to authenticate the symmetric encryption
      * @return the ciphertext
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext, byte[] additionalData, byte[] authenticationData) throws CoverCryptException {
+            byte[] plaintext, byte[] additionalData, byte[] authenticationData) throws CloudproofException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.of(additionalData),
                 Optional.of(authenticationData));
@@ -1068,11 +1069,11 @@ public final class CoverCrypt {
      * @param authenticationData optional data used to authenticate the symmetric
      *                           encryption
      * @return the ciphertext
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
             byte[] plaintext, Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
-            throws CoverCryptException {
+            throws CloudproofException {
 
         // Is additional data supplied
         int additionalDataLength;
@@ -1099,7 +1100,7 @@ public final class CoverCrypt {
         try {
             policyJson = mapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid Policy", e);
+            throw new CloudproofException("Invalid Policy", e);
         }
 
         // Public Key
@@ -1146,9 +1147,9 @@ public final class CoverCrypt {
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
      * @param ciphertext             the ciphertext to decrypt
      * @return A tuple of [plaintext, additional data]
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
-    public byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext) throws CoverCryptException {
+    public byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext) throws CloudproofException {
         return decrypt(userDecryptionKeyBytes, ciphertext, Optional.empty());
     }
 
@@ -1160,10 +1161,10 @@ public final class CoverCrypt {
      * @param authenticationData     data used to authenticate the symmetric
      *                               encryption
      * @return A tuple of [plaintext, additional data]
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     public byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
-            byte[] authenticationData) throws CoverCryptException {
+            byte[] authenticationData) throws CloudproofException {
         return decrypt(userDecryptionKeyBytes, ciphertext, Optional.of(authenticationData));
     }
 
@@ -1175,10 +1176,10 @@ public final class CoverCrypt {
      * @param authenticationData     optional data used to authenticate the
      *                               symmetric encryption
      * @return A tuple of [plaintext, additional data]
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
     byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
-            Optional<byte[]> authenticationData) throws CoverCryptException {
+            Optional<byte[]> authenticationData) throws CloudproofException {
 
         // plaintext OUT
         byte[] plaintext = new byte[ciphertext.length]; // safe: plaintext should be smaller than cipher text
@@ -1226,10 +1227,10 @@ public final class CoverCrypt {
      * that can be used in KMIP calls to create user decryption keys.
      *
      * @param booleanExpression access policy in the form of a boolean expression
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @return the JSON expression as a {@link String}
      */
-    public String booleanAccessPolicyToJson(String booleanExpression) throws CoverCryptException {
+    public String booleanAccessPolicyToJson(String booleanExpression) throws CloudproofException {
         int len = booleanExpression.length() * 2;
         byte[] output = new byte[len];
         IntByReference outputSize = new IntByReference(output.length);

@@ -37,18 +37,19 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <jna.version>5.10.0</jna.version>
+        <jna.version>5.12.1</jna.version>
+        <jackson.version>2.14.1</jackson.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.13.3</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
-            <version>2.13.3</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -71,11 +72,11 @@
             <artifactId>jna</artifactId>
             <version>${jna.version}</version>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>com.rover12421.android</groupId>
             <artifactId>dx</artifactId>
             <version>1.16</version>
-        </dependency>
+        </dependency> -->
         <!-- Scope test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

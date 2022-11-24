@@ -3,7 +3,7 @@ package com.cosmian.jna.findex;
 import java.util.HashMap;
 import java.util.List;
 
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
@@ -21,73 +21,73 @@ public interface FfiWrapper extends Library {
     /* Internal callbacks FFI */
     interface FetchEntryCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength)
-                throws CoverCryptException;
+                throws CloudproofException;
     }
 
     interface FetchAllEntryCallback extends Callback {
-        int apply(Pointer output, IntByReference outputSize, int numberOfEntries) throws CoverCryptException;
+        int apply(Pointer output, IntByReference outputSize, int numberOfEntries) throws CloudproofException;
     }
 
     interface FetchChainCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength)
-                throws CoverCryptException;
+                throws CloudproofException;
     }
 
     interface UpsertEntryCallback extends Callback {
-        int apply(Pointer entries, int entriesLength) throws CoverCryptException;
+        int apply(Pointer entries, int entriesLength) throws CloudproofException;
     }
 
     interface UpsertChainCallback extends Callback {
-        int apply(Pointer chains, int chainsLength) throws CoverCryptException;
+        int apply(Pointer chains, int chainsLength) throws CloudproofException;
     }
 
     interface UpdateLinesCallback extends Callback {
         int apply(Pointer removedChains, int removedChainsLength, Pointer newEntries, int newEntriesLength,
-                Pointer newChains, int newChainsLength) throws CoverCryptException;
+                Pointer newChains, int newChainsLength) throws CloudproofException;
     }
 
     interface ListRemovedLocationsCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer locations, int locationsLength)
-                throws CoverCryptException;
+                throws CloudproofException;
     }
 
     interface ProgressCallback extends Callback {
         boolean apply(Pointer output, int outputSize)
-                throws CoverCryptException;
+                throws CloudproofException;
     }
 
     /* Customer high-level callbacks */
     interface FetchEntryInterface {
-        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CoverCryptException;
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException;
     }
 
     interface FetchAllEntryInterface {
-        public HashMap<byte[], byte[]> fetch() throws CoverCryptException;
+        public HashMap<byte[], byte[]> fetch() throws CloudproofException;
     }
 
     interface FetchChainInterface {
-        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CoverCryptException;
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException;
     }
 
     interface UpsertEntryInterface {
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CoverCryptException;
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException;
     }
 
     interface UpsertChainInterface {
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CoverCryptException;
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException;
     }
 
     interface UpdateLinesInterface {
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
-                HashMap<byte[], byte[]> newChains) throws CoverCryptException;
+                HashMap<byte[], byte[]> newChains) throws CloudproofException;
     }
 
     interface ListRemovedLocationsInterface {
-        public List<Location> list(List<Location> locations) throws CoverCryptException;
+        public List<Location> list(List<Location> locations) throws CloudproofException;
     }
 
     interface ProgressInterface {
-        public boolean list(List<byte[]> indexedValues) throws CoverCryptException;
+        public boolean list(List<byte[]> indexedValues) throws CloudproofException;
     }
 
     int h_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,

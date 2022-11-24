@@ -3,7 +3,7 @@ package com.cosmian.jna.findex.Callbacks;
 import java.util.HashMap;
 import java.util.List;
 
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.jna.findex.FfiWrapper.UpdateLinesCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpdateLinesInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
@@ -19,7 +19,7 @@ public class UpdateLines implements UpdateLinesCallback {
 
     @Override
     public int apply(Pointer removedChainsPointer, int removedChainsLength, Pointer newEntriesPointer,
-            int newEntriesLength, Pointer newChainsPointer, int newChainsLength) throws CoverCryptException {
+            int newEntriesLength, Pointer newChainsPointer, int newChainsLength) throws CloudproofException {
 
         byte[] removedChainsBytes = new byte[removedChainsLength];
         removedChainsPointer.read(0, removedChainsBytes, 0, removedChainsLength);

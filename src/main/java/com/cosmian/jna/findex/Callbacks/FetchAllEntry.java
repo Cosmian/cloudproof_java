@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
@@ -23,7 +23,7 @@ public class FetchAllEntry implements FetchAllEntryCallback {
     }
 
     @Override
-    public int apply(Pointer output, IntByReference outputSize, int numberOfEntries) throws CoverCryptException {
+    public int apply(Pointer output, IntByReference outputSize, int numberOfEntries) throws CloudproofException {
         if (entrySetIterator == null) {
             entrySetIterator = this.fetch.fetch().entrySet().iterator();
         }

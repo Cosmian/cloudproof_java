@@ -16,7 +16,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import com.cosmian.CosmianException;
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
@@ -37,11 +37,11 @@ public class Sqlite {
     //
     public FetchEntry fetchEntry = new FetchEntry(new com.cosmian.jna.findex.FfiWrapper.FetchEntryInterface() {
         @Override
-        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CoverCryptException {
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException {
             try {
                 return fetchEntryTableItems(uids);
             } catch (SQLException e) {
-                throw new CoverCryptException("Failed fetch entry: " + e.toString());
+                throw new CloudproofException("Failed fetch entry: " + e.toString());
             }
         }
     });
@@ -49,44 +49,44 @@ public class Sqlite {
     public FetchAllEntry fetchAllEntry = new FetchAllEntry(
             new com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface() {
                 @Override
-                public HashMap<byte[], byte[]> fetch() throws CoverCryptException {
+                public HashMap<byte[], byte[]> fetch() throws CloudproofException {
                     try {
                         return fetchAllEntryTableItems();
                     } catch (SQLException e) {
-                        throw new CoverCryptException("Failed fetch all entry: " + e.toString());
+                        throw new CloudproofException("Failed fetch all entry: " + e.toString());
                     }
                 }
             });
 
     public FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FfiWrapper.FetchChainInterface() {
         @Override
-        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CoverCryptException {
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException {
             try {
                 return fetchChainTableItems(uids);
             } catch (SQLException e) {
-                throw new CoverCryptException("Failed fetch chain: " + e.toString());
+                throw new CloudproofException("Failed fetch chain: " + e.toString());
             }
         }
     });
 
     public UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface() {
         @Override
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CoverCryptException {
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
             try {
                 databaseUpsert(uidsAndValues, "entry_table");
             } catch (SQLException e) {
-                throw new CoverCryptException("Failed entry upsert: " + e.toString());
+                throw new CloudproofException("Failed entry upsert: " + e.toString());
             }
         }
     });
 
     public UpsertChain upsertChain = new UpsertChain(new com.cosmian.jna.findex.FfiWrapper.UpsertChainInterface() {
         @Override
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CoverCryptException {
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
             try {
                 databaseUpsert(uidsAndValues, "chain_table");
             } catch (SQLException e) {
-                throw new CoverCryptException("Failed chain upsert: " + e.toString());
+                throw new CloudproofException("Failed chain upsert: " + e.toString());
             }
         }
     });
@@ -94,14 +94,14 @@ public class Sqlite {
     public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FfiWrapper.UpdateLinesInterface() {
         @Override
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
-                HashMap<byte[], byte[]> newChains) throws CoverCryptException {
+                HashMap<byte[], byte[]> newChains) throws CloudproofException {
             try {
                 databaseTruncate("entry_table");
                 databaseUpsert(newEntries, "entry_table");
                 databaseUpsert(newChains, "chain_table");
                 databaseRemove(removedChains, "chain_table");
             } catch (SQLException e) {
-                throw new CoverCryptException("Failed update lines: " + e.toString());
+                throw new CloudproofException("Failed update lines: " + e.toString());
             }
         }
     });
@@ -109,7 +109,7 @@ public class Sqlite {
     public ListRemovedLocations listRemovedLocations = new ListRemovedLocations(
             new com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsInterface() {
                 @Override
-                public List<Location> list(List<Location> locations) throws CoverCryptException {
+                public List<Location> list(List<Location> locations) throws CloudproofException {
                     List<Integer> ids = locations.stream()
                             .map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
                             .collect(Collectors.toList());
@@ -119,7 +119,7 @@ public class Sqlite {
                                 .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
                                 .collect(Collectors.toList());
                     } catch (SQLException e) {
-                        throw new CoverCryptException("Failed update lines: " + e.toString());
+                        throw new CloudproofException("Failed update lines: " + e.toString());
                     }
 
                 }
@@ -127,7 +127,7 @@ public class Sqlite {
 
     public Progress progress = new Progress(new com.cosmian.jna.findex.FfiWrapper.ProgressInterface() {
         @Override
-        public boolean list(List<byte[]> indexedValues) throws CoverCryptException {
+        public boolean list(List<byte[]> indexedValues) throws CloudproofException {
 
             try {
                 //
@@ -139,7 +139,7 @@ public class Sqlite {
                 }
                 return true;
             } catch (CosmianException e) {
-                throw new CoverCryptException("Failed getting search results: " + e.toString());
+                throw new CloudproofException("Failed getting search results: " + e.toString());
             }
 
         }

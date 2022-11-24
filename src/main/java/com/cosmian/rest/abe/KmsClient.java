@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 
 import com.cosmian.CosmianException;
 import com.cosmian.RestClient;
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.jna.abe.CoverCrypt;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.Attr;
@@ -247,7 +247,7 @@ public class KmsClient {
         String json;
         try {
             json = ffi.booleanAccessPolicyToJson(accessPolicy);
-        } catch (CoverCryptException e) {
+        } catch (CloudproofException e) {
             throw new CosmianException("Failed converting the boolean access policy to a JSON: " + e.getMessage(), e);
         }
         VendorAttribute accessPolicyAttribute = new VendorAttribute(

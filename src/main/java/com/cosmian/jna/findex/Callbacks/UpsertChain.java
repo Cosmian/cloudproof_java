@@ -2,7 +2,7 @@ package com.cosmian.jna.findex.Callbacks;
 
 import java.util.HashMap;
 
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.jna.findex.FfiWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.UpsertChainInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
@@ -17,7 +17,7 @@ public class UpsertChain implements UpsertChainCallback {
     }
 
     @Override
-    public int apply(Pointer items, int itemsLength) throws CoverCryptException {
+    public int apply(Pointer items, int itemsLength) throws CloudproofException {
         //
         // Read `items` until `itemsLength`
         //

@@ -2,7 +2,7 @@ package com.cosmian.jna.findex.Callbacks;
 
 import java.util.List;
 
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.jna.findex.FfiWrapper.ProgressCallback;
 import com.cosmian.jna.findex.FfiWrapper.ProgressInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
@@ -16,7 +16,7 @@ public class Progress implements ProgressCallback {
     }
 
     @Override
-    public boolean apply(Pointer searchResultsPointer, int searchResultsLength) throws CoverCryptException {
+    public boolean apply(Pointer searchResultsPointer, int searchResultsLength) throws CloudproofException {
         //
         // Read `searchResultsPointer` until `searchResultsLength`
         //

@@ -3,7 +3,7 @@ package com.cosmian.jna.findex.Callbacks;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsCallback;
 import com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
@@ -21,7 +21,7 @@ public class ListRemovedLocations implements ListRemovedLocationsCallback {
 
     @Override
     public int apply(Pointer output, IntByReference outputSize, Pointer items, int itemsLength)
-            throws CoverCryptException {
+            throws CloudproofException {
         //
         // Read `items` until `itemsLength`
         //

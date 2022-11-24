@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import com.cosmian.CosmianException;
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchEntryCallback;
@@ -31,9 +31,9 @@ public final class Ffi {
      * Return the last error in a String that does not exceed 1023 bytes
      *
      * @return the last error recorded by the native library
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
-    public static String get_last_error() throws CoverCryptException {
+    public static String get_last_error() throws CloudproofException {
         return get_last_error(1023);
     }
 
@@ -41,33 +41,33 @@ public final class Ffi {
      * Return the last error in a String that does not exceed `max_len` bytes
      *
      * @param maxLen the maximum number of bytes to return
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      * @return the error
      */
-    public static String get_last_error(int maxLen) throws CoverCryptException {
+    public static String get_last_error(int maxLen) throws CloudproofException {
         if (maxLen < 1) {
-            throw new CoverCryptException("get_last_error: maxLen must be at least one");
+            throw new CloudproofException("get_last_error: maxLen must be at least one");
         }
         byte[] output = new byte[maxLen + 1];
         IntByReference outputSize = new IntByReference(output.length);
         if (Ffi.INSTANCE.get_last_error(output, outputSize) == 0) {
             return new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
         }
-        throw new CoverCryptException("Failed retrieving the last error; check the debug logs");
+        throw new CloudproofException("Failed retrieving the last error; check the debug logs");
     }
 
     /**
      * Set the last error on the native lib
      *
      * @param error_msg the last error to set on the native lib
-     * @throws CoverCryptException n case of native library error
+     * @throws CloudproofException n case of native library error
      */
-    public static void set_error(String error_msg) throws CoverCryptException {
+    public static void set_error(String error_msg) throws CloudproofException {
         unwrap(Ffi.INSTANCE.set_error(error_msg));
     }
 
     public static int writeOutputPointerAndSize(HashMap<byte[], byte[]> uidsAndValues, Pointer output,
-            IntByReference outputSize) {
+            IntByReference outputSize) throws CloudproofException {
         if (uidsAndValues.size() > 0) {
             byte[] uidsAndValuesBytes = Leb128Serializer.serializeHashMap(uidsAndValues);
             if (outputSize.getValue() < uidsAndValuesBytes.length) {
@@ -84,7 +84,7 @@ public final class Ffi {
 
     public static void upsert(MasterKeys masterKeys, byte[] label, HashMap<IndexedValue, Word[]> indexedValuesAndWords,
             FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -94,39 +94,41 @@ public final class Ffi {
         try {
             masterKeysJson = mapper.writeValueAsString(masterKeys);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid master keys", e);
+            throw new CloudproofException("Invalid master keys", e);
         }
 
-        final Pointer labelPointer = new Memory(label.length);
-        labelPointer.write(0, label, 0, label.length);
+        try (final Memory labelPointer = new Memory(label.length)) {
+            labelPointer.write(0, label, 0, label.length);
 
-        // Findex indexed values and words
-        HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
-        for (Entry<IndexedValue, Word[]> entry : indexedValuesAndWords.entrySet()) {
-            String[] words = new String[entry.getValue().length];
-            int i = 0;
-            for (Word word : entry.getValue()) {
-                words[i++] = word.toString();
+            // Findex indexed values and words
+            HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
+            for (Entry<IndexedValue, Word[]> entry : indexedValuesAndWords.entrySet()) {
+                String[] words = new String[entry.getValue().length];
+                int i = 0;
+                for (Word word : entry.getValue()) {
+                    words[i++] = word.toString();
+                }
+                indexedValuesAndWordsString.put(entry.getKey().toString(), words);
             }
-            indexedValuesAndWordsString.put(entry.getKey().toString(), words);
-        }
 
-        String indexedValuesAndWordsJson;
-        try {
-            indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
-        } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid indexed values and words", e);
-        }
+            String indexedValuesAndWordsJson;
+            try {
+                indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
+            } catch (JsonProcessingException e) {
+                throw new CloudproofException("Invalid indexed values and words", e);
+            }
 
-        // Indexes creation + insertion/update
-        unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson, fetchEntry,
-                upsertEntry, upsertChain));
+            // Indexes creation + insertion/update
+            unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
+                    fetchEntry,
+                    upsertEntry, upsertChain));
+        }
     }
 
     public static void graph_upsert(MasterKeys masterKeys, byte[] label,
             HashMap<IndexedValue, Word[]> indexedValuesAndWords,
             FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -136,39 +138,40 @@ public final class Ffi {
         try {
             masterKeysJson = mapper.writeValueAsString(masterKeys);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid master keys", e);
+            throw new CloudproofException("Invalid master keys", e);
         }
 
-        final Pointer labelPointer = new Memory(label.length);
-        labelPointer.write(0, label, 0, label.length);
+        try (final Memory labelPointer = new Memory(label.length)) {
+            labelPointer.write(0, label, 0, label.length);
 
-        // Findex indexed values and words
-        HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
-        for (Entry<IndexedValue, Word[]> entry : indexedValuesAndWords.entrySet()) {
-            String[] words = new String[entry.getValue().length];
-            int i = 0;
-            for (Word word : entry.getValue()) {
-                words[i++] = word.toString();
+            // Findex indexed values and words
+            HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
+            for (Entry<IndexedValue, Word[]> entry : indexedValuesAndWords.entrySet()) {
+                String[] words = new String[entry.getValue().length];
+                int i = 0;
+                for (Word word : entry.getValue()) {
+                    words[i++] = word.toString();
+                }
+                indexedValuesAndWordsString.put(entry.getKey().toString(), words);
             }
-            indexedValuesAndWordsString.put(entry.getKey().toString(), words);
-        }
 
-        String indexedValuesAndWordsJson;
-        try {
-            indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
-        } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid indexed values and words", e);
-        }
+            String indexedValuesAndWordsJson;
+            try {
+                indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
+            } catch (JsonProcessingException e) {
+                throw new CloudproofException("Invalid indexed values and words", e);
+            }
 
-        // Indexes creation + insertion/update
-        unwrap(Ffi.INSTANCE.h_graph_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
-                fetchEntry,
-                upsertEntry, upsertChain));
+            // Indexes creation + insertion/update
+            unwrap(Ffi.INSTANCE.h_graph_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
+                    fetchEntry,
+                    upsertEntry, upsertChain));
+        }
     }
 
     public static List<byte[]> search(byte[] keyK, byte[] label, Word[] words, int loopIterationLimit, int maxDepth,
             ProgressCallback progress, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
         //
         // Prepare outputs
         //
@@ -182,44 +185,48 @@ public final class Ffi {
 
         // Findex master keys
         if (keyK == null) {
-            throw new CoverCryptException("Key k cannot be null");
+            throw new CloudproofException("Key k cannot be null");
         }
-        final Pointer keyKeyPointer = new Memory(keyK.length);
-        keyKeyPointer.write(0, keyK, 0, keyK.length);
+        try (final Memory keyKeyPointer = new Memory(keyK.length);
+                final Memory labelPointer = new Memory(label.length)) {
+            keyKeyPointer.write(0, keyK, 0, keyK.length);
 
-        final Pointer labelPointer = new Memory(label.length);
-        labelPointer.write(0, label, 0, label.length);
+            labelPointer.write(0, label, 0, label.length);
 
-        // Findex words
-        String[] wordsString = new String[words.length];
-        int i = 0;
-        for (Word word : words) {
-            wordsString[i++] = word.toString();
-        }
-        String wordsJson;
-        try {
-            wordsJson = mapper.writeValueAsString(wordsString);
-        } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid words", e);
-        }
+            // Findex words
+            String[] wordsString = new String[words.length];
+            int i = 0;
+            for (Word word : words) {
+                wordsString[i++] = word.toString();
+            }
+            String wordsJson;
+            try {
+                wordsJson = mapper.writeValueAsString(wordsString);
+            } catch (JsonProcessingException e) {
+                throw new CloudproofException("Invalid words", e);
+            }
 
-        // Indexes creation + insertion/update
-        int ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
-                labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry, fetchChain);
-        if (ffiCode != 0) {
-            // Retry with correct allocated size
-            indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
-            ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer, keyK.length,
+            // Indexes creation + insertion/update
+            int ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer,
+                    keyK.length,
                     labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry,
                     fetchChain);
             if (ffiCode != 0) {
-                throw new CoverCryptException(get_last_error(4095));
+                // Retry with correct allocated size
+                indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
+                ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer,
+                        keyK.length,
+                        labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry,
+                        fetchChain);
+                if (ffiCode != 0) {
+                    throw new CloudproofException(get_last_error(4095));
+                }
             }
+
+            byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
+
+            return Leb128Serializer.deserializeList(indexedValuesBytes);
         }
-
-        byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
-
-        return Leb128Serializer.deserializeList(indexedValuesBytes);
     }
 
     /// `number_of_reindexing_phases_before_full_set`: if you compact the indexes
@@ -230,7 +237,7 @@ public final class Ffi {
     public static void compact(int numberOfReindexingPhasesBeforeFullSet, MasterKeys masterKeys, byte[] label,
             FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
             UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations)
-            throws CoverCryptException, CosmianException {
+            throws CloudproofException, CosmianException {
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
 
@@ -239,7 +246,7 @@ public final class Ffi {
         try {
             masterKeysJson = mapper.writeValueAsString(masterKeys);
         } catch (JsonProcessingException e) {
-            throw new CoverCryptException("Invalid master keys", e);
+            throw new CloudproofException("Invalid master keys", e);
         }
 
         final Pointer labelPointer = new Memory(label.length);
@@ -256,11 +263,11 @@ public final class Ffi {
      * exception wrapping it.
      *
      * @param result the result of the FFI call
-     * @throws CoverCryptException in case of native library error
+     * @throws CloudproofException in case of native library error
      */
-    public static void unwrap(int result) throws CoverCryptException {
+    public static void unwrap(int result) throws CloudproofException {
         if (result == 1) {
-            throw new CoverCryptException(get_last_error(4095));
+            throw new CloudproofException(get_last_error(4095));
         }
     }
 

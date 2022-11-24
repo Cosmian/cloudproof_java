@@ -3,7 +3,7 @@ package com.cosmian.jna.findex.Callbacks;
 import java.util.HashMap;
 import java.util.List;
 
-import com.cosmian.jna.CoverCryptException;
+import com.cosmian.jna.CloudproofException;
 import com.cosmian.jna.findex.Ffi;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.FfiWrapper.FetchChainInterface;
@@ -21,7 +21,7 @@ public class FetchChain implements FetchChainCallback {
 
     @Override
     public int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength)
-            throws CoverCryptException {
+            throws CloudproofException {
         //
         // Read `uidsPointer` until `uidsLength`
         //

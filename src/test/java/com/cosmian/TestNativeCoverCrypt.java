@@ -23,6 +23,7 @@ import com.cosmian.jna.abe.MasterKeys;
 import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
 
 public class TestNativeCoverCrypt {
@@ -358,6 +359,11 @@ public class TestNativeCoverCrypt {
         // Attributes must exist in the policy associated with the Public Key
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
         byte[] ciphertext = coverCrypt.encrypt(policy, publicKey.bytes(), encryptionPolicy, data, uid);
+
+        PrivateKey userKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userKeyId);
+        byte[][] decrypted = coverCrypt.decrypt(userKey.bytes(), ciphertext, uid);
+        assertArrayEquals(data, decrypted[0]);
+        assertArrayEquals(uid, decrypted[1]);
 
         //
         // KMS Decryption

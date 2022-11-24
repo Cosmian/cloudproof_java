@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.cosmian.jna.CloudproofException;
-import com.cosmian.jna.findex.FfiWrapper.UpdateLinesCallback;
-import com.cosmian.jna.findex.FfiWrapper.UpdateLinesInterface;
+import com.cosmian.jna.findex.FindexWrapper.UpdateLinesCallback;
+import com.cosmian.jna.findex.FindexWrapper.UpdateLinesInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
 import com.sun.jna.Pointer;
 

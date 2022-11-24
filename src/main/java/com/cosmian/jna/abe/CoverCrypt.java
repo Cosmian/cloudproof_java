@@ -28,7 +28,7 @@ public final class CoverCrypt {
     // For the JSON strings
     private final static ObjectMapper mapper = new ObjectMapper();
 
-    private CoverCryptWrapper instance;
+    final private CoverCryptWrapper instance;
 
     /**
      * Instantiate a {@link CoverCrypt} instance by loading the native library

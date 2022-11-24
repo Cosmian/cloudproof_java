@@ -12,7 +12,7 @@ import com.sun.jna.ptr.IntByReference;
 /**
  * This maps the Findex Secure Searchable Encryption written in Rust
  */
-public interface FfiWrapper extends Library {
+public interface FindexWrapper extends Library {
 
     int set_error(String errorMsg);
 

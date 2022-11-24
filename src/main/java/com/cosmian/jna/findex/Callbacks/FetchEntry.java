@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.cosmian.jna.CloudproofException;
-import com.cosmian.jna.findex.Ffi;
-import com.cosmian.jna.findex.FfiWrapper.FetchEntryCallback;
-import com.cosmian.jna.findex.FfiWrapper.FetchEntryInterface;
+import com.cosmian.jna.findex.Findex;
+import com.cosmian.jna.findex.FindexWrapper.FetchEntryCallback;
+import com.cosmian.jna.findex.FindexWrapper.FetchEntryInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
@@ -40,7 +40,7 @@ public class FetchEntry implements FetchEntryCallback {
         //
         // Serialize results
         //
-        return Ffi.writeOutputPointerAndSize(uidsAndValues, output, outputSize);
+        return Findex.writeOutputPointerAndSize(uidsAndValues, output, outputSize);
     }
 
 }

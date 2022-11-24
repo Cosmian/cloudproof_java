@@ -3,8 +3,8 @@ package com.cosmian.jna.findex.Callbacks;
 import java.util.List;
 
 import com.cosmian.jna.CloudproofException;
-import com.cosmian.jna.findex.FfiWrapper.ProgressCallback;
-import com.cosmian.jna.findex.FfiWrapper.ProgressInterface;
+import com.cosmian.jna.findex.FindexWrapper.ProgressCallback;
+import com.cosmian.jna.findex.FindexWrapper.ProgressInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
 import com.sun.jna.Pointer;
 

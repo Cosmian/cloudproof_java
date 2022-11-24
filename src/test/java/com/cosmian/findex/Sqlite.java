@@ -35,7 +35,7 @@ public class Sqlite {
     //
     // Declare all Findex callbacks
     //
-    public FetchEntry fetchEntry = new FetchEntry(new com.cosmian.jna.findex.FfiWrapper.FetchEntryInterface() {
+    public FetchEntry fetchEntry = new FetchEntry(new com.cosmian.jna.findex.FindexWrapper.FetchEntryInterface() {
         @Override
         public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException {
             try {
@@ -47,7 +47,7 @@ public class Sqlite {
     });
 
     public FetchAllEntry fetchAllEntry = new FetchAllEntry(
-            new com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface() {
+            new com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface() {
                 @Override
                 public HashMap<byte[], byte[]> fetch() throws CloudproofException {
                     try {
@@ -58,7 +58,7 @@ public class Sqlite {
                 }
             });
 
-    public FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FfiWrapper.FetchChainInterface() {
+    public FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FindexWrapper.FetchChainInterface() {
         @Override
         public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException {
             try {
@@ -69,7 +69,7 @@ public class Sqlite {
         }
     });
 
-    public UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface() {
+    public UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FindexWrapper.UpsertEntryInterface() {
         @Override
         public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
             try {
@@ -80,7 +80,7 @@ public class Sqlite {
         }
     });
 
-    public UpsertChain upsertChain = new UpsertChain(new com.cosmian.jna.findex.FfiWrapper.UpsertChainInterface() {
+    public UpsertChain upsertChain = new UpsertChain(new com.cosmian.jna.findex.FindexWrapper.UpsertChainInterface() {
         @Override
         public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
             try {
@@ -91,7 +91,7 @@ public class Sqlite {
         }
     });
 
-    public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FfiWrapper.UpdateLinesInterface() {
+    public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FindexWrapper.UpdateLinesInterface() {
         @Override
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
                 HashMap<byte[], byte[]> newChains) throws CloudproofException {
@@ -107,7 +107,7 @@ public class Sqlite {
     });
 
     public ListRemovedLocations listRemovedLocations = new ListRemovedLocations(
-            new com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsInterface() {
+            new com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsInterface() {
                 @Override
                 public List<Location> list(List<Location> locations) throws CloudproofException {
                     List<Integer> ids = locations.stream()
@@ -125,7 +125,7 @@ public class Sqlite {
                 }
             });
 
-    public Progress progress = new Progress(new com.cosmian.jna.findex.FfiWrapper.ProgressInterface() {
+    public Progress progress = new Progress(new com.cosmian.jna.findex.FindexWrapper.ProgressInterface() {
         @Override
         public boolean list(List<byte[]> indexedValues) throws CloudproofException {
 

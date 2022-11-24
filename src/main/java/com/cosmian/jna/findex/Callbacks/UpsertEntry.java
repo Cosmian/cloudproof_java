@@ -3,8 +3,8 @@ package com.cosmian.jna.findex.Callbacks;
 import java.util.HashMap;
 
 import com.cosmian.jna.CloudproofException;
-import com.cosmian.jna.findex.FfiWrapper.UpsertEntryCallback;
-import com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface;
+import com.cosmian.jna.findex.FindexWrapper.UpsertEntryCallback;
+import com.cosmian.jna.findex.FindexWrapper.UpsertEntryInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
 import com.sun.jna.Pointer;
 

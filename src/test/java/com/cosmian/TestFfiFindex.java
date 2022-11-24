@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import com.cosmian.findex.Redis;
 import com.cosmian.findex.Sqlite;
 import com.cosmian.findex.UsersDataset;
-import com.cosmian.jna.findex.Ffi;
+import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.MasterKeys;
@@ -86,7 +86,7 @@ public class TestFfiFindex {
         //
         // Upsert
         //
-        Ffi.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
+        Findex.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
         System.out.println("After insertion: entry_table: nb indexes: " + db.getAllKeyValueItems("entry_table").size());
         System.out.println("After insertion: chain_table: nb indexes: " + db.getAllKeyValueItems("chain_table").size());
 
@@ -100,21 +100,24 @@ public class TestFfiFindex {
         System.out.println("");
 
         {
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
-                -1, db.progress, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), label, new Word[] { new Word("France") },
+                    0,
+                    -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(expectedDbUids, dbUids);
         }
 
-        // This compact should do nothing except changing the label since the users table didn't change.
-        Ffi.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
-            db.updateLines, db.listRemovedLocations);
+        // This compact should do nothing except changing the label since the users
+        // table didn't change.
+        Findex.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
+                db.updateLines, db.listRemovedLocations);
 
         {
             // Search with old label
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
-                -1, db.progress, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), label, new Word[] { new Word("France") },
+                    0,
+                    -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertEquals(0, dbUids.length);
@@ -122,8 +125,8 @@ public class TestFfiFindex {
 
         {
             // Search with new label and without user changes
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), "NewLabel".getBytes(),
+                    new Word[] { new Word("France") }, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(expectedDbUids, dbUids);
@@ -133,25 +136,27 @@ public class TestFfiFindex {
         db.deleteUser(17);
         int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbUids, 17);
 
-        Ffi.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
-            db.updateLines, db.listRemovedLocations);
+        Findex.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
+                db.updateLines, db.listRemovedLocations);
 
         {
             // Search should return everyone instead of n°17
 
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), "NewLabel".getBytes(),
+                    new Word[] { new Word("France") }, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(newExpectedDbUids, dbUids);
         }
 
-        // Check allocation problem during insertions. Allocation problem could occur when fetching entry table
+        // Check allocation problem during insertions. Allocation problem could occur
+        // when fetching entry table
         // values
-        // whose sizes depend on words being indexed: the Entry Table Encrypted value is:
+        // whose sizes depend on words being indexed: the Entry Table Encrypted value
+        // is:
         // `EncSym(𝐾value, (ict_uid𝑥𝑤𝑖, 𝐾𝑤𝑖 , 𝑤𝑖))`
         for (int i = 0; i < 100; i++) {
-            Ffi.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
+            Findex.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
         }
     }
 
@@ -179,9 +184,9 @@ public class TestFfiFindex {
     }
 
     private void verifyFindexSearch(MasterKeys masterKeys, byte[] label, String word, Redis db,
-        int expectedResultsNumber) throws Exception {
-        List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word(word)}, 0, -1,
-            db.progress, db.fetchEntry, db.fetchChain);
+            int expectedResultsNumber) throws Exception {
+        List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), label, new Word[] { new Word(word) }, 0, -1,
+                db.progress, db.fetchEntry, db.fetchChain);
         int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
         assertEquals(expectedResultsNumber, dbUids.length);
@@ -240,11 +245,11 @@ public class TestFfiFindex {
         //
         // Upsert
         //
-        Ffi.graph_upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
+        Findex.graph_upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
         System.out.println("After insertion: entry_table: nb indexes: "
-            + db.getAllKeysAndValues(Redis.INDEX_TABLE_ENTRY_STORAGE).size());
+                + db.getAllKeysAndValues(Redis.INDEX_TABLE_ENTRY_STORAGE).size());
         System.out.println("After insertion: chain_table: nb indexes: "
-            + db.getAllKeysAndValues(Redis.INDEX_TABLE_CHAIN_STORAGE).size());
+                + db.getAllKeysAndValues(Redis.INDEX_TABLE_CHAIN_STORAGE).size());
 
         //
         // Search
@@ -256,8 +261,9 @@ public class TestFfiFindex {
         System.out.println("");
 
         {
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
-                -1, db.progress, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), label, new Word[] { new Word("France") },
+                    0,
+                    -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(expectedDbUids, dbUids);
@@ -270,17 +276,18 @@ public class TestFfiFindex {
         verifyFindexSearch(masterKeys, label, "Kia", db, 1);
         verifyFindexSearch(masterKeys, label, "vit", db, 2); // 2 emails starting with `vit`
 
-        // This compact should do nothing except changing the label since the users table didn't change.
-        Ffi.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
-            db.updateLines, db.listRemovedLocations);
+        // This compact should do nothing except changing the label since the users
+        // table didn't change.
+        Findex.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
+                db.updateLines, db.listRemovedLocations);
 
         verifyFindexSearch(masterKeys, label, "France", db, 0);
 
         {
             // Search with new label and without user changes
 
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), "NewLabel".getBytes(),
+                    new Word[] { new Word("France") }, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(expectedDbUids, dbUids);
@@ -290,34 +297,38 @@ public class TestFfiFindex {
         db.deleteUser(17);
         int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbUids, 17);
 
-        Ffi.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
-            db.updateLines, db.listRemovedLocations);
+        Findex.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain, db.fetchAllEntry,
+                db.updateLines, db.listRemovedLocations);
 
         {
             // Search should return everyone instead of n°17
 
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), "NewLabel".getBytes(),
-                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
+            List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), "NewLabel".getBytes(),
+                    new Word[] { new Word("France") }, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
             assertArrayEquals(newExpectedDbUids, dbUids);
         }
 
-        // Check allocation problem during insertions. Allocation problem could occur when fetching entry table
+        // Check allocation problem during insertions. Allocation problem could occur
+        // when fetching entry table
         // values
-        // whose sizes depend on words being indexed: the Entry Table Encrypted value is:
+        // whose sizes depend on words being indexed: the Entry Table Encrypted value
+        // is:
         // `EncSym(𝐾value, (ict_uid𝑥𝑤𝑖, 𝐾𝑤𝑖 , 𝑤𝑖))`
         for (int i = 0; i < 100; i++) {
-            Ffi.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
-            List<byte[]> indexedValuesList = Ffi.search(masterKeys.getK(), label, new Word[] {new Word("France")}, 0,
-                -1, db.progress, db.fetchEntry, db.fetchChain);
+            Findex.upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
+            List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), label, new Word[] { new Word("France") },
+                    0,
+                    -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
             assertArrayEquals(expectedDbUids, dbUids);
         }
     }
 
     /*
-     * Helper function to transform the list of bytes returned by the FFI (representing `IndexedValue`) to a sorted
+     * Helper function to transform the list of bytes returned by the FFI
+     * (representing `IndexedValue`) to a sorted
      * array of int (representing the DB id of users).
      */
     private int[] indexedValuesBytesListToArray(List<byte[]> indexedValuesList) throws Exception {

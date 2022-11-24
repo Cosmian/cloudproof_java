@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.cosmian.jna.CloudproofException;
-import com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsCallback;
-import com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsInterface;
+import com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsCallback;
+import com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
 import com.cosmian.jna.findex.Location;
 import com.sun.jna.Pointer;

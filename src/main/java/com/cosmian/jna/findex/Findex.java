@@ -8,14 +8,14 @@ import java.util.Map.Entry;
 
 import com.cosmian.CosmianException;
 import com.cosmian.jna.CloudproofException;
-import com.cosmian.jna.findex.FfiWrapper.FetchAllEntryCallback;
-import com.cosmian.jna.findex.FfiWrapper.FetchChainCallback;
-import com.cosmian.jna.findex.FfiWrapper.FetchEntryCallback;
-import com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsCallback;
-import com.cosmian.jna.findex.FfiWrapper.ProgressCallback;
-import com.cosmian.jna.findex.FfiWrapper.UpdateLinesCallback;
-import com.cosmian.jna.findex.FfiWrapper.UpsertChainCallback;
-import com.cosmian.jna.findex.FfiWrapper.UpsertEntryCallback;
+import com.cosmian.jna.findex.FindexWrapper.FetchAllEntryCallback;
+import com.cosmian.jna.findex.FindexWrapper.FetchChainCallback;
+import com.cosmian.jna.findex.FindexWrapper.FetchEntryCallback;
+import com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsCallback;
+import com.cosmian.jna.findex.FindexWrapper.ProgressCallback;
+import com.cosmian.jna.findex.FindexWrapper.UpdateLinesCallback;
+import com.cosmian.jna.findex.FindexWrapper.UpsertChainCallback;
+import com.cosmian.jna.findex.FindexWrapper.UpsertEntryCallback;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
@@ -23,9 +23,9 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
-public final class Ffi {
+public final class Findex {
 
-    static final FfiWrapper INSTANCE = (FfiWrapper) Native.load("cosmian_findex", FfiWrapper.class);
+    static final FindexWrapper INSTANCE = (FindexWrapper) Native.load("cosmian_findex", FindexWrapper.class);
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes
@@ -50,7 +50,7 @@ public final class Ffi {
         }
         byte[] output = new byte[maxLen + 1];
         IntByReference outputSize = new IntByReference(output.length);
-        if (Ffi.INSTANCE.get_last_error(output, outputSize) == 0) {
+        if (Findex.INSTANCE.get_last_error(output, outputSize) == 0) {
             return new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
         }
         throw new CloudproofException("Failed retrieving the last error; check the debug logs");
@@ -63,7 +63,7 @@ public final class Ffi {
      * @throws CloudproofException n case of native library error
      */
     public static void set_error(String error_msg) throws CloudproofException {
-        unwrap(Ffi.INSTANCE.set_error(error_msg));
+        unwrap(Findex.INSTANCE.set_error(error_msg));
     }
 
     public static int writeOutputPointerAndSize(HashMap<byte[], byte[]> uidsAndValues, Pointer output,
@@ -119,7 +119,7 @@ public final class Ffi {
             }
 
             // Indexes creation + insertion/update
-            unwrap(Ffi.INSTANCE.h_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
+            unwrap(Findex.INSTANCE.h_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
                     fetchEntry,
                     upsertEntry, upsertChain));
         }
@@ -163,7 +163,7 @@ public final class Ffi {
             }
 
             // Indexes creation + insertion/update
-            unwrap(Ffi.INSTANCE.h_graph_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
+            unwrap(Findex.INSTANCE.h_graph_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
                     fetchEntry,
                     upsertEntry, upsertChain));
         }
@@ -207,14 +207,14 @@ public final class Ffi {
             }
 
             // Indexes creation + insertion/update
-            int ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer,
+            int ffiCode = Findex.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer,
                     keyK.length,
                     labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry,
                     fetchChain);
             if (ffiCode != 0) {
                 // Retry with correct allocated size
                 indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
-                ffiCode = Ffi.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer,
+                ffiCode = Findex.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer,
                         keyK.length,
                         labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry,
                         fetchChain);
@@ -253,7 +253,8 @@ public final class Ffi {
         labelPointer.write(0, label, 0, label.length);
 
         // Indexes creation + insertion/update
-        unwrap(Ffi.INSTANCE.h_compact(numberOfReindexingPhasesBeforeFullSet, masterKeysJson, labelPointer, label.length,
+        unwrap(Findex.INSTANCE.h_compact(numberOfReindexingPhasesBeforeFullSet, masterKeysJson, labelPointer,
+                label.length,
                 fetchEntry, fetchChain, fetchAllEntry, updateLines, listRemovedLocations));
     }
 

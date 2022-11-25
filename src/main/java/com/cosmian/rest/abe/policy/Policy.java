@@ -41,6 +41,13 @@ public class Policy implements Serializable {
     }
 
     /**
+     * Instantiate an empty policy allowing up to 2^32 rotation of attributes
+     */
+    public Policy() {
+        this.maxAttributeCreations = Integer.MAX_VALUE;
+    }
+
+    /**
      * Instantiate an empty policy allowing the given max number of revocations of attributes
      *
      * @param maxAttributeCreations the maximum number of possible attributes

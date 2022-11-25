@@ -1,6 +1,6 @@
 package com.cosmian.findex;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.Word;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -52,23 +52,24 @@ public class UsersDataset {
      * This method is mostly used for local tests and serialization.
      *
      * @return the JSON string
-     * @throws CosmianException if the serialization fails
+     * @throws CloudproofException if the serialization fails
      */
-    public String toJson() throws CosmianException {
+    public String toJson() throws CloudproofException {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new CosmianException("Failed serializing to JSON the TestFindexDataset.class: " + e.getMessage(), e);
+            throw new CloudproofException("Failed serializing to JSON the TestFindexDataset.class: " + e.getMessage(),
+                e);
         }
     }
 
-    public static UsersDataset[] fromJson(String json) throws CosmianException {
+    public static UsersDataset[] fromJson(String json) throws CloudproofException {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(json, UsersDataset[].class);
         } catch (JsonProcessingException e) {
-            throw new CosmianException(
+            throw new CloudproofException(
                 "Failed deserializing from JSON the TestFindexDataset.class " + ": " + e.getMessage(), e);
         }
     }

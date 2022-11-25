@@ -302,13 +302,13 @@ public class TestNativeCoverCrypt {
         assertTrue(Arrays.equals(additionalData, additionalData_));
     }
 
-    private Policy policy() throws CosmianException {
+    private Policy policy() throws CloudproofException {
         return new Policy(20)
             .addAxis("Security Level", new String[] {"Protected", "Confidential", "Top Secret"}, true)
             .addAxis("Department", new String[] {"FIN", "MKG", "HR"}, false);
     }
 
-    private String accessPolicyConfidential() throws CosmianException {
+    private String accessPolicyConfidential() throws CloudproofException {
         return "Department::FIN && Security Level::Confidential";
     }
 

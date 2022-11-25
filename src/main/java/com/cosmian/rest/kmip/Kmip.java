@@ -2,7 +2,7 @@ package com.cosmian.rest.kmip;
 
 import java.util.logging.Logger;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.RestClient;
 import com.cosmian.rest.kmip.operations.Create;
 import com.cosmian.rest.kmip.operations.CreateKeyPair;
@@ -54,9 +54,9 @@ public class Kmip {
      *
      * @param request The Create request
      * @return the successful response
-     * @throws CosmianException if the request fails
+     * @throws CloudproofException if the request fails
      */
-    public CreateResponse create(Create request) throws CosmianException {
+    public CreateResponse create(Create request) throws CloudproofException {
         logger.finer(() -> "Create " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
@@ -65,7 +65,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: Create failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 
@@ -83,9 +83,9 @@ public class Kmip {
      *
      * @param request The Create request
      * @return the successful response
-     * @throws CosmianException if the request fails
+     * @throws CloudproofException if the request fails
      */
-    public CreateKeyPairResponse createKeyPair(CreateKeyPair request) throws CosmianException {
+    public CreateKeyPairResponse createKeyPair(CreateKeyPair request) throws CloudproofException {
         logger.finer(() -> "CreateKeyPair " + request.toString());
         try {
             return this.mapper.readValue(
@@ -94,7 +94,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: CreateKeyPair failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 
@@ -110,9 +110,9 @@ public class Kmip {
      *
      * @param request The Decrypt request
      * @return the successful response
-     * @throws CosmianException if the request fails *
+     * @throws CloudproofException if the request fails *
      */
-    public DecryptResponse decrypt(Decrypt request) throws CosmianException {
+    public DecryptResponse decrypt(Decrypt request) throws CloudproofException {
         logger.finer(() -> "Decrypt " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
@@ -122,7 +122,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: Decrypt failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 
@@ -133,9 +133,9 @@ public class Kmip {
      *
      * @param request The Destroy request
      * @return the successful response
-     * @throws CosmianException if the request fails
+     * @throws CloudproofException if the request fails
      */
-    public DestroyResponse destroy(Destroy request) throws CosmianException {
+    public DestroyResponse destroy(Destroy request) throws CloudproofException {
         logger.finer(() -> "Destroy " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
@@ -145,7 +145,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: Destroy failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 
@@ -166,9 +166,9 @@ public class Kmip {
      *
      * @param request The Encrypt request
      * @return the successful response
-     * @throws CosmianException if the request fails
+     * @throws CloudproofException if the request fails
      */
-    public EncryptResponse encrypt(Encrypt request) throws CosmianException {
+    public EncryptResponse encrypt(Encrypt request) throws CloudproofException {
         logger.finer(() -> "Encrypt " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
@@ -178,7 +178,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: Encrypt failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 
@@ -200,9 +200,9 @@ public class Kmip {
      *
      * @param request The Get request
      * @return the successful response
-     * @throws CosmianException if the request fails
+     * @throws CloudproofException if the request fails
      */
-    public GetResponse get(Get request) throws CosmianException {
+    public GetResponse get(Get request) throws CloudproofException {
         logger.finer(() -> "Get " + request.toString());
         try {
             String json = this.rest_client.json_post("/kmip/2_1", this.mapper.writeValueAsString(request));
@@ -211,7 +211,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: Get failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 
@@ -225,9 +225,9 @@ public class Kmip {
      *
      * @param request The Import request
      * @return the successful response
-     * @throws CosmianException if the request fails
+     * @throws CloudproofException if the request fails
      */
-    public ImportResponse importObject(Import request) throws CosmianException {
+    public ImportResponse importObject(Import request) throws CloudproofException {
         logger.finer(() -> "Import " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
@@ -237,7 +237,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: Import failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 
@@ -293,9 +293,9 @@ public class Kmip {
      *
      * @param request The Locate request
      * @return the successful response
-     * @throws CosmianException if the request fails
+     * @throws CloudproofException if the request fails
      */
-    public LocateResponse locate(Locate request) throws CosmianException {
+    public LocateResponse locate(Locate request) throws CloudproofException {
         logger.finer(() -> "Locate " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
@@ -305,7 +305,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: Locate failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 
@@ -326,9 +326,9 @@ public class Kmip {
      *
      * @param request The Rekey KeyPair request
      * @return the successful response
-     * @throws CosmianException if the request fails
+     * @throws CloudproofException if the request fails
      */
-    public ReKeyKeyPairResponse reKeyKeyPair(ReKeyKeyPair request) throws CosmianException {
+    public ReKeyKeyPairResponse reKeyKeyPair(ReKeyKeyPair request) throws CloudproofException {
         logger.finer(() -> "ReKeyKeypair " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
@@ -338,7 +338,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: ReKeyKeypair failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 
@@ -354,9 +354,9 @@ public class Kmip {
      *
      * @param request The Revoke request
      * @return the successful response
-     * @throws CosmianException if the request fails
+     * @throws CloudproofException if the request fails
      */
-    public RevokeResponse revoke(Revoke request) throws CosmianException {
+    public RevokeResponse revoke(Revoke request) throws CloudproofException {
         logger.finer(() -> "Revoke " + request.toString());
         try {
             String json_req = this.mapper.writeValueAsString(request);
@@ -366,7 +366,7 @@ public class Kmip {
         } catch (Exception e) {
             String err = "KMIP: Revoke failed: " + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
-            throw new CosmianException(err, e);
+            throw new CloudproofException(err, e);
         }
     }
 

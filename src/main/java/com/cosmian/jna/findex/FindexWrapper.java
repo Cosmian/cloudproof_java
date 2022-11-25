@@ -3,7 +3,7 @@ package com.cosmian.jna.findex;
 import java.util.HashMap;
 import java.util.List;
 
-import com.cosmian.jna.CloudproofException;
+import com.cosmian.CloudproofException;
 import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
@@ -21,7 +21,7 @@ public interface FindexWrapper extends Library {
     /* Internal callbacks FFI */
     interface FetchEntryCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength)
-                throws CloudproofException;
+            throws CloudproofException;
     }
 
     interface FetchAllEntryCallback extends Callback {
@@ -30,7 +30,7 @@ public interface FindexWrapper extends Library {
 
     interface FetchChainCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength)
-                throws CloudproofException;
+            throws CloudproofException;
     }
 
     interface UpsertEntryCallback extends Callback {
@@ -43,17 +43,17 @@ public interface FindexWrapper extends Library {
 
     interface UpdateLinesCallback extends Callback {
         int apply(Pointer removedChains, int removedChainsLength, Pointer newEntries, int newEntriesLength,
-                Pointer newChains, int newChainsLength) throws CloudproofException;
+            Pointer newChains, int newChainsLength) throws CloudproofException;
     }
 
     interface ListRemovedLocationsCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer locations, int locationsLength)
-                throws CloudproofException;
+            throws CloudproofException;
     }
 
     interface ProgressCallback extends Callback {
         boolean apply(Pointer output, int outputSize)
-                throws CloudproofException;
+            throws CloudproofException;
     }
 
     /* Customer high-level callbacks */
@@ -79,7 +79,7 @@ public interface FindexWrapper extends Library {
 
     interface UpdateLinesInterface {
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
-                HashMap<byte[], byte[]> newChains) throws CloudproofException;
+            HashMap<byte[], byte[]> newChains) throws CloudproofException;
     }
 
     interface ListRemovedLocationsInterface {
@@ -91,17 +91,17 @@ public interface FindexWrapper extends Library {
     }
 
     int h_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,
-            FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
+        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
 
     int h_graph_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,
-            FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
+        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
 
     int h_compact(int numberOfReindexingPhasesBeforeFullSet, String masterKeysJson, Pointer labelPointer, int labelSize,
-            FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
-            UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations);
+        FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
+        UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations);
 
     int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer, int keyKLength, Pointer labelPointer,
-            int labelSize, String words, int loopIterationLimit, int maxDepth, ProgressCallback progress,
-            FetchEntryCallback fetchEntry,
-            FetchChainCallback fetchChain);
+        int labelSize, String words, int loopIterationLimit, int maxDepth, ProgressCallback progress,
+        FetchEntryCallback fetchEntry,
+        FetchChainCallback fetchChain);
 }

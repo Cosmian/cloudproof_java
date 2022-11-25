@@ -1,6 +1,6 @@
 package com.cosmian.jna.findex;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,23 +32,24 @@ public class MasterKeys {
      * This method is mostly used for local tests and serialization.
      *
      * @return the JSON string
-     * @throws CosmianException if the serialization fails
+     * @throws CloudproofException if the serialization fails
      */
-    public String toJson() throws CosmianException {
+    public String toJson() throws CloudproofException {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new CosmianException("Failed serializing to JSON the MasterKeys.class: " + e.getMessage(), e);
+            throw new CloudproofException("Failed serializing to JSON the MasterKeys.class: " + e.getMessage(), e);
         }
     }
 
-    public static MasterKeys fromJson(String json) throws CosmianException {
+    public static MasterKeys fromJson(String json) throws CloudproofException {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(json, MasterKeys.class);
         } catch (JsonProcessingException e) {
-            throw new CosmianException("Failed deserializing from JSON the MasterKeys.class " + ": " + e.getMessage(),
+            throw new CloudproofException(
+                "Failed deserializing from JSON the MasterKeys.class " + ": " + e.getMessage(),
                 e);
         }
     }

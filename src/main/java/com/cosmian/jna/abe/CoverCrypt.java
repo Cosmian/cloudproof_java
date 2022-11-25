@@ -7,8 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 
-import com.cosmian.CosmianException;
-import com.cosmian.jna.CloudproofException;
+import com.cosmian.CloudproofException;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.policy.Policy;
@@ -31,16 +30,12 @@ public final class CoverCrypt {
     final private CoverCryptWrapper instance;
 
     /**
-     * Instantiate a {@link CoverCrypt} instance by loading the native library
-     * `cosmian_cover_crypt`.
-     * The library must be on the classpath.
-     * 
-     * Native libraries are already included for darwin-x86-64, linux-x86-64 and
-     * win32-x86-64
+     * Instantiate a {@link CoverCrypt} instance by loading the native library `cosmian_cover_crypt`. The library must
+     * be on the classpath. Native libraries are already included for darwin-x86-64, linux-x86-64 and win32-x86-64
      */
     public CoverCrypt() {
         this((CoverCryptWrapper) Native.load("cosmian_cover_crypt",
-                CoverCryptWrapper.class));
+            CoverCryptWrapper.class));
     }
 
     public CoverCrypt(CoverCryptWrapper instance) {
@@ -87,38 +82,34 @@ public final class CoverCrypt {
     }
 
     /**
-     * Create an encryption cache that can be used with
-     * {@link #encryptHeaderUsingCache(int, String)} se of the cache
-     * speeds up the encryption of the header. WARN: the cache MUST be destroyed
-     * after use with
+     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, String)} se of the cache
+     * speeds up the encryption of the header. WARN: the cache MUST be destroyed after use with
      * {@link #destroyEncryptionCache(int)}
      *
      * @param publicKey the public key to cache
      * @return the cache handle that can be passed to the encryption routine
      * @throws CloudproofException on Rust lib errors
-     * @throws CosmianException    in case of other errors
+     * @throws CloudproofException in case of other errors
      */
-    public int createEncryptionCache(PublicKey publicKey) throws CloudproofException, CosmianException {
+    public int createEncryptionCache(PublicKey publicKey) throws CloudproofException, CloudproofException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
         return createEncryptionCache(policy, publicKeyBytes);
     }
 
     /**
-     * Create an encryption cache that can be used with
-     * {@link #encryptHeaderUsingCache(int, String)} Use of the cache
-     * speeds up the encryption of the header. WARN: the cache MUST be destroyed
-     * after use with
+     * Create an encryption cache that can be used with {@link #encryptHeaderUsingCache(int, String)} Use of the cache
+     * speeds up the encryption of the header. WARN: the cache MUST be destroyed after use with
      * {@link #destroyEncryptionCache(int)}
      *
-     * @param policy         the {@link Policy} to cache
+     * @param policy the {@link Policy} to cache
      * @param publicKeyBytes the public key bytes to cache
      * @return the cache handle that can be passed to the encryption routine
      * @throws CloudproofException on Rust lib errors
-     * @throws CosmianException    in case of other errors
+     * @throws CloudproofException in case of other errors
      */
     public int createEncryptionCache(Policy policy, byte[] publicKeyBytes)
-            throws CloudproofException, CosmianException {
+        throws CloudproofException, CloudproofException {
 
         // Policy
         String policyJson;
@@ -137,7 +128,7 @@ public final class CoverCrypt {
 
         // cache ptr ptr
         unwrap(this.instance.h_aes_create_encryption_cache(cacheHandle, policyJson, publicKeyPointer,
-                publicKeyBytes.length));
+            publicKeyBytes.length));
 
         return cacheHandle.getValue();
     }
@@ -147,57 +138,46 @@ public final class CoverCrypt {
      *
      * @param cacheHandle the pointer to the cache to destroy
      * @throws CloudproofException on Rust lib errors
-     * @throws CosmianException    in case of other errors
+     * @throws CloudproofException in case of other errors
      */
-    public void destroyEncryptionCache(int cacheHandle) throws CloudproofException, CosmianException {
+    public void destroyEncryptionCache(int cacheHandle) throws CloudproofException, CloudproofException {
         unwrap(this.instance.h_aes_destroy_encryption_cache(cacheHandle));
     }
 
     /**
-     * Generate an hybrid encryption header using a pre-cached Public Key and
-     * Policy. A symmetric key is randomly
-     * generated and encrypted using the ABEschemes and the provided policy
-     * attributes for the given policy
+     * Generate an hybrid encryption header using a pre-cached Public Key and Policy. A symmetric key is randomly
+     * generated and encrypted using the ABEschemes and the provided policy attributes for the given policy
      *
-     * @param cacheHandle      the pointer to the {@link int}
-     * @param encryptionPolicy the encryption policy that determines the partitions
-     *                         to encrypt for
+     * @param cacheHandle the pointer to the {@link int}
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
      * @return the encrypted header, bytes and symmetric key
      * @throws CloudproofException in case of native library error
-     * @throws CosmianException    in case the {@link Policy} and key bytes
-     *                             cannot be
-     *                             recovered from the {@link PublicKey}
+     * @throws CloudproofException in case the {@link Policy} and key bytes cannot be recovered from the
+     *             {@link PublicKey}
      */
     public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, String encryptionPolicy)
-            throws CloudproofException, CosmianException {
+        throws CloudproofException, CloudproofException {
         return encryptHeaderUsingCache(cacheHandle, encryptionPolicy, Optional.empty(), Optional.empty());
     }
 
     /**
-     * Generate an hybrid encryption header using a pre-cached Public Key and
-     * Policy. A symmetric key is randomly
-     * generated and encrypted using the ABE schemes and the provided policy
-     * attributes for the given policy. . If
-     * provided, the resource `uid` and the `additionalData` are symmetrically
-     * encrypted and appended to the encrypted
+     * Generate an hybrid encryption header using a pre-cached Public Key and Policy. A symmetric key is randomly
+     * generated and encrypted using the ABE schemes and the provided policy attributes for the given policy. . If
+     * provided, the resource `uid` and the `additionalData` are symmetrically encrypted and appended to the encrypted
      * header.
      *
-     * @param cacheHandle        the pointer to the {@link int}
-     * @param encryptionPolicy   the encryption policy that determines the
-     *                           partitions to encrypt for
-     * @param additionalData     optional additional data to encrypt and add to the
-     *                           header
-     * @param authenticationData optional data used to authenticate the encryption
-     *                           of the additional data
+     * @param cacheHandle the pointer to the {@link int}
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param additionalData optional additional data to encrypt and add to the header
+     * @param authenticationData optional data used to authenticate the encryption of the additional data
      * @return the encrypted header, bytes and symmetric key
      * @throws CloudproofException in case of native library error
-     * @throws CosmianException    in case the {@link Policy} and key bytes
-     *                             cannot be
-     *                             recovered from the {@link PublicKey}
+     * @throws CloudproofException in case the {@link Policy} and key bytes cannot be recovered from the
+     *             {@link PublicKey}
      */
     public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, String encryptionPolicy,
-            Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
-            throws CloudproofException, CosmianException {
+        Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
+        throws CloudproofException, CloudproofException {
         // Is a resource UID supplied
         int authenticationDataLength;
         if (authenticationData.isPresent()) {
@@ -242,110 +222,92 @@ public final class CoverCrypt {
 
         try {
             unwrap(this.instance.h_aes_encrypt_header_using_cache(
-                    symmetricKeyBuffer, symmetricKeyBufferSize,
-                    headerBytesBuffer, headerBytesBufferSize,
-                    cacheHandle,
-                    encryptionPolicy,
-                    uidPointer, authenticationDataLength,
-                    additionalDataPointer, additionalDataLength));
+                symmetricKeyBuffer, symmetricKeyBufferSize,
+                headerBytesBuffer, headerBytesBufferSize,
+                cacheHandle,
+                encryptionPolicy,
+                uidPointer, authenticationDataLength,
+                additionalDataPointer, additionalDataLength));
         } catch (Throwable e) {
             e.printStackTrace();
             throw e;
         }
 
         return new EncryptedHeader(Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
-                Arrays.copyOfRange(headerBytesBuffer, 0, headerBytesBufferSize.getValue()));
+            Arrays.copyOfRange(headerBytesBuffer, 0, headerBytesBufferSize.getValue()));
     }
 
     /**
-     * Generate an hybrid encryption header. A symmetric key is randomly generated
-     * and encrypted using the ABE schemes
+     * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the ABE schemes
      * and the provided encryption policy for the given policy
      *
-     * @param publicKey        the ABE public key also holds the {@link Policy}
-     * @param encryptionPolicy the encryption policy that determines the partitions
-     *                         to encrypt for
+     * @param publicKey the ABE public key also holds the {@link Policy}
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
      * @return the encrypted header, bytes and symmetric key
      * @throws CloudproofException in case of native library error
-     * @throws CosmianException    in case the {@link Policy} and key bytes
-     *                             cannot be
-     *                             recovered from the {@link PublicKey}
+     * @throws CloudproofException in case the {@link Policy} and key bytes cannot be recovered from the
+     *             {@link PublicKey}
      */
     public EncryptedHeader encryptHeader(PublicKey publicKey, String encryptionPolicy)
-            throws CloudproofException, CosmianException {
+        throws CloudproofException, CloudproofException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, Optional.empty(), Optional.empty());
     }
 
     /**
-     * Generate an hybrid encryption header. A symmetric key is randomly generated
-     * and encrypted using the ABE schemes
-     * and the provided encryption policy for the given policy. . If provided, the
-     * resource `uid` and the
-     * `additionalData` are symmetrically encrypted and appended to the encrypted
-     * header.
+     * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the ABE schemes
+     * and the provided encryption policy for the given policy. . If provided, the resource `uid` and the
+     * `additionalData` are symmetrically encrypted and appended to the encrypted header.
      *
-     * @param publicKey          the ABE public key also holds the {@link Policy}
-     * @param encryptionPolicy   the encryption policy that determines the
-     *                           partitions to encrypt for
-     * @param additionalData     the additional data to encrypt and add to the
-     *                           header
-     * @param authenticationData optional data used to authenticate the encryption
-     *                           of the additional data
+     * @param publicKey the ABE public key also holds the {@link Policy}
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param additionalData the additional data to encrypt and add to the header
+     * @param authenticationData optional data used to authenticate the encryption of the additional data
      * @return the encrypted header, bytes and symmetric key
      * @throws CloudproofException in case of native library error
-     * @throws CosmianException    in case the {@link Policy} and key bytes
-     *                             cannot be
-     *                             recovered from the {@link PublicKey}
+     * @throws CloudproofException in case the {@link Policy} and key bytes cannot be recovered from the
+     *             {@link PublicKey}
      */
     public EncryptedHeader encryptHeader(PublicKey publicKey, String encryptionPolicy,
-            Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
-            throws CloudproofException, CosmianException {
+        Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
+        throws CloudproofException, CloudproofException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, additionalData, authenticationData);
     }
 
     /**
-     * Generate an hybrid encryption header. A symmetric key is randomly generated
-     * and encrypted using the ABE schemes
+     * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the ABE schemes
      * and the provided encryption policy for the given policy.
      *
-     * @param policy           the policy to use
-     * @param publicKeyBytes   the ABE public key bytes
-     * @param encryptionPolicy the encryption policy that determines the partitions
-     *                         to encrypt for
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
      * @return the encrypted header, bytes and symmetric key
      * @throws CloudproofException in case of native library error
      */
     public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, String encryptionPolicy)
-            throws CloudproofException {
+        throws CloudproofException {
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, Optional.empty(), Optional.empty());
     }
 
     /**
-     * Generate an hybrid encryption header. A symmetric key is randomly generated
-     * and encrypted using the ABE schemes
-     * and the provided encryption policy for the given policy. If provided, the
-     * additionalData` are symmetrically
-     * encrypted and appended to the encrypted header. If provided the
-     * `authenticationData` are used as part of the
+     * Generate an hybrid encryption header. A symmetric key is randomly generated and encrypted using the ABE schemes
+     * and the provided encryption policy for the given policy. If provided, the additionalData` are symmetrically
+     * encrypted and appended to the encrypted header. If provided the `authenticationData` are used as part of the
      * authentication of the symmetric encryption scheme.
      *
-     * @param policy             the policy to use
-     * @param publicKeyBytes     the ABE public key bytes
-     * @param encryptionPolicy   the encryption policy that determines the
-     *                           partitions to encrypt for
-     * @param additionalData     the additional data to encrypt and add to the
-     *                           header
-     * @param authenticationData optional data used to authenticate the encryption
-     *                           of the additional data
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param additionalData the additional data to encrypt and add to the header
+     * @param authenticationData optional data used to authenticate the encryption of the additional data
      * @return the encrypted header, bytes and symmetric key
      * @throws CloudproofException in case of native library error
      */
     public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            Optional<byte[]> additionalData, Optional<byte[]> authenticationData) throws CloudproofException {
+        Optional<byte[]> additionalData, Optional<byte[]> authenticationData) throws CloudproofException {
 
         // Is additional data supplied
         int additionalDataLength;
@@ -402,16 +364,16 @@ public final class CoverCrypt {
         }
 
         unwrap(this.instance.h_aes_encrypt_header(
-                symmetricKeyBuffer, symmetricKeyBufferSize,
-                headerBytesBuffer, headerBytesBufferSize,
-                policyJson,
-                publicKeyPointer, publicKeyBytes.length,
-                encryptionPolicy,
-                additionalDataPointer, additionalDataLength,
-                authenticationDataPointer, authenticationDataLength));
+            symmetricKeyBuffer, symmetricKeyBufferSize,
+            headerBytesBuffer, headerBytesBufferSize,
+            policyJson,
+            publicKeyPointer, publicKeyBytes.length,
+            encryptionPolicy,
+            additionalDataPointer, additionalDataLength,
+            authenticationDataPointer, authenticationDataLength));
 
         return new EncryptedHeader(Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
-                Arrays.copyOfRange(headerBytesBuffer, 0, headerBytesBufferSize.getValue()));
+            Arrays.copyOfRange(headerBytesBuffer, 0, headerBytesBufferSize.getValue()));
     }
 
     // -----------------------------------------------
@@ -419,35 +381,31 @@ public final class CoverCrypt {
     // -----------------------------------------------
 
     /**
-     * Create an decryption cache that can be used with
-     * {@link #decryptHeaderUsingCache(int, byte[])} Use of the cache
-     * speeds up decryption of the header WARN: the cache MUST be destroyed after
-     * use with
+     * Create an decryption cache that can be used with {@link #decryptHeaderUsingCache(int, byte[])} Use of the cache
+     * speeds up decryption of the header WARN: the cache MUST be destroyed after use with
      * {@link #destroyDecryptionCache(int)}
      *
      * @param userDecryptionKey the public key to cache
      * @return the cache handle that can be passed to the decryption routine
      * @throws CloudproofException on Rust lib errors
-     * @throws CosmianException    in case of other errors
+     * @throws CloudproofException in case of other errors
      */
-    public int createDecryptionCache(PrivateKey userDecryptionKey) throws CloudproofException, CosmianException {
+    public int createDecryptionCache(PrivateKey userDecryptionKey) throws CloudproofException, CloudproofException {
         byte[] userDecryptionKeyBytes = userDecryptionKey.bytes();
         return createDecryptionCache(userDecryptionKeyBytes);
     }
 
     /**
-     * Create a decryption cache that can be used with
-     * {@link #decryptHeaderUsingCache(int, byte[])} Use of the cache
-     * speeds up the decryption of the header. WARN: the cache MUST be destroyed
-     * after use with
+     * Create a decryption cache that can be used with {@link #decryptHeaderUsingCache(int, byte[])} Use of the cache
+     * speeds up the decryption of the header. WARN: the cache MUST be destroyed after use with
      * {@link #destroyDecryptionCache(int)}
      *
      * @param userDecryptionKeyBytes the public key bytes to cache
      * @return the cache handle that can be passed to the decryption routine
      * @throws CloudproofException on Rust lib errors
-     * @throws CosmianException    in case of other errors
+     * @throws CloudproofException in case of other errors
      */
-    public int createDecryptionCache(byte[] userDecryptionKeyBytes) throws CloudproofException, CosmianException {
+    public int createDecryptionCache(byte[] userDecryptionKeyBytes) throws CloudproofException, CloudproofException {
 
         // Public Key
         final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKeyBytes.length);
@@ -457,7 +415,7 @@ public final class CoverCrypt {
         IntByReference cacheHandle = new IntByReference();
 
         unwrap(this.instance.h_aes_create_decryption_cache(cacheHandle, userDecryptionKeyPointer,
-                userDecryptionKeyBytes.length));
+            userDecryptionKeyBytes.length));
 
         return cacheHandle.getValue();
     }
@@ -467,44 +425,39 @@ public final class CoverCrypt {
      *
      * @param cacheHandle the pointer to the cache to destroy
      * @throws CloudproofException on Rust lib errors
-     * @throws CosmianException    in case of other errors
+     * @throws CloudproofException in case of other errors
      */
-    public void destroyDecryptionCache(int cacheHandle) throws CloudproofException, CosmianException {
+    public void destroyDecryptionCache(int cacheHandle) throws CloudproofException, CloudproofException {
         unwrap(this.instance.h_aes_destroy_decryption_cache(cacheHandle));
     }
 
     /**
      * Decrypt a hybrid header using a cache, recovering the symmetric key
      *
-     * @param cacheHandle          the cache to the user decryption key
+     * @param cacheHandle the cache to the user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws CloudproofException in case of native library error
-     * @throws CosmianException    in case the key bytes cannot be recovered
-     *                             from the
-     *                             {@link PrivateKey}
+     * @throws CloudproofException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
     public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes)
-            throws CloudproofException, CosmianException {
+        throws CloudproofException, CloudproofException {
         return decryptHeaderUsingCache(cacheHandle, encryptedHeaderBytes, 0, Optional.empty());
     }
 
     /**
-     * Decrypt a hybrid header using a cache, recovering the symmetric key, and
-     * optionally, the resource UID and
+     * Decrypt a hybrid header using a cache, recovering the symmetric key, and optionally, the resource UID and
      * additional data
      *
-     * @param cacheHandle          the cache to the user decryption key
+     * @param cacheHandle the cache to the user decryption key
      * @param encryptedHeaderBytes the encrypted header
-     * @param additionalDataLen    the maximum bytes length of the expected
-     *                             additional data
-     * @param authenticationData   optional data used to authenticate the encryption
-     *                             of the additional data
+     * @param additionalDataLen the maximum bytes length of the expected additional data
+     * @param authenticationData optional data used to authenticate the encryption of the additional data
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws CloudproofException in case of native library error
      */
     public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes,
-            int additionalDataLen, Optional<byte[]> authenticationData) throws CloudproofException {
+        int additionalDataLen, Optional<byte[]> authenticationData) throws CloudproofException {
 
         // Symmetric Key OUT
         byte[] symmetricKeyBuffer = new byte[1024];
@@ -536,86 +489,75 @@ public final class CoverCrypt {
         }
 
         unwrap(this.instance.h_aes_decrypt_header_using_cache(
-                symmetricKeyBuffer, symmetricKeyBufferSize,
-                additionalDataBuffer, additionalDataBufferSize,
-                encryptedHeaderBytesPointer, encryptedHeaderBytes.length,
-                authenticationDataPointer, authenticationDataLen,
-                cacheHandle));
+            symmetricKeyBuffer, symmetricKeyBufferSize,
+            additionalDataBuffer, additionalDataBufferSize,
+            encryptedHeaderBytesPointer, encryptedHeaderBytes.length,
+            authenticationDataPointer, authenticationDataLen,
+            cacheHandle));
 
         return new DecryptedHeader(
-                Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
-                authenticationDataLen > 0 ? authenticationData.get() : new byte[] {},
-                additionalDataLen > 0 ? Arrays.copyOfRange(additionalDataBuffer, 0, additionalDataBufferSize.getValue())
-                        : new byte[] {});
+            Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
+            authenticationDataLen > 0 ? authenticationData.get() : new byte[] {},
+            additionalDataLen > 0 ? Arrays.copyOfRange(additionalDataBuffer, 0, additionalDataBufferSize.getValue())
+                : new byte[] {});
     }
 
     /**
      * Decrypt a hybrid header, recovering the symmetric key
      *
-     * @param userDecryptionKey    the ABE user decryption key
+     * @param userDecryptionKey the ABE user decryption key
      * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws CloudproofException in case of native library error
-     * @throws CosmianException    in case the key bytes cannot be recovered
-     *                             from the
-     *                             {@link PrivateKey}
+     * @throws CloudproofException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
     public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes)
-            throws CloudproofException, CosmianException {
+        throws CloudproofException, CloudproofException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, 0, Optional.empty());
     }
 
     /**
-     * Decrypt a hybrid header, recovering the symmetric key, and optionally, the
-     * resource UID and additional data
+     * Decrypt a hybrid header, recovering the symmetric key, and optionally, the resource UID and additional data
      *
-     * @param userDecryptionKey    the ABE user decryption key
+     * @param userDecryptionKey the ABE user decryption key
      * @param encryptedHeaderBytes the encrypted header
-     * @param additionalDataLen    the maximum bytes length of the expected
-     *                             additional data
-     * @param authenticationData   optional data used to authenticate the encryption
-     *                             of the additional data
+     * @param additionalDataLen the maximum bytes length of the expected additional data
+     * @param authenticationData optional data used to authenticate the encryption of the additional data
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws CloudproofException in case of native library error
-     * @throws CosmianException    in case the key bytes cannot be recovered
-     *                             from the
-     *                             {@link PrivateKey}
+     * @throws CloudproofException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
     public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes,
-            int additionalDataLen, Optional<byte[]> authenticationData)
-            throws CloudproofException, CosmianException {
+        int additionalDataLen, Optional<byte[]> authenticationData)
+        throws CloudproofException, CloudproofException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, additionalDataLen, authenticationData);
     }
 
     /**
-     * Decrypt a hybrid header, recovering the symmetric key, and optionally, the
-     * resource UID and additional data
+     * Decrypt a hybrid header, recovering the symmetric key, and optionally, the resource UID and additional data
      *
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
-     * @param encryptedHeaderBytes   the encrypted header
+     * @param encryptedHeaderBytes the encrypted header
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws CloudproofException in case of native library error
      */
     public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes)
-            throws CloudproofException {
+        throws CloudproofException {
         return decryptHeader(userDecryptionKeyBytes, encryptedHeaderBytes, 0, Optional.empty());
     }
 
     /**
-     * Decrypt a hybrid header, recovering the symmetric key, and optionally, the
-     * resource UID and additional data
+     * Decrypt a hybrid header, recovering the symmetric key, and optionally, the resource UID and additional data
      *
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
-     * @param encryptedHeaderBytes   the encrypted header
-     * @param additionalDataLen      the maximum bytes length of the expected
-     *                               additional data
-     * @param authenticationData     optional data used to authenticate the
-     *                               encryption of the additional data
+     * @param encryptedHeaderBytes the encrypted header
+     * @param additionalDataLen the maximum bytes length of the expected additional data
+     * @param authenticationData optional data used to authenticate the encryption of the additional data
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws CloudproofException in case of native library error
      */
     public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes,
-            int additionalDataLen, Optional<byte[]> authenticationData) throws CloudproofException {
+        int additionalDataLen, Optional<byte[]> authenticationData) throws CloudproofException {
 
         // Symmetric Key OUT
         byte[] symmetricKeyBuffer = new byte[1024];
@@ -651,21 +593,20 @@ public final class CoverCrypt {
         userDecryptionKeyPointer.write(0, userDecryptionKeyBytes, 0, userDecryptionKeyBytes.length);
 
         unwrap(this.instance.h_aes_decrypt_header(
-                symmetricKeyBuffer, symmetricKeyBufferSize,
-                additionalDataBuffer, additionalDataBufferSize,
-                encryptedHeaderBytesPointer, encryptedHeaderBytes.length,
-                authenticationDataPointer, authenticationDataLen,
-                userDecryptionKeyPointer, userDecryptionKeyBytes.length));
+            symmetricKeyBuffer, symmetricKeyBufferSize,
+            additionalDataBuffer, additionalDataBufferSize,
+            encryptedHeaderBytesPointer, encryptedHeaderBytes.length,
+            authenticationDataPointer, authenticationDataLen,
+            userDecryptionKeyPointer, userDecryptionKeyBytes.length));
 
         return new DecryptedHeader(Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
-                authenticationDataLen > 0 ? authenticationData.get() : new byte[] {},
-                additionalDataLen > 0 ? Arrays.copyOfRange(additionalDataBuffer, 0, additionalDataBufferSize.getValue())
-                        : new byte[] {});
+            authenticationDataLen > 0 ? authenticationData.get() : new byte[] {},
+            additionalDataLen > 0 ? Arrays.copyOfRange(additionalDataBuffer, 0, additionalDataBufferSize.getValue())
+                : new byte[] {});
     }
 
     /**
-     * The overhead in bytes (over the clear text) generated by the symmetric
-     * encryption scheme (AES 256 GCM)
+     * The overhead in bytes (over the clear text) generated by the symmetric encryption scheme (AES 256 GCM)
      *
      * @return the overhead bytes
      */
@@ -674,12 +615,11 @@ public final class CoverCrypt {
     }
 
     /**
-     * Symmetrically encrypt a block of clear text data. No resource UID is used for
-     * authentication and the block number
+     * Symmetrically encrypt a block of clear text data. No resource UID is used for authentication and the block number
      * is assumed to be zero
      *
      * @param symmetricKey The key to use to symmetrically encrypt the block
-     * @param clearText    the clear text to encrypt
+     * @param clearText the clear text to encrypt
      * @return the encrypted block
      * @throws CloudproofException in case of native library error
      */
@@ -688,19 +628,17 @@ public final class CoverCrypt {
     }
 
     /**
-     * Symmetrically encrypt a block of clear text data. The UID and Block Number
-     * are part of the AEAD of the symmetric
+     * Symmetrically encrypt a block of clear text data. The UID and Block Number are part of the AEAD of the symmetric
      * scheme.
      *
-     * @param symmetricKey       The key to use to symmetrically encrypt the block
-     * @param authenticationData The associated Data used to authenticate the
-     *                           symmetric encryption
-     * @param clearText          the clear text to encrypt
+     * @param symmetricKey The key to use to symmetrically encrypt the block
+     * @param authenticationData The associated Data used to authenticate the symmetric encryption
+     * @param clearText the clear text to encrypt
      * @return the encrypted block
      * @throws CloudproofException in case of native library error
      */
     public byte[] encryptBlock(byte[] symmetricKey, byte[] authenticationData, byte[] clearText)
-            throws CloudproofException {
+        throws CloudproofException {
 
         // Ciphertext OUT
         byte[] ciphertextBuffer = new byte[this.instance.h_aes_symmetric_encryption_overhead() + clearText.length];
@@ -724,20 +662,19 @@ public final class CoverCrypt {
         dataPointer.write(0, clearText, 0, clearText.length);
 
         unwrap(this.instance.h_aes_encrypt_block(
-                ciphertextBuffer, ciphertextBufferSize,
-                symmetricKeyPointer, symmetricKey.length,
-                associatedDataPointer, authenticationData.length,
-                dataPointer, clearText.length));
+            ciphertextBuffer, ciphertextBufferSize,
+            symmetricKeyPointer, symmetricKey.length,
+            associatedDataPointer, authenticationData.length,
+            dataPointer, clearText.length));
 
         return Arrays.copyOfRange(ciphertextBuffer, 0, ciphertextBufferSize.getValue());
     }
 
     /**
-     * Symmetrically decrypt a block of encrypted data. No resource UID is used for
-     * authentication and the block number
+     * Symmetrically decrypt a block of encrypted data. No resource UID is used for authentication and the block number
      * is assumed to be zero
      *
-     * @param symmetricKey   the symmetric key to use
+     * @param symmetricKey the symmetric key to use
      * @param encryptedBytes the encrypted block bytes
      * @return the clear text bytes
      * @throws CloudproofException in case of native library error
@@ -748,19 +685,17 @@ public final class CoverCrypt {
     }
 
     /**
-     * Symmetrically decrypt a block of encrypted data. The resource UID and block
-     * Number must match those supplied on
+     * Symmetrically decrypt a block of encrypted data. The resource UID and block Number must match those supplied on
      * encryption or decryption will fail.
      *
-     * @param symmetricKey       the symmetric key to use
-     * @param authenticationData The associated Data used to authenticate the
-     *                           symmetric encryption
-     * @param encryptedBytes     the encrypted block bytes
+     * @param symmetricKey the symmetric key to use
+     * @param authenticationData The associated Data used to authenticate the symmetric encryption
+     * @param encryptedBytes the encrypted block bytes
      * @return the clear text bytes
      * @throws CloudproofException in case of native library error
      */
     public byte[] decryptBlock(byte[] symmetricKey, byte[] authenticationData, byte[] encryptedBytes)
-            throws CloudproofException {
+        throws CloudproofException {
 
         // Clear Text Bytes OUT
         byte[] clearTextBuffer = new byte[encryptedBytes.length - this.instance.h_aes_symmetric_encryption_overhead()];
@@ -784,10 +719,10 @@ public final class CoverCrypt {
         encryptedBytesPointer.write(0, encryptedBytes, 0, encryptedBytes.length);
 
         unwrap(this.instance.h_aes_decrypt_block(
-                clearTextBuffer, clearTextBufferSize,
-                symmetricKeyPointer, symmetricKey.length,
-                authenticationDataPointer, authenticationData.length,
-                encryptedBytesPointer, encryptedBytes.length));
+            clearTextBuffer, clearTextBufferSize,
+            symmetricKeyPointer, symmetricKey.length,
+            authenticationDataPointer, authenticationData.length,
+            encryptedBytesPointer, encryptedBytes.length));
 
         return Arrays.copyOfRange(clearTextBuffer, 0, clearTextBufferSize.getValue());
     }
@@ -838,14 +773,13 @@ public final class CoverCrypt {
      * Generate the user private key
      *
      * @param masterPrivateKey the master private key in bytes
-     *
-     *                         boolean expression
-     * @param policy           the ABE policy
+     * @param booleanAccessPolicy the access policy of the user private key as an boolean expression
+     * @param policy the ABE policy
      * @return the corresponding user private key
      * @throws CloudproofException in case of native library error
      */
     public byte[] generateUserPrivateKey(byte[] masterPrivateKey, String booleanAccessPolicy, Policy policy)
-            throws CloudproofException {
+        throws CloudproofException {
 
         String json = this.booleanAccessPolicyToJson(booleanAccessPolicy);
         return generateUserPrivateKey_(masterPrivateKey, json, policy);
@@ -855,14 +789,13 @@ public final class CoverCrypt {
      * Generate the user private key
      *
      * @param masterPrivateKey the master private key in bytes
-     * @param accessPolicy     the access policy of the user private key as an
-     *                         AccessPolicy instance
-     * @param policy           the ABE policy
+     * @param accessPolicy the access policy of the user private key as an AccessPolicy instance
+     * @param policy the ABE policy
      * @return the corresponding user private key
      * @throws CloudproofException in case of native library error
      */
     public byte[] generateUserPrivateKey(byte[] masterPrivateKey, AccessPolicy accessPolicy, Policy policy)
-            throws CloudproofException {
+        throws CloudproofException {
 
         // Access Policy
         String accessPolicyJson;
@@ -880,14 +813,13 @@ public final class CoverCrypt {
      * Generate the user private key
      *
      * @param masterPrivateKey the master private key in bytes
-     * @param accessPolicyJson the access policy of the user private key as a JSON
-     *                         version of an AccessPolicy instance
-     * @param policy           the ABE policy
+     * @param accessPolicyJson the access policy of the user private key as a JSON version of an AccessPolicy instance
+     * @param policy the ABE policy
      * @return the corresponding user private key
      * @throws CloudproofException in case of native library error
      */
     byte[] generateUserPrivateKey_(byte[] masterPrivateKey, String accessPolicyJson, Policy policy)
-            throws CloudproofException {
+        throws CloudproofException {
         // User private key Bytes OUT
         byte[] userPrivateKeyBuffer = new byte[8192];
         IntByReference userPrivateKeyBufferSize = new IntByReference(userPrivateKeyBuffer.length);
@@ -905,12 +837,12 @@ public final class CoverCrypt {
             }
 
             int ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
-                    masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
+                masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
             if (ffiCode != 0) {
                 // Retry with correct allocated size
                 userPrivateKeyBuffer = new byte[userPrivateKeyBufferSize.getValue()];
                 ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
-                        masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
+                    masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
                 if (ffiCode != 0) {
                     throw new CloudproofException(get_last_error(4095));
                 }
@@ -920,19 +852,18 @@ public final class CoverCrypt {
     }
 
     /**
-     * Rotate attributes, changing their underlying value with that of an unused
-     * slot
+     * Rotate attributes, changing their underlying value with that of an unused slot
      *
      * @param attributes: a list of attributes to rotate
-     * @param policy:     the current policy returns the new Policy
+     * @param policy: the current policy returns the new Policy
      * @return the new policy
      * @throws CloudproofException in case of native library error
-     * @throws IOException         standard IO exceptions
-     * @throws DatabindException   standard databind exceptions
+     * @throws IOException standard IO exceptions
+     * @throws DatabindException standard databind exceptions
      * @throws StreamReadException stream read exceptions
      */
     public Policy rotateAttributes(Attr[] attributes, Policy policy)
-            throws CloudproofException, StreamReadException, DatabindException, IOException {
+        throws CloudproofException, StreamReadException, DatabindException, IOException {
         // New policy Bytes OUT
         byte[] policyBuffer = new byte[4096];
         IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
@@ -975,14 +906,12 @@ public final class CoverCrypt {
     }
 
     /**
-     * If the result of the last FFI call is in Error, recover the last error from
-     * the native code and throw an
+     * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
      * exception wrapping it.
      *
      * @param result the result of the FFI call
      * @return the result if it is different from 1
-     * @throws CloudproofException in case of native library error (result is
-     *                             1)
+     * @throws CloudproofException in case of native library error (result is 1)
      */
     public int unwrap(int result) throws CloudproofException {
         if (result == 1) {
@@ -994,86 +923,76 @@ public final class CoverCrypt {
     /**
      * Generate an hybrid encryption of a plaintext.
      *
-     * @param policy           the policy to use
-     * @param publicKeyBytes   the ABE public key bytes
-     * @param encryptionPolicy the encryption policy that determines the partitions
-     *                         to encrypt for
-     * @param plaintext        the plaintext to encrypt
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param plaintext the plaintext to encrypt
      * @return the ciphertext
      * @throws CloudproofException in case of native library error
      */
     public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext) throws CloudproofException {
+        byte[] plaintext) throws CloudproofException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.empty(),
-                Optional.empty());
+            Optional.empty());
     }
 
     /**
-     * Generate an hybrid encryption of a plaintext. The `authenticationData` are
-     * used as part of the authentication of
+     * Generate an hybrid encryption of a plaintext. The `authenticationData` are used as part of the authentication of
      * the symmetric encryption scheme.
      *
-     * @param policy             the policy to use
-     * @param publicKeyBytes     the ABE public key bytes
-     * @param encryptionPolicy   the encryption policy that determines the
-     *                           partitions to encrypt for
-     * @param plaintext          the plaintext to encrypt
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param plaintext the plaintext to encrypt
      * @param authenticationData data used to authenticate the symmetric encryption
      * @return the ciphertext
      * @throws CloudproofException in case of native library error
      */
     public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext, byte[] authenticationData) throws CloudproofException {
+        byte[] plaintext, byte[] authenticationData) throws CloudproofException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.empty(),
-                Optional.of(authenticationData));
+            Optional.of(authenticationData));
     }
 
     /**
-     * Generate an hybrid encryption of a plaintext. The `authenticationData` are
-     * used as part of the authentication of
+     * Generate an hybrid encryption of a plaintext. The `authenticationData` are used as part of the authentication of
      * the symmetric encryption scheme.
      *
-     * @param policy             the policy to use
-     * @param publicKeyBytes     the ABE public key bytes
-     * @param encryptionPolicy   the encryption policy that determines the
-     *                           partitions to encrypt for
-     * @param plaintext          the plaintext to encrypt
-     * @param additionalData     additional data to encrypt and add to the header
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param plaintext the plaintext to encrypt
+     * @param additionalData additional data to encrypt and add to the header
      * @param authenticationData data used to authenticate the symmetric encryption
      * @return the ciphertext
      * @throws CloudproofException in case of native library error
      */
     public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext, byte[] additionalData, byte[] authenticationData) throws CloudproofException {
+        byte[] plaintext, byte[] additionalData, byte[] authenticationData) throws CloudproofException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.of(additionalData),
-                Optional.of(authenticationData));
+            Optional.of(authenticationData));
     }
 
     /**
-     * Generate an hybrid encryption of a plaintext. If provided, the
-     * additionalData` are symmetrically encrypted and
-     * appended to the encrypted header. If provided the `authenticationData` are
-     * used as part of the authentication of
+     * Generate an hybrid encryption of a plaintext. If provided, the additionalData` are symmetrically encrypted and
+     * appended to the encrypted header. If provided the `authenticationData` are used as part of the authentication of
      * the symmetric encryption scheme.
      *
-     * @param policy             the policy to use
-     * @param publicKeyBytes     the ABE public key bytes
-     * @param encryptionPolicy   the encryption policy that determines the
-     *                           partitions to encrypt for
-     * @param plaintext          the plaintext to encrypt
-     * @param additionalData     the additional data to encrypt and add to the
-     *                           header
-     * @param authenticationData optional data used to authenticate the symmetric
-     *                           encryption
+     * @param policy the policy to use
+     * @param publicKeyBytes the ABE public key bytes
+     * @param encryptionPolicy the encryption policy that determines the partitions to encrypt for
+     * @param plaintext the plaintext to encrypt
+     * @param additionalData the additional data to encrypt and add to the header
+     * @param authenticationData optional data used to authenticate the symmetric encryption
      * @return the ciphertext
      * @throws CloudproofException in case of native library error
      */
     byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-            byte[] plaintext, Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
-            throws CloudproofException {
+        byte[] plaintext, Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
+        throws CloudproofException {
 
         // Is additional data supplied
         int additionalDataLength;
@@ -1130,13 +1049,13 @@ public final class CoverCrypt {
         }
 
         unwrap(this.instance.h_aes_encrypt(
-                ciphertext, ciphertextSize,
-                policyJson,
-                publicKeyPointer, publicKeyBytes.length,
-                encryptionPolicy,
-                plaintextPointer, plaintext.length,
-                additionalDataPointer, additionalDataLength,
-                authenticationDataPointer, authenticationDataLength));
+            ciphertext, ciphertextSize,
+            policyJson,
+            publicKeyPointer, publicKeyBytes.length,
+            encryptionPolicy,
+            plaintextPointer, plaintext.length,
+            additionalDataPointer, additionalDataLength,
+            authenticationDataPointer, authenticationDataLength));
 
         return Arrays.copyOfRange(ciphertext, 0, ciphertextSize.getValue());
     }
@@ -1145,7 +1064,7 @@ public final class CoverCrypt {
      * Decrypt a hybrid encryption
      *
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
-     * @param ciphertext             the ciphertext to decrypt
+     * @param ciphertext the ciphertext to decrypt
      * @return A tuple of [plaintext, additional data]
      * @throws CloudproofException in case of native library error
      */
@@ -1157,14 +1076,13 @@ public final class CoverCrypt {
      * Decrypt a hybrid encryption
      *
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
-     * @param ciphertext             the ciphertext to decrypt
-     * @param authenticationData     data used to authenticate the symmetric
-     *                               encryption
+     * @param ciphertext the ciphertext to decrypt
+     * @param authenticationData data used to authenticate the symmetric encryption
      * @return A tuple of [plaintext, additional data]
      * @throws CloudproofException in case of native library error
      */
     public byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
-            byte[] authenticationData) throws CloudproofException {
+        byte[] authenticationData) throws CloudproofException {
         return decrypt(userDecryptionKeyBytes, ciphertext, Optional.of(authenticationData));
     }
 
@@ -1172,14 +1090,13 @@ public final class CoverCrypt {
      * Decrypt a hybrid encryption
      *
      * @param userDecryptionKeyBytes the ABE user decryption key bytes
-     * @param ciphertext             the ciphertext to decrypt
-     * @param authenticationData     optional data used to authenticate the
-     *                               symmetric encryption
+     * @param ciphertext the ciphertext to decrypt
+     * @param authenticationData optional data used to authenticate the symmetric encryption
      * @return A tuple of [plaintext, additional data]
      * @throws CloudproofException in case of native library error
      */
     byte[][] decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
-            Optional<byte[]> authenticationData) throws CloudproofException {
+        Optional<byte[]> authenticationData) throws CloudproofException {
 
         // plaintext OUT
         byte[] plaintext = new byte[ciphertext.length]; // safe: plaintext should be smaller than cipher text
@@ -1210,21 +1127,20 @@ public final class CoverCrypt {
         userDecryptionKeyPointer.write(0, userDecryptionKeyBytes, 0, userDecryptionKeyBytes.length);
 
         unwrap(this.instance.h_aes_decrypt(
-                plaintext, plaintextSize,
-                additionalData, additionalDataSize,
-                ciphertextPointer, ciphertext.length,
-                authenticationDataPointer, authenticationDataLen,
-                userDecryptionKeyPointer, userDecryptionKeyBytes.length));
+            plaintext, plaintextSize,
+            additionalData, additionalDataSize,
+            ciphertextPointer, ciphertext.length,
+            authenticationDataPointer, authenticationDataLen,
+            userDecryptionKeyPointer, userDecryptionKeyBytes.length));
 
         return new byte[][] {
-                Arrays.copyOfRange(plaintext, 0, plaintextSize.getValue()),
-                Arrays.copyOfRange(additionalData, 0, additionalDataSize.getValue())
+            Arrays.copyOfRange(plaintext, 0, plaintextSize.getValue()),
+            Arrays.copyOfRange(additionalData, 0, additionalDataSize.getValue())
         };
     }
 
     /**
-     * Convert a boolean access policy expression to JSON
-     * that can be used in KMIP calls to create user decryption keys.
+     * Convert a boolean access policy expression to JSON that can be used in KMIP calls to create user decryption keys.
      *
      * @param booleanExpression access policy in the form of a boolean expression
      * @throws CloudproofException in case of native library error

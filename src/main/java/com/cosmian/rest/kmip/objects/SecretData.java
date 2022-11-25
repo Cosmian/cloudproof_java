@@ -2,7 +2,7 @@ package com.cosmian.rest.kmip.objects;
 
 import java.util.Objects;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.SecretDataType;
@@ -82,9 +82,9 @@ public class SecretData extends KmipObject {
      * 
      * @param json secret data in JSON form
      * @return the {@link SecretData}
-     * @throws CosmianException if the the JSON cannot be parsed
+     * @throws CloudproofException if the the JSON cannot be parsed
      */
-    public static SecretData fromJson(String json) throws CosmianException {
+    public static SecretData fromJson(String json) throws CloudproofException {
         return KmipObject.fromJson(json, SecretData.class);
     }
 }

@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.cosmian.CloudproofException;
 import com.cosmian.Leb128;
-import com.cosmian.jna.CloudproofException;
 
 public class Leb128Serializer {
 
@@ -73,7 +73,7 @@ public class Leb128Serializer {
                 Leb128.writeArray(out, value);
             }
             // empty array marks the end
-            out.write(new byte[] { 0 });
+            out.write(new byte[] {0});
         } catch (IOException e) {
             throw new CloudproofException("failed serializing the set", e);
         }
@@ -89,7 +89,7 @@ public class Leb128Serializer {
                 Leb128.writeArray(out, bs);
             }
             // empty array marks the end
-            out.write(new byte[] { 0 });
+            out.write(new byte[] {0});
         } catch (IOException e) {
             throw new CloudproofException("failed serializing the list", e);
         }

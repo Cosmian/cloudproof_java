@@ -3,7 +3,7 @@ package com.cosmian.jna.findex.Callbacks;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.cosmian.jna.CloudproofException;
+import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsCallback;
 import com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
@@ -21,7 +21,7 @@ public class ListRemovedLocations implements ListRemovedLocationsCallback {
 
     @Override
     public int apply(Pointer output, IntByReference outputSize, Pointer items, int itemsLength)
-            throws CloudproofException {
+        throws CloudproofException {
         //
         // Read `items` until `itemsLength`
         //
@@ -30,13 +30,13 @@ public class ListRemovedLocations implements ListRemovedLocationsCallback {
 
         List<byte[]> locationsBytes = Leb128Serializer.deserializeList(itemsBytes);
         List<Location> locations = locationsBytes.stream().map((byte[] bytes) -> new Location(bytes))
-                .collect(Collectors.toList());
+            .collect(Collectors.toList());
 
         List<Location> removedLocations = this.list.list(locations);
 
         if (removedLocations.size() > 0) {
             List<byte[]> removedLocationsAsBytes = removedLocations.stream()
-                    .map((Location location) -> location.getBytes()).collect(Collectors.toList());
+                .map((Location location) -> location.getBytes()).collect(Collectors.toList());
 
             byte[] bytes = Leb128Serializer.serializeList(removedLocationsAsBytes);
 

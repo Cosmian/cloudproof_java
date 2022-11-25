@@ -2,24 +2,24 @@ package com.cosmian.jna.findex;
 
 import java.util.Arrays;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 
 public class IndexedValue {
     private byte[] bytes;
 
-    public IndexedValue(byte[] bytes) throws CosmianException {
+    public IndexedValue(byte[] bytes) throws CloudproofException {
         this.bytes = bytes;
         if (bytes[0] != 108 && bytes[0] != 119) {
-            throw new CosmianException("Indexed value must be prefixed by 'l' or 'w' in byte");
+            throw new CloudproofException("Indexed value must be prefixed by 'l' or 'w' in byte");
         }
     }
 
     public IndexedValue() {
     }
 
-    public IndexedValue(Location location) throws CosmianException {
+    public IndexedValue(Location location) throws CloudproofException {
         if (location == null) {
-            throw new CosmianException("location is null");
+            throw new CloudproofException("location is null");
         }
         byte[] locationBytes = location.getBytes();
         byte[] prefix = {(byte) 108};
@@ -28,9 +28,9 @@ public class IndexedValue {
         this.bytes = indexedValueBytes;
     }
 
-    public IndexedValue(Word word) throws CosmianException {
+    public IndexedValue(Word word) throws CloudproofException {
         if (word == null) {
-            throw new CosmianException("word is null");
+            throw new CloudproofException("word is null");
         }
         byte[] wordBytes = word.getBytes();
         byte[] prefix = {(byte) 119};
@@ -47,23 +47,23 @@ public class IndexedValue {
         return this.bytes[0] == 119; // char 'w' is 119 is ascii
     }
 
-    public Location getLocation() throws CosmianException {
+    public Location getLocation() throws CloudproofException {
         if (isLocation()) {
             // remove 'l' char
             byte[] location = new byte[this.bytes.length - 1];
             System.arraycopy(this.bytes, 1, location, 0, location.length);
             return new Location(location);
         }
-        throw new CosmianException("IndexValue is not a location");
+        throw new CloudproofException("IndexValue is not a location");
     }
 
-    public Word getWord() throws CosmianException {
+    public Word getWord() throws CloudproofException {
         if (isWord()) {
             // remove 'w' char
             byte[] word = new byte[this.bytes.length - 1];
             System.arraycopy(this.bytes, 1, word, 0, word.length);
             return new Word(this.bytes);
         }
-        throw new CosmianException("IndexValue is not a word");
+        throw new CloudproofException("IndexValue is not a word");
     }
 }

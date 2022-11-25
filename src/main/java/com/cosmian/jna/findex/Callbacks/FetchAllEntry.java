@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.cosmian.jna.CloudproofException;
+import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.FindexWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface;
 import com.cosmian.jna.findex.Leb128Serializer;

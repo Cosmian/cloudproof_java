@@ -12,8 +12,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.cosmian.CosmianException;
-import com.cosmian.jna.CloudproofException;
+import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
@@ -66,7 +65,7 @@ public class Redis {
      * Instantiate a new Redis Client
      *
      * @param hostname the REST Server URL e.g. localhost
-     * @param port     Sets a specified port value e.g 6379
+     * @param port Sets a specified port value e.g 6379
      * @param password the authentication password or token
      */
     public Redis(String hostname, int port, String password) {
@@ -103,15 +102,15 @@ public class Redis {
 
     //
     // Very basic redis functions
-    public byte[] get(byte[] key) throws CosmianException {
+    public byte[] get(byte[] key) throws CloudproofException {
         return this.jedis.get(key);
     }
 
-    public long del(byte[] key) throws CosmianException {
+    public long del(byte[] key) throws CloudproofException {
         return this.jedis.del(key);
     }
 
-    public byte[] set(byte[] key, byte[] value) throws CosmianException {
+    public byte[] set(byte[] key, byte[] value) throws CloudproofException {
         return this.jedis.getSet(key, value);
     }
 
@@ -123,7 +122,7 @@ public class Redis {
         public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException {
             try {
                 return getEntries(uids, INDEX_TABLE_ENTRY_STORAGE);
-            } catch (CosmianException e) {
+            } catch (CloudproofException e) {
                 throw new CloudproofException("Failed fetch entry: " + e.toString());
             }
         }
@@ -134,30 +133,30 @@ public class Redis {
         public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException {
             try {
                 return getEntries(uids, INDEX_TABLE_CHAIN_STORAGE);
-            } catch (CosmianException e) {
+            } catch (CloudproofException e) {
                 throw new CloudproofException("Failed chain upsert: " + e.toString());
             }
         }
     });
 
     public FetchAllEntry fetchAllEntry = new FetchAllEntry(
-            new com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface() {
-                @Override
-                public HashMap<byte[], byte[]> fetch() throws CloudproofException {
-                    try {
-                        return getAllKeysAndValues(INDEX_TABLE_ENTRY_STORAGE);
-                    } catch (CosmianException e) {
-                        throw new CloudproofException("Failed fetch all entry: " + e.toString());
-                    }
+        new com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface() {
+            @Override
+            public HashMap<byte[], byte[]> fetch() throws CloudproofException {
+                try {
+                    return getAllKeysAndValues(INDEX_TABLE_ENTRY_STORAGE);
+                } catch (CloudproofException e) {
+                    throw new CloudproofException("Failed fetch all entry: " + e.toString());
                 }
-            });
+            }
+        });
 
     public UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FindexWrapper.UpsertEntryInterface() {
         @Override
         public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
             try {
                 setEntries(uidsAndValues);
-            } catch (CosmianException e) {
+            } catch (CloudproofException e) {
                 throw new CloudproofException("Failed entry upsert: " + e.toString());
             }
         }
@@ -168,7 +167,7 @@ public class Redis {
         public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
             try {
                 setChains(uidsAndValues);
-            } catch (CosmianException e) {
+            } catch (CloudproofException e) {
                 throw new CloudproofException("Failed chain upsert: " + e.toString());
             }
         }
@@ -207,36 +206,36 @@ public class Redis {
     public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FindexWrapper.UpdateLinesInterface() {
         @Override
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
-                HashMap<byte[], byte[]> newChains) throws CloudproofException {
+            HashMap<byte[], byte[]> newChains) throws CloudproofException {
             try {
                 delAllEntries(INDEX_TABLE_ENTRY_STORAGE);
                 setEntries(newEntries);
                 setChains(newChains);
                 delEntries(removedChains, INDEX_TABLE_CHAIN_STORAGE);
-            } catch (CosmianException e) {
+            } catch (CloudproofException e) {
                 throw new CloudproofException("Failed update lines: " + e.toString());
             }
         }
     });
 
     public ListRemovedLocations listRemovedLocations = new ListRemovedLocations(
-            new com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsInterface() {
-                @Override
-                public List<Location> list(List<Location> locations) throws CloudproofException {
-                    List<Integer> ids = locations.stream()
-                            .map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
-                            .collect(Collectors.toList());
+        new com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsInterface() {
+            @Override
+            public List<Location> list(List<Location> locations) throws CloudproofException {
+                List<Integer> ids = locations.stream()
+                    .map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
+                    .collect(Collectors.toList());
 
-                    try {
-                        return listRemovedIds(ids).stream()
-                                .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
-                                .collect(Collectors.toList());
-                    } catch (CosmianException e) {
-                        throw new CloudproofException("Failed update lines: " + e.toString());
-                    }
-
+                try {
+                    return listRemovedIds(ids).stream()
+                        .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
+                        .collect(Collectors.toList());
+                } catch (CloudproofException e) {
+                    throw new CloudproofException("Failed update lines: " + e.toString());
                 }
-            });
+
+            }
+        });
 
     public Progress progress = new Progress(new com.cosmian.jna.findex.FindexWrapper.ProgressInterface() {
         @Override
@@ -251,14 +250,14 @@ public class Redis {
                     indexedValuesBytes.add(new IndexedValue(iv));
                 }
                 return true;
-            } catch (CosmianException e) {
+            } catch (CloudproofException e) {
                 throw new CloudproofException("Failed getting search results: " + e.toString());
             }
 
         }
     });
 
-    public List<Integer> listRemovedIds(List<Integer> ids) throws CosmianException {
+    public List<Integer> listRemovedIds(List<Integer> ids) throws CloudproofException {
         HashSet<Integer> removedIds = new HashSet<>(ids);
         for (Integer id : ids) {
             byte[] keySuffix = ByteBuffer.allocate(4).putInt(id).array();
@@ -275,7 +274,7 @@ public class Redis {
      *
      * @param prefix table prefix (can be 1, 2 or 3)
      * @param number the index of the table
-     * @param uid    which is the UID of
+     * @param uid which is the UID of
      * @return key as prefix|number on 4 bytes|uid
      */
     public static byte[] key(String prefix, int number, byte[] uid) {
@@ -287,7 +286,7 @@ public class Redis {
         return result;
     }
 
-    public HashMap<byte[], byte[]> getEntries(List<byte[]> uids, int redisPrefix) throws CosmianException {
+    public HashMap<byte[], byte[]> getEntries(List<byte[]> uids, int redisPrefix) throws CloudproofException {
         Transaction tx = this.jedis.multi();
         List<byte[]> keys = new ArrayList<>();
         for (byte[] uid : uids) {
@@ -309,7 +308,7 @@ public class Redis {
         return keysAndValues;
     }
 
-    public void setEntries(HashMap<byte[], byte[]> uidsAndValues) throws CosmianException {
+    public void setEntries(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
         Transaction tx = this.jedis.multi();
         for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
             byte[] key = key(PREFIX_STORAGE, INDEX_TABLE_ENTRY_STORAGE, entry.getKey());
@@ -318,7 +317,7 @@ public class Redis {
         tx.exec();
     }
 
-    public void setChains(HashMap<byte[], byte[]> uidsAndValues) throws CosmianException {
+    public void setChains(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
         Transaction tx = this.jedis.multi();
         for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
             byte[] key = key(PREFIX_STORAGE, INDEX_TABLE_CHAIN_STORAGE, entry.getKey());
@@ -327,29 +326,29 @@ public class Redis {
         tx.exec();
     }
 
-    public byte[] getDataEntry(byte[] uid) throws CosmianException {
+    public byte[] getDataEntry(byte[] uid) throws CloudproofException {
         byte[] key = key(PREFIX_STORAGE, INDEX_TABLE_DATA_STORAGE, uid);
         return get(key);
     }
 
-    public byte[] setDataEntry(byte[] uid, byte[] value) throws CosmianException {
+    public byte[] setDataEntry(byte[] uid, byte[] value) throws CloudproofException {
         byte[] key = key(PREFIX_STORAGE, INDEX_TABLE_DATA_STORAGE, uid);
         return set(key, value);
     }
 
-    public long delDataEntry(byte[] uid) throws CosmianException {
+    public long delDataEntry(byte[] uid) throws CloudproofException {
         byte[] key = key(PREFIX_STORAGE, INDEX_TABLE_DATA_STORAGE, uid);
         return del(key);
     }
 
-    public List<byte[]> getAllKeys(int redisIndex) throws CosmianException {
+    public List<byte[]> getAllKeys(int redisIndex) throws CloudproofException {
         List<byte[]> keys = new ArrayList<>();
         Transaction tx = this.jedis.multi();
         byte[] key = key(PREFIX_STORAGE, redisIndex, "*".getBytes());
         Response<Set<byte[]>> responses = tx.keys(key);
         tx.exec();
         if (responses.get() == null) {
-            throw new CosmianException("Failed to get Redis items");
+            throw new CloudproofException("Failed to get Redis items");
         }
         for (byte[] keyIter : responses.get()) {
             keys.add(keyIter);
@@ -357,7 +356,7 @@ public class Redis {
         return keys;
     }
 
-    public HashMap<byte[], byte[]> getAllKeysAndValues(int redisIndex) throws CosmianException {
+    public HashMap<byte[], byte[]> getAllKeysAndValues(int redisIndex) throws CloudproofException {
         List<byte[]> keys = getAllKeys(redisIndex);
 
         // Get all values now
@@ -377,21 +376,21 @@ public class Redis {
         return keysAndValues;
     }
 
-    public void delEntries(List<byte[]> uids, int redisPrefix) throws CosmianException {
+    public void delEntries(List<byte[]> uids, int redisPrefix) throws CloudproofException {
         for (byte[] uid : uids) {
             byte[] key = key(PREFIX_STORAGE, redisPrefix, uid);
             this.jedis.del(key);
         }
     }
 
-    public void delAllEntries(int redisPrefix) throws CosmianException {
+    public void delAllEntries(int redisPrefix) throws CloudproofException {
         List<byte[]> keys = getAllKeys(redisPrefix);
         for (byte[] key : keys) {
             this.jedis.del(key);
         }
     }
 
-    public void insertUsers(UsersDataset[] testFindexDataset) throws CosmianException {
+    public void insertUsers(UsersDataset[] testFindexDataset) throws CloudproofException {
         for (UsersDataset user : testFindexDataset) {
             String json = user.toString();
             byte[] keySuffix = ByteBuffer.allocate(4).putInt(user.id).array();
@@ -399,7 +398,7 @@ public class Redis {
         }
     }
 
-    public long deleteUser(int uid) throws CosmianException {
+    public long deleteUser(int uid) throws CloudproofException {
         byte[] keySuffix = ByteBuffer.allocate(4).putInt(uid).array();
         byte[] key = key(PREFIX_STORAGE, INDEX_TABLE_DATA_STORAGE, keySuffix);
         return del(key);

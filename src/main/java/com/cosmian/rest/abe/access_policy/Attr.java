@@ -3,7 +3,7 @@ package com.cosmian.rest.abe.access_policy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.types.VendorAttribute;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,19 +19,19 @@ public class Attr extends AccessPolicy {
     public Attr() {
     }
 
-    private static void assertValidCharacters(String value) throws CosmianException {
+    private static void assertValidCharacters(String value) throws CloudproofException {
         if (value.equals("")) {
-            throw new CosmianException("Attributes axes and names cannot be empty strings");
+            throw new CloudproofException("Attributes axes and names cannot be empty strings");
         }
         if (value.startsWith(" ") || value.endsWith(" ")) {
-            throw new CosmianException("Attributes axes and names cannot start or end with spaces");
+            throw new CloudproofException("Attributes axes and names cannot start or end with spaces");
         }
         if (value.contains("::")) {
-            throw new CosmianException("Attributes axes and names cannot contain the sequence \"::\"");
+            throw new CloudproofException("Attributes axes and names cannot contain the sequence \"::\"");
         }
     }
 
-    public Attr(String axis, String name) throws CosmianException {
+    public Attr(String axis, String name) throws CloudproofException {
         assertValidCharacters(axis);
         assertValidCharacters(name);
         this.axis = axis;
@@ -42,7 +42,7 @@ public class Attr extends AccessPolicy {
         return this.axis;
     }
 
-    public void setAxis(String axis) throws CosmianException {
+    public void setAxis(String axis) throws CloudproofException {
         assertValidCharacters(axis);
         this.axis = axis;
     }
@@ -51,17 +51,17 @@ public class Attr extends AccessPolicy {
         return this.name;
     }
 
-    public void setName(String name) throws CosmianException {
+    public void setName(String name) throws CloudproofException {
         assertValidCharacters(name);
         this.name = name;
     }
 
-    public Attr axis(String axis) throws CosmianException {
+    public Attr axis(String axis) throws CloudproofException {
         setAxis(axis);
         return this;
     }
 
-    public Attr name(String name) throws CosmianException {
+    public Attr name(String name) throws CloudproofException {
         setName(name);
         return this;
     }
@@ -87,10 +87,10 @@ public class Attr extends AccessPolicy {
         return getAxis() + "::" + getName();
     }
 
-    public static Attr fromString(String attrString) throws CosmianException {
+    public static Attr fromString(String attrString) throws CloudproofException {
         String[] parts = attrString.split("::");
         if (parts.length != 2) {
-            throw new CosmianException("Invalid attribute string; it should be of the form AXIS::ATTRIBUTE_NAME");
+            throw new CloudproofException("Invalid attribute string; it should be of the form AXIS::ATTRIBUTE_NAME");
         }
         String axis = parts[0];
         assertValidCharacters(axis);
@@ -99,7 +99,8 @@ public class Attr extends AccessPolicy {
         return new Attr(axis, name);
     }
 
-    public static VendorAttribute toVendorAttribute(Attr[] policyAttributes, String vendor_attribute_abe) throws CosmianException {
+    public static VendorAttribute toVendorAttribute(Attr[] policyAttributes, String vendor_attribute_abe)
+        throws CloudproofException {
         // The value must be the JSON array of the String representation of the Attrs
         ArrayList<String> array = new ArrayList<String>();
         for (Attr attr : policyAttributes) {
@@ -110,7 +111,7 @@ public class Attr extends AccessPolicy {
         try {
             value = mapper.writeValueAsBytes(array.toArray());
         } catch (JsonProcessingException e) {
-            throw new CosmianException("Failed serializing to JSON the attributes: " + e.getMessage(), e);
+            throw new CloudproofException("Failed serializing to JSON the attributes: " + e.getMessage(), e);
         }
         return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN, vendor_attribute_abe,
             value);

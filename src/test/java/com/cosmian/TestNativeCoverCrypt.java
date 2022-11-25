@@ -4,18 +4,23 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.cosmian.cover_crypt.NonRegressionVector;
 import com.cosmian.jna.abe.CoverCrypt;
 import com.cosmian.jna.abe.DecryptedHeader;
 import com.cosmian.jna.abe.EncryptedHeader;
@@ -704,6 +709,30 @@ public class TestNativeCoverCrypt {
         assertEquals(
             "{\"And\":[{\"Attr\":\"Department::MKG\"},{\"Or\":[{\"Attr\":\"Country::France\"},{\"Attr\":\"Country::Spain\"}]}]}",
             json);
+    }
+
+    @Test
+    public void test_non_regression_vectors_generation() throws Exception {
+        NonRegressionVector nrv = NonRegressionVector.generate();
+        Resources.write_resource(
+            "java_non_regression_vector.json",
+            nrv.toJson().getBytes(StandardCharsets.UTF_8));
+    }
+
+    public Set<String> listFiles(String dir) {
+        return Stream.of(new File(dir).listFiles())
+            .filter(file -> !file.isDirectory())
+            .map(File::getName)
+            .collect(Collectors.toSet());
+    }
+
+    @Test
+    public void test_non_regression_vectors() throws Exception {
+        String testFolder = "src/test/resources/cover_crypt/";
+        for (String file : listFiles("src/test/resources/cover_crypt")) {
+            System.out.println("Non-regression test file: " + file);
+            NonRegressionVector.verify(testFolder + file);
+        }
     }
 
 }

@@ -1113,7 +1113,7 @@ public final class CoverCrypt {
         // Is authenticated data supplied
         final Pointer authenticationDataPointer;
         final int authenticationDataLen;
-        if (authenticationData.isPresent()) {
+        if (authenticationData.isPresent() && authenticationData.get().length > 0) {
             authenticationDataLen = authenticationData.get().length;
             authenticationDataPointer = new Memory(authenticationDataLen);
             authenticationDataPointer.write(0, authenticationData.get(), 0, authenticationDataLen);

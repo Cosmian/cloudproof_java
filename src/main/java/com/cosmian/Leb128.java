@@ -19,6 +19,11 @@ public class Leb128 {
      */
     public static void writeU64(OutputStream os, long value) throws IOException {
 
+        if (value == 0) {
+            os.write(0x00);
+            return;
+        }
+
         while (value != 0) {
 
             long b = value & MASK;

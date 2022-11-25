@@ -1,73 +1,50 @@
 package com.cosmian.rest.abe.data;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
-import com.cosmian.rest.abe.access_policy.Attr;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.cosmian.CloudproofException;
+import com.cosmian.Leb128;
 
-@JsonSerialize(using = DataToEncryptSerializer.class)
 public class DataToEncrypt {
 
-    private Attr[] policyAttributes;
+    private final String encryptionPolicy;
+    private final byte[] plaintext;
+    private final Optional<byte[]> headerMetaData;
 
-    private byte[] data;
-
-    public DataToEncrypt() {
+    public DataToEncrypt(String encryptionPolicy, byte[] plaintext, Optional<byte[]> headerMetaData) {
+        this.encryptionPolicy = encryptionPolicy;
+        this.plaintext = plaintext;
+        this.headerMetaData = headerMetaData;
     }
 
-    public DataToEncrypt(Attr[] policyAttributes, byte[] data) {
-        this.policyAttributes = policyAttributes;
-        this.data = data;
+    public String getEncryptionPolicy() {
+        return this.encryptionPolicy;
     }
 
-    public Attr[] getPolicyAttributes() {
-        return this.policyAttributes;
+    public byte[] getPlaintext() {
+        return this.plaintext;
     }
 
-    public void setPolicyAttributes(Attr[] policyAttributes) {
-        this.policyAttributes = policyAttributes;
+    public Optional<byte[]> getHeaderMetaData() {
+        return this.headerMetaData;
     }
 
-    public byte[] getData() {
-        return this.data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
-    }
-
-    public DataToEncrypt policyAttributes(Attr[] policyAttributes) {
-        setPolicyAttributes(policyAttributes);
-        return this;
-    }
-
-    public DataToEncrypt data(byte[] data) {
-        setData(data);
-        return this;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == this)
-            return true;
-        if (!(o instanceof DataToEncrypt)) {
-            return false;
+    public byte[] toBytes() throws CloudproofException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try {
+            Leb128.writeArray(bos, this.encryptionPolicy.getBytes(StandardCharsets.UTF_8));
+            if (this.headerMetaData.isPresent()) {
+                Leb128.writeArray(bos, this.headerMetaData.get());
+            } else {
+                Leb128.writeU64(bos, 0);
+            }
+            bos.write(this.plaintext);
+        } catch (IOException e) {
+            throw new CloudproofException("Failed serializing the data to encrypt to bytes: " + e.getMessage(), e);
         }
-        DataToEncrypt dataToEncrypt = (DataToEncrypt) o;
-        return Arrays.equals(policyAttributes, dataToEncrypt.policyAttributes)
-            && Arrays.equals(data, dataToEncrypt.data);
+        return bos.toByteArray();
     }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(Arrays.hashCode(policyAttributes), Arrays.hashCode(data));
-    }
-
-    @Override
-    public String toString() {
-        return "{" + " policyAttributes='" + Arrays.toString(getPolicyAttributes()) + "'" + ", data='"
-            + Arrays.toString(getData()) + "'" + "}";
-    }
-
 }

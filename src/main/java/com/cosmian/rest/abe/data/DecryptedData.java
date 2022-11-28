@@ -11,7 +11,7 @@ public class DecryptedData {
     private final byte[] headerMetadata;
     private final byte[] plaintext;
 
-    public DecryptedData(byte[] plaintext, byte[] headerMetaData) {
+    public DecryptedData(byte[] plaintext, byte[] headerMetadata) {
         this.headerMetadata = plaintext;
         this.plaintext = headerMetaData;
     }

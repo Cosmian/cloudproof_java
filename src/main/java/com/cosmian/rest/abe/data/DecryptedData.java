@@ -13,7 +13,7 @@ public class DecryptedData {
 
     public DecryptedData(byte[] plaintext, byte[] headerMetadata) {
         this.headerMetadata = plaintext;
-        this.plaintext = headerMetaData;
+        this.plaintext = headerMetadata;
     }
 
     public byte[] getPlaintext() {

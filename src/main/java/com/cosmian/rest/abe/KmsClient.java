@@ -606,8 +606,8 @@ public class KmsClient {
     /**
      * Revoke a key in the KMS which makes it unavailable to use in the KMS to
      * perform
-     * {@link #coverCryptEncrypt(String, byte[], Attr[])} or
-     * {@link #coverCryptDecrypt(String, byte[])} operations. <br>
+     * {@link #coverCryptEncrypt(String, byte[], String)} or
+     * {@link #coverCryptDecrypt(String, byte[], Optional)} operations. <br>
      * <br>
      * If this key is a User Decryption Key, it will not be rekeyed in case of
      * attribute revocation. <br>
@@ -638,8 +638,8 @@ public class KmsClient {
     /**
      * Destroy a key in the KMS which makes it unavailable to use in the KMS to
      * perform
-     * {@link #coverCryptEncrypt(String, byte[], Attr[])} or
-     * {@link #coverCryptDecrypt(String, byte[])} operations. <br>
+     * {@link #coverCryptEncrypt(String, byte[], String)} or
+     * {@link #coverCryptDecrypt(String, byte[], Optional)} operations. <br>
      * <br>
      * Note: this destroy the key **inside** the KMS: it does not prevent an user
      * who has a local copy of a User

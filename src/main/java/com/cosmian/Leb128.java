@@ -18,21 +18,14 @@ public class Leb128 {
      * @throws IOException if the stream is in error
      */
     public static void writeU64(OutputStream os, long value) throws IOException {
-
-        if (value == 0) {
-            os.write(0x00);
-            return;
-        }
-
-        while (value != 0) {
-
+        do {
             long b = value & MASK;
             value = value >>> 7;
             if (value != 0) {
                 b = b | HIGH_ORDER_BIT;
             }
             os.write((int) b & 0xFF);
-        }
+        } while (value != 0);
     }
 
     /**

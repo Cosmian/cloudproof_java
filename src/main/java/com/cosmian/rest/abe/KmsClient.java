@@ -10,6 +10,7 @@ import com.cosmian.jna.abe.CoverCrypt;
 import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.data.DataToEncrypt;
+import com.cosmian.rest.abe.data.DecryptedData;
 import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.Kmip;
 import com.cosmian.rest.kmip.objects.PrivateKey;
@@ -416,7 +417,7 @@ public class KmsClient {
      */
     public byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier, byte[] plaintext, String encryptionPolicy,
             byte[] authenticationData) throws CloudproofException {
-        return coverCryptEncrypt(publicMasterKeyUniqueIdentifier, authenticationData, encryptionPolicy,
+        return coverCryptEncrypt(publicMasterKeyUniqueIdentifier, plaintext, encryptionPolicy,
                 Optional.of(authenticationData), Optional.empty());
     }
 
@@ -437,7 +438,7 @@ public class KmsClient {
      * @return the encrypted data
      * @throws CloudproofException if the encryption fails
      */
-    byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier, byte[] plaintext, String encryptionPolicy,
+    public byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier, byte[] plaintext, String encryptionPolicy,
             byte[] authenticationData, byte[] headerMetaData) throws CloudproofException {
 
         return coverCryptEncrypt(publicMasterKeyUniqueIdentifier, plaintext, encryptionPolicy,
@@ -466,7 +467,10 @@ public class KmsClient {
             Optional<byte[]> authenticationData, Optional<byte[]> headerMetaData) throws CloudproofException {
         try {
             DataToEncrypt dataToEncrypt = new DataToEncrypt(encryptionPolicy, plaintext, headerMetaData);
-            Encrypt request = new Encrypt(publicMasterKeyUniqueIdentifier, dataToEncrypt.toBytes(), Optional.empty(),
+            Encrypt request = new Encrypt(
+                    publicMasterKeyUniqueIdentifier,
+                    dataToEncrypt.toBytes(),
+                    Optional.empty(),
                     authenticationData.isPresent() ? Optional.of(authenticationData.get()) : Optional.empty());
             EncryptResponse response = this.kmip.encrypt(request);
             if (response.getData().isPresent()) {
@@ -494,7 +498,7 @@ public class KmsClient {
      * @return the clear text data
      * @throws CloudproofException if the decryption fails
      */
-    public byte[] coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData)
+    public DecryptedData coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData)
             throws CloudproofException {
         return this.coverCryptDecrypt(userDecryptionKeyUniqueIdentifier, encryptedData, Optional.empty());
     }
@@ -514,7 +518,7 @@ public class KmsClient {
      * @return the clear text data
      * @throws CloudproofException if the decryption fails
      */
-    public byte[] coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData,
+    public DecryptedData coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData,
             byte[] authenticationData)
             throws CloudproofException {
         return coverCryptDecrypt(userDecryptionKeyUniqueIdentifier, encryptedData, Optional.of(authenticationData));
@@ -535,14 +539,14 @@ public class KmsClient {
      * @return the clear text data
      * @throws CloudproofException if the decryption fails
      */
-    byte[] coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData,
+    DecryptedData coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier, byte[] encryptedData,
             Optional<byte[]> authenticationData)
             throws CloudproofException {
         try {
             Decrypt request = new Decrypt(userDecryptionKeyUniqueIdentifier, encryptedData, authenticationData);
             DecryptResponse response = this.kmip.decrypt(request);
             if (response.getData().isPresent()) {
-                return response.getData().get();
+                return DecryptedData.fromBytes(response.getData().get());
             }
             throw new CloudproofException("No decrypted data in response !");
         } catch (CloudproofException e) {

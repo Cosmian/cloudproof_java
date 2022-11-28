@@ -143,7 +143,7 @@ public class TestDemo {
         // The medium secret marketing user can successfully decrypt a low security
         // marketing message
         assertArrayEquals(low_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(medium_secret_mkg_user_key_uid, low_secret_mkg_ct));
+                coverCrypt.coverCryptDecrypt(medium_secret_mkg_user_key_uid, low_secret_mkg_ct).getPlaintext());
         // ... however it can neither decrypt a marketing message with higher security
         try {
             coverCrypt.coverCryptDecrypt(
@@ -176,15 +176,15 @@ public class TestDemo {
         assertArrayEquals(low_secret_mkg_data,
                 coverCrypt.coverCryptDecrypt(
                         top_secret_mkg_fin_user_key_uid,
-                        low_secret_mkg_ct));
+                        low_secret_mkg_ct).getPlaintext());
         assertArrayEquals(top_secret_mkg_data,
                 coverCrypt.coverCryptDecrypt(
                         top_secret_mkg_fin_user_key_uid,
-                        top_secret_mkg_ct));
+                        top_secret_mkg_ct).getPlaintext());
         assertArrayEquals(low_secret_fin_data,
                 coverCrypt.coverCryptDecrypt(
                         top_secret_mkg_fin_user_key_uid,
-                        low_secret_fin_ct));
+                        low_secret_fin_ct).getPlaintext());
 
         // ## Revocation
         // At anytime the Master Authority can revoke an attribute.
@@ -216,37 +216,37 @@ public class TestDemo {
         // The automatically rekeyed medium secret marketing user key can still decrypt
         // the low secret marketing message
         assertArrayEquals(low_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(medium_secret_mkg_user_key_uid, low_secret_mkg_ct));
+                coverCrypt.coverCryptDecrypt(medium_secret_mkg_user_key_uid, low_secret_mkg_ct).getPlaintext());
         // ... as well as the new medium secret marketing message
         assertArrayEquals(medium_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(medium_secret_mkg_user_key_uid, medium_secret_mkg_ct));
+                coverCrypt.coverCryptDecrypt(medium_secret_mkg_user_key_uid, medium_secret_mkg_ct).getPlaintext());
 
         // Likewise, the top secret marketing financial user can decrypt all messages
         // ... old
         assertArrayEquals(low_secret_mkg_data,
                 coverCrypt.coverCryptDecrypt(
                         top_secret_mkg_fin_user_key_uid,
-                        low_secret_mkg_ct));
+                        low_secret_mkg_ct).getPlaintext());
         assertArrayEquals(top_secret_mkg_data,
                 coverCrypt.coverCryptDecrypt(
                         top_secret_mkg_fin_user_key_uid,
-                        top_secret_mkg_ct));
+                        top_secret_mkg_ct).getPlaintext());
         assertArrayEquals(low_secret_fin_data,
                 coverCrypt.coverCryptDecrypt(
                         top_secret_mkg_fin_user_key_uid,
-                        low_secret_fin_ct));
+                        low_secret_fin_ct).getPlaintext());
         // ..and new
         assertArrayEquals(medium_secret_mkg_data,
                 coverCrypt.coverCryptDecrypt(
                         top_secret_mkg_fin_user_key_uid,
-                        medium_secret_mkg_ct));
+                        medium_secret_mkg_ct).getPlaintext());
 
         // However, the old, non rekeyed medium secret marketing user key
         // ...can still decrypt the old low secret marketing message
         assertArrayEquals(low_secret_mkg_data,
                 coverCrypt.coverCryptDecrypt(
                         "original_medium_secret_mkg_user_key_uid",
-                        low_secret_mkg_ct));
+                        low_secret_mkg_ct).getPlaintext());
         // ... but NOT the new medium secret marketing message
 
         try {

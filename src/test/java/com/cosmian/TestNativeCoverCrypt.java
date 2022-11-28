@@ -22,6 +22,7 @@ import com.cosmian.jna.abe.EncryptedHeader;
 import com.cosmian.jna.abe.MasterKeys;
 import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.abe.access_policy.Attr;
+import com.cosmian.rest.abe.data.DecryptedData;
 import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
@@ -202,7 +203,7 @@ public class TestNativeCoverCrypt {
         System.out.println("");
 
         // The data we want to encrypt/decrypt
-        byte[] data = "This s a test message".getBytes(StandardCharsets.UTF_8);
+        byte[] plaintext = "This s a test message".getBytes(StandardCharsets.UTF_8);
 
         // Declare the CoverCrypt Policy
         Policy policy = policy();
@@ -214,7 +215,7 @@ public class TestNativeCoverCrypt {
         // authenticate the message in the AES encryption scheme.
         // Typically this will be a hash of the content if it is unique, a unique
         // filename or a database unique key
-        byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
+        byte[] uid = MessageDigest.getInstance("SHA-256").digest(plaintext);
 
         // The policy attributes that will be used to encrypt the content. They must
         // exist in the policy associated with the Public Key
@@ -222,7 +223,7 @@ public class TestNativeCoverCrypt {
 
         // now hybrid encrypt the data using the uid as authentication in the symmetric
         // cipher
-        byte[] ciphertext = coverCrypt.encrypt(policy, masterKeys.getPublicKey(), encryptionPolicy, data, uid);
+        byte[] ciphertext = coverCrypt.encrypt(policy, masterKeys.getPublicKey(), encryptionPolicy, plaintext, uid);
 
         //
         // Decryption
@@ -237,27 +238,25 @@ public class TestNativeCoverCrypt {
 
         // decrypt the ciphertext using the uid as authentication in the symmetric
         // cipher
-        byte[][] res = coverCrypt.decrypt(userDecryptionKey, ciphertext, uid);
-        byte[] data_ = res[0];
-        byte[] additionalData_ = res[1];
+        DecryptedData res = coverCrypt.decrypt(userDecryptionKey, ciphertext, uid);
 
         // Verify everything is correct
-        assertTrue(Arrays.equals(data, data_));
-        assertTrue(Arrays.equals(new byte[] {}, additionalData_));
+        assertTrue(Arrays.equals(plaintext, res.getPlaintext()));
+        assertTrue(Arrays.equals(new byte[] {}, res.getHeaderMetaData()));
     }
 
     @Test
-    public void testHybridCryptoWithAdditionalData() throws Exception {
+    public void testHybridCryptoWithHeaderMetadata() throws Exception {
 
         System.out.println("");
         System.out.println("-----------------------------------------");
-        System.out.println(" Hybrid Crypto test with additional data ");
+        System.out.println(" Hybrid Crypto test with header metadata ");
         System.out.println("-----------------------------------------");
         System.out.println("");
 
         // The data we want to encrypt/decrypt
         byte[] data = "This s a test message".getBytes(StandardCharsets.UTF_8);
-        byte[] additionalData = new byte[] { 1, 2, 3, 4, 5, 6 };
+        byte[] headerMetadata = new byte[] { 1, 2, 3, 4, 5, 6 };
 
         // Declare the CoverCrypt Policy
         Policy policy = policy();
@@ -278,7 +277,7 @@ public class TestNativeCoverCrypt {
         // now hybrid encrypt the data using the uid as authentication in the symmetric
         // cipher
         byte[] ciphertext = coverCrypt.encrypt(policy, masterKeys.getPublicKey(), encryptionPolicy, data,
-                additionalData, uid);
+                uid, headerMetadata);
 
         //
         // Decryption
@@ -293,13 +292,11 @@ public class TestNativeCoverCrypt {
 
         // decrypt the ciphertext using the uid as authentication in the symmetric
         // cipher
-        byte[][] res = coverCrypt.decrypt(userDecryptionKey, ciphertext, uid);
-        byte[] data_ = res[0];
-        byte[] additionalData_ = res[1];
+        DecryptedData res = coverCrypt.decrypt(userDecryptionKey, ciphertext, uid);
 
         // Verify everything is correct
-        assertTrue(Arrays.equals(data, data_));
-        assertTrue(Arrays.equals(additionalData, additionalData_));
+        assertTrue(Arrays.equals(data, res.getPlaintext()));
+        assertTrue(Arrays.equals(headerMetadata, res.getHeaderMetaData()));
     }
 
     private Policy policy() throws CloudproofException {
@@ -327,13 +324,13 @@ public class TestNativeCoverCrypt {
         }
 
         // The data we want to encrypt/decrypt
-        byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
+        byte[] plaintext = "This is a test message".getBytes(StandardCharsets.UTF_8);
 
         // A unique ID associated with this message. The unique id is used to
         // authenticate the message in the AES encryption scheme.
         // Typically this will be a hash of the content if it is unique, a unique
         // filename or a database unique key
-        byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
+        byte[] uid = MessageDigest.getInstance("SHA-256").digest(plaintext);
 
         Policy policy = policy();
 
@@ -356,31 +353,31 @@ public class TestNativeCoverCrypt {
         // The encryption policy attributes that will be used to encrypt the content.
         // Attributes must exist in the policy associated with the Public Key
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-        byte[] ciphertext = coverCrypt.encrypt(policy, publicKey.bytes(), encryptionPolicy, data, uid);
+        byte[] ciphertext = coverCrypt.encrypt(policy, publicKey.bytes(), encryptionPolicy, plaintext, uid);
 
         //
         // Local Decryption
         //
 
         PrivateKey userKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userKeyId);
-        byte[][] decrypted = coverCrypt.decrypt(userKey.bytes(), ciphertext, uid);
-        assertArrayEquals(data, decrypted[0]);
-        assertArrayEquals(new byte[] {}, decrypted[1]);
+        DecryptedData res = coverCrypt.decrypt(userKey.bytes(), ciphertext, uid);
+        assertArrayEquals(plaintext, res.getPlaintext());
+        assertArrayEquals(new byte[] {}, res.getHeaderMetaData());
 
         //
         // KMS Decryption
         //
-        byte[] data_kms = kmsClient.coverCryptDecrypt(userKeyId, ciphertext, uid);
-        assertArrayEquals(data, data_kms);
+        byte[] data_kms = kmsClient.coverCryptDecrypt(userKeyId, ciphertext, uid).getPlaintext();
+        assertArrayEquals(plaintext, data_kms);
     }
 
     @Test
     public void testServerEncryptLocalDecrypt() throws Exception {
 
         System.out.println("");
-        System.out.println("---------------------------------------");
-        System.out.println(" Hybrid Crypto Test Server Encrypt + Local Decrypt");
-        System.out.println("---------------------------------------");
+        System.out.println("------------------------------------------------------");
+        System.out.println(" Hybrid Crypto Test Server Encrypt + Local Decrypt    ");
+        System.out.println("------------------------------------------------------");
         System.out.println("");
 
         if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
@@ -389,13 +386,13 @@ public class TestNativeCoverCrypt {
         }
 
         // The data we want to encrypt/decrypt
-        byte[] data = "This is a test message".getBytes(StandardCharsets.UTF_8);
+        byte[] plaintext = new byte[] { 1, 2, 3, 4, 5, 6 };
 
         // A unique ID associated with this message. The unique id is used to
         // authenticate the message in the AES encryption scheme.
         // Typically this will be a hash of the content if it is unique, a unique
         // filename or a database unique key
-        byte[] uid = MessageDigest.getInstance("SHA-256").digest(data);
+        byte[] uid = MessageDigest.getInstance("SHA-256").digest(plaintext);
 
         Policy policy = policy();
 
@@ -416,22 +413,24 @@ public class TestNativeCoverCrypt {
         // The encryption policy attributes that will be used to encrypt the content.
         // Attributes must exist in the policy associated with the Public Key
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-        byte[] ciphertext = kmsClient.coverCryptEncrypt(publicMasterKeyId, data, encryptionPolicy, uid);
+        byte[] ciphertext = kmsClient.coverCryptEncrypt(publicMasterKeyId, plaintext, encryptionPolicy, uid);
+
+        //
+        // KMS Decryption
+        //
+        DecryptedData data_kms = kmsClient.coverCryptDecrypt(userKeyId, ciphertext, uid);
+        assertArrayEquals(plaintext, data_kms.getPlaintext());
+        assertArrayEquals(new byte[] {}, data_kms.getHeaderMetaData());
 
         //
         // Local Decryption
         //
 
         PrivateKey userKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userKeyId);
-        byte[][] decrypted = coverCrypt.decrypt(userKey.bytes(), ciphertext, uid);
-        assertArrayEquals(data, decrypted[0]);
-        assertArrayEquals(new byte[] {}, decrypted[1]);
+        DecryptedData res = coverCrypt.decrypt(userKey.bytes(), ciphertext, uid);
+        assertArrayEquals(plaintext, res.getPlaintext());
+        assertArrayEquals(new byte[] {}, res.getHeaderMetaData());
 
-        //
-        // KMS Decryption
-        //
-        byte[] data_kms = kmsClient.coverCryptDecrypt(userKeyId, ciphertext, uid);
-        assertArrayEquals(data, data_kms);
     }
 
     @Test

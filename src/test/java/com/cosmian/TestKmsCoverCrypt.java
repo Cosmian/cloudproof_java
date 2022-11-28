@@ -1,5 +1,6 @@
 package com.cosmian;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,6 +19,7 @@ import com.cosmian.rest.abe.access_policy.AccessPolicy;
 import com.cosmian.rest.abe.access_policy.And;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.access_policy.Or;
+import com.cosmian.rest.abe.data.DecryptedData;
 import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.data_structures.KeyValue;
 import com.cosmian.rest.kmip.objects.PrivateKey;
@@ -29,9 +31,9 @@ import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.VendorAttribute;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class TestCoverCrypt {
+public class TestKmsCoverCrypt {
 
-    private static final Logger logger = Logger.getLogger(TestCoverCrypt.class.getName());
+    private static final Logger logger = Logger.getLogger(TestKmsCoverCrypt.class.getName());
 
     @BeforeAll
     public static void before_all() {
@@ -201,19 +203,19 @@ public class TestCoverCrypt {
                 userKey_2.toJson().getBytes(StandardCharsets.UTF_8));
 
         // User decryption key Protected should be able to decrypt protected_fin_ct
-        String clearText_1_1 = new String(kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, protected_fin_ct),
-                StandardCharsets.UTF_8);
-        assertEquals(protected_fin_data, clearText_1_1);
+        String plaintext_1_1 = new String(kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, protected_fin_ct)
+                .getPlaintext(), StandardCharsets.UTF_8);
+        assertEquals(protected_fin_data, plaintext_1_1);
         // User decryption key Confidential should be able to decrypt protected_fin_ct
-        String clearText_1_2 = new String(kmsClient.coverCryptDecrypt(fin_confidential_user_key, protected_fin_ct),
-                StandardCharsets.UTF_8);
-        assertEquals(protected_fin_data, clearText_1_2);
+        String plaintext_1_2 = new String(kmsClient.coverCryptDecrypt(fin_confidential_user_key, protected_fin_ct)
+                .getPlaintext(), StandardCharsets.UTF_8);
+        assertEquals(protected_fin_data, plaintext_1_2);
 
         // User decryption key Protected should not be able to decrypt
         // confidential_fin_ct
         try {
-            new String(kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, confidential_fin_ct),
-                    StandardCharsets.UTF_8);
+            new String(kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, confidential_fin_ct)
+                    .getPlaintext(), StandardCharsets.UTF_8);
             throw new RuntimeException("User with key Confidential should not be able to decrypt data Confidential");
         } catch (CloudproofException e) {
             // fine: should not be able to decrypt
@@ -221,9 +223,50 @@ public class TestCoverCrypt {
 
         // User decryption key Confidential should not be able to decrypt
         // confidential_fin_ct
-        String clearText_2_2 = new String(kmsClient.coverCryptDecrypt(fin_confidential_user_key, confidential_fin_ct),
-                StandardCharsets.UTF_8);
-        assertEquals(confidential_fin_data, clearText_2_2);
+        String plaintext_2_2 = new String(kmsClient.coverCryptDecrypt(fin_confidential_user_key, confidential_fin_ct)
+                .getPlaintext(), StandardCharsets.UTF_8);
+        assertEquals(confidential_fin_data, plaintext_2_2);
+    }
+
+    @Test
+    public void testKmsEncryptDecryptMetaData() throws Exception {
+
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            System.out.println("No KMS Server: ignoring");
+            return;
+        }
+
+        Policy pg = policy();
+
+        KmsClient kmsClient = new KmsClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
+
+        String[] ids = kmsClient.createCoverCryptMasterKeyPair(pg);
+        logger.info("Created Master Key: Private Key ID: " + ids[0] + ", Public Key ID: " + ids[1]);
+        String privateMasterKeyID = ids[0];
+        String publicMasterKeyUniqueIdentifier = ids[1];
+
+        // encryption
+        byte[] protected_fin_data = "protected_fin_attributes".getBytes(StandardCharsets.UTF_8);
+        String protected_fin_enc_policy = "Department::FIN && Security Level::Protected";
+        byte[] authenticationData = "authentication".getBytes(StandardCharsets.UTF_8);
+        byte[] headerMetaData = "headerMeta".getBytes(StandardCharsets.UTF_8);
+        byte[] protected_fin_ct = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier,
+                protected_fin_data, protected_fin_enc_policy, authenticationData, headerMetaData);
+
+        // User decryption key Protected, FIN, MKG
+        String fin_mkg_protected_user_key = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
+                privateMasterKeyID);
+        PrivateKey userKey_1 = kmsClient.retrieveCoverCryptUserDecryptionKey(fin_mkg_protected_user_key);
+        Resources.write_resource("cover_crypt/fin_mkg_protected_user_key.json",
+                userKey_1.toJson().getBytes(StandardCharsets.UTF_8));
+
+        // User decryption key Protected should be able to decrypt protected_fin_ct
+        DecryptedData decryptedData = kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, protected_fin_ct,
+                authenticationData);
+        byte[] plaintext_ = decryptedData.getPlaintext();
+        byte[] headerMetadata_ = decryptedData.getHeaderMetaData();
+        assertArrayEquals(protected_fin_data, plaintext_);
+        assertArrayEquals(headerMetaData, headerMetadata_);
     }
 
     @Test

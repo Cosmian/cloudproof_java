@@ -2,7 +2,7 @@ package com.cosmian.rest.kmip.objects;
 
 import java.lang.reflect.InvocationTargetException;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.json.KmipStruct;
 import com.cosmian.rest.kmip.json.KmipStructDeserializer;
 import com.cosmian.rest.kmip.json.KmipStructSerializer;
@@ -22,29 +22,30 @@ public abstract class KmipObject implements KmipStruct {
      * This method is mostly used for local tests and serialization.
      * 
      * @return the JSON string
-     * @throws CosmianException if the serialization fails
+     * @throws CloudproofException if the serialization fails
      */
-    public String toJson() throws CosmianException {
+    public String toJson() throws CloudproofException {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new CosmianException("Failed serializing to JSON the " + this.getObjectType() + ": " + e.getMessage(),
+            throw new CloudproofException(
+                "Failed serializing to JSON the " + this.getObjectType() + ": " + e.getMessage(),
                 e);
         }
     }
 
-    protected static <T extends KmipObject> T fromJson(String json, Class<T> clazz) throws CosmianException {
+    protected static <T extends KmipObject> T fromJson(String json, Class<T> clazz) throws CloudproofException {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
             try {
-                throw new CosmianException("Failed de serializing from JSON the "
+                throw new CloudproofException("Failed de serializing from JSON the "
                     + clazz.getDeclaredConstructor().newInstance().getObjectType() + ": " + e.getMessage(), e);
             } catch (InstantiationException | IllegalAccessException | NoSuchMethodException
                 | InvocationTargetException e1) {
-                throw new CosmianException("Failed de serializing from JSON:" + e.getMessage(), e);
+                throw new CloudproofException("Failed de serializing from JSON:" + e.getMessage(), e);
             }
         }
     }

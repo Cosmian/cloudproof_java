@@ -1,89 +1,98 @@
 package com.cosmian.jna.findex;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
-import com.android.dex.Leb128;
-import com.android.dex.util.ByteArrayByteInput;
-import com.android.dx.util.ByteArrayAnnotatedOutput;
+import com.cosmian.CloudproofException;
+import com.cosmian.Leb128;
 
 public class Leb128Serializer {
 
-    public static List<byte[]> deserializeList(byte[] serializedUids) {
+    public static List<byte[]> deserializeList(byte[] serializedUids) throws CloudproofException {
         List<byte[]> result = new ArrayList<byte[]>();
-        ByteArrayByteInput in = new ByteArrayByteInput(serializedUids);
-        int len = 0;
-        while ((len = Leb128.readUnsignedLeb128(in)) >= 0) {
-            if (len == 0) {
-                break;
+        ByteArrayInputStream in = new ByteArrayInputStream(serializedUids);
+        long len = 0;
+        try {
+            while ((len = Leb128.readU64(in)) >= 0) {
+                if (len == 0) {
+                    break;
+                }
+                byte[] element = new byte[(int) len];
+                in.read(element);
+                result.add(element);
             }
-            byte[] element = new byte[len];
-            for (int i = 0; i < len; i++) {
-                element[i] = in.readByte();
-            }
-            result.add(element);
+        } catch (IOException e) {
+            throw new CloudproofException("failed serializing the list", e);
         }
         return result;
     }
 
-    public static HashMap<byte[], byte[]> deserializeHashmap(byte[] serializedUids) {
+    public static HashMap<byte[], byte[]> deserializeHashmap(byte[] serializedUids) throws CloudproofException {
         HashMap<byte[], byte[]> result = new HashMap<byte[], byte[]>();
-        ByteArrayByteInput in = new ByteArrayByteInput(serializedUids);
-        int len = 0;
-        while ((len = Leb128.readUnsignedLeb128(in)) >= 0) {
-            if (len == 0) {
-                break;
-            }
-            byte[] key = new byte[len];
-            for (int i = 0; i < len; i++) {
-                key[i] = in.readByte();
-            }
+        ByteArrayInputStream in = new ByteArrayInputStream(serializedUids);
+        long len = 0;
+        try {
+            while ((len = Leb128.readU64(in)) >= 0) {
+                if (len == 0) {
+                    break;
+                }
+                byte[] key = new byte[(int) len];
+                in.read(key);
 
-            len = Leb128.readUnsignedLeb128(in);
-            if (len == 0) {
-                throw new IllegalArgumentException("HashMap `value` should be serialized after `key`");
+                len = Leb128.readU64(in);
+                if (len == 0) {
+                    throw new IllegalArgumentException("HashMap `value` should be serialized after `key`");
+                }
+                byte[] value = new byte[(int) len];
+                in.read(value);
+                result.put(key, value);
             }
-            byte[] value = new byte[len];
-            for (int i = 0; i < len; i++) {
-                value[i] = in.readByte();
-            }
-            result.put(key, value);
+        } catch (IOException e) {
+            throw new CloudproofException("failed deserializing the map", e);
         }
         return result;
     }
 
-    public static byte[] serializeHashMap(HashMap<byte[], byte[]> uidsAndValues) {
+    public static byte[] serializeHashMap(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
         return serializeEntrySet(uidsAndValues.entrySet());
     }
 
-    public static byte[] serializeEntrySet(Set<Entry<byte[], byte[]>> uidsAndValues) {
-        ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput();
-        for (Entry<byte[], byte[]> entry : uidsAndValues) {
-            byte[] uid = entry.getKey();
-            Leb128.writeUnsignedLeb128(out, uid.length);
-            out.write(uid);
-            byte[] value = entry.getValue();
-            Leb128.writeUnsignedLeb128(out, value.length);
-            out.write(value);
+    public static byte[] serializeEntrySet(Set<Entry<byte[], byte[]>> uidsAndValues) throws CloudproofException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            for (Entry<byte[], byte[]> entry : uidsAndValues) {
+                byte[] uid = entry.getKey();
+                Leb128.writeArray(out, uid);
+                byte[] value = entry.getValue();
+                Leb128.writeArray(out, value);
+            }
+            // empty array marks the end
+            out.write(new byte[] {0});
+        } catch (IOException e) {
+            throw new CloudproofException("failed serializing the set", e);
         }
-        // empty array marks the end
-        out.write(new byte[] {0});
 
         byte[] uidsAndValuesBytes = out.toByteArray();
         return uidsAndValuesBytes;
     }
 
-    public static byte[] serializeList(List<byte[]> values) {
-        ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput();
-        for (byte[] bs : values) {
-            Leb128.writeUnsignedLeb128(out, bs.length);
-            out.write(bs);
+    public static byte[] serializeList(List<byte[]> values) throws CloudproofException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            for (byte[] bs : values) {
+                Leb128.writeArray(out, bs);
+            }
+            // empty array marks the end
+            out.write(new byte[] {0});
+        } catch (IOException e) {
+            throw new CloudproofException("failed serializing the list", e);
         }
-        // empty array marks the end
-        out.write(new byte[] {0});
 
         return out.toByteArray();
     }

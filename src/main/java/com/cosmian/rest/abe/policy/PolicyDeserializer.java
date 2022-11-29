@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.json.KmipJsonDeserializer;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -60,7 +60,7 @@ public class PolicyDeserializer extends KmipJsonDeserializer<Policy> {
             }
             try {
                 attributeToInt.put(PolicyAttributeUid.fromString(entry.getKey()), set);
-            } catch (CosmianException e) {
+            } catch (CloudproofException e) {
                 throw new IOException(e);
             }
         }

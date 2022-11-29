@@ -2,9 +2,9 @@ package com.cosmian.jna.findex.Callbacks;
 
 import java.util.HashMap;
 
-import com.cosmian.jna.FfiException;
-import com.cosmian.jna.findex.FfiWrapper.UpsertEntryCallback;
-import com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface;
+import com.cosmian.CloudproofException;
+import com.cosmian.jna.findex.FindexWrapper.UpsertEntryCallback;
+import com.cosmian.jna.findex.FindexWrapper.UpsertEntryInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
 import com.sun.jna.Pointer;
 
@@ -17,7 +17,7 @@ public class UpsertEntry implements UpsertEntryCallback {
     }
 
     @Override
-    public int apply(Pointer items, int itemsLength) throws FfiException {
+    public int apply(Pointer items, int itemsLength) throws CloudproofException {
         //
         // Read `items` until `itemsLength`
         //

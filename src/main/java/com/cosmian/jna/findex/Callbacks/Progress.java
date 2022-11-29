@@ -2,9 +2,9 @@ package com.cosmian.jna.findex.Callbacks;
 
 import java.util.List;
 
-import com.cosmian.jna.FfiException;
-import com.cosmian.jna.findex.FfiWrapper.ProgressCallback;
-import com.cosmian.jna.findex.FfiWrapper.ProgressInterface;
+import com.cosmian.CloudproofException;
+import com.cosmian.jna.findex.FindexWrapper.ProgressCallback;
+import com.cosmian.jna.findex.FindexWrapper.ProgressInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
 import com.sun.jna.Pointer;
 
@@ -16,7 +16,7 @@ public class Progress implements ProgressCallback {
     }
 
     @Override
-    public boolean apply(Pointer searchResultsPointer, int searchResultsLength) throws FfiException {
+    public boolean apply(Pointer searchResultsPointer, int searchResultsLength) throws CloudproofException {
         //
         // Read `searchResultsPointer` until `searchResultsLength`
         //

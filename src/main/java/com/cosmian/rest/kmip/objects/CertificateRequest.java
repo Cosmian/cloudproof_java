@@ -3,7 +3,7 @@ package com.cosmian.rest.kmip.objects;
 import java.util.Arrays;
 import java.util.Objects;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.types.CertificateRequestType;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -83,9 +83,9 @@ public class CertificateRequest extends KmipObject {
      * 
      * @param json the JSON string
      * @return the {@link CertificateRequest}
-     * @throws CosmianException if the parsing fails
+     * @throws CloudproofException if the parsing fails
      */
-    public static CertificateRequest fromJson(String json) throws CosmianException {
+    public static CertificateRequest fromJson(String json) throws CloudproofException {
         return KmipObject.fromJson(json, CertificateRequest.class);
     }
 }

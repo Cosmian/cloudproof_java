@@ -2,7 +2,7 @@ package com.cosmian.rest.kmip.objects;
 
 import java.util.Objects;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.ObjectType;
@@ -73,9 +73,9 @@ public class SymmetricKey extends KmipObject {
      * 
      * @param json key in JSON form
      * @return the {@link SymmetricKey}
-     * @throws CosmianException if the key cannot be recovered
+     * @throws CloudproofException if the key cannot be recovered
      */
-    public static SymmetricKey fromJson(String json) throws CosmianException {
+    public static SymmetricKey fromJson(String json) throws CloudproofException {
         return KmipObject.fromJson(json, SymmetricKey.class);
     }
 }

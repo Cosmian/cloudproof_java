@@ -3,9 +3,9 @@ package com.cosmian.jna.findex.Callbacks;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.cosmian.jna.FfiException;
-import com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsCallback;
-import com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsInterface;
+import com.cosmian.CloudproofException;
+import com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsCallback;
+import com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
 import com.cosmian.jna.findex.Location;
 import com.sun.jna.Pointer;
@@ -20,7 +20,8 @@ public class ListRemovedLocations implements ListRemovedLocationsCallback {
     }
 
     @Override
-    public int apply(Pointer output, IntByReference outputSize, Pointer items, int itemsLength) throws FfiException {
+    public int apply(Pointer output, IntByReference outputSize, Pointer items, int itemsLength)
+        throws CloudproofException {
         //
         // Read `items` until `itemsLength`
         //
@@ -28,14 +29,14 @@ public class ListRemovedLocations implements ListRemovedLocationsCallback {
         items.read(0, itemsBytes, 0, itemsLength);
 
         List<byte[]> locationsBytes = Leb128Serializer.deserializeList(itemsBytes);
-        List<Location> locations =
-            locationsBytes.stream().map((byte[] bytes) -> new Location(bytes)).collect(Collectors.toList());
+        List<Location> locations = locationsBytes.stream().map((byte[] bytes) -> new Location(bytes))
+            .collect(Collectors.toList());
 
         List<Location> removedLocations = this.list.list(locations);
 
         if (removedLocations.size() > 0) {
-            List<byte[]> removedLocationsAsBytes =
-                removedLocations.stream().map((Location location) -> location.getBytes()).collect(Collectors.toList());
+            List<byte[]> removedLocationsAsBytes = removedLocations.stream()
+                .map((Location location) -> location.getBytes()).collect(Collectors.toList());
 
             byte[] bytes = Leb128Serializer.serializeList(removedLocationsAsBytes);
 

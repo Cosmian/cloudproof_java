@@ -15,8 +15,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import com.cosmian.CosmianException;
-import com.cosmian.jna.FfiException;
+import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
@@ -35,99 +34,99 @@ public class Sqlite {
     //
     // Declare all Findex callbacks
     //
-    public FetchEntry fetchEntry = new FetchEntry(new com.cosmian.jna.findex.FfiWrapper.FetchEntryInterface() {
+    public FetchEntry fetchEntry = new FetchEntry(new com.cosmian.jna.findex.FindexWrapper.FetchEntryInterface() {
         @Override
-        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException {
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException {
             try {
                 return fetchEntryTableItems(uids);
             } catch (SQLException e) {
-                throw new FfiException("Failed fetch entry: " + e.toString());
+                throw new CloudproofException("Failed fetch entry: " + e.toString());
             }
         }
     });
 
-    public FetchAllEntry fetchAllEntry =
-        new FetchAllEntry(new com.cosmian.jna.findex.FfiWrapper.FetchAllEntryInterface() {
+    public FetchAllEntry fetchAllEntry = new FetchAllEntry(
+        new com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface() {
             @Override
-            public HashMap<byte[], byte[]> fetch() throws FfiException {
+            public HashMap<byte[], byte[]> fetch() throws CloudproofException {
                 try {
                     return fetchAllEntryTableItems();
                 } catch (SQLException e) {
-                    throw new FfiException("Failed fetch all entry: " + e.toString());
+                    throw new CloudproofException("Failed fetch all entry: " + e.toString());
                 }
             }
         });
 
-    public FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FfiWrapper.FetchChainInterface() {
+    public FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FindexWrapper.FetchChainInterface() {
         @Override
-        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws FfiException {
+        public HashMap<byte[], byte[]> fetch(List<byte[]> uids) throws CloudproofException {
             try {
                 return fetchChainTableItems(uids);
             } catch (SQLException e) {
-                throw new FfiException("Failed fetch chain: " + e.toString());
+                throw new CloudproofException("Failed fetch chain: " + e.toString());
             }
         }
     });
 
-    public UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FfiWrapper.UpsertEntryInterface() {
+    public UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FindexWrapper.UpsertEntryInterface() {
         @Override
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException {
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
             try {
                 databaseUpsert(uidsAndValues, "entry_table");
             } catch (SQLException e) {
-                throw new FfiException("Failed entry upsert: " + e.toString());
+                throw new CloudproofException("Failed entry upsert: " + e.toString());
             }
         }
     });
 
-    public UpsertChain upsertChain = new UpsertChain(new com.cosmian.jna.findex.FfiWrapper.UpsertChainInterface() {
+    public UpsertChain upsertChain = new UpsertChain(new com.cosmian.jna.findex.FindexWrapper.UpsertChainInterface() {
         @Override
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws FfiException {
+        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
             try {
                 databaseUpsert(uidsAndValues, "chain_table");
             } catch (SQLException e) {
-                throw new FfiException("Failed chain upsert: " + e.toString());
+                throw new CloudproofException("Failed chain upsert: " + e.toString());
             }
         }
     });
 
-    public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FfiWrapper.UpdateLinesInterface() {
+    public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FindexWrapper.UpdateLinesInterface() {
         @Override
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
-            HashMap<byte[], byte[]> newChains) throws FfiException {
+            HashMap<byte[], byte[]> newChains) throws CloudproofException {
             try {
                 databaseTruncate("entry_table");
                 databaseUpsert(newEntries, "entry_table");
                 databaseUpsert(newChains, "chain_table");
                 databaseRemove(removedChains, "chain_table");
             } catch (SQLException e) {
-                throw new FfiException("Failed update lines: " + e.toString());
+                throw new CloudproofException("Failed update lines: " + e.toString());
             }
         }
     });
 
-    public ListRemovedLocations listRemovedLocations =
-        new ListRemovedLocations(new com.cosmian.jna.findex.FfiWrapper.ListRemovedLocationsInterface() {
+    public ListRemovedLocations listRemovedLocations = new ListRemovedLocations(
+        new com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsInterface() {
             @Override
-            public List<Location> list(List<Location> locations) throws FfiException {
-                List<Integer> ids =
-                    locations.stream().map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
-                        .collect(Collectors.toList());
+            public List<Location> list(List<Location> locations) throws CloudproofException {
+                List<Integer> ids = locations.stream()
+                    .map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
+                    .collect(Collectors.toList());
 
                 try {
                     return listRemovedIds("users", ids).stream()
                         .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
                         .collect(Collectors.toList());
                 } catch (SQLException e) {
-                    throw new FfiException("Failed update lines: " + e.toString());
+                    throw new CloudproofException("Failed update lines: " + e.toString());
                 }
 
             }
         });
 
-    public Progress progress = new Progress(new com.cosmian.jna.findex.FfiWrapper.ProgressInterface() {
+    public Progress progress = new Progress(new com.cosmian.jna.findex.FindexWrapper.ProgressInterface() {
         @Override
-        public boolean list(List<byte[]> indexedValues) throws FfiException {
+        public boolean list(List<byte[]> indexedValues) throws CloudproofException {
 
             try {
                 //
@@ -138,8 +137,8 @@ public class Sqlite {
                     indexedValuesBytes.add(new IndexedValue(iv));
                 }
                 return true;
-            } catch (CosmianException e) {
-                throw new FfiException("Failed getting search results: " + e.toString());
+            } catch (CloudproofException e) {
+                throw new CloudproofException("Failed getting search results: " + e.toString());
             }
 
         }
@@ -167,8 +166,10 @@ public class Sqlite {
         for (UsersDataset user : testFindexDataset) {
             stat.executeUpdate(
                 "INSERT INTO users (id, firstName,lastName,phone,email,country,region,employeeNumber,security) VALUES ("
-                    + user.id + ", '" + user.firstName + "','" + user.lastName + "','" + user.phone + "','" + user.email
-                    + "','" + user.country + "','" + user.region + "','" + user.employeeNumber + "','" + user.security
+                    + user.id + ", '" + user.firstName + "','" + user.lastName + "','" + user.phone + "','"
+                    + user.email
+                    + "','" + user.country + "','" + user.region + "','" + user.employeeNumber + "','"
+                    + user.security
                     + "')");
         }
     }
@@ -179,7 +180,8 @@ public class Sqlite {
 
     public HashMap<byte[], byte[]> fetchChainTableItems(List<byte[]> uids) throws SQLException {
         PreparedStatement pstmt = this.connection
-            .prepareStatement("SELECT uid, value FROM chain_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
+            .prepareStatement(
+                "SELECT uid, value FROM chain_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
 
         int count = 1;
         for (byte[] bs : uids) {
@@ -215,7 +217,8 @@ public class Sqlite {
 
     public HashMap<byte[], byte[]> fetchEntryTableItems(List<byte[]> uids) throws SQLException {
         PreparedStatement pstmt = this.connection
-            .prepareStatement("SELECT uid, value FROM entry_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
+            .prepareStatement(
+                "SELECT uid, value FROM entry_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
 
         int count = 1;
         for (byte[] bs : uids) {
@@ -235,8 +238,8 @@ public class Sqlite {
     }
 
     public void databaseUpsert(HashMap<byte[], byte[]> uidsAndValues, String tableName) throws SQLException {
-        PreparedStatement pstmt =
-            connection.prepareStatement("INSERT OR REPLACE INTO " + tableName + "(uid, value) VALUES (?,?)");
+        PreparedStatement pstmt = connection
+            .prepareStatement("INSERT OR REPLACE INTO " + tableName + "(uid, value) VALUES (?,?)");
         this.connection.setAutoCommit(false);
         for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
             pstmt.setBytes(1, entry.getKey());
@@ -245,7 +248,8 @@ public class Sqlite {
         }
         /* int[] result = */ pstmt.executeBatch();
         this.connection.commit();
-        // System.out.println("The number of rows in " + tableName + " inserted: " + result.length);
+        // System.out.println("The number of rows in " + tableName + " inserted: " +
+        // result.length);
     }
 
     public void databaseRemove(List<byte[]> uids, String tableName) throws SQLException {
@@ -277,8 +281,8 @@ public class Sqlite {
     }
 
     public List<Integer> listRemovedIds(String string, List<Integer> ids) throws SQLException {
-        PreparedStatement pstmt =
-            this.connection.prepareStatement("SELECT id FROM users WHERE id IN (" + questionMarks(ids.size()) + ")");
+        PreparedStatement pstmt = this.connection
+            .prepareStatement("SELECT id FROM users WHERE id IN (" + questionMarks(ids.size()) + ")");
 
         int count = 1;
         for (Integer bs : ids) {

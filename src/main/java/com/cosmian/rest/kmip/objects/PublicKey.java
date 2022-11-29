@@ -2,7 +2,7 @@ package com.cosmian.rest.kmip.objects;
 
 import java.util.Objects;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.KmipUtils;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.types.Attributes;
@@ -73,9 +73,9 @@ public class PublicKey extends KmipObject {
      * The low level cryptographic content of the Public Key
      * 
      * @return the byte array
-     * @throws CosmianException if the key is wrapped and bytes cannot be extracted
+     * @throws CloudproofException if the key is wrapped and bytes cannot be extracted
      */
-    public byte[] bytes() throws CosmianException {
+    public byte[] bytes() throws CloudproofException {
         return KmipUtils.bytesFromKeyBlock(this.getKeyBlock());
     }
 
@@ -84,9 +84,9 @@ public class PublicKey extends KmipObject {
      * 
      * @param json the public key in JSON form
      * @return the public key
-     * @throws CosmianException if the parsing fails
+     * @throws CloudproofException if the parsing fails
      */
-    public static PublicKey fromJson(String json) throws CosmianException {
+    public static PublicKey fromJson(String json) throws CloudproofException {
         return KmipObject.fromJson(json, PublicKey.class);
     }
 

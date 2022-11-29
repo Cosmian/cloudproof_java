@@ -3,7 +3,7 @@ package com.cosmian.rest.kmip.objects;
 import java.util.Arrays;
 import java.util.Objects;
 
-import com.cosmian.CosmianException;
+import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.types.CertificateType;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,27 +28,59 @@ public class Certificate extends KmipObject {
         this.certificateValue = certificateValue;
     }
 
+    /**
+     * Get the {@link CertificateType}
+     * 
+     * @return the {@link CertificateType}
+     */
     public CertificateType getCertificateType() {
         return this.certificateType;
     }
 
+    /**
+     * Set the {@link CertificateType}
+     * 
+     * @param certificateType the type
+     */
     public void setCertificateType(CertificateType certificateType) {
         this.certificateType = certificateType;
     }
 
+    /**
+     * Get the {@link Certificate} value
+     * 
+     * @return the value
+     */
     public byte[] getCertificateValue() {
         return this.certificateValue;
     }
 
+    /**
+     * Set the {@link Certificate} value
+     * 
+     * @param certificateValue the value
+     */
     public void setCertificateValue(byte[] certificateValue) {
         this.certificateValue = certificateValue;
     }
 
+    /**
+     * Set the {@link CertificateType}
+     * 
+     * @param certificateType the {@link CertificateType}
+     * @return the {@link Certificate}
+     */
     public Certificate certificateType(CertificateType certificateType) {
         setCertificateType(certificateType);
         return this;
     }
 
+    /**
+     * Set the {@link Certificate} value
+     * 
+     * @param certificateValue the value
+     * @return the {@link Certificate}
+     */
     public Certificate certificateValue(byte[] certificateValue) {
         setCertificateValue(certificateValue);
         return this;
@@ -87,9 +119,9 @@ public class Certificate extends KmipObject {
      * 
      * @param json the JSON string
      * @return the {@link Certificate}
-     * @throws CosmianException if the {@link Certificate} cannot be parsed
+     * @throws CloudproofException if the {@link Certificate} cannot be parsed
      */
-    public static Certificate fromJson(String json) throws CosmianException {
+    public static Certificate fromJson(String json) throws CloudproofException {
         return KmipObject.fromJson(json, Certificate.class);
     }
 }

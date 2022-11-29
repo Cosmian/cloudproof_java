@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import com.cosmian.CloudproofException;
 import com.cosmian.jna.abe.CoverCrypt;
+import com.cosmian.rest.abe.data.DecryptedData;
 import com.cosmian.rest.abe.policy.Policy;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -28,11 +29,11 @@ public class EncryptionTestVector {
     private byte[] authenticationData;
 
     public void decrypt(byte[] key) throws CloudproofException {
-        byte[][] res = coverCrypt.decrypt(key, ciphertext, authenticationData);
+        DecryptedData res = coverCrypt.decrypt(key, ciphertext, authenticationData);
 
         // Verify everything is correct
-        assertTrue(Arrays.equals(this.plaintext, res[0]));
-        assertTrue(Arrays.equals(this.headerMetadata, res[1]));
+        assertTrue(Arrays.equals(this.plaintext, res.getPlaintext()));
+        assertTrue(Arrays.equals(this.headerMetadata, res.getHeaderMetaData()));
     }
 
     public static EncryptionTestVector generate(Policy policy, byte[] publicKey, String encryptionPolicy,

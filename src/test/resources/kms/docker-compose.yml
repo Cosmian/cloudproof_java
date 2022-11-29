@@ -1,12 +1,13 @@
-version: "3.4"
+---
+version: '3.4'
 services:
   kms:
     container_name: kms
-    image: cosmian/kms:3.0.0
+    image: cosmian/kms:4.0.0
     environment:
       - KMS_HOSTNAME=0.0.0.0
       - KMS_PUBLIC_PATH=/data
       - KMS_PRIVATE_PATH=/data
       - KMS_SHARED_PATH=/data
     ports:
-      - "9998:9998"
+      - 9998:9998

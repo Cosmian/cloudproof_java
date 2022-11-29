@@ -6,6 +6,15 @@ The Cloudproof Java library provides a Java-friendly API to the [Cosmian Cloudpr
 
 In summary, Cloudproof Encryption product secures data repositories in the cloud with attributes-based access control encryption and encrypted search.
 
+<!-- toc -->
+
+- [Getting started](#getting-started)
+- [Using in Java projects](#using-in-java-projects)
+- [Versions Correspondence](#versions-correspondence)
+- [Update native libraries](#update-native-libraries)
+
+<!-- tocstop -->
+
 ## Getting started
 
 Please [check the online documentation](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/) for details on using the CloudProof APIs
@@ -54,7 +63,7 @@ This table shows the minimum versions correspondences between the various compon
 | 2.2.0      | 0.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
 | 2.3.0      | 1.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
 | 3.0.0      | 2.0.0     | N/A       | 7.1.0          | 0.10.0 |
-| 3.0.0      | 2.1.0     | N/A       | 7.2.0          | 0.10.0 |
+| 3.0.0      | 2.1.0     | N/A       | 7.1.1          | 0.10.0 |
 
 ## Update native libraries
 

@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - support for access policy as boolean expressions to create user decryption keys
+- regression test vectors for CoverCrypt
 
 ### Changed
 

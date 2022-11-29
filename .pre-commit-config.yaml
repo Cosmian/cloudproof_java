@@ -1,7 +1,6 @@
 ---
 # Pre-requisites:
 # pip install pre-commit conventional-pre-commit
-# pre-commit install
 # pre-commit install --install-hooks -t commit-msg
 # pre-commit autoupdate
 
@@ -26,7 +25,7 @@ repos:
     rev: v3.0.0-alpha.4
     hooks:
       - id: prettier
-        types_or: [bash, bib, c, css, dart, dockerfile, html, java, javascript, jsx, json, python3, sql, ts, tsx, sh, vue]
+        types_or: [bash, bib, c, css, dart, dockerfile, html, java, javascript, jsx, json, markdown, python3, sql, ts, tsx, sh, vue]
 
   - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
     rev: 0.2.2

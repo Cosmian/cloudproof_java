@@ -15,20 +15,17 @@ import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 
 /**
- * This class contains demos of the Java API. Demos are written as tests so that
- * they can be easily launched from an IDE
+ * This class contains demos of the Java API. Demos are written as tests so that they can be easily launched from an IDE
  */
 public class TestDemo {
 
     /**
      * <b>ABE</b>: Encryption using an Authorization Policy<br/>
      * <br/>
-     * This demo demonstrates how data can be encrypted with policy attributes. An
-     * user will only be able to decrypt
+     * This demo demonstrates how data can be encrypted with policy attributes. An user will only be able to decrypt
      * data when it holds a key with the proper attributes. <br/>
      * <br/>
-     * This demo also demonstrates revocation of an attribute value and how to
-     * implement forward secrecy.
+     * This demo also demonstrates revocation of an attribute value and how to implement forward secrecy.
      */
     @Test
     public void testCoverCrypt() throws Exception {
@@ -39,7 +36,7 @@ public class TestDemo {
         }
 
         // Change the Cosmian Server Server URL and API key as appropriate
-        KmsClient coverCrypt = new KmsClient(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
+        KmsClient kmsClient = new KmsClient(new RestClient(TestUtils.kmsServerUrl(), TestUtils.apiKey()));
 
         // ## Policy
         // In this demo, we will create a Policy which combines two axes, a
@@ -71,28 +68,27 @@ public class TestDemo {
         // attribute of this axis to a user does not give access to any other
         // attribute. Each attribute must be granted individually.
         Policy policy = new Policy(20)
-                .addAxis("Security Level",
-                        new String[] {
-                                "Protected",
-                                "Low Secret",
-                                "Medium Secret",
-                                "High Secret",
-                                "Top Secret",
-                        },
-                        true)
-                .addAxis("Department", new String[] {
-                        "R&D",
-                        "HR",
-                        "MKG",
-                        "FIN"
-                }, false);
+            .addAxis("Security Level",
+                new String[] {
+                    "Protected",
+                    "Low Secret",
+                    "Medium Secret",
+                    "Top Secret",
+                },
+                true)
+            .addAxis("Department", new String[] {
+                "R&D",
+                "HR",
+                "MKG",
+                "FIN"
+            }, false);
 
         // ## Master Authority
         // The Master Authority possesses the keys for the given Policy:
         // a Private Key which is used to generate user keys and a Public Key which is
         // used to encrypt files with proper level of security.
         // The call returns the KMS UIDs of the 2 keys
-        String[] ids = coverCrypt.createCoverCryptMasterKeyPair(policy);
+        String[] ids = kmsClient.createCoverCryptMasterKeyPair(policy);
         String privateMasterKeyUID = ids[0];
         String publicMasterKeyUID = ids[1];
 
@@ -106,22 +102,22 @@ public class TestDemo {
 
         // Let us create 3 encrypted messages
         // - a low secret marketing message
-        byte[] low_secret_mkg_data = "low_secret_mkg_message".getBytes(StandardCharsets.UTF_8);
-        String low_secret_mkg_enc_policy = "Department::MKG && Security Level::Low Secret";
-        byte[] low_secret_mkg_ct = coverCrypt.coverCryptEncrypt(publicMasterKeyUID, low_secret_mkg_data,
-                low_secret_mkg_enc_policy);
+        byte[] lowSecretMkgData = "lowSecretMkgMessage".getBytes(StandardCharsets.UTF_8);
+        String lowSecretMkgDnc_policy = "Department::MKG && Security Level::Low Secret";
+        byte[] lowSecretMkgDt = kmsClient.coverCryptEncrypt(publicMasterKeyUID, lowSecretMkgData,
+            lowSecretMkgDnc_policy);
 
         // - a top secret marketing message
         byte[] top_secret_mkg_data = "top_secret_mkg_message".getBytes(StandardCharsets.UTF_8);
         String top_secret_mkg_enc_policy = "Department::MKG && Security Level::Top Secret";
-        byte[] top_secret_mkg_ct = coverCrypt.coverCryptEncrypt(publicMasterKeyUID, top_secret_mkg_data,
-                top_secret_mkg_enc_policy);
+        byte[] top_secret_mkg_ct = kmsClient.coverCryptEncrypt(publicMasterKeyUID, top_secret_mkg_data,
+            top_secret_mkg_enc_policy);
 
         // - and a low secret finance message
         byte[] low_secret_fin_data = "low_secret_fin_message".getBytes(StandardCharsets.UTF_8);
         String low_secret_fin_enc_policy = "Department::FIN && Security Level::Low Secret";
-        byte[] low_secret_fin_ct = coverCrypt.coverCryptEncrypt(publicMasterKeyUID, low_secret_fin_data,
-                low_secret_fin_enc_policy);
+        byte[] low_secret_fin_ct = kmsClient.coverCryptEncrypt(publicMasterKeyUID, low_secret_fin_data,
+            low_secret_fin_enc_policy);
 
         // ## User Decryption Keys
         // User Decryption Keys are generated from the Master Private Key using Access
@@ -135,29 +131,29 @@ public class TestDemo {
         // This user can decrypt messages from the marketing department only with a
         // security level of Medium Secret or below
         AccessPolicy medium_secret_mkg_access = new And(
-                new Attr("Department", "MKG"),
-                new Attr("Security Level", "Medium Secret"));
-        String medium_secret_mkg_user_key_uid = coverCrypt.createCoverCryptUserDecryptionKey(medium_secret_mkg_access,
-                privateMasterKeyUID);
+            new Attr("Department", "MKG"),
+            new Attr("Security Level", "Medium Secret"));
+        String medium_secret_mkg_user_key_uid = kmsClient.createCoverCryptUserDecryptionKey(medium_secret_mkg_access,
+            privateMasterKeyUID);
 
         // The medium secret marketing user can successfully decrypt a low security
         // marketing message
-        assertArrayEquals(low_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(medium_secret_mkg_user_key_uid, low_secret_mkg_ct).getPlaintext());
+        assertArrayEquals(lowSecretMkgData,
+            kmsClient.coverCryptDecrypt(medium_secret_mkg_user_key_uid, lowSecretMkgDt).getPlaintext());
         // ... however it can neither decrypt a marketing message with higher security
         try {
-            coverCrypt.coverCryptDecrypt(
-                    medium_secret_mkg_user_key_uid,
-                    top_secret_mkg_ct);
+            kmsClient.coverCryptDecrypt(
+                medium_secret_mkg_user_key_uid,
+                top_secret_mkg_ct);
             throw new RuntimeException("Oh... something is wrong !");
         } catch (CloudproofException e) {
             // fine: the user is not be able to decrypt
         }
         // ... nor decrypt a message from another department even with a lower security
         try {
-            coverCrypt.coverCryptDecrypt(
-                    medium_secret_mkg_user_key_uid,
-                    low_secret_fin_ct);
+            kmsClient.coverCryptDecrypt(
+                medium_secret_mkg_user_key_uid,
+                low_secret_fin_ct);
             throw new RuntimeException("Oh... something is wrong !");
         } catch (CloudproofException e) {
             // fine: the user is not be able to decrypt
@@ -167,24 +163,24 @@ public class TestDemo {
         // This user can decrypt messages from the marketing department OR the financial
         // department that have a security level of Top Secret or below
         AccessPolicy top_secret_mkg_fin_access = new And(
-                new Or(new Attr("Department", "MKG"), new Attr("Department", "FIN")),
-                new Attr("Security Level", "Top Secret"));
-        String top_secret_mkg_fin_user_key_uid = coverCrypt.createCoverCryptUserDecryptionKey(top_secret_mkg_fin_access,
-                privateMasterKeyUID);
+            new Or(new Attr("Department", "MKG"), new Attr("Department", "FIN")),
+            new Attr("Security Level", "Top Secret"));
+        String top_secret_mkg_fin_user_key_uid = kmsClient.createCoverCryptUserDecryptionKey(top_secret_mkg_fin_access,
+            privateMasterKeyUID);
         // As expected, the top secret marketing financial user can successfully decrypt
         // all messages
-        assertArrayEquals(low_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(
-                        top_secret_mkg_fin_user_key_uid,
-                        low_secret_mkg_ct).getPlaintext());
+        assertArrayEquals(lowSecretMkgData,
+            kmsClient.coverCryptDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                lowSecretMkgDt).getPlaintext());
         assertArrayEquals(top_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(
-                        top_secret_mkg_fin_user_key_uid,
-                        top_secret_mkg_ct).getPlaintext());
+            kmsClient.coverCryptDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                top_secret_mkg_ct).getPlaintext());
         assertArrayEquals(low_secret_fin_data,
-                coverCrypt.coverCryptDecrypt(
-                        top_secret_mkg_fin_user_key_uid,
-                        low_secret_fin_ct).getPlaintext());
+            kmsClient.coverCryptDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                low_secret_fin_ct).getPlaintext());
 
         // ## Revocation
         // At anytime the Master Authority can revoke an attribute.
@@ -195,64 +191,64 @@ public class TestDemo {
 
         // Before revoking the MKG attribute, let us make a local copy of the
         // medium_secret_mkg_user_key_uid
-        PrivateKey original_medium_secret_mkg_user_key = coverCrypt
-                .retrieveCoverCryptUserDecryptionKey(medium_secret_mkg_user_key_uid);
+        PrivateKey original_medium_secret_mkg_user_key = kmsClient
+            .retrieveCoverCryptUserDecryptionKey(medium_secret_mkg_user_key_uid);
 
         // Now revoke the MKG attribute
-        coverCrypt.rotateCoverCryptAttributes(privateMasterKeyUID, new Attr[] { new Attr("Department", "MKG") });
+        kmsClient.rotateCoverCryptAttributes(privateMasterKeyUID, new Attr[] {new Attr("Department", "MKG")});
 
         // ... and reimport the non rekeyed original medium secret marketing user key
         // under a new UID
-        coverCrypt.importCoverCryptUserDecryptionKey("original_medium_secret_mkg_user_key_uid",
-                original_medium_secret_mkg_user_key,
-                true);
+        kmsClient.importCoverCryptUserDecryptionKey("original_medium_secret_mkg_user_key_uid",
+            original_medium_secret_mkg_user_key,
+            true);
 
         // finally let us create a new medium secret marketing message
         byte[] medium_secret_mkg_data = "medium_secret_mkg_message".getBytes(StandardCharsets.UTF_8);
         String medium_secret_mkg_enc_policy = "Department::MKG && Security Level::Low Secret";
-        byte[] medium_secret_mkg_ct = coverCrypt.coverCryptEncrypt(publicMasterKeyUID, medium_secret_mkg_data,
-                medium_secret_mkg_enc_policy);
+        byte[] medium_secret_mkg_ct = kmsClient.coverCryptEncrypt(publicMasterKeyUID, medium_secret_mkg_data,
+            medium_secret_mkg_enc_policy);
 
         // The automatically rekeyed medium secret marketing user key can still decrypt
         // the low secret marketing message
-        assertArrayEquals(low_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(medium_secret_mkg_user_key_uid, low_secret_mkg_ct).getPlaintext());
+        assertArrayEquals(lowSecretMkgData,
+            kmsClient.coverCryptDecrypt(medium_secret_mkg_user_key_uid, lowSecretMkgDt).getPlaintext());
         // ... as well as the new medium secret marketing message
         assertArrayEquals(medium_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(medium_secret_mkg_user_key_uid, medium_secret_mkg_ct).getPlaintext());
+            kmsClient.coverCryptDecrypt(medium_secret_mkg_user_key_uid, medium_secret_mkg_ct).getPlaintext());
 
         // Likewise, the top secret marketing financial user can decrypt all messages
         // ... old
-        assertArrayEquals(low_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(
-                        top_secret_mkg_fin_user_key_uid,
-                        low_secret_mkg_ct).getPlaintext());
+        assertArrayEquals(lowSecretMkgData,
+            kmsClient.coverCryptDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                lowSecretMkgDt).getPlaintext());
         assertArrayEquals(top_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(
-                        top_secret_mkg_fin_user_key_uid,
-                        top_secret_mkg_ct).getPlaintext());
+            kmsClient.coverCryptDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                top_secret_mkg_ct).getPlaintext());
         assertArrayEquals(low_secret_fin_data,
-                coverCrypt.coverCryptDecrypt(
-                        top_secret_mkg_fin_user_key_uid,
-                        low_secret_fin_ct).getPlaintext());
+            kmsClient.coverCryptDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                low_secret_fin_ct).getPlaintext());
         // ..and new
         assertArrayEquals(medium_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(
-                        top_secret_mkg_fin_user_key_uid,
-                        medium_secret_mkg_ct).getPlaintext());
+            kmsClient.coverCryptDecrypt(
+                top_secret_mkg_fin_user_key_uid,
+                medium_secret_mkg_ct).getPlaintext());
 
         // However, the old, non rekeyed medium secret marketing user key
         // ...can still decrypt the old low secret marketing message
-        assertArrayEquals(low_secret_mkg_data,
-                coverCrypt.coverCryptDecrypt(
-                        "original_medium_secret_mkg_user_key_uid",
-                        low_secret_mkg_ct).getPlaintext());
+        assertArrayEquals(lowSecretMkgData,
+            kmsClient.coverCryptDecrypt(
+                "original_medium_secret_mkg_user_key_uid",
+                lowSecretMkgDt).getPlaintext());
         // ... but NOT the new medium secret marketing message
 
         try {
-            coverCrypt.coverCryptDecrypt(
-                    "original_medium_secret_mkg_user_key_uid",
-                    medium_secret_mkg_ct);
+            kmsClient.coverCryptDecrypt(
+                "original_medium_secret_mkg_user_key_uid",
+                medium_secret_mkg_ct);
             throw new RuntimeException("Oh... something is wrong !");
         } catch (CloudproofException e) {
             // fine: the user is not be able to decrypt

@@ -6,6 +6,7 @@
 
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+exclude: src/test/java/com/cosmian/TestUtils.java|src/test/resources
 repos:
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v2.1.1
@@ -25,7 +26,16 @@ repos:
     rev: v3.0.0-alpha.4
     hooks:
       - id: prettier
-        types_or: [bash, bib, c, css, dart, dockerfile, html, java, javascript, jsx, json, markdown, python3, sql, ts, tsx, sh, vue]
+        stages: [commit]
+        exclude_types:
+          - yaml
+          - markdown
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.32.2
+    hooks:
+      - id: markdownlint-fix
+        args: [--disable=MD013, --disable=MD024, --disable=MD041]
 
   - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
     rev: 0.2.2

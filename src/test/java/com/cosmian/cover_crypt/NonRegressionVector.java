@@ -46,7 +46,7 @@ public class NonRegressionVector {
         return this.publicKey;
     }
 
-    public byte[] getMasterPrivateKey() {
+    public byte[] getMasterSecretKey() {
         return masterSecretKey;
     }
 
@@ -121,8 +121,8 @@ public class NonRegressionVector {
                 6},
             new byte[] {7, 8, 9, 10, 11});
         nrv.lowSecretMkgTestVector = EncryptionTestVector.generate(policy, masterKeys.getPublicKey(),
-            "Department::MKG && Security Level::Low Secret", "LowSecretMkgPlaintext", new byte[] {1, 2, 3, 4, 5,
-                6},
+            "Department::MKG && Security Level::Low Secret", "LowSecretMkgPlaintext",
+            new byte[] {1, 2, 3, 4, 5, 6},
             new byte[] {});
         nrv.lowSecretFinTestVector = EncryptionTestVector.generate(policy, masterKeys.getPublicKey(),
             "Department::FIN && Security Level::Low Secret", "LowSecretFinPlaintext",
@@ -132,18 +132,20 @@ public class NonRegressionVector {
         return nrv;
     }
 
-    public static void verify(String filename) throws IOException, CloudproofException, CloudproofException {
+    public static void verify(String filename) throws IOException, CloudproofException {
         String json = Resources.load_file(filename);
         NonRegressionVector nrv = NonRegressionVector.fromJson(json);
         // top_secret_fin_key
         nrv.getLowSecretFinTestVector().decrypt(nrv.getTopSecretFinKey().getKey());
         try {
             nrv.getLowSecretMkgTestVector().decrypt(nrv.getTopSecretFinKey().getKey());
+            throw new CloudproofException("Should not be able to decrypt");
         } catch (CloudproofException e) {
             // ... failing expected
         }
         try {
             nrv.getTopSecretMkgTestVector().decrypt(nrv.getTopSecretFinKey().getKey());
+            throw new CloudproofException("Should not be able to decrypt");
         } catch (CloudproofException e) {
             // ... failing expected
         }
@@ -156,15 +158,18 @@ public class NonRegressionVector {
         // medium_secret_mkg_key
         try {
             nrv.getLowSecretFinTestVector().decrypt(nrv.getMediumSecretMkgKey().getKey());
+            throw new CloudproofException("Should not be able to decrypt");
         } catch (CloudproofException e) {
             // ... failing expected
         }
         nrv.getLowSecretMkgTestVector().decrypt(nrv.getMediumSecretMkgKey().getKey());
         try {
             nrv.getTopSecretMkgTestVector().decrypt(nrv.getMediumSecretMkgKey().getKey());
+            throw new CloudproofException("Should not be able to decrypt");
         } catch (CloudproofException e) {
             // ... failing expected
         }
+        System.out.println("... OK: " + filename);
     }
 
     /**

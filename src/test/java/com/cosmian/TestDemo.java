@@ -392,7 +392,9 @@ public class TestDemo {
 
         System.out.println(Policy.fromAttributes(publicKey.attributes()));
         System.out.println(Policy.fromAttributes(rekeyedPublicKey.attributes()));
-        // assert Arrays.equals(publicKey.bytes(), rekeyedPublicKey.bytes());
+        assert !Arrays.equals(publicKey.bytes(), rekeyedPublicKey.bytes());
+        assert !Policy.fromAttributes(publicKey.attributes()).equals(
+                Policy.fromAttributes(rekeyedPublicKey.attributes()));
 
         // Creating a new `confidential marketing` message
         byte[] confidentialMkgData = "confidentialMkgMessage".getBytes(StandardCharsets.UTF_8);

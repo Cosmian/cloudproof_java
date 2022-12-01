@@ -83,7 +83,7 @@ public final class Findex {
 
     public static void upsert(MasterKeys masterKeys, byte[] label, HashMap<IndexedValue, Word[]> indexedValuesAndWords,
         FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
-        throws CloudproofException, CloudproofException {
+        throws CloudproofException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -127,7 +127,7 @@ public final class Findex {
     public static void graph_upsert(MasterKeys masterKeys, byte[] label,
         HashMap<IndexedValue, Word[]> indexedValuesAndWords,
         FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain)
-        throws CloudproofException, CloudproofException {
+        throws CloudproofException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -170,7 +170,7 @@ public final class Findex {
 
     public static List<byte[]> search(byte[] keyK, byte[] label, Word[] words, int loopIterationLimit, int maxDepth,
         ProgressCallback progress, FetchEntryCallback fetchEntry, FetchChainCallback fetchChain)
-        throws CloudproofException, CloudproofException {
+        throws CloudproofException {
         //
         // Prepare outputs
         //
@@ -236,7 +236,7 @@ public final class Findex {
     public static void compact(int numberOfReindexingPhasesBeforeFullSet, MasterKeys masterKeys, byte[] label,
         FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
         UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations)
-        throws CloudproofException, CloudproofException {
+        throws CloudproofException {
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
 

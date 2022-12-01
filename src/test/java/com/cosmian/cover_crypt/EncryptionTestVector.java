@@ -46,7 +46,7 @@ public class EncryptionTestVector {
         out.ciphertext = coverCrypt.encrypt(policy, publicKey,
             encryptionPolicy,
             out.plaintext,
-            headerMetadata, authenticationData);
+            authenticationData, headerMetadata);
         out.headerMetadata = headerMetadata;
         out.authenticationData = authenticationData;
         out.encryptionPolicy = encryptionPolicy;

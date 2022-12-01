@@ -413,6 +413,7 @@ public class TestDemo {
         // Retrieving the rekeyed `confidential marketing user` decryption key
         PrivateKey rekeyedConfidentialMkgUserKey = kmsClient
                 .retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
+        assert !Arrays.equals(oldConfidentialMkgUserKey.bytes(), rekeyedConfidentialMkgUserKey.bytes());
 
         // Decrypting the "old" `protected marketing` message
         DecryptedData protectedMkg__ = coverCrypt.decrypt(
@@ -440,9 +441,10 @@ public class TestDemo {
 
         // Decrypting the "new" `confidential marketing` message with the old key fails
         try {
-            coverCrypt.decrypt(
+            DecryptedData confidentialMkg___ = coverCrypt.decrypt(
                     oldConfidentialMkgUserKey.bytes(),
                     confidentialMkgCT);
+            assert Arrays.equals(confidentialMkgData, confidentialMkg___.getPlaintext());
             throw new RuntimeException("the message should not be decrypted!");
         } catch (CloudproofException e) {
             // ==> fine, the user is not able to decrypt

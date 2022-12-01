@@ -109,7 +109,8 @@ public final class CoverCrypt {
      * @throws CloudproofException on Rust lib errors
      * @throws CloudproofException in case of other errors
      */
-    public int createEncryptionCache(Policy policy, byte[] publicKeyBytes)
+    public int createEncryptionCache(Policy policy,
+                                     byte[] publicKeyBytes)
         throws CloudproofException {
 
         // Policy
@@ -156,7 +157,8 @@ public final class CoverCrypt {
      * @throws CloudproofException in case the {@link Policy} and key bytes cannot be recovered from the
      *             {@link PublicKey}
      */
-    public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, String encryptionPolicy)
+    public EncryptedHeader encryptHeaderUsingCache(int cacheHandle,
+                                                   String encryptionPolicy)
         throws CloudproofException {
         return encryptHeaderUsingCache(cacheHandle, encryptionPolicy, Optional.empty(), Optional.empty());
     }
@@ -176,8 +178,10 @@ public final class CoverCrypt {
      * @throws CloudproofException in case the {@link Policy} and key bytes cannot be recovered from the
      *             {@link PublicKey}
      */
-    public EncryptedHeader encryptHeaderUsingCache(int cacheHandle, String encryptionPolicy,
-        Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
+    public EncryptedHeader encryptHeaderUsingCache(int cacheHandle,
+                                                   String encryptionPolicy,
+                                                   Optional<byte[]> additionalData,
+                                                   Optional<byte[]> authenticationData)
         throws CloudproofException {
         // Is a resource UID supplied
         int authenticationDataLength;
@@ -249,7 +253,8 @@ public final class CoverCrypt {
      * @throws CloudproofException in case the {@link Policy} and key bytes cannot be recovered from the
      *             {@link PublicKey}
      */
-    public EncryptedHeader encryptHeader(PublicKey publicKey, String encryptionPolicy)
+    public EncryptedHeader encryptHeader(PublicKey publicKey,
+                                         String encryptionPolicy)
         throws CloudproofException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
@@ -270,8 +275,10 @@ public final class CoverCrypt {
      * @throws CloudproofException in case the {@link Policy} and key bytes cannot be recovered from the
      *             {@link PublicKey}
      */
-    public EncryptedHeader encryptHeader(PublicKey publicKey, String encryptionPolicy,
-        Optional<byte[]> additionalData, Optional<byte[]> authenticationData)
+    public EncryptedHeader encryptHeader(PublicKey publicKey,
+                                         String encryptionPolicy,
+                                         Optional<byte[]> additionalData,
+                                         Optional<byte[]> authenticationData)
         throws CloudproofException {
         byte[] publicKeyBytes = publicKey.bytes();
         Policy policy = Policy.fromAttributes(publicKey.attributes());
@@ -288,7 +295,9 @@ public final class CoverCrypt {
      * @return the encrypted header, bytes and symmetric key
      * @throws CloudproofException in case of native library error
      */
-    public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, String encryptionPolicy)
+    public EncryptedHeader encryptHeader(Policy policy,
+                                         byte[] publicKeyBytes,
+                                         String encryptionPolicy)
         throws CloudproofException {
         return encryptHeader(policy, publicKeyBytes, encryptionPolicy, Optional.empty(), Optional.empty());
     }
@@ -307,8 +316,12 @@ public final class CoverCrypt {
      * @return the encrypted header, bytes and symmetric key
      * @throws CloudproofException in case of native library error
      */
-    public EncryptedHeader encryptHeader(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-        Optional<byte[]> additionalData, Optional<byte[]> authenticationData) throws CloudproofException {
+    public EncryptedHeader encryptHeader(Policy policy,
+                                         byte[] publicKeyBytes,
+                                         String encryptionPolicy,
+                                         Optional<byte[]> additionalData,
+                                         Optional<byte[]> authenticationData)
+        throws CloudproofException {
 
         // Is additional data supplied
         int additionalDataLength;
@@ -441,7 +454,8 @@ public final class CoverCrypt {
      * @throws CloudproofException in case of native library error
      * @throws CloudproofException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
-    public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes)
+    public DecryptedHeader decryptHeaderUsingCache(int cacheHandle,
+                                                   byte[] encryptedHeaderBytes)
         throws CloudproofException {
         return decryptHeaderUsingCache(cacheHandle, encryptedHeaderBytes, 0, Optional.empty());
     }
@@ -457,8 +471,11 @@ public final class CoverCrypt {
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws CloudproofException in case of native library error
      */
-    public DecryptedHeader decryptHeaderUsingCache(int cacheHandle, byte[] encryptedHeaderBytes,
-        int additionalDataLen, Optional<byte[]> authenticationData) throws CloudproofException {
+    public DecryptedHeader decryptHeaderUsingCache(int cacheHandle,
+                                                   byte[] encryptedHeaderBytes,
+                                                   int additionalDataLen,
+                                                   Optional<byte[]> authenticationData)
+        throws CloudproofException {
 
         // Symmetric Key OUT
         byte[] symmetricKeyBuffer = new byte[1024];
@@ -512,7 +529,8 @@ public final class CoverCrypt {
      * @throws CloudproofException in case of native library error
      * @throws CloudproofException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
-    public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes)
+    public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey,
+                                         byte[] encryptedHeaderBytes)
         throws CloudproofException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, 0, Optional.empty());
     }
@@ -528,8 +546,10 @@ public final class CoverCrypt {
      * @throws CloudproofException in case of native library error
      * @throws CloudproofException in case the key bytes cannot be recovered from the {@link PrivateKey}
      */
-    public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey, byte[] encryptedHeaderBytes,
-        int additionalDataLen, Optional<byte[]> authenticationData)
+    public DecryptedHeader decryptHeader(PrivateKey userDecryptionKey,
+                                         byte[] encryptedHeaderBytes,
+                                         int additionalDataLen,
+                                         Optional<byte[]> authenticationData)
         throws CloudproofException {
         return decryptHeader(userDecryptionKey.bytes(), encryptedHeaderBytes, additionalDataLen, authenticationData);
     }
@@ -542,7 +562,8 @@ public final class CoverCrypt {
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws CloudproofException in case of native library error
      */
-    public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes)
+    public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes,
+                                         byte[] encryptedHeaderBytes)
         throws CloudproofException {
         return decryptHeader(userDecryptionKeyBytes, encryptedHeaderBytes, 0, Optional.empty());
     }
@@ -557,8 +578,11 @@ public final class CoverCrypt {
      * @return The decrypted header: symmetric key, uid and additional data
      * @throws CloudproofException in case of native library error
      */
-    public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes, byte[] encryptedHeaderBytes,
-        int additionalDataLen, Optional<byte[]> authenticationData) throws CloudproofException {
+    public DecryptedHeader decryptHeader(byte[] userDecryptionKeyBytes,
+                                         byte[] encryptedHeaderBytes,
+                                         int additionalDataLen,
+                                         Optional<byte[]> authenticationData)
+        throws CloudproofException {
 
         // Symmetric Key OUT
         byte[] symmetricKeyBuffer = new byte[1024];
@@ -624,7 +648,9 @@ public final class CoverCrypt {
      * @return the encrypted block
      * @throws CloudproofException in case of native library error
      */
-    public byte[] encryptBlock(byte[] symmetricKey, byte[] clearText) throws CloudproofException {
+    public byte[] encryptBlock(byte[] symmetricKey,
+                               byte[] clearText)
+        throws CloudproofException {
         return encryptBlock(symmetricKey, new byte[] {}, clearText);
     }
 
@@ -638,7 +664,9 @@ public final class CoverCrypt {
      * @return the encrypted block
      * @throws CloudproofException in case of native library error
      */
-    public byte[] encryptBlock(byte[] symmetricKey, byte[] authenticationData, byte[] clearText)
+    public byte[] encryptBlock(byte[] symmetricKey,
+                               byte[] authenticationData,
+                               byte[] clearText)
         throws CloudproofException {
 
         // Ciphertext OUT
@@ -680,7 +708,9 @@ public final class CoverCrypt {
      * @return the clear text bytes
      * @throws CloudproofException in case of native library error
      */
-    public byte[] decryptBlock(byte[] symmetricKey, byte[] encryptedBytes) throws CloudproofException {
+    public byte[] decryptBlock(byte[] symmetricKey,
+                               byte[] encryptedBytes)
+        throws CloudproofException {
 
         return decryptBlock(symmetricKey, new byte[] {}, encryptedBytes);
     }
@@ -695,7 +725,9 @@ public final class CoverCrypt {
      * @return the clear text bytes
      * @throws CloudproofException in case of native library error
      */
-    public byte[] decryptBlock(byte[] symmetricKey, byte[] authenticationData, byte[] encryptedBytes)
+    public byte[] decryptBlock(byte[] symmetricKey,
+                               byte[] authenticationData,
+                               byte[] encryptedBytes)
         throws CloudproofException {
 
         // Clear Text Bytes OUT
@@ -779,7 +811,9 @@ public final class CoverCrypt {
      * @return the corresponding user private key
      * @throws CloudproofException in case of native library error
      */
-    public byte[] generateUserPrivateKey(byte[] masterPrivateKey, String booleanAccessPolicy, Policy policy)
+    public byte[] generateUserPrivateKey(byte[] masterPrivateKey,
+                                         String booleanAccessPolicy,
+                                         Policy policy)
         throws CloudproofException {
 
         String json = this.booleanAccessPolicyToJson(booleanAccessPolicy);
@@ -795,7 +829,9 @@ public final class CoverCrypt {
      * @return the corresponding user private key
      * @throws CloudproofException in case of native library error
      */
-    public byte[] generateUserPrivateKey(byte[] masterPrivateKey, AccessPolicy accessPolicy, Policy policy)
+    public byte[] generateUserPrivateKey(byte[] masterPrivateKey,
+                                         AccessPolicy accessPolicy,
+                                         Policy policy)
         throws CloudproofException {
 
         // Access Policy
@@ -819,7 +855,9 @@ public final class CoverCrypt {
      * @return the corresponding user private key
      * @throws CloudproofException in case of native library error
      */
-    byte[] generateUserPrivateKey_(byte[] masterPrivateKey, String accessPolicyJson, Policy policy)
+    byte[] generateUserPrivateKey_(byte[] masterPrivateKey,
+                                   String accessPolicyJson,
+                                   Policy policy)
         throws CloudproofException {
         // User private key Bytes OUT
         byte[] userPrivateKeyBuffer = new byte[8192];
@@ -863,7 +901,8 @@ public final class CoverCrypt {
      * @throws DatabindException standard databind exceptions
      * @throws StreamReadException stream read exceptions
      */
-    public Policy rotateAttributes(Attr[] attributes, Policy policy)
+    public Policy rotateAttributes(Attr[] attributes,
+                                   Policy policy)
         throws CloudproofException, StreamReadException, DatabindException, IOException {
         // New policy Bytes OUT
         byte[] policyBuffer = new byte[4096];
@@ -931,8 +970,11 @@ public final class CoverCrypt {
      * @return the ciphertext
      * @throws CloudproofException in case of native library error
      */
-    public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-        byte[] plaintext) throws CloudproofException {
+    public byte[] encrypt(Policy policy,
+                          byte[] publicKeyBytes,
+                          String encryptionPolicy,
+                          byte[] plaintext)
+        throws CloudproofException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.empty(),
             Optional.empty());
@@ -950,8 +992,12 @@ public final class CoverCrypt {
      * @return the ciphertext
      * @throws CloudproofException in case of native library error
      */
-    public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-        byte[] plaintext, byte[] authenticationData) throws CloudproofException {
+    public byte[] encrypt(Policy policy,
+                          byte[] publicKeyBytes,
+                          String encryptionPolicy,
+                          byte[] plaintext,
+                          byte[] authenticationData)
+        throws CloudproofException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.of(authenticationData),
             Optional.empty());
@@ -970,8 +1016,13 @@ public final class CoverCrypt {
      * @return the ciphertext
      * @throws CloudproofException in case of native library error
      */
-    public byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-        byte[] plaintext, byte[] authenticationData, byte[] headerMetadata) throws CloudproofException {
+    public byte[] encrypt(Policy policy,
+                          byte[] publicKeyBytes,
+                          String encryptionPolicy,
+                          byte[] plaintext,
+                          byte[] authenticationData,
+                          byte[] headerMetadata)
+        throws CloudproofException {
 
         return encrypt(policy, publicKeyBytes, encryptionPolicy, plaintext, Optional.of(
             authenticationData), Optional.of(headerMetadata));
@@ -991,9 +1042,12 @@ public final class CoverCrypt {
      * @return the ciphertext
      * @throws CloudproofException in case of native library error
      */
-    byte[] encrypt(Policy policy, byte[] publicKeyBytes, String encryptionPolicy,
-        byte[] plaintext, Optional<byte[]> authenticationData,
-        Optional<byte[]> headerMetadata)
+    byte[] encrypt(Policy policy,
+                   byte[] publicKeyBytes,
+                   String encryptionPolicy,
+                   byte[] plaintext,
+                   Optional<byte[]> authenticationData,
+                   Optional<byte[]> headerMetadata)
         throws CloudproofException {
 
         // Is additional data supplied
@@ -1070,7 +1124,9 @@ public final class CoverCrypt {
      * @return the {@link DecryptedData} containing the plaintext and optional header metadata
      * @throws CloudproofException in case of native library error
      */
-    public DecryptedData decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext) throws CloudproofException {
+    public DecryptedData decrypt(byte[] userDecryptionKeyBytes,
+                                 byte[] ciphertext)
+        throws CloudproofException {
         return decrypt(userDecryptionKeyBytes, ciphertext, Optional.empty());
     }
 
@@ -1083,8 +1139,10 @@ public final class CoverCrypt {
      * @return the {@link DecryptedData} containing the plaintext and optional header metadata
      * @throws CloudproofException in case of native library error
      */
-    public DecryptedData decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
-        byte[] authenticationData) throws CloudproofException {
+    public DecryptedData decrypt(byte[] userDecryptionKeyBytes,
+                                 byte[] ciphertext,
+                                 byte[] authenticationData)
+        throws CloudproofException {
         return decrypt(userDecryptionKeyBytes, ciphertext, Optional.of(authenticationData));
     }
 
@@ -1097,8 +1155,10 @@ public final class CoverCrypt {
      * @return the {@link DecryptedData} containing the plaintext and optional header metadata
      * @throws CloudproofException in case of native library error
      */
-    DecryptedData decrypt(byte[] userDecryptionKeyBytes, byte[] ciphertext,
-        Optional<byte[]> authenticationData) throws CloudproofException {
+    DecryptedData decrypt(byte[] userDecryptionKeyBytes,
+                          byte[] ciphertext,
+                          Optional<byte[]> authenticationData)
+        throws CloudproofException {
 
         // plaintext OUT
         byte[] plaintext = new byte[ciphertext.length]; // safe: plaintext should be smaller than cipher text

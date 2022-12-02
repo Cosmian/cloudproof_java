@@ -6,6 +6,7 @@ import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.jna.abe.CoverCrypt;
+import com.cosmian.jna.abe.MasterKeys;
 import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.data.DecryptedData;
@@ -75,23 +76,23 @@ public class TestDemo {
         // Change the Cosmian Server Server URL and API key as appropriate
         final KmsClient kmsClient = new KmsClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
 
-        // Direct access to the native library
+        // Direct access to the native library (used on attributes rotation below)
         final CoverCrypt coverCrypt = new CoverCrypt();
 
-        // Instantiate a policy; see comments in
+        // Instantiate a policy; see comments in the policy() method for details
         Policy policy = policy();
 
         String[] ids = kmsClient.createCoverCryptMasterKeyPair(policy);
         String privateMasterKeyUniqueIdentifier = ids[0];
         String publicMasterKeyUniqueIdentifier = ids[1];
 
+        // Master Keys can be exported from the KMS
         // export the private master key
-        PrivateKey privateMasterKey = kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyUniqueIdentifier);
-        byte[] _privateMasterKeyBytes = privateMasterKey.bytes();
-
+        // PrivateKey privateMasterKey = kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyUniqueIdentifier);
+        // byte[] _privateMasterKeyBytes = privateMasterKey.bytes();
         // export the public key
-        PublicKey publicKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
-        byte[] _publicKeyBytes = publicKey.bytes();
+        // PublicKey publicKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
+        // byte[] _publicKeyBytes = publicKey.bytes();
 
         byte[] protectedMkgData = "protectedMkgMessage".getBytes(StandardCharsets.UTF_8);
         String protectedMkgEncryptionPolicy = "Department::MKG && Security Level::Protected";
@@ -126,8 +127,9 @@ public class TestDemo {
 
         // as with the master keys, the user keys can be exported to be used with the
         // native library
-        PrivateKey confidentialMkgUserKey_ = kmsClient.retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
-        PrivateKey topSecretMkgFinUserKey = kmsClient.retrieveCoverCryptUserDecryptionKey(topSecretMkgFinUserKeyUid);
+        // PrivateKey confidentialMkgUserKey_ =
+        // kmsClient.retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
+        // PrivateKey topSecretMkgFinUserKey = kmsClient.retrieveCoverCryptUserDecryptionKey(topSecretMkgFinUserKeyUid);
 
         // The confidential marketing user can successfully decrypt a low-security
         // marketing message
@@ -231,6 +233,87 @@ public class TestDemo {
         } catch (CloudproofException e) {
             // ==> fine, the user is not able to decrypt
         }
+
+    }
+
+    @Test
+    public void testDemoNative() throws CloudproofException {
+
+        // Direct access to the native library
+        final CoverCrypt coverCrypt = new CoverCrypt();
+
+        // Instantiate a policy; see comments in the policy() method for details
+        Policy policy = policy();
+
+        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        byte[] privateMasterKeyBytes = masterKeys.getPrivateKey();
+        byte[] publicKeyBytes = masterKeys.getPublicKey();
+
+        byte[] protectedMkgData = "protectedMkgMessage".getBytes(StandardCharsets.UTF_8);
+        String protectedMkgEncryptionPolicy = "Department::MKG && Security Level::Protected";
+        byte[] protectedMkgCT = coverCrypt.encrypt(
+            policy,
+            publicKeyBytes,
+            protectedMkgEncryptionPolicy,
+            protectedMkgData);
+
+        byte[] topSecretMkgData = "topSecretMkgMessage".getBytes(StandardCharsets.UTF_8);
+        String topSecretMkgEncryptionPolicy = "Department::MKG && Security Level::Top Secret";
+        byte[] topSecretMkgCT = coverCrypt.encrypt(
+            policy,
+            publicKeyBytes,
+            topSecretMkgEncryptionPolicy,
+            topSecretMkgData);
+
+        byte[] protectedFinData = "protectedFinMessage".getBytes(StandardCharsets.UTF_8);
+        String protectedFinEncryptionPolicy = "Department::FIN && Security Level::Protected";
+        byte[] protectedFinCT = coverCrypt.encrypt(
+            policy,
+            publicKeyBytes,
+            protectedFinEncryptionPolicy,
+            protectedFinData);
+
+        // the confidential marketing use
+        byte[] confidentialMkgUserKey = coverCrypt.generateUserPrivateKey(
+            privateMasterKeyBytes,
+            "Department::MKG && Security Level::Confidential",
+            policy);
+
+        // the top secret marketing financial user
+        byte[] topSecretMkgFinUserKeyUid = coverCrypt.generateUserPrivateKey(
+            privateMasterKeyBytes,
+            "(Department::MKG || Department::FIN) && Security Level::Top Secret",
+            policy);
+
+        // The confidential marketing user can successfully decrypt a low-security marketing message
+        DecryptedData protectedMkg = coverCrypt.decrypt(confidentialMkgUserKey, protectedMkgCT);
+        assert Arrays.equals(protectedMkgData, protectedMkg.getPlaintext());
+
+        // ... however, it can neither decrypt a marketing message with higher security:
+        try {
+            coverCrypt.decrypt(confidentialMkgUserKey, topSecretMkgCT);
+            throw new RuntimeException("the message should not be decrypted!");
+        } catch (CloudproofException e) {
+            // ==> fine, the user is not able to decrypt
+        }
+
+        // ... nor decrypt a message from another department even with a lower security:
+        try {
+            coverCrypt.decrypt(confidentialMkgUserKey, protectedFinCT);
+            throw new RuntimeException("the message should not be decrypted!");
+        } catch (CloudproofException e) {
+            // ==> fine, the user is not able to decrypt
+        }
+
+        // As expected, the top-secret marketing financial user can successfully decrypt all messages
+        DecryptedData protectedMkg_ = coverCrypt.decrypt(topSecretMkgFinUserKeyUid, protectedMkgCT);
+        assert Arrays.equals(protectedMkgData, protectedMkg_.getPlaintext());
+
+        DecryptedData topSecretMkg = coverCrypt.decrypt(topSecretMkgFinUserKeyUid, topSecretMkgCT);
+        assert Arrays.equals(topSecretMkgData, topSecretMkg.getPlaintext());
+
+        DecryptedData protectedFin = coverCrypt.decrypt(topSecretMkgFinUserKeyUid, protectedFinCT);
+        assert Arrays.equals(protectedFinData, protectedFin.getPlaintext());
 
     }
 

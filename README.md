@@ -15,18 +15,20 @@ In summary, Cloudproof Encryption product secures data repositories in the cloud
 
 <!-- tocstop -->
 
+## Licensing
+
+The library is available under a dual licensing scheme Affero GPL/v3 and commercial. See [LICENSE.md](LICENSE.md) for details.
+
 ## Getting started
 
 Please [check the online documentation](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/) for details on using the CloudProof APIs
 
 In addition, please have a look at the following tests for implementation examples:
 
-- [TestCoverCrypt](./src/test/java/com/cosmian/TestCoverCrypt.java) for using the CoverCrypt scheme with Cosmian KMS
-- [TestFfiCoverCrypt](./src/test/java/com/cosmian/TestFfiCoverCrypt.java) for using the CoverCrypt scheme with the local native library
-- [TestGpsw](./src/test/java/com/cosmian/TestAbe.java) for using the ABE GPSW scheme with Cosmian KMS
-- [TestFfiGpsw](./src/test/java/com/cosmian/TestFfiAbe.java) for using the ABE GPSW scheme with the local native library
+- [TestCoverCrypt](./src/test/java/com/cosmian/TestKmsCoverCrypt.java) for using the CoverCrypt scheme with Cosmian KMS
+- [TestFfiCoverCrypt](./src/test/java/com/cosmian/TestNativeCoverCrypt.java) for using the CoverCrypt scheme with the local native library
 - [TestKmip](./src/test/java/com/cosmian/TestKmip.java) for using the KMIP 2.1 interface with the Cosmian KMS
-- [TestFfiFindex](./src/test/java/com/cosmian/TestFfiFindex.java) for using the SSE Findex scheme with the local native library
+- [TestFfiFindex](./src/test/java/com/cosmian/TestNativeFindex.java) for using the SSE Findex scheme with the local native library
 
 ## Using in Java projects
 
@@ -36,7 +38,7 @@ This library is free software and is available on Maven Central
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
 </dependency>
 ```
 
@@ -80,5 +82,3 @@ Those libraries must be found either in the classpath or in subfolders of `src/r
   - `win32-x86-64` for windows
 
 For tests, it is possible to override these libraries by placing them in the equivalent sub-folders of `src/test/resources`
-
-To update those native libraries, the script `src/test/resources/linux-x86-64/update_native_libraries.sh`

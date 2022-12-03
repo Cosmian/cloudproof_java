@@ -61,6 +61,9 @@ public class Leb128 {
      */
     public static byte[] readByteArray(InputStream is) throws IOException {
         long length = readU64(is);
+        if (length == 0) {
+            return new byte[] {};
+        }
         byte[] buffer = new byte[(int) length];
         int actualLength = is.read(buffer);
         if (actualLength != length) {

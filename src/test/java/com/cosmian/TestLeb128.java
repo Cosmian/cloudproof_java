@@ -22,9 +22,9 @@ public class TestLeb128 {
         // see Wikipedia https://en.wikipedia.org/wiki/LEB128
         final long canonicalVal = Long.parseUnsignedLong("10011000011101100101", 2); // new Random().nextLong();
         final byte[] canonicalLeb128 = new byte[] {
-            (byte) Integer.parseInt("11100101", 2),
-            (byte) Integer.parseInt("10001110", 2),
-            (byte) Integer.parseInt("00100110", 2)};
+                (byte) Integer.parseInt("11100101", 2),
+                (byte) Integer.parseInt("10001110", 2),
+                (byte) Integer.parseInt("00100110", 2) };
         // encode
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Leb128.writeU64(bos, canonicalVal);
@@ -68,6 +68,20 @@ public class TestLeb128 {
             byte[] buffer_ = Leb128.readByteArray(bis);
             assertArrayEquals(buffer, buffer_);
         }
+    }
+
+    @Test
+    public void testZeroLengthArray() throws Exception {
+        byte[] array = new byte[] {};
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        Leb128.writeArray(bos, array);
+        byte[] data = bos.toByteArray();
+        assertEquals(1, data.length);
+        //
+        ByteArrayInputStream bis = new ByteArrayInputStream(data);
+        byte[] array_ = Leb128.readByteArray(bis);
+        assertArrayEquals(array, array_);
+
     }
 
 }

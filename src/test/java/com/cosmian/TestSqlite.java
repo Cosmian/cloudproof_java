@@ -43,10 +43,10 @@ public class TestSqlite {
                 rand.nextBytes(valueBuffer);
                 if (i % 3 == 0) {
                     updatedValues.put(uid, new EntryTableValue(new byte[] {}, valueBuffer));
-                    System.out.println("o UID: " + uid.toString());
-                } else {
                     System.out.println("u UID: " + uid.toString());
+                } else {
                     originalValues.put(uid, new EntryTableValue(new byte[] {}, valueBuffer));
+                    System.out.println("o UID: " + uid.toString());
                 }
             }
 
@@ -54,7 +54,7 @@ public class TestSqlite {
             System.out.println("Updated  Values: " + updatedValues.size());
 
             // insert originals
-            Set<byte[]> fails = sqlite.databaseConditionalUpsert(originalValues, tableName);
+            Set<Uid> fails = sqlite.databaseConditionalUpsert(originalValues, tableName);
             assertEquals(0, fails.size());
 
             int numOverlapSuccess = rand.nextInt(NEW_TOTAL / 3);
@@ -72,7 +72,7 @@ public class TestSqlite {
                 } else if (++counterFail <= numOverlapFail) {
                     rand.nextBytes(valueBuffer);
                     updatedValues.put(entry.getKey(),
-                            new EntryTableValue(new byte[] { 'f', 'a', 'i', 'l' }, valueBuffer));
+                        new EntryTableValue(new byte[] {'f', 'a', 'i', 'l'}, valueBuffer));
                     System.out.println("FAIL -> " + entry.getKey().toString());
                 } else {
                     break;

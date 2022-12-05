@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.cosmian.CloudproofException;
+import com.cosmian.jna.findex.FindexWrapper.EntryTableValue;
 import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
@@ -65,7 +66,7 @@ public class Redis {
      * Instantiate a new Redis Client
      *
      * @param hostname the REST Server URL e.g. localhost
-     * @param port Sets a specified port value e.g 6379
+     * @param port     Sets a specified port value e.g 6379
      * @param password the authentication password or token
      */
     public Redis(String hostname, int port, String password) {
@@ -140,16 +141,16 @@ public class Redis {
     });
 
     public FetchAllEntry fetchAllEntry = new FetchAllEntry(
-        new com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface() {
-            @Override
-            public HashMap<byte[], byte[]> fetch() throws CloudproofException {
-                try {
-                    return getAllKeysAndValues(INDEX_TABLE_ENTRY_STORAGE);
-                } catch (CloudproofException e) {
-                    throw new CloudproofException("Failed fetch all entry: " + e.toString());
+            new com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface() {
+                @Override
+                public HashMap<byte[], byte[]> fetch() throws CloudproofException {
+                    try {
+                        return getAllKeysAndValues(INDEX_TABLE_ENTRY_STORAGE);
+                    } catch (CloudproofException e) {
+                        throw new CloudproofException("Failed fetch all entry: " + e.toString());
+                    }
                 }
-            }
-        });
+            });
 
     public UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FindexWrapper.UpsertEntryInterface() {
         @Override
@@ -159,6 +160,13 @@ public class Redis {
             } catch (CloudproofException e) {
                 throw new CloudproofException("Failed entry upsert: " + e.toString());
             }
+        }
+
+        @Override
+        public HashMap<byte[], byte[]> upsert(HashMap<byte[], EntryTableValue> uidsAndValues)
+                throws CloudproofException {
+            // TODO Auto-generated method stub
+            return null;
         }
     });
 
@@ -206,7 +214,7 @@ public class Redis {
     public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FindexWrapper.UpdateLinesInterface() {
         @Override
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
-            HashMap<byte[], byte[]> newChains) throws CloudproofException {
+                HashMap<byte[], byte[]> newChains) throws CloudproofException {
             try {
                 delAllEntries(INDEX_TABLE_ENTRY_STORAGE);
                 setEntries(newEntries);
@@ -219,23 +227,23 @@ public class Redis {
     });
 
     public ListRemovedLocations listRemovedLocations = new ListRemovedLocations(
-        new com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsInterface() {
-            @Override
-            public List<Location> list(List<Location> locations) throws CloudproofException {
-                List<Integer> ids = locations.stream()
-                    .map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
-                    .collect(Collectors.toList());
+            new com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsInterface() {
+                @Override
+                public List<Location> list(List<Location> locations) throws CloudproofException {
+                    List<Integer> ids = locations.stream()
+                            .map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
+                            .collect(Collectors.toList());
 
-                try {
-                    return listRemovedIds(ids).stream()
-                        .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
-                        .collect(Collectors.toList());
-                } catch (CloudproofException e) {
-                    throw new CloudproofException("Failed update lines: " + e.toString());
+                    try {
+                        return listRemovedIds(ids).stream()
+                                .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
+                                .collect(Collectors.toList());
+                    } catch (CloudproofException e) {
+                        throw new CloudproofException("Failed update lines: " + e.toString());
+                    }
+
                 }
-
-            }
-        });
+            });
 
     public Progress progress = new Progress(new com.cosmian.jna.findex.FindexWrapper.ProgressInterface() {
         @Override
@@ -274,7 +282,7 @@ public class Redis {
      *
      * @param prefix table prefix (can be 1, 2 or 3)
      * @param number the index of the table
-     * @param uid which is the UID of
+     * @param uid    which is the UID of
      * @return key as prefix|number on 4 bytes|uid
      */
     public static byte[] key(String prefix, int number, byte[] uid) {

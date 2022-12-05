@@ -14,14 +14,25 @@ import com.sun.jna.ptr.IntByReference;
  */
 public interface FindexWrapper extends Library {
 
+    class EntryTableValue {
+        public final byte[] previousValue;
+        public final byte[] newValue;
+
+        public EntryTableValue(byte[] previousValue, byte[] newValue) {
+            this.previousValue = previousValue;
+            this.newValue = newValue;
+        }
+    }
+
     int set_error(String errorMsg);
 
     int get_last_error(byte[] output, IntByReference outputSize);
 
     /* Internal callbacks FFI */
     interface FetchEntryCallback extends Callback {
-        int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength)
-            throws CloudproofException;
+        int apply(
+                Pointer output, IntByReference outputSize,
+                Pointer uidsPointer, int uidsLength) throws CloudproofException;
     }
 
     interface FetchAllEntryCallback extends Callback {
@@ -30,11 +41,13 @@ public interface FindexWrapper extends Library {
 
     interface FetchChainCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength)
-            throws CloudproofException;
+                throws CloudproofException;
     }
 
     interface UpsertEntryCallback extends Callback {
-        int apply(Pointer entries, int entriesLength) throws CloudproofException;
+        int apply(
+                Pointer entries, int entriesLength,
+                Pointer outputs, IntByReference outputsLength) throws CloudproofException;
     }
 
     interface UpsertChainCallback extends Callback {
@@ -43,17 +56,17 @@ public interface FindexWrapper extends Library {
 
     interface UpdateLinesCallback extends Callback {
         int apply(Pointer removedChains, int removedChainsLength, Pointer newEntries, int newEntriesLength,
-            Pointer newChains, int newChainsLength) throws CloudproofException;
+                Pointer newChains, int newChainsLength) throws CloudproofException;
     }
 
     interface ListRemovedLocationsCallback extends Callback {
         int apply(Pointer output, IntByReference outputSize, Pointer locations, int locationsLength)
-            throws CloudproofException;
+                throws CloudproofException;
     }
 
     interface ProgressCallback extends Callback {
         boolean apply(Pointer output, int outputSize)
-            throws CloudproofException;
+                throws CloudproofException;
     }
 
     /* Customer high-level callbacks */
@@ -70,7 +83,8 @@ public interface FindexWrapper extends Library {
     }
 
     interface UpsertEntryInterface {
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException;
+        public HashMap<byte[], byte[]> upsert(HashMap<byte[], EntryTableValue> uidsAndValues)
+                throws CloudproofException;
     }
 
     interface UpsertChainInterface {
@@ -79,7 +93,7 @@ public interface FindexWrapper extends Library {
 
     interface UpdateLinesInterface {
         public void update(List<byte[]> removedChains, HashMap<byte[], byte[]> newEntries,
-            HashMap<byte[], byte[]> newChains) throws CloudproofException;
+                HashMap<byte[], byte[]> newChains) throws CloudproofException;
     }
 
     interface ListRemovedLocationsInterface {
@@ -90,18 +104,23 @@ public interface FindexWrapper extends Library {
         public boolean list(List<byte[]> indexedValues) throws CloudproofException;
     }
 
-    int h_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,
-        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
+    int h_upsert(
+            Pointer masterKeyPointer, int masterKeySize,
+            Pointer labelPointer, int labelSize,
+            String dbUidsAndWordsJson,
+            FetchEntryCallback fetchEntry,
+            UpsertEntryCallback upsertEntry,
+            UpsertChainCallback upsertChain);
 
     int h_graph_upsert(String masterKeysJson, Pointer labelPointer, int labelSize, String dbUidsAndWordsJson,
-        FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
+            FetchEntryCallback fetchEntry, UpsertEntryCallback upsertEntry, UpsertChainCallback upsertChain);
 
     int h_compact(int numberOfReindexingPhasesBeforeFullSet, String masterKeysJson, Pointer labelPointer, int labelSize,
-        FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
-        UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations);
+            FetchEntryCallback fetchEntry, FetchChainCallback fetchChain, FetchAllEntryCallback fetchAllEntry,
+            UpdateLinesCallback updateLines, ListRemovedLocationsCallback listRemovedLocations);
 
     int h_search(byte[] dbUidsPtr, IntByReference dbUidsSize, Pointer keyKPointer, int keyKLength, Pointer labelPointer,
-        int labelSize, String words, int loopIterationLimit, int maxDepth, ProgressCallback progress,
-        FetchEntryCallback fetchEntry,
-        FetchChainCallback fetchChain);
+            int labelSize, String words, int loopIterationLimit, int maxDepth, ProgressCallback progress,
+            FetchEntryCallback fetchEntry,
+            FetchChainCallback fetchChain);
 }

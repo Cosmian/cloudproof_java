@@ -1,13 +1,14 @@
 package com.cosmian.jna.findex.Callbacks;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.FindexWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.FindexWrapper.FetchEntryInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
+import com.cosmian.jna.findex.Uid;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
@@ -19,7 +20,10 @@ public class FetchEntry implements FetchEntryCallback {
     }
 
     @Override
-    public int apply(Pointer output, IntByReference outputSize, Pointer uidsPointer, int uidsLength)
+    public int apply(Pointer output,
+                     IntByReference outputSize,
+                     Pointer uidsPointer,
+                     int uidsLength)
         throws CloudproofException {
         //
         // Read `uidsPointer` until `uidsLength`
@@ -30,12 +34,12 @@ public class FetchEntry implements FetchEntryCallback {
         //
         // Deserialize Entry Table uids
         //
-        List<byte[]> entryTableUids = Leb128Serializer.deserializeList(uids);
+        List<Uid> entryTableUids = Leb128Serializer.deserializeList(uids);
 
         //
         // Select uids and values in EntryTable
         //
-        HashMap<byte[], byte[]> uidsAndValues = this.fetch.fetch(entryTableUids);
+        Map<Uid, byte[]> uidsAndValues = this.fetch.fetch(entryTableUids);
 
         //
         // Serialize results

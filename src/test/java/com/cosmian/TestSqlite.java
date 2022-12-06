@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -45,10 +45,10 @@ public class TestSqlite {
                 rand.nextBytes(valueBuffer);
                 if (i % 3 == 0) {
                     updatedValues.put(uid,
-                            new EntryTableValue(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
+                        new EntryTableValue(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
                 } else {
                     originalValues.put(uid,
-                            new EntryTableValue(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
+                        new EntryTableValue(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
                 }
             }
 
@@ -56,8 +56,8 @@ public class TestSqlite {
             System.out.println(" .  Updated  Values: " + updatedValues.size());
 
             // insert originals
-            Set<Uid> fails = db.conditionalUpsert(originalValues, tableName);
-            assertEquals(0, fails.size());
+            Map<Uid, byte[]> failed = db.conditionalUpsert(originalValues, tableName);
+            assertEquals(0, failed.size());
 
             // the number of entries that should fail on update
             int numOverlapSuccess = rand.nextInt(NEW_TOTAL / 3);
@@ -76,15 +76,15 @@ public class TestSqlite {
                 } else if (++counterFail <= numOverlapFail) {
                     rand.nextBytes(valueBuffer);
                     updatedValues.put(entry.getKey(),
-                            new EntryTableValue(new byte[] { 'f', 'a', 'i', 'l' }, valueBuffer));
+                        new EntryTableValue(new byte[] {'f', 'a', 'i', 'l'}, valueBuffer));
                 } else {
                     break;
                 }
             }
 
             // insert updated
-            fails = db.conditionalUpsert(updatedValues, "test_table");
-            assertEquals(numOverlapFail, fails.size());
+            failed = db.conditionalUpsert(updatedValues, "test_table");
+            assertEquals(numOverlapFail, failed.size());
             System.out.println("<== success");
         }
 

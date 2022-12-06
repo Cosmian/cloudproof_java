@@ -1,69 +1,81 @@
 package com.cosmian.jna.findex;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Base64;
 
 import com.cosmian.CloudproofException;
+import com.cosmian.Leb128;
+import com.cosmian.jna.findex.Leb128Serializer.Leb128Serializable;
 
-public class IndexedValue {
+public class IndexedValue implements Leb128Serializable {
+
+    protected final byte LOCATION_BYTE = 'l';
+
+    protected final byte WORD_BYTE = 'w';
+
     private byte[] bytes;
 
-    public IndexedValue(byte[] bytes) throws CloudproofException {
+    protected IndexedValue() {
+        this.bytes = new byte[] {};
+    }
+
+    protected IndexedValue(byte[] bytes) {
         this.bytes = bytes;
-        if (bytes[0] != 108 && bytes[0] != 119) {
-            throw new CloudproofException("Indexed value must be prefixed by 'l' or 'w' in byte");
-        }
-    }
-
-    public IndexedValue() {
-    }
-
-    public IndexedValue(Location location) throws CloudproofException {
-        if (location == null) {
-            throw new CloudproofException("location is null");
-        }
-        byte[] locationBytes = location.getBytes();
-        byte[] prefix = {(byte) 108};
-        byte[] indexedValueBytes = Arrays.copyOf(prefix, locationBytes.length + 1);
-        System.arraycopy(locationBytes, 0, indexedValueBytes, 1, locationBytes.length);
-        this.bytes = indexedValueBytes;
-    }
-
-    public IndexedValue(Word word) throws CloudproofException {
-        if (word == null) {
-            throw new CloudproofException("word is null");
-        }
-        byte[] wordBytes = word.getBytes();
-        byte[] prefix = {(byte) 119};
-        byte[] indexedValueBytes = Arrays.copyOf(prefix, wordBytes.length + 1);
-        System.arraycopy(wordBytes, 0, indexedValueBytes, 1, wordBytes.length);
-        this.bytes = wordBytes;
     }
 
     public boolean isLocation() {
-        return this.bytes[0] == 108; // char 'l' is 108 is ascii
+        return this.bytes[0] == LOCATION_BYTE; // char 'l' is LOCATION_BYTE is ascii
     }
 
     public boolean isWord() {
-        return this.bytes[0] == 119; // char 'w' is 119 is ascii
+        return this.bytes[0] == WORD_BYTE; // char 'w' is WORD_BYTE is ascii
     }
 
     public Location getLocation() throws CloudproofException {
         if (isLocation()) {
-            // remove 'l' char
-            byte[] location = new byte[this.bytes.length - 1];
-            System.arraycopy(this.bytes, 1, location, 0, location.length);
-            return new Location(location);
+            return (Location) this;
         }
         throw new CloudproofException("IndexValue is not a location");
     }
 
     public Word getWord() throws CloudproofException {
         if (isWord()) {
-            // remove 'w' char
-            byte[] word = new byte[this.bytes.length - 1];
-            System.arraycopy(this.bytes, 1, word, 0, word.length);
-            return new Word(this.bytes);
+            return (Word) this;
         }
         throw new CloudproofException("IndexValue is not a word");
+    }
+
+    @Override
+    public String toString() {
+        return this.bytes[0] + ":"
+            + Base64.getEncoder().encodeToString(Arrays.copyOfRange(this.bytes, 1, this.bytes.length));
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out)
+        throws IOException {
+        Leb128.writeU64(out, this.bytes.length);
+        if (this.bytes.length > 0) {
+            out.write(this.bytes);
+        }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        int length = (int) Leb128.readU64(in);
+        if (length == 0) {
+            this.bytes = new byte[] {};
+        } else {
+            byte[] buffer = new byte[length];
+            int actual = in.read(buffer);
+            if (actual != length) {
+                throw new IOException("Invalid serialized Indexed Value");
+            }
+            this.bytes = buffer;
+        }
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return this.bytes.length == 0;
     }
 }

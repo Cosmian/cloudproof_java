@@ -2,9 +2,13 @@ package com.cosmian.jna.findex;
 
 import java.io.IOException;
 
-import com.cosmian.Leb128;
 import com.cosmian.jna.findex.Leb128Serializer.Leb128Serializable;
 
+/**
+ * A tuple holds a pair of
+ * {@link com.cosmian.jna.findex.Leb128Serializer.Leb128Serializable} values and
+ * is itself {@link com.cosmian.jna.findex.Leb128Serializer.Leb128Serializable}
+ */
 public class Tuple<LEFT extends Leb128Serializable, RIGHT extends Leb128Serializable> implements Leb128Serializable {
     private LEFT left;
 
@@ -15,7 +19,7 @@ public class Tuple<LEFT extends Leb128Serializable, RIGHT extends Leb128Serializ
     public Tuple(LEFT left, RIGHT right) {
         this.left = left;
         this.right = right;
-        this.empty = left.isEmpty() && right.isEmpty();
+        this.empty = false;
     }
 
     public LEFT getLeft() {
@@ -38,23 +42,29 @@ public class Tuple<LEFT extends Leb128Serializable, RIGHT extends Leb128Serializ
 
     private void writeObject(java.io.ObjectOutputStream out)
             throws IOException {
-        out.writeObject(this.left);
-        out.writeObject(this.right);
+        if (this.empty) {
+            out.write(0);
+        } else {
+            out.writeObject(this.left);
+            out.writeObject(this.right);
+        }
     }
 
     private void readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException {
-        int length = (int) Leb128.readU64(in);
-        if (length == 0) {
-            this.empty = true;
-        } else {
-            @SuppressWarnings("unchecked")
-            final LEFT left = (LEFT) in.readObject();
+        @SuppressWarnings("unchecked")
+        final LEFT left = (LEFT) in.readObject();
+        if (!left.isEmpty()) {
             @SuppressWarnings("unchecked")
             final RIGHT right = (RIGHT) in.readObject();
+            this.empty = false;
             this.left = left;
             this.right = right;
-            this.empty = left.isEmpty() && right.isEmpty();
+        } else {
+            this.empty = true;
+            // cleanup potential previous values
+            this.left = null;
+            this.right = null;
         }
     }
 

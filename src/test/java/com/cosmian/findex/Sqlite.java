@@ -19,8 +19,11 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import com.cosmian.CloudproofException;
+import com.cosmian.jna.findex.ChainTableValue;
+import com.cosmian.jna.findex.EntryTableValue;
 import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
+import com.cosmian.jna.findex.Tuple;
 import com.cosmian.jna.findex.Uid;
 import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
 import com.cosmian.jna.findex.Callbacks.FetchChain;
@@ -31,8 +34,6 @@ import com.cosmian.jna.findex.Callbacks.UpdateLines;
 import com.cosmian.jna.findex.Callbacks.UpsertChain;
 import com.cosmian.jna.findex.Callbacks.UpsertEntry;
 
-import redis.clients.jedis.resps.Tuple;
-
 public class Sqlite implements Closeable {
 
     private final Connection connection;
@@ -42,7 +43,7 @@ public class Sqlite implements Closeable {
     //
     public FetchEntry fetchEntry = new FetchEntry(new com.cosmian.jna.findex.FindexWrapper.FetchEntryInterface() {
         @Override
-        public Map<Uid, byte[]> fetch(List<Uid> uids) throws CloudproofException {
+        public Map<Uid, EntryTableValue> fetch(List<Uid> uids) throws CloudproofException {
             try {
                 return fetchEntryTableItems(uids);
             } catch (SQLException e) {
@@ -54,7 +55,7 @@ public class Sqlite implements Closeable {
     public FetchAllEntry fetchAllEntry = new FetchAllEntry(
             new com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface() {
                 @Override
-                public Map<Uid, byte[]> fetch() throws CloudproofException {
+                public Map<Uid, EntryTableValue> fetch() throws CloudproofException {
                     try {
                         return fetchAllEntryTableItems();
                     } catch (SQLException e) {
@@ -65,7 +66,7 @@ public class Sqlite implements Closeable {
 
     public FetchChain fetchChain = new FetchChain(new com.cosmian.jna.findex.FindexWrapper.FetchChainInterface() {
         @Override
-        public Map<Uid, byte[]> fetch(List<Uid> uids) throws CloudproofException {
+        public Map<Uid, ChainTableValue> fetch(List<Uid> uids) throws CloudproofException {
             try {
                 return fetchChainTableItems(uids);
             } catch (SQLException e) {
@@ -86,7 +87,8 @@ public class Sqlite implements Closeable {
         // }
 
         @Override
-        public Map<Uid, byte[]> upsert(Map<Uid, Tuple> uidsAndValues)
+        public Map<Uid, EntryTableValue> upsert(
+                Map<Uid, Tuple<EntryTableValue, EntryTableValue>> uidsAndValues)
                 throws CloudproofException {
             // TODO Auto-generated method stub
             return null;
@@ -95,7 +97,7 @@ public class Sqlite implements Closeable {
 
     public UpsertChain upsertChain = new UpsertChain(new com.cosmian.jna.findex.FindexWrapper.UpsertChainInterface() {
         @Override
-        public void upsert(Map<Uid, byte[]> uidsAndValues) throws CloudproofException {
+        public void upsert(Map<Uid, ChainTableValue> uidsAndValues) throws CloudproofException {
             try {
                 Sqlite.this.upsert(uidsAndValues, "chain_table");
             } catch (SQLException e) {
@@ -107,8 +109,8 @@ public class Sqlite implements Closeable {
     public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FindexWrapper.UpdateLinesInterface() {
         @Override
         public void update(List<Uid> removedChains,
-                Map<Uid, byte[]> newEntries,
-                Map<Uid, byte[]> newChains)
+                Map<Uid, EntryTableValue> newEntries,
+                Map<Uid, ChainTableValue> newChains)
                 throws CloudproofException {
             try {
                 truncate("entry_table");
@@ -257,7 +259,7 @@ public class Sqlite implements Closeable {
         // result.length);
     }
 
-    public Map<Uid, byte[]> conditionalUpsert(Map<Uid, Tuple> uidsAndValues,
+    public Map<Uid, byte[]> conditionalUpsert(Map<Uid, Tuple<EntryTableValue, EntryTableValue>> uidsAndValues,
             String tableName)
             throws SQLException {
         if (uidsAndValues.size() == 0) {
@@ -268,13 +270,13 @@ public class Sqlite implements Closeable {
                         + "(uid, value) VALUES(?,?) ON CONFLICT(uid) DO UPDATE SET value=? WHERE value=?;");
         // this.connection.setAutoCommit(false);
         ArrayList<Uid> uids = new ArrayList<>(uidsAndValues.size());
-        for (Entry<Uid, Tuple> entry : uidsAndValues.entrySet()) {
+        for (Entry<Uid, Tuple<EntryTableValue, EntryTableValue>> entry : uidsAndValues.entrySet()) {
             Uid uid = entry.getKey();
             uids.add(uid);
             updatePreparedStatement.setBytes(1, uid.getBytes());
-            updatePreparedStatement.setBytes(2, entry.getValue().newValue);
-            updatePreparedStatement.setBytes(3, entry.getValue().newValue);
-            updatePreparedStatement.setBytes(4, entry.getValue().previousValue);
+            updatePreparedStatement.setBytes(2, entry.getValue().getRight().getBytes());
+            updatePreparedStatement.setBytes(3, entry.getValue().getRight().getBytes());
+            updatePreparedStatement.setBytes(4, entry.getValue().getLeft().getBytes());
             updatePreparedStatement.addBatch();
         }
         // this.connection.commit();

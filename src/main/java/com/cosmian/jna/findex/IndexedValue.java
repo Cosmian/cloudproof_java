@@ -5,10 +5,10 @@ import java.util.Arrays;
 import org.apache.commons.codec.binary.Hex;
 
 import com.cosmian.CloudproofException;
+import com.cosmian.jna.findex.serde.Leb128ByteArray;
 
 /**
- * An Indexed Value is either a Location or a (next) word
- * It is the plaintext entry of the Chain table
+ * An Indexed Value is either a Location or a (next) word It is the plaintext entry of the Chain table
  */
 public class IndexedValue extends Leb128ByteArray {
 
@@ -45,7 +45,7 @@ public class IndexedValue extends Leb128ByteArray {
     @Override
     public String toString() {
         return this.bytes[0] + ":"
-                + Hex.encodeHexString(Arrays.copyOfRange(this.bytes, 1, this.bytes.length));
+            + Hex.encodeHexString(Arrays.copyOfRange(this.bytes, 1, this.bytes.length));
     }
 
 }

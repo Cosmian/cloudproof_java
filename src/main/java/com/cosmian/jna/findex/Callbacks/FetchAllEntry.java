@@ -9,8 +9,8 @@ import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.EntryTableValue;
 import com.cosmian.jna.findex.FindexWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface;
-import com.cosmian.jna.findex.Leb128Serializer;
 import com.cosmian.jna.findex.Uid;
+import com.cosmian.jna.findex.serde.Leb128CollectionsSerializer;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
@@ -26,9 +26,9 @@ public class FetchAllEntry implements FetchAllEntryCallback {
 
     @Override
     public int apply(Pointer output,
-            IntByReference outputSize,
-            int numberOfEntries)
-            throws CloudproofException {
+                     IntByReference outputSize,
+                     int numberOfEntries)
+        throws CloudproofException {
         if (entrySetIterator == null) {
             entrySetIterator = this.fetch.fetch().entrySet().iterator();
         }
@@ -39,7 +39,7 @@ public class FetchAllEntry implements FetchAllEntryCallback {
         }
 
         if (chunk.size() > 0) {
-            byte[] uidsAndValuesBytes = Leb128Serializer.serializeEntrySet(chunk);
+            byte[] uidsAndValuesBytes = Leb128CollectionsSerializer.serializeEntrySet(chunk);
             output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
             outputSize.setValue(uidsAndValuesBytes.length);
         } else {

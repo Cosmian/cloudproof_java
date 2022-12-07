@@ -7,9 +7,9 @@ import com.cosmian.jna.findex.EntryTableValue;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.FindexWrapper.UpsertEntryCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpsertEntryInterface;
-import com.cosmian.jna.findex.Leb128Serializer;
-import com.cosmian.jna.findex.Tuple;
 import com.cosmian.jna.findex.Uid;
+import com.cosmian.jna.findex.serde.Leb128CollectionsSerializer;
+import com.cosmian.jna.findex.serde.Tuple;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
@@ -23,17 +23,18 @@ public class UpsertEntry implements UpsertEntryCallback {
 
     @Override
     public int apply(Pointer entries,
-            int entriesLength,
-            Pointer outputs,
-            IntByReference outputsLength)
-            throws CloudproofException {
+                     int entriesLength,
+                     Pointer outputs,
+                     IntByReference outputsLength)
+        throws CloudproofException {
         //
         // Read `entries` until `itemsLength`
         //
         byte[] entriesBytes = new byte[entriesLength];
         entries.read(0, entriesBytes, 0, entriesLength);
 
-        Map<Uid, Tuple<EntryTableValue, EntryTableValue>> map = Leb128Serializer.deserializeMap(entriesBytes);
+        Map<Uid, Tuple<EntryTableValue, EntryTableValue>> map =
+            Leb128CollectionsSerializer.deserializeMap(entriesBytes);
 
         Map<Uid, EntryTableValue> failedEntries = upsert.upsert(map);
         return Findex.mapToOutputPointer(failedEntries, outputs, outputsLength);

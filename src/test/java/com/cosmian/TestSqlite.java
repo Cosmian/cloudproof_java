@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 
 import com.cosmian.findex.Sqlite;
 import com.cosmian.jna.findex.EntryTableValue;
-import com.cosmian.jna.findex.Tuple;
 import com.cosmian.jna.findex.Uid;
+import com.cosmian.jna.findex.serde.Tuple;
 
 public class TestSqlite {
 

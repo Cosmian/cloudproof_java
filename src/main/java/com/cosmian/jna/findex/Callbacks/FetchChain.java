@@ -8,8 +8,8 @@ import com.cosmian.jna.findex.ChainTableValue;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.FindexWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.FindexWrapper.FetchChainInterface;
-import com.cosmian.jna.findex.Leb128Serializer;
 import com.cosmian.jna.findex.Uid;
+import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
@@ -23,10 +23,10 @@ public class FetchChain implements FetchChainCallback {
 
     @Override
     public int apply(Pointer output,
-            IntByReference outputSize,
-            Pointer uidsPointer,
-            int uidsLength)
-            throws CloudproofException {
+                     IntByReference outputSize,
+                     Pointer uidsPointer,
+                     int uidsLength)
+        throws CloudproofException {
         //
         // Read `uidsPointer` until `uidsLength`
         //
@@ -36,7 +36,7 @@ public class FetchChain implements FetchChainCallback {
         //
         // Deserialize Chain Table uids
         //
-        List<Uid> chainTableUids = Leb128Serializer.deserializeList(uids);
+        List<Uid> chainTableUids = Leb128Reader.deserializeList(Uid.class, uids);
 
         //
         // Select uid and value in ChainTable

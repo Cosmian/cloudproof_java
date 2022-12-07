@@ -8,8 +8,8 @@ import com.cosmian.jna.findex.EntryTableValue;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.FindexWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.FindexWrapper.FetchEntryInterface;
-import com.cosmian.jna.findex.Leb128Serializer;
 import com.cosmian.jna.findex.Uid;
+import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
@@ -22,10 +22,10 @@ public class FetchEntry implements FetchEntryCallback {
 
     @Override
     public int apply(Pointer output,
-            IntByReference outputSize,
-            Pointer uidsPointer,
-            int uidsLength)
-            throws CloudproofException {
+                     IntByReference outputSize,
+                     Pointer uidsPointer,
+                     int uidsLength)
+        throws CloudproofException {
         //
         // Read `uidsPointer` until `uidsLength`
         //
@@ -35,7 +35,7 @@ public class FetchEntry implements FetchEntryCallback {
         //
         // Deserialize Entry Table uids
         //
-        List<Uid> entryTableUids = Leb128Serializer.deserializeList(uids);
+        List<Uid> entryTableUids = Leb128Reader.deserializeList(Uid.class, uids);
 
         //
         // Select uids and values in EntryTable

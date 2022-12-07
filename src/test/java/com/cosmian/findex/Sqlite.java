@@ -22,9 +22,7 @@ import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.ChainTableValue;
 import com.cosmian.jna.findex.EntryTableValue;
 import com.cosmian.jna.findex.IndexedValue;
-import com.cosmian.jna.findex.Leb128ByteArray;
 import com.cosmian.jna.findex.Location;
-import com.cosmian.jna.findex.Tuple;
 import com.cosmian.jna.findex.Uid;
 import com.cosmian.jna.findex.Callbacks.FetchAllEntry;
 import com.cosmian.jna.findex.Callbacks.FetchChain;
@@ -34,6 +32,8 @@ import com.cosmian.jna.findex.Callbacks.Progress;
 import com.cosmian.jna.findex.Callbacks.UpdateLines;
 import com.cosmian.jna.findex.Callbacks.UpsertChain;
 import com.cosmian.jna.findex.Callbacks.UpsertEntry;
+import com.cosmian.jna.findex.serde.Leb128ByteArray;
+import com.cosmian.jna.findex.serde.Tuple;
 
 public class Sqlite implements Closeable {
 

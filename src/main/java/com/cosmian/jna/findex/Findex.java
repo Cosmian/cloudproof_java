@@ -17,7 +17,9 @@ import com.cosmian.jna.findex.FindexWrapper.ProgressCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpdateLinesCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpsertEntryCallback;
-import com.cosmian.jna.findex.Leb128Serializer.Leb128Serializable;
+import com.cosmian.jna.findex.serde.Leb128CollectionsSerializer;
+import com.cosmian.jna.findex.serde.Leb128Reader;
+import com.cosmian.jna.findex.serde.Leb128Serializable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
@@ -69,26 +71,25 @@ public final class Findex {
     }
 
     /**
-     * Serialize a map to a memory location specified by the Pointer; set its actual
-     * size in the pointed int.
+     * Serialize a map to a memory location specified by the Pointer; set its actual size in the pointed int.
      * 
-     * @param <K>        the map key type. Must be
-     *                   {@link com.cosmian.jna.findex.Leb128Serializer.Leb128Serializable}
-     * @param <V>        the map value type. Must be
-     *                   {@link com.cosmian.jna.findex.Leb128Serializer.Leb128Serializable}
-     * @param map        the map to serialize and export
-     * @param output     the output Pointer
+     * @param <K> the map key type. Must be
+     *            {@link com.cosmian.jna.findex.serde.Leb128CollectionsSerializer.Leb128Serializable}
+     * @param <V> the map value type. Must be
+     *            {@link com.cosmian.jna.findex.serde.Leb128CollectionsSerializer.Leb128Serializable}
+     * @param map the map to serialize and export
+     * @param output the output Pointer
      * @param outputSize the output byte size
-     * @return 0 on success, 1 if the pre-allocated memory is too small. The
-     *         outputSized contains the required size to hold the map.
+     * @return 0 on success, 1 if the pre-allocated memory is too small. The outputSized contains the required size to
+     *         hold the map.
      * @throws CloudproofException
      */
-    public static <K extends Leb128Serializable, V extends Leb128Serializable> int mapToOutputPointer(Map<K, V> map,
-            Pointer output,
-            IntByReference outputSize)
-            throws CloudproofException {
+    public static <K extends com.cosmian.jna.findex.serde.Leb128Serializable, V extends Leb128Serializable> int mapToOutputPointer(Map<K, V> map,
+                                                                                                                                   Pointer output,
+                                                                                                                                   IntByReference outputSize)
+        throws CloudproofException {
         if (map.size() > 0) {
-            byte[] uidsAndValuesBytes = Leb128Serializer.serializeMap(map);
+            byte[] uidsAndValuesBytes = Leb128CollectionsSerializer.serializeMap(map);
             if (outputSize.getValue() < uidsAndValuesBytes.length) {
                 outputSize.setValue(uidsAndValuesBytes.length);
                 return 1;
@@ -102,20 +103,20 @@ public final class Findex {
     }
 
     public static void upsert(
-            byte[] key,
-            byte[] label,
-            HashMap<IndexedValue, Word[]> indexedValuesAndWords,
-            FetchEntryCallback fetchEntry,
-            UpsertEntryCallback upsertEntry,
-            UpsertChainCallback upsertChain)
-            throws CloudproofException {
+                              byte[] key,
+                              byte[] label,
+                              HashMap<IndexedValue, Word[]> indexedValuesAndWords,
+                              FetchEntryCallback fetchEntry,
+                              UpsertEntryCallback upsertEntry,
+                              UpsertChainCallback upsertChain)
+        throws CloudproofException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
 
         try (
-                final Memory keyPointer = new Memory(key.length);
-                final Memory labelPointer = new Memory(label.length)) {
+            final Memory keyPointer = new Memory(key.length);
+            final Memory labelPointer = new Memory(label.length)) {
             keyPointer.write(0, key, 0, key.length);
             labelPointer.write(0, label, 0, label.length);
 
@@ -139,22 +140,22 @@ public final class Findex {
 
             // Indexes creation + insertion/update
             unwrap(Findex.INSTANCE.h_upsert(
-                    keyPointer, key.length,
-                    labelPointer, label.length,
-                    indexedValuesAndWordsJson,
-                    fetchEntry,
-                    upsertEntry,
-                    upsertChain));
+                keyPointer, key.length,
+                labelPointer, label.length,
+                indexedValuesAndWordsJson,
+                fetchEntry,
+                upsertEntry,
+                upsertChain));
         }
     }
 
     public static void graph_upsert(MasterKeys masterKeys,
-            byte[] label,
-            HashMap<IndexedValue, Word[]> indexedValuesAndWords,
-            FetchEntryCallback fetchEntry,
-            UpsertEntryCallback upsertEntry,
-            UpsertChainCallback upsertChain)
-            throws CloudproofException {
+                                    byte[] label,
+                                    HashMap<IndexedValue, Word[]> indexedValuesAndWords,
+                                    FetchEntryCallback fetchEntry,
+                                    UpsertEntryCallback upsertEntry,
+                                    UpsertChainCallback upsertChain)
+        throws CloudproofException {
 
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -190,20 +191,20 @@ public final class Findex {
 
             // Indexes creation + insertion/update
             unwrap(Findex.INSTANCE.h_graph_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
-                    fetchEntry,
-                    upsertEntry, upsertChain));
+                fetchEntry,
+                upsertEntry, upsertChain));
         }
     }
 
     public static List<IndexedValue> search(byte[] keyK,
-            byte[] label,
-            Word[] words,
-            int loopIterationLimit,
-            int maxDepth,
-            ProgressCallback progress,
-            FetchEntryCallback fetchEntry,
-            FetchChainCallback fetchChain)
-            throws CloudproofException {
+                                            byte[] label,
+                                            Word[] words,
+                                            int loopIterationLimit,
+                                            int maxDepth,
+                                            ProgressCallback progress,
+                                            FetchEntryCallback fetchEntry,
+                                            FetchChainCallback fetchChain)
+        throws CloudproofException {
         //
         // Prepare outputs
         //
@@ -220,7 +221,7 @@ public final class Findex {
             throw new CloudproofException("Key k cannot be null");
         }
         try (final Memory keyKeyPointer = new Memory(keyK.length);
-                final Memory labelPointer = new Memory(label.length)) {
+            final Memory labelPointer = new Memory(label.length)) {
             keyKeyPointer.write(0, keyK, 0, keyK.length);
 
             labelPointer.write(0, label, 0, label.length);
@@ -240,16 +241,16 @@ public final class Findex {
 
             // Indexes creation + insertion/update
             int ffiCode = Findex.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer,
-                    keyK.length,
-                    labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry,
-                    fetchChain);
+                keyK.length,
+                labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry,
+                fetchChain);
             if (ffiCode != 0) {
                 // Retry with correct allocated size
                 indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
                 ffiCode = Findex.INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize, keyKeyPointer,
-                        keyK.length,
-                        labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry,
-                        fetchChain);
+                    keyK.length,
+                    labelPointer, label.length, wordsJson, loopIterationLimit, maxDepth, progress, fetchEntry,
+                    fetchChain);
                 if (ffiCode != 0) {
                     throw new CloudproofException(get_last_error(4095));
                 }
@@ -257,7 +258,7 @@ public final class Findex {
 
             byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
 
-            return Leb128Serializer.deserializeList(indexedValuesBytes);
+            return Leb128Reader.deserializeList(IndexedValue.class, indexedValuesBytes);
         }
     }
 
@@ -267,14 +268,14 @@ public final class Findex {
     /// indexes were checked
     /// (see the coupon problem to understand why it's not 100% sure)
     public static void compact(int numberOfReindexingPhasesBeforeFullSet,
-            MasterKeys masterKeys,
-            byte[] label,
-            FetchEntryCallback fetchEntry,
-            FetchChainCallback fetchChain,
-            FetchAllEntryCallback fetchAllEntry,
-            UpdateLinesCallback updateLines,
-            ListRemovedLocationsCallback listRemovedLocations)
-            throws CloudproofException {
+                               MasterKeys masterKeys,
+                               byte[] label,
+                               FetchEntryCallback fetchEntry,
+                               FetchChainCallback fetchChain,
+                               FetchAllEntryCallback fetchAllEntry,
+                               UpdateLinesCallback updateLines,
+                               ListRemovedLocationsCallback listRemovedLocations)
+        throws CloudproofException {
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
 
@@ -291,13 +292,12 @@ public final class Findex {
 
         // Indexes creation + insertion/update
         unwrap(Findex.INSTANCE.h_compact(numberOfReindexingPhasesBeforeFullSet, masterKeysJson, labelPointer,
-                label.length,
-                fetchEntry, fetchChain, fetchAllEntry, updateLines, listRemovedLocations));
+            label.length,
+            fetchEntry, fetchChain, fetchAllEntry, updateLines, listRemovedLocations));
     }
 
     /**
-     * If the result of the last FFI call is in Error, recover the last error from
-     * the native code and throw an
+     * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
      * exception wrapping it.
      *
      * @param result the result of the FFI call

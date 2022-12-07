@@ -6,7 +6,7 @@ import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.FindexWrapper.ProgressCallback;
 import com.cosmian.jna.findex.FindexWrapper.ProgressInterface;
 import com.cosmian.jna.findex.IndexedValue;
-import com.cosmian.jna.findex.Leb128Serializer;
+import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.sun.jna.Pointer;
 
 public class Progress implements ProgressCallback {
@@ -29,7 +29,7 @@ public class Progress implements ProgressCallback {
         //
         // Deserialize search results
         //
-        List<IndexedValue> indexedValues = Leb128Serializer.deserializeList(serializedSearchResults);
+        List<IndexedValue> indexedValues = Leb128Reader.deserializeList(IndexedValue.class, serializedSearchResults);
 
         //
         // Convert to Indexed Values list

@@ -6,8 +6,8 @@ import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.ChainTableValue;
 import com.cosmian.jna.findex.FindexWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpsertChainInterface;
-import com.cosmian.jna.findex.Leb128Serializer;
 import com.cosmian.jna.findex.Uid;
+import com.cosmian.jna.findex.serde.Leb128CollectionsSerializer;
 import com.sun.jna.Pointer;
 
 public class UpsertChain implements UpsertChainCallback {
@@ -19,7 +19,9 @@ public class UpsertChain implements UpsertChainCallback {
     }
 
     @Override
-    public int apply(Pointer items, int itemsLength) throws CloudproofException {
+    public int apply(Pointer items,
+                     int itemsLength)
+        throws CloudproofException {
         //
         // Read `items` until `itemsLength`
         //
@@ -29,7 +31,7 @@ public class UpsertChain implements UpsertChainCallback {
         //
         // Deserialize the chain table items
         //
-        Map<Uid, ChainTableValue> uidsAndValues = Leb128Serializer.deserializeMap(itemsBytes);
+        Map<Uid, ChainTableValue> uidsAndValues = Leb128CollectionsSerializer.deserializeMap(itemsBytes);
 
         //
         // Insert in database

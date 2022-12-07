@@ -11,7 +11,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.jna.findex.EntryTableValue;
-import com.cosmian.jna.findex.Leb128Serializer;
+import com.cosmian.jna.findex.serde.Leb128CollectionsSerializer;
 
 public class TestSerializer {
 
@@ -30,8 +30,8 @@ public class TestSerializer {
             list.add(etv);
         }
 
-        byte[] serialized = Leb128Serializer.serializeList(list);
-        List<EntryTableValue> list_ = Leb128Serializer.deserializeList(serialized);
+        byte[] serialized = Leb128CollectionsSerializer.writeList(list);
+        List<EntryTableValue> list_ = Leb128CollectionsSerializer.deserializeList(serialized);
 
         assertEquals(list.size(), list_.size());
         for (EntryTableValue etv : list) {

@@ -13,9 +13,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.findex.Sqlite;
+import com.cosmian.jna.findex.EntryTableValue;
+import com.cosmian.jna.findex.Tuple;
 import com.cosmian.jna.findex.Uid;
-
-import redis.clients.jedis.resps.Tuple;
 
 public class TestSqlite {
 
@@ -38,18 +38,19 @@ public class TestSqlite {
             byte[] uidBuffer = new byte[32];
             byte[] valueBuffer = new byte[64];
             int NEW_TOTAL = 999;
-            HashMap<Uid, Tuple> originalValues = new HashMap<>();
-            HashMap<Uid, Tuple> updatedValues = new HashMap<>();
+            HashMap<Uid, Tuple<EntryTableValue, EntryTableValue>> originalValues = new HashMap<>();
+            HashMap<Uid, Tuple<EntryTableValue, EntryTableValue>> updatedValues = new HashMap<>();
             for (int i = 0; i < NEW_TOTAL; i++) {
                 rand.nextBytes(uidBuffer);
                 Uid uid = new Uid(Arrays.copyOf(uidBuffer, uidBuffer.length));
                 rand.nextBytes(valueBuffer);
+                Tuple<EntryTableValue, EntryTableValue> tuple = new Tuple<>(
+                    new EntryTableValue(new byte[] {}),
+                    new EntryTableValue(Arrays.copyOf(valueBuffer, valueBuffer.length)));
                 if (i % 3 == 0) {
-                    updatedValues.put(uid,
-                            new Tuple(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
+                    updatedValues.put(uid, tuple);
                 } else {
-                    originalValues.put(uid,
-                            new Tuple(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
+                    originalValues.put(uid, tuple);
                 }
             }
 
@@ -70,14 +71,18 @@ public class TestSqlite {
 
             int counterSuccess = 0;
             int counterFail = 0;
-            for (Entry<Uid, Tuple> entry : originalValues.entrySet()) {
+            for (Entry<Uid, Tuple<EntryTableValue, EntryTableValue>> entry : originalValues.entrySet()) {
+                rand.nextBytes(valueBuffer);
+                EntryTableValue newValue = new EntryTableValue(Arrays.copyOf(valueBuffer, valueBuffer.length));
                 if (++counterSuccess <= numOverlapSuccess) {
-                    rand.nextBytes(valueBuffer);
-                    updatedValues.put(entry.getKey(), new Tuple(entry.getValue().newValue, valueBuffer));
+                    updatedValues.put(
+                        entry.getKey(),
+                        new Tuple<>(entry.getValue().getRight(), newValue));
                 } else if (++counterFail <= numOverlapFail) {
-                    rand.nextBytes(valueBuffer);
-                    updatedValues.put(entry.getKey(),
-                            new Tuple(new byte[] { 'f', 'a', 'i', 'l' }, valueBuffer));
+                    updatedValues.put(
+                        entry.getKey(),
+                        new Tuple<>(
+                            new EntryTableValue(new byte[] {'f', 'a', 'i', 'l'}), newValue));
                 } else {
                     break;
                 }
@@ -86,6 +91,10 @@ public class TestSqlite {
             // insert updated
             failed = db.conditionalUpsert(updatedValues, "test_table");
             assertEquals(numOverlapFail, failed.size());
+
+            // cleanup
+            stat.execute("DROP TABLE IF EXISTS " + tableName + ";");
+
             System.out.println("<== success");
         }
 

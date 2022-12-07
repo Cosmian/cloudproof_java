@@ -58,8 +58,8 @@ public class TestNativeFindex {
         //
         ObjectMapper mapper = new ObjectMapper();
         String expectedSearchResultsInt = Resources.load_resource("findex/expected_db_uids.json");
-        int[] expectedDbUids = mapper.readValue(expectedSearchResultsInt, int[].class);
-        Arrays.sort(expectedDbUids);
+        int[] expectedDbLocations = mapper.readValue(expectedSearchResultsInt, int[].class);
+        Arrays.sort(expectedDbLocations);
 
         //
         // Build dataset with DB uids and words
@@ -98,12 +98,12 @@ public class TestNativeFindex {
         System.out.println("");
 
         {
-            List<IndexedValue> indexedValuesList = Findex.search(key, label, new Word[] { new Word("France") },
-                    0,
-                    -1, db.progress, db.fetchEntry, db.fetchChain);
-            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+            List<IndexedValue> indexedValuesList = Findex.search(key, label, new Word[] {new Word("France")},
+                0,
+                -1, db.progress, db.fetchEntry, db.fetchChain);
+            int[] dbLocations = indexedValuesBytesListToArray(indexedValuesList);
 
-            assertArrayEquals(expectedDbUids, dbUids);
+            assertArrayEquals(expectedDbLocations, dbLocations);
         }
 
         // TODO fix compact
@@ -126,16 +126,16 @@ public class TestNativeFindex {
 
         {
             // Search with new label and without user changes
-            List<byte[]> indexedValuesList = Findex.search(key, "NewLabel".getBytes(),
-                    new Word[] { new Word("France") }, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
+            List<IndexedValue> indexedValuesList = Findex.search(key, "NewLabel".getBytes(),
+                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
-            assertArrayEquals(expectedDbUids, dbUids);
+            assertArrayEquals(expectedDbLocations, dbUids);
         }
 
         // Delete the user n°17 to test the compact indexes
         db.deleteUser(17);
-        int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbUids, 17);
+        int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbLocations, 17);
 
         // TODO fix compact
         // Findex.compact(1, key, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain,
@@ -346,22 +346,19 @@ public class TestNativeFindex {
     // }
 
     /*
-     * Helper function to transform the list of bytes returned by the FFI
-     * (representing `IndexedValue`) to a sorted
+     * Helper function to transform the list of bytes returned by the FFI (representing `IndexedValue`) to a sorted
      * array of int (representing the DB id of users).
      */
-    private int[] indexedValuesBytesListToArray(List<byte[]> indexedValuesList) throws Exception {
-        int[] dbUids = new int[indexedValuesList.size()];
+    private int[] indexedValuesBytesListToArray(List<IndexedValue> indexedValuesList) throws Exception {
+        int[] dbLocations = new int[indexedValuesList.size()];
         int count = 0;
-        for (byte[] dbUidBytes : indexedValuesList) {
-            byte[] location = new IndexedValue(dbUidBytes).getLocation().getBytes();
-
-            dbUids[count] = ByteBuffer.wrap(location).getInt();
+        for (IndexedValue iv : indexedValuesList) {
+            byte[] location = iv.getLocation().getBytes();
+            dbLocations[count] = ByteBuffer.wrap(location).getInt();
             count++;
         }
-
-        Arrays.sort(dbUids);
-        return dbUids;
+        Arrays.sort(dbLocations);
+        return dbLocations;
     }
 
 }

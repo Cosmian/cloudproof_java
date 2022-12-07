@@ -13,8 +13,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.findex.Sqlite;
-import com.cosmian.jna.findex.FindexWrapper.EntryTableValue;
 import com.cosmian.jna.findex.Uid;
+
+import redis.clients.jedis.resps.Tuple;
 
 public class TestSqlite {
 
@@ -37,18 +38,18 @@ public class TestSqlite {
             byte[] uidBuffer = new byte[32];
             byte[] valueBuffer = new byte[64];
             int NEW_TOTAL = 999;
-            HashMap<Uid, EntryTableValue> originalValues = new HashMap<>();
-            HashMap<Uid, EntryTableValue> updatedValues = new HashMap<>();
+            HashMap<Uid, Tuple> originalValues = new HashMap<>();
+            HashMap<Uid, Tuple> updatedValues = new HashMap<>();
             for (int i = 0; i < NEW_TOTAL; i++) {
                 rand.nextBytes(uidBuffer);
                 Uid uid = new Uid(Arrays.copyOf(uidBuffer, uidBuffer.length));
                 rand.nextBytes(valueBuffer);
                 if (i % 3 == 0) {
                     updatedValues.put(uid,
-                        new EntryTableValue(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
+                            new Tuple(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
                 } else {
                     originalValues.put(uid,
-                        new EntryTableValue(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
+                            new Tuple(new byte[] {}, Arrays.copyOf(valueBuffer, valueBuffer.length)));
                 }
             }
 
@@ -69,14 +70,14 @@ public class TestSqlite {
 
             int counterSuccess = 0;
             int counterFail = 0;
-            for (Entry<Uid, EntryTableValue> entry : originalValues.entrySet()) {
+            for (Entry<Uid, Tuple> entry : originalValues.entrySet()) {
                 if (++counterSuccess <= numOverlapSuccess) {
                     rand.nextBytes(valueBuffer);
-                    updatedValues.put(entry.getKey(), new EntryTableValue(entry.getValue().newValue, valueBuffer));
+                    updatedValues.put(entry.getKey(), new Tuple(entry.getValue().newValue, valueBuffer));
                 } else if (++counterFail <= numOverlapFail) {
                     rand.nextBytes(valueBuffer);
                     updatedValues.put(entry.getKey(),
-                        new EntryTableValue(new byte[] {'f', 'a', 'i', 'l'}, valueBuffer));
+                            new Tuple(new byte[] { 'f', 'a', 'i', 'l' }, valueBuffer));
                 } else {
                     break;
                 }

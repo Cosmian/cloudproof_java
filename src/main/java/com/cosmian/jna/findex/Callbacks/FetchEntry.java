@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cosmian.CloudproofException;
+import com.cosmian.jna.findex.EntryTableValue;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.FindexWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.FindexWrapper.FetchEntryInterface;
@@ -21,10 +22,10 @@ public class FetchEntry implements FetchEntryCallback {
 
     @Override
     public int apply(Pointer output,
-                     IntByReference outputSize,
-                     Pointer uidsPointer,
-                     int uidsLength)
-        throws CloudproofException {
+            IntByReference outputSize,
+            Pointer uidsPointer,
+            int uidsLength)
+            throws CloudproofException {
         //
         // Read `uidsPointer` until `uidsLength`
         //
@@ -39,12 +40,12 @@ public class FetchEntry implements FetchEntryCallback {
         //
         // Select uids and values in EntryTable
         //
-        Map<Uid, byte[]> uidsAndValues = this.fetch.fetch(entryTableUids);
+        Map<Uid, EntryTableValue> uidsAndValues = this.fetch.fetch(entryTableUids);
 
         //
         // Serialize results
         //
-        return Findex.writeOutputPointerAndSize(uidsAndValues, output, outputSize);
+        return Findex.mapToOutputPointer(uidsAndValues, output, outputSize);
     }
 
 }

@@ -1,11 +1,13 @@
 package com.cosmian.jna.findex.Callbacks;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import com.cosmian.CloudproofException;
+import com.cosmian.jna.findex.ChainTableValue;
 import com.cosmian.jna.findex.FindexWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpsertChainInterface;
 import com.cosmian.jna.findex.Leb128Serializer;
+import com.cosmian.jna.findex.Uid;
 import com.sun.jna.Pointer;
 
 public class UpsertChain implements UpsertChainCallback {
@@ -27,7 +29,7 @@ public class UpsertChain implements UpsertChainCallback {
         //
         // Deserialize the chain table items
         //
-        HashMap<byte[], byte[]> uidsAndValues = Leb128Serializer.deserializeHashmap(itemsBytes);
+        Map<Uid, ChainTableValue> uidsAndValues = Leb128Serializer.deserializeMap(itemsBytes);
 
         //
         // Insert in database

@@ -98,7 +98,7 @@ public class TestNativeFindex {
         System.out.println("");
 
         {
-            List<byte[]> indexedValuesList = Findex.search(key, label, new Word[] { new Word("France") },
+            List<IndexedValue> indexedValuesList = Findex.search(key, label, new Word[] { new Word("France") },
                     0,
                     -1, db.progress, db.fetchEntry, db.fetchChain);
             int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);

@@ -7,4 +7,8 @@ package com.cosmian.jna.findex;
 public class ChainTableValue extends Leb128ByteArray {
     static final long serialVersionUID = 1L;
 
+    public ChainTableValue(byte[] bytes) {
+        super(bytes);
+    }
+
 }

@@ -24,6 +24,11 @@ public abstract class Leb128ByteArray implements Leb128Serializable {
         this.bytes = bytes;
     }
 
+    /**
+     * Generate a random array of len bytes
+     * 
+     * @param len the length of the array
+     */
     public Leb128ByteArray(int len) {
         this.bytes = new byte[len];
         if (len > 0) {

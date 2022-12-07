@@ -22,6 +22,7 @@ import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.ChainTableValue;
 import com.cosmian.jna.findex.EntryTableValue;
 import com.cosmian.jna.findex.IndexedValue;
+import com.cosmian.jna.findex.Leb128ByteArray;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.Tuple;
 import com.cosmian.jna.findex.Uid;
@@ -87,8 +88,7 @@ public class Sqlite implements Closeable {
         // }
 
         @Override
-        public Map<Uid, EntryTableValue> upsert(
-                Map<Uid, Tuple<EntryTableValue, EntryTableValue>> uidsAndValues)
+        public Map<Uid, EntryTableValue> upsert(Map<Uid, Tuple<EntryTableValue, EntryTableValue>> uidsAndValues)
                 throws CloudproofException {
             // TODO Auto-generated method stub
             return null;
@@ -108,10 +108,8 @@ public class Sqlite implements Closeable {
 
     public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FindexWrapper.UpdateLinesInterface() {
         @Override
-        public void update(List<Uid> removedChains,
-                Map<Uid, EntryTableValue> newEntries,
-                Map<Uid, ChainTableValue> newChains)
-                throws CloudproofException {
+        public void update(List<Uid> removedChains, Map<Uid, EntryTableValue> newEntries,
+                Map<Uid, ChainTableValue> newChains) throws CloudproofException {
             try {
                 truncate("entry_table");
                 upsert(newEntries, "entry_table");
@@ -183,14 +181,14 @@ public class Sqlite implements Closeable {
         this.connection.createStatement().execute("DELETE FROM users WHERE id = " + userId);
     }
 
-    public Map<byte[], byte[]> fetchChainTableItems(List<byte[]> uids) throws SQLException {
+    public Map<Uid, ChainTableValue> fetchChainTableItems(List<Uid> uids) throws SQLException {
         PreparedStatement pstmt = this.connection
                 .prepareStatement(
                         "SELECT uid, value FROM chain_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
 
         int count = 1;
-        for (byte[] bs : uids) {
-            pstmt.setBytes(count, bs);
+        for (Uid uid : uids) {
+            pstmt.setBytes(count, uid.getBytes());
             count += 1;
         }
         ResultSet rs = pstmt.executeQuery();
@@ -198,36 +196,40 @@ public class Sqlite implements Closeable {
         //
         // Recover all results
         //
-        HashMap<byte[], byte[]> uidsAndValues = new HashMap<byte[], byte[]>();
+        HashMap<Uid, ChainTableValue> uidsAndValues = new HashMap<>();
         while (rs.next()) {
-            uidsAndValues.put(rs.getBytes("uid"), rs.getBytes("value"));
+            uidsAndValues.put(
+                    new Uid(rs.getBytes("uid")),
+                    new ChainTableValue(rs.getBytes("value")));
         }
         return uidsAndValues;
     }
 
-    public Map<Uid, byte[]> fetchAllEntryTableItems() throws SQLException {
+    public Map<Uid, EntryTableValue> fetchAllEntryTableItems() throws SQLException {
         PreparedStatement pstmt = this.connection.prepareStatement("SELECT uid, value FROM entry_table");
         ResultSet rs = pstmt.executeQuery();
 
         //
         // Recover all results
         //
-        HashMap<Uid, byte[]> uidsAndValues = new HashMap<>();
+        HashMap<Uid, EntryTableValue> uidsAndValues = new HashMap<>();
         while (rs.next()) {
-            uidsAndValues.put(new Uid(rs.getBytes("uid")), rs.getBytes("value"));
+            uidsAndValues.put(
+                    new Uid(rs.getBytes("uid")),
+                    new EntryTableValue(rs.getBytes("value")));
         }
 
         return uidsAndValues;
     }
 
-    public Map<Uid, byte[]> fetchEntryTableItems(List<byte[]> uids) throws SQLException {
+    public Map<Uid, EntryTableValue> fetchEntryTableItems(List<Uid> uids) throws SQLException {
         PreparedStatement pstmt = this.connection
                 .prepareStatement(
                         "SELECT uid, value FROM entry_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
 
         int count = 1;
-        for (byte[] bs : uids) {
-            pstmt.setBytes(count, bs);
+        for (Uid uid : uids) {
+            pstmt.setBytes(count, uid.getBytes());
             count += 1;
         }
         ResultSet rs = pstmt.executeQuery();
@@ -235,22 +237,24 @@ public class Sqlite implements Closeable {
         //
         // Recover all results
         //
-        HashMap<Uid, byte[]> uidsAndValues = new HashMap<>(uids.size(), 1);
+        HashMap<Uid, EntryTableValue> uidsAndValues = new HashMap<>(uids.size(), 1);
         while (rs.next()) {
-            uidsAndValues.put(new Uid(rs.getBytes("uid")), rs.getBytes("value"));
+            uidsAndValues.put(
+                    new Uid(rs.getBytes("uid")),
+                    new EntryTableValue(rs.getBytes("value")));
         }
         return uidsAndValues;
     }
 
-    public void upsert(Map<byte[], byte[]> uidsAndValues,
+    public <V extends Leb128ByteArray> void upsert(Map<Uid, V> uidsAndValues,
             String tableName)
             throws SQLException {
         PreparedStatement pstmt = connection
                 .prepareStatement("INSERT OR REPLACE INTO " + tableName + "(uid, value) VALUES (?,?)");
         // this.connection.setAutoCommit(false);
-        for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
-            pstmt.setBytes(1, entry.getKey());
-            pstmt.setBytes(2, entry.getValue());
+        for (Entry<Uid, V> entry : uidsAndValues.entrySet()) {
+            pstmt.setBytes(1, entry.getKey().getBytes());
+            pstmt.setBytes(2, entry.getValue().getBytes());
             pstmt.addBatch();
         }
         /* int[] result = */ pstmt.executeBatch();
@@ -305,15 +309,15 @@ public class Sqlite implements Closeable {
         return failed;
     }
 
-    public void remove(List<byte[]> uids,
+    public void remove(List<Uid> uids,
             String tableName)
             throws SQLException {
         PreparedStatement pstmt = this.connection
                 .prepareStatement("DELETE FROM " + tableName + " WHERE uid IN (" + questionMarks(uids.size()) + ")");
 
         int count = 1;
-        for (byte[] bs : uids) {
-            pstmt.setBytes(count, bs);
+        for (Uid uid : uids) {
+            pstmt.setBytes(count, uid.getBytes());
             count += 1;
         }
         pstmt.execute();

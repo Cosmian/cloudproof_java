@@ -6,4 +6,8 @@ package com.cosmian.jna.findex;
 public class EntryTableValue extends Leb128ByteArray {
     static final long serialVersionUID = 1L;
 
+    public EntryTableValue(byte[] bytes) {
+        super(bytes);
+    }
+
 }

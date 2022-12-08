@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import com.cosmian.CloudproofException;
 import com.cosmian.jna.findex.ChainTableValue;
 import com.cosmian.jna.findex.EntryTableValue;
+import com.cosmian.jna.findex.EntryTableValues;
 import com.cosmian.jna.findex.IndexedValue;
 import com.cosmian.jna.findex.Location;
 import com.cosmian.jna.findex.Uid;
@@ -88,7 +89,7 @@ public class Sqlite implements Closeable {
         // }
 
         @Override
-        public Map<Uid, EntryTableValue> upsert(Map<Uid, Tuple<EntryTableValue, EntryTableValue>> uidsAndValues)
+        public Map<Uid, EntryTableValue> upsert(Map<Uid, EntryTableValues> uidsAndValues)
             throws CloudproofException {
             // TODO Auto-generated method stub
             return null;

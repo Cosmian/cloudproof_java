@@ -54,6 +54,17 @@ public abstract class Leb128ByteArray implements Leb128Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof Leb128ByteArray)) {
+            return false;
+        }
+        Leb128ByteArray leb128ByteArray = (Leb128ByteArray) o;
+        return Arrays.equals(bytes, leb128ByteArray.bytes);
+    }
+
+    @Override
     public void writeObject(OutputStream out) throws CloudproofException {
         try {
             Leb128.writeU64(out, this.bytes.length);

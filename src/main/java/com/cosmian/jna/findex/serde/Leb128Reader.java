@@ -4,7 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.cosmian.CloudproofException;
 
@@ -25,6 +28,21 @@ public class Leb128Reader {
         return newInstance;
     }
 
+    public <T extends Leb128Serializable> T readObject(Class<? extends Leb128Serializable> clazzOfT)
+        throws CloudproofException {
+        T element;
+        try {
+            @SuppressWarnings("unchecked")
+            final T el = (T) clazzOfT.newInstance();
+            element = el;
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new CloudproofException(
+                "Leb128 reader: failed instantiating a " + clazzOfT.getSimpleName() + ": " + e.getMessage(), e);
+        }
+        this.readObject(element);
+        return element;
+    }
+
     public boolean reachedCollectionEnd() throws CloudproofException {
         try {
             return this.in.peek() == 0;
@@ -34,29 +52,62 @@ public class Leb128Reader {
         }
     }
 
-    public <T extends Leb128Serializable> List<T> readList(Class<? extends Leb128Serializable> clazzOfT)
+    public <T extends Leb128Serializable> List<T> readCollection(Class<? extends Leb128Serializable> clazzOfT)
         throws CloudproofException {
         List<T> result = new ArrayList<T>();
         while (!this.reachedCollectionEnd()) {
-            T element;
-            try {
-                @SuppressWarnings("unchecked")
-                final T el = (T) clazzOfT.newInstance();
-                element = el;
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new CloudproofException(
-                    "Leb128 reader: failed instantiating a " + clazzOfT.getSimpleName() + ": " + e.getMessage(), e);
-            }
-            element.readObject(this.in);
-            result.add(element);
+            result.add(this.readObject(clazzOfT));
         }
         return result;
     }
 
-    public static <T extends Leb128Serializable> List<T> deserializeList(Class<? extends Leb128Serializable> clazzOfT,
-                                                                         byte[] bytes)
+    public <LEFT extends Leb128Serializable, RIGHT extends Leb128Serializable> Tuple<LEFT, RIGHT> readTuple(Class<? extends Leb128Serializable> clazzOfK,
+                                                                                                            Class<? extends Leb128Serializable> clazzOfV)
         throws CloudproofException {
-        return new Leb128Reader(new ByteArrayInputStream(bytes)).readList(clazzOfT);
+        LEFT key = this.readObject(clazzOfK);
+        RIGHT value = this.readObject(clazzOfV);
+        return new Tuple<>(key, value);
+    }
+
+    private <K extends Leb128Serializable, V extends Leb128Serializable> Entry<K, V> readEntry(Class<? extends Leb128Serializable> clazzOfK,
+                                                                                               Class<? extends Leb128Serializable> clazzOfV)
+        throws CloudproofException {
+        return this.readTuple(clazzOfK, clazzOfV);
+    }
+
+    public <K extends Leb128Serializable, V extends Leb128Serializable> Map<K, V> readMap(Class<? extends Leb128Serializable> clazzOfK,
+                                                                                          Class<? extends Leb128Serializable> clazzOfV)
+        throws CloudproofException {
+        Map<K, V> map = new HashMap<>();
+        while (!this.reachedCollectionEnd()) {
+            Entry<K, V> entry = this.readEntry(clazzOfK, clazzOfV);
+            map.put(entry.getKey(), entry.getValue());
+        }
+        return map;
+    }
+
+    // ------------------------------------------------------
+    // Static implementations
+    // ------------------------------------------------------
+
+    public static <T extends Leb128Serializable> List<T> deserializeCollection(Class<? extends Leb128Serializable> clazzOfT,
+                                                                               byte[] bytes)
+        throws CloudproofException {
+        return new Leb128Reader(new ByteArrayInputStream(bytes)).readCollection(clazzOfT);
+    }
+
+    public static <K extends Leb128Serializable, V extends Leb128Serializable> Map<K, V> deserializeMap(Class<? extends Leb128Serializable> clazzOfK,
+                                                                                                        Class<? extends Leb128Serializable> clazzOfV,
+                                                                                                        byte[] bytes)
+        throws CloudproofException {
+        return new Leb128Reader(new ByteArrayInputStream(bytes)).readMap(clazzOfK, clazzOfV);
+    }
+
+    public static <LEFT extends Leb128Serializable, RIGHT extends Leb128Serializable> Tuple<LEFT, RIGHT> deserializeTuple(Class<? extends Leb128Serializable> clazzOfLeft,
+                                                                                                                          Class<? extends Leb128Serializable> clazzOfRight,
+                                                                                                                          byte[] bytes)
+        throws CloudproofException {
+        return new Leb128Reader(new ByteArrayInputStream(bytes)).readTuple(clazzOfLeft, clazzOfRight);
     }
 
 }

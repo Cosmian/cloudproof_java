@@ -7,7 +7,7 @@ import com.cosmian.jna.findex.ChainTableValue;
 import com.cosmian.jna.findex.FindexWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpsertChainInterface;
 import com.cosmian.jna.findex.Uid;
-import com.cosmian.jna.findex.serde.Leb128CollectionsSerializer;
+import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.sun.jna.Pointer;
 
 public class UpsertChain implements UpsertChainCallback {
@@ -31,7 +31,8 @@ public class UpsertChain implements UpsertChainCallback {
         //
         // Deserialize the chain table items
         //
-        Map<Uid, ChainTableValue> uidsAndValues = Leb128CollectionsSerializer.deserializeMap(itemsBytes);
+        Map<Uid, ChainTableValue> uidsAndValues =
+            Leb128Reader.deserializeMap(Uid.class, ChainTableValue.class, itemsBytes);
 
         //
         // Insert in database

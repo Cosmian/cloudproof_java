@@ -35,7 +35,7 @@ public class FetchEntry implements FetchEntryCallback {
         //
         // Deserialize Entry Table uids
         //
-        List<Uid> entryTableUids = Leb128Reader.deserializeList(Uid.class, uids);
+        List<Uid> entryTableUids = Leb128Reader.deserializeCollection(Uid.class, uids);
 
         //
         // Select uids and values in EntryTable

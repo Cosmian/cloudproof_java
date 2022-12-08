@@ -8,6 +8,10 @@ import com.cosmian.jna.findex.serde.Leb128ByteArray;
 public class ChainTableValue extends Leb128ByteArray {
     static final long serialVersionUID = 1L;
 
+    public ChainTableValue() {
+        super();
+    }
+
     public ChainTableValue(byte[] bytes) {
         super(bytes);
     }

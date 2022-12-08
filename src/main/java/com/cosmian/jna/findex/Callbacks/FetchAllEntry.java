@@ -10,7 +10,7 @@ import com.cosmian.jna.findex.EntryTableValue;
 import com.cosmian.jna.findex.FindexWrapper.FetchAllEntryCallback;
 import com.cosmian.jna.findex.FindexWrapper.FetchAllEntryInterface;
 import com.cosmian.jna.findex.Uid;
-import com.cosmian.jna.findex.serde.Leb128CollectionsSerializer;
+import com.cosmian.jna.findex.serde.Leb128Writer;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
@@ -39,7 +39,7 @@ public class FetchAllEntry implements FetchAllEntryCallback {
         }
 
         if (chunk.size() > 0) {
-            byte[] uidsAndValuesBytes = Leb128CollectionsSerializer.serializeEntrySet(chunk);
+            byte[] uidsAndValuesBytes = Leb128Writer.serializeEntryCollection(chunk);
             output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
             outputSize.setValue(uidsAndValuesBytes.length);
         } else {

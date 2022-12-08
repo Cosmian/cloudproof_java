@@ -36,7 +36,7 @@ public class FetchChain implements FetchChainCallback {
         //
         // Deserialize Chain Table uids
         //
-        List<Uid> chainTableUids = Leb128Reader.deserializeList(Uid.class, uids);
+        List<Uid> chainTableUids = Leb128Reader.deserializeCollection(Uid.class, uids);
 
         //
         // Select uid and value in ChainTable

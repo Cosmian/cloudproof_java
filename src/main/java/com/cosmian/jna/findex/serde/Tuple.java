@@ -1,18 +1,17 @@
 package com.cosmian.jna.findex.serde;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import com.cosmian.CloudproofException;
+import java.util.Map;
+import java.util.Objects;
 
 /**
- * A tuple holds a pair of {@link com.cosmian.jna.findex.serde.Leb128CollectionsSerializer.Leb128Serializable} values
- * and is itself {@link com.cosmian.jna.findex.serde.Leb128CollectionsSerializer.Leb128Serializable}
+ * A tuple holds a pair of {@link Leb128Serializable}. A tuple is also a {@link java.util.Map.Entry} and can be used in
+ * methods taking it as argument (LEFT is the KEY, RIGHT is the VALUE).
  */
-public class Tuple<LEFT extends Leb128Serializable, RIGHT extends Leb128Serializable> implements Leb128Serializable {
-    private LEFT left;
+public class Tuple<LEFT extends Leb128Serializable, RIGHT extends Leb128Serializable>
+    implements Map.Entry<LEFT, RIGHT> {
+    protected LEFT left;
 
-    private RIGHT right;
+    protected RIGHT right;
 
     public Tuple(LEFT left, RIGHT right) {
         this.left = left;
@@ -38,17 +37,30 @@ public class Tuple<LEFT extends Leb128Serializable, RIGHT extends Leb128Serializ
     }
 
     @Override
-
-    public void writeObject(OutputStream out) throws CloudproofException {
-        this.left.writeObject(out);
-        this.right.writeObject(out);
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof Tuple)) {
+            return false;
+        }
+        Tuple<?, ?> tuple = (Tuple<?, ?>) o;
+        return Objects.equals(left, tuple.left) && Objects.equals(right, tuple.right);
     }
 
     @Override
-    public void readObject(InputStream in) throws CloudproofException {
-        Leb128Reader reader = new Leb128Reader(in);
-        reader.readObject(this.left);
-        reader.readObject(this.right);
+    public LEFT getKey() {
+        return this.left;
+    }
+
+    @Override
+    public RIGHT getValue() {
+        return this.right;
+    }
+
+    @Override
+    public RIGHT setValue(RIGHT value) {
+        this.right = value;
+        return right;
     }
 
 }

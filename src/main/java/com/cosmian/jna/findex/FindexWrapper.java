@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.cosmian.CloudproofException;
-import com.cosmian.jna.findex.serde.Tuple;
 import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
@@ -98,7 +97,7 @@ public interface FindexWrapper extends Library {
     }
 
     interface UpsertEntryInterface {
-        public Map<Uid, EntryTableValue> upsert(Map<Uid, Tuple<EntryTableValue, EntryTableValue>> uidsAndValues)
+        public Map<Uid, EntryTableValue> upsert(Map<Uid, EntryTableValues> uidsAndValues)
             throws CloudproofException;
     }
 

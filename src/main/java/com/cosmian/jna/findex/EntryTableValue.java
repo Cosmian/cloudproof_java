@@ -7,6 +7,10 @@ import com.cosmian.jna.findex.serde.Leb128ByteArray;
  */
 public class EntryTableValue extends Leb128ByteArray {
 
+    public EntryTableValue() {
+        super();
+    }
+
     public EntryTableValue(byte[] bytes) {
         super(bytes);
     }

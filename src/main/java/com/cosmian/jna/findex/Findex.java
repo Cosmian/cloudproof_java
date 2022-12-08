@@ -17,9 +17,9 @@ import com.cosmian.jna.findex.FindexWrapper.ProgressCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpdateLinesCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.FindexWrapper.UpsertEntryCallback;
-import com.cosmian.jna.findex.serde.Leb128CollectionsSerializer;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.serde.Leb128Serializable;
+import com.cosmian.jna.findex.serde.Leb128Writer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
@@ -89,7 +89,7 @@ public final class Findex {
                                                                                                                                    IntByReference outputSize)
         throws CloudproofException {
         if (map.size() > 0) {
-            byte[] uidsAndValuesBytes = Leb128CollectionsSerializer.serializeMap(map);
+            byte[] uidsAndValuesBytes = Leb128Writer.serializeMap(map);
             if (outputSize.getValue() < uidsAndValuesBytes.length) {
                 outputSize.setValue(uidsAndValuesBytes.length);
                 return 1;
@@ -258,7 +258,7 @@ public final class Findex {
 
             byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
 
-            return Leb128Reader.deserializeList(IndexedValue.class, indexedValuesBytes);
+            return Leb128Reader.deserializeCollection(IndexedValue.class, indexedValuesBytes);
         }
     }
 

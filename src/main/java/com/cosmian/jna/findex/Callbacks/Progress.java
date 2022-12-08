@@ -29,7 +29,8 @@ public class Progress implements ProgressCallback {
         //
         // Deserialize search results
         //
-        List<IndexedValue> indexedValues = Leb128Reader.deserializeList(IndexedValue.class, serializedSearchResults);
+        List<IndexedValue> indexedValues =
+            Leb128Reader.deserializeCollection(IndexedValue.class, serializedSearchResults);
 
         //
         // Convert to Indexed Values list

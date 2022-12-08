@@ -31,12 +31,12 @@ public class ListRemovedLocations implements ListRemovedLocationsCallback {
         byte[] itemsBytes = new byte[itemsLength];
         items.read(0, itemsBytes, 0, itemsLength);
 
-        List<Location> locations = Leb128Reader.deserializeList(Location.class, itemsBytes);
+        List<Location> locations = Leb128Reader.deserializeCollection(Location.class, itemsBytes);
 
         List<Location> removedLocations = this.list.list(locations);
 
         if (removedLocations.size() > 0) {
-            byte[] bytes = Leb128Writer.serializeList(removedLocations);
+            byte[] bytes = Leb128Writer.serializeCollection(removedLocations);
             output.write(0, bytes, 0, bytes.length);
             outputSize.setValue(bytes.length);
         } else {

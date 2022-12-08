@@ -2,24 +2,31 @@ package com.cosmian.jna.findex;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Base64.Encoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
-import com.cosmian.CloudproofException;
-import com.cosmian.jna.abe.MasterKeys;
-import com.cosmian.jna.findex.FindexWrapper.FetchAllEntryCallback;
-import com.cosmian.jna.findex.FindexWrapper.FetchChainCallback;
-import com.cosmian.jna.findex.FindexWrapper.FetchEntryCallback;
-import com.cosmian.jna.findex.FindexWrapper.ListRemovedLocationsCallback;
-import com.cosmian.jna.findex.FindexWrapper.ProgressCallback;
-import com.cosmian.jna.findex.FindexWrapper.UpdateLinesCallback;
-import com.cosmian.jna.findex.FindexWrapper.UpsertChainCallback;
-import com.cosmian.jna.findex.FindexWrapper.UpsertEntryCallback;
+import com.cosmian.jna.covercrypt.structs.MasterKeys;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchAllEntryCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchChainCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchEntryCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.ListRemovedLocationsCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.ProgressCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpdateLinesCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertChainCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertEntryCallback;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.serde.Leb128Serializable;
 import com.cosmian.jna.findex.serde.Leb128Writer;
+import com.cosmian.jna.findex.structs.IndexedValue;
+import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.jna.findex.structs.NextKeyword;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
@@ -29,7 +36,8 @@ import com.sun.jna.ptr.IntByReference;
 
 public final class Findex {
 
-    static final FindexWrapper INSTANCE = (FindexWrapper) Native.load("cosmian_findex", FindexWrapper.class);
+    static final FindexNativeWrapper INSTANCE =
+        (FindexNativeWrapper) Native.load("cosmian_findex", FindexNativeWrapper.class);
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes
@@ -84,35 +92,26 @@ public final class Findex {
      *         hold the map.
      * @throws CloudproofException
      */
-    public static <K extends com.cosmian.jna.findex.serde.Leb128Serializable, V extends Leb128Serializable> int mapToOutputPointer(Map<K, V> map,
-                                                                                                                                   Pointer output,
-                                                                                                                                   IntByReference outputSize)
+    public static <K extends Leb128Serializable, V extends Leb128Serializable> int mapToOutputPointer(Map<K, V> map,
+                                                                                                      Pointer output,
+                                                                                                      IntByReference outputSize)
         throws CloudproofException {
-        if (map.size() > 0) {
-            byte[] uidsAndValuesBytes = Leb128Writer.serializeMap(map);
-            if (outputSize.getValue() < uidsAndValuesBytes.length) {
-                outputSize.setValue(uidsAndValuesBytes.length);
-                return 1;
-            }
+        byte[] uidsAndValuesBytes = Leb128Writer.serializeMap(map);
+        if (outputSize.getValue() < uidsAndValuesBytes.length) {
             outputSize.setValue(uidsAndValuesBytes.length);
-            output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
-        } else {
-            outputSize.setValue(0);
+            return 1;
         }
+        outputSize.setValue(uidsAndValuesBytes.length);
+        output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
         return 0;
     }
 
     public static void upsert(
                               byte[] key,
                               byte[] label,
-                              HashMap<IndexedValue, Word[]> indexedValuesAndWords,
-                              FetchEntryCallback fetchEntry,
-                              UpsertEntryCallback upsertEntry,
-                              UpsertChainCallback upsertChain)
+                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords,
+                              Database db)
         throws CloudproofException {
-
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
 
         try (
             final Memory keyPointer = new Memory(key.length);
@@ -120,38 +119,46 @@ public final class Findex {
             keyPointer.write(0, key, 0, key.length);
             labelPointer.write(0, label, 0, label.length);
 
-            // Findex indexed values and words
-            HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
-            for (Entry<IndexedValue, Word[]> entry : indexedValuesAndWords.entrySet()) {
-                String[] words = new String[entry.getValue().length];
-                int i = 0;
-                for (Word word : entry.getValue()) {
-                    words[i++] = word.toString();
-                }
-                indexedValuesAndWordsString.put(entry.getKey().toString(), words);
-            }
-
-            String indexedValuesAndWordsJson;
-            try {
-                indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
-            } catch (JsonProcessingException e) {
-                throw new CloudproofException("Invalid indexed values and words", e);
-            }
-
             // Indexes creation + insertion/update
             unwrap(Findex.INSTANCE.h_upsert(
                 keyPointer, key.length,
                 labelPointer, label.length,
-                indexedValuesAndWordsJson,
-                fetchEntry,
-                upsertEntry,
-                upsertChain));
+                indexedValuesToJson(indexedValuesAndWords),
+                db.fetchEntryCallback(),
+                db.upsertEntryCallback(),
+                db.upsertChainCallback()));
         }
+    }
+
+    private static String indexedValuesToJson(Map<IndexedValue, Set<Keyword>> indexedValuesAndWords)
+        throws CloudproofException {
+        // For the JSON strings
+        ObjectMapper mapper = new ObjectMapper();
+        Encoder encoder = Base64.getEncoder();
+        HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
+        for (Entry<IndexedValue, Set<Keyword>> entry : indexedValuesAndWords.entrySet()) {
+            String[] words = new String[entry.getValue().size()];
+            int i = 0;
+            for (Keyword word : entry.getValue()) {
+                words[i++] = encoder.encodeToString(word.getBytes());
+            }
+            indexedValuesAndWordsString.put(
+                encoder.encodeToString(entry.getKey().getBytes()),
+                words);
+        }
+
+        String indexedValuesAndWordsJson;
+        try {
+            indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
+        } catch (JsonProcessingException e) {
+            throw new CloudproofException("Invalid indexed values and words", e);
+        }
+        return indexedValuesAndWordsJson;
     }
 
     public static void graph_upsert(MasterKeys masterKeys,
                                     byte[] label,
-                                    HashMap<IndexedValue, Word[]> indexedValuesAndWords,
+                                    HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords,
                                     FetchEntryCallback fetchEntry,
                                     UpsertEntryCallback upsertEntry,
                                     UpsertChainCallback upsertChain)
@@ -173,10 +180,10 @@ public final class Findex {
 
             // Findex indexed values and words
             HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
-            for (Entry<IndexedValue, Word[]> entry : indexedValuesAndWords.entrySet()) {
-                String[] words = new String[entry.getValue().length];
+            for (Entry<IndexedValue, Set<Keyword>> entry : indexedValuesAndWords.entrySet()) {
+                String[] words = new String[entry.getValue().size()];
                 int i = 0;
-                for (Word word : entry.getValue()) {
+                for (Keyword word : entry.getValue()) {
                     words[i++] = word.toString();
                 }
                 indexedValuesAndWordsString.put(entry.getKey().toString(), words);
@@ -198,7 +205,7 @@ public final class Findex {
 
     public static List<IndexedValue> search(byte[] keyK,
                                             byte[] label,
-                                            Word[] words,
+                                            NextKeyword[] words,
                                             int loopIterationLimit,
                                             int maxDepth,
                                             ProgressCallback progress,
@@ -229,7 +236,7 @@ public final class Findex {
             // Findex words
             String[] wordsString = new String[words.length];
             int i = 0;
-            for (Word word : words) {
+            for (NextKeyword word : words) {
                 wordsString[i++] = word.toString();
             }
             String wordsJson;

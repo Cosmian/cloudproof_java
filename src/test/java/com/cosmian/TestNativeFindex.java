@@ -11,7 +11,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -20,9 +22,11 @@ import org.junit.jupiter.api.Test;
 import com.cosmian.findex.Sqlite;
 import com.cosmian.findex.UsersDataset;
 import com.cosmian.jna.findex.Findex;
-import com.cosmian.jna.findex.IndexedValue;
-import com.cosmian.jna.findex.Location;
-import com.cosmian.jna.findex.Word;
+import com.cosmian.jna.findex.structs.IndexedValue;
+import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.jna.findex.structs.Location;
+import com.cosmian.jna.findex.structs.NextKeyword;
+import com.cosmian.utils.Resources;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestNativeFindex {
@@ -66,101 +70,110 @@ public class TestNativeFindex {
         //
         String dataJson = Resources.load_resource("findex/data.json");
         UsersDataset[] testFindexDataset = UsersDataset.fromJson(dataJson);
-        HashMap<IndexedValue, Word[]> indexedValuesAndWords = new HashMap<>();
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
+        Set<Keyword> keywords = new HashSet<>();
         for (UsersDataset user : testFindexDataset) {
-            ByteBuffer dbuf = ByteBuffer.allocate(32);
-            dbuf.putInt(user.id);
-            byte[] dbUid = dbuf.array();
-
+            ByteBuffer buf = ByteBuffer.allocate(32);
+            buf.putInt(user.id);
+            byte[] dbUid = buf.array();
             indexedValuesAndWords.put(new Location(dbUid), user.values());
+            keywords.addAll(user.values());
         }
+
+        // stats
+        System.out.println("Num keywords: " + keywords.size() + ", indexed Values: " + indexedValuesAndWords.size());
 
         //
         // Prepare Sqlite tables and users
         //
-        Sqlite db = new Sqlite();
-        db.insertUsers(testFindexDataset);
+        try (Sqlite db = new Sqlite()) {
+            db.insertUsers(testFindexDataset);
 
-        //
-        // Upsert
-        //
-        Findex.upsert(key, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
-        System.out.println("After insertion: entry_table: nb indexes: " + db.getAllKeyValueItems("entry_table").size());
-        System.out.println("After insertion: chain_table: nb indexes: " + db.getAllKeyValueItems("chain_table").size());
+            //
+            // Upsert
+            //
+            Findex.upsert(key, label, indexedValuesAndWords, db);
+            System.out
+                .println("After insertion: entry_table: nb indexes: " + db.getAllKeyValueItems("entry_table").size());
+            System.out
+                .println("After insertion: chain_table: nb indexes: " + db.getAllKeyValueItems("chain_table").size());
 
-        //
-        // Search
-        //
-        System.out.println("");
-        System.out.println("---------------------------------------");
-        System.out.println("Findex Search Sqlite");
-        System.out.println("---------------------------------------");
-        System.out.println("");
+            //
+            // Search
+            //
+            System.out.println("");
+            System.out.println("---------------------------------------");
+            System.out.println("Findex Search Sqlite");
+            System.out.println("---------------------------------------");
+            System.out.println("");
 
-        {
-            List<IndexedValue> indexedValuesList = Findex.search(key, label, new Word[] {new Word("France")},
-                0,
-                -1, db.progress, db.fetchEntry, db.fetchChain);
-            int[] dbLocations = indexedValuesBytesListToArray(indexedValuesList);
+            {
+                List<IndexedValue> indexedValuesList =
+                    Findex.search(key, label, new NextKeyword[] {new NextKeyword("France")},
+                        0,
+                        -1, db.progressCallback(), db.fetchEntryCallback(), db.fetchChainCallback());
+                int[] dbLocations = indexedValuesBytesListToArray(indexedValuesList);
 
-            assertArrayEquals(expectedDbLocations, dbLocations);
-        }
+                assertArrayEquals(expectedDbLocations, dbLocations);
+            }
 
-        // TODO fix compact
-        // // This compact should do nothing except changing the label since the users
-        // // table didn't change.
-        // Findex.compact(1, key, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain,
-        // db.fetchAllEntry,
-        // db.updateLines, db.listRemovedLocations);
+            // TODO fix compact
+            // // This compact should do nothing except changing the label since the users
+            // // table didn't change.
+            // Findex.compact(1, key, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain,
+            // db.fetchAllEntry,
+            // db.updateLines, db.listRemovedLocations);
 
-        // {
-        // // Search with old label
-        // List<byte[]> indexedValuesList = Findex.search(key, label, new Word[] { new
-        // Word("France") },
-        // 0,
-        // -1, db.progress, db.fetchEntry, db.fetchChain);
-        // int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+            // {
+            // // Search with old label
+            // List<byte[]> indexedValuesList = Findex.search(key, label, new Word[] { new
+            // Word("France") },
+            // 0,
+            // -1, db.progress, db.fetchEntry, db.fetchChain);
+            // int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
-        // assertEquals(0, dbUids.length);
-        // }
+            // assertEquals(0, dbUids.length);
+            // }
 
-        {
-            // Search with new label and without user changes
-            List<IndexedValue> indexedValuesList = Findex.search(key, "NewLabel".getBytes(),
-                new Word[] {new Word("France")}, 0, -1, db.progress, db.fetchEntry, db.fetchChain);
-            int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+            {
+                // Search with new label and without user changes
+                List<IndexedValue> indexedValuesList = Findex.search(key, "NewLabel".getBytes(),
+                    new NextKeyword[] {new NextKeyword("France")}, 0, -1, db.progressCallback(),
+                    db.fetchEntryCallback(), db.fetchChainCallback());
+                int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
-            assertArrayEquals(expectedDbLocations, dbUids);
-        }
+                assertArrayEquals(expectedDbLocations, dbUids);
+            }
 
-        // Delete the user n°17 to test the compact indexes
-        db.deleteUser(17);
-        int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbLocations, 17);
+            // Delete the user n°17 to test the compact indexes
+            db.deleteUser(17);
+            int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbLocations, 17);
 
-        // TODO fix compact
-        // Findex.compact(1, key, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain,
-        // db.fetchAllEntry,
-        // db.updateLines, db.listRemovedLocations);
+            // TODO fix compact
+            // Findex.compact(1, key, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain,
+            // db.fetchAllEntry,
+            // db.updateLines, db.listRemovedLocations);
 
-        // {
-        // // Search should return everyone instead of n°17
+            // {
+            // // Search should return everyone instead of n°17
 
-        // List<byte[]> indexedValuesList = Findex.search(key, "NewLabel".getBytes(),
-        // new Word[] { new Word("France") }, 0, -1, db.progress, db.fetchEntry,
-        // db.fetchChain);
-        // int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+            // List<byte[]> indexedValuesList = Findex.search(key, "NewLabel".getBytes(),
+            // new Word[] { new Word("France") }, 0, -1, db.progress, db.fetchEntry,
+            // db.fetchChain);
+            // int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
-        // assertArrayEquals(newExpectedDbUids, dbUids);
-        // }
+            // assertArrayEquals(newExpectedDbUids, dbUids);
+            // }
 
-        // Check allocation problem during insertions. Allocation problem could occur
-        // when fetching entry table
-        // values
-        // whose sizes depend on words being indexed: the Entry Table Encrypted value
-        // is:
-        // `EncSym(𝐾value, (ict_uid𝑥𝑤𝑖, 𝐾𝑤𝑖 , 𝑤𝑖))`
-        for (int i = 0; i < 100; i++) {
-            Findex.upsert(key, label, indexedValuesAndWords, db.fetchEntry, db.upsertEntry, db.upsertChain);
+            // Check allocation problem during insertions. Allocation problem could occur
+            // when fetching entry table
+            // values
+            // whose sizes depend on words being indexed: the Entry Table Encrypted value
+            // is:
+            // `EncSym(𝐾value, (ict_uid𝑥𝑤𝑖, 𝐾𝑤𝑖 , 𝑤𝑖))`
+            for (int i = 0; i < 100; i++) {
+                Findex.upsert(key, label, indexedValuesAndWords, db);
+            }
         }
     }
 

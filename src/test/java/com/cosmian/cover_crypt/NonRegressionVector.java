@@ -3,11 +3,11 @@ package com.cosmian.cover_crypt;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import com.cosmian.CloudproofException;
-import com.cosmian.Resources;
-import com.cosmian.jna.abe.CoverCrypt;
-import com.cosmian.jna.abe.MasterKeys;
+import com.cosmian.jna.covercrypt.CoverCrypt;
+import com.cosmian.jna.covercrypt.structs.MasterKeys;
 import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.Resources;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

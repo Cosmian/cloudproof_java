@@ -3,12 +3,13 @@ package com.cosmian.rest.abe.data;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import com.cosmian.CloudproofException;
-import com.cosmian.Leb128;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.Leb128;
 
 public class DecryptedData {
 
     private final byte[] headerMetadata;
+
     private final byte[] plaintext;
 
     public DecryptedData(byte[] plaintext, byte[] headerMetadata) {

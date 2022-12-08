@@ -7,7 +7,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.cosmian.CloudproofException;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.Leb128;
 
 public class Leb128Writer {
 
@@ -32,22 +33,15 @@ public class Leb128Writer {
         this.writeEntry(tuple);
     }
 
-    private void writeCollectionEnd() throws CloudproofException {
-        try {
-            os.write(0);
-            os.flush();
-        } catch (IOException e) {
-            throw new CloudproofException("Leb128 writer: failed writing the collection end mark: " + e.getMessage(),
-                e);
-        }
-    }
-
     public <T extends Leb128Serializable> void writeCollection(Collection<T> elements) throws CloudproofException {
+        try {
+            Leb128.writeU64(this.os, elements.size());
+        } catch (IOException e) {
+            throw new CloudproofException("failed writing the collection to the output: " + e.getMessage(), e);
+        }
         for (T value : elements) {
             this.writeObject(value);
         }
-        // mark the end
-        this.writeCollectionEnd();
     }
 
     public <K extends Leb128Serializable, V extends Leb128Serializable> void writeMap(Map<K, V> map)
@@ -55,13 +49,16 @@ public class Leb128Writer {
         this.writeEntryCollection(map.entrySet());
     }
 
-    public <K extends Leb128Serializable, V extends Leb128Serializable> void writeEntryCollection(Collection<Entry<K, V>> tupleCollection)
+    public <K extends Leb128Serializable, V extends Leb128Serializable> void writeEntryCollection(Collection<Entry<K, V>> entryCollection)
         throws CloudproofException {
-        for (Entry<K, V> value : tupleCollection) {
+        try {
+            Leb128.writeU64(this.os, entryCollection.size());
+        } catch (IOException e) {
+            throw new CloudproofException("failed writing the entry collection to the output: " + e.getMessage(), e);
+        }
+        for (Entry<K, V> value : entryCollection) {
             this.writeEntry(value);
         }
-        // mark the end
-        this.writeCollectionEnd();
     }
 
     // ------------------------------------------------------

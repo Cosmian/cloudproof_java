@@ -4,10 +4,10 @@ import java.math.BigInteger;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.SplitKeyMethod;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SplitKey extends KmipObject {

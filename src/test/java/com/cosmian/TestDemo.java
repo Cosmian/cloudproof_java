@@ -5,14 +5,15 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
-import com.cosmian.jna.abe.CoverCrypt;
-import com.cosmian.jna.abe.MasterKeys;
+import com.cosmian.jna.covercrypt.CoverCrypt;
+import com.cosmian.jna.covercrypt.structs.MasterKeys;
 import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.data.DecryptedData;
 import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
+import com.cosmian.utils.CloudproofException;
 
 /**
  * This class contains demos of the Java API. Demos are written as tests so that they can be easily launched from an IDE

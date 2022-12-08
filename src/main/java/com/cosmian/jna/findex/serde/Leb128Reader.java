@@ -9,18 +9,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.cosmian.CloudproofException;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.Leb128;
 
 public class Leb128Reader {
 
-    final PeekInputStream in;
+    final InputStream in;
 
     public Leb128Reader(byte[] bytes) {
-        this.in = new PeekInputStream(new ByteArrayInputStream(bytes));
+        this.in = new ByteArrayInputStream(bytes);
     }
 
     public Leb128Reader(InputStream in) {
-        this.in = new PeekInputStream(in);
+        this.in = in;
     }
 
     public <T extends Leb128Serializable> T readObject(T newInstance) throws CloudproofException {
@@ -43,19 +44,16 @@ public class Leb128Reader {
         return element;
     }
 
-    public boolean reachedCollectionEnd() throws CloudproofException {
-        try {
-            return this.in.peek() == 0;
-        } catch (IOException e) {
-            throw new CloudproofException("Leb128 reader: failed reading the collection end mark: " + e.getMessage(),
-                e);
-        }
-    }
-
     public <T extends Leb128Serializable> List<T> readCollection(Class<? extends Leb128Serializable> clazzOfT)
         throws CloudproofException {
-        List<T> result = new ArrayList<T>();
-        while (!this.reachedCollectionEnd()) {
+        int size;
+        try {
+            size = (int) Leb128.readU64(this.in);
+        } catch (IOException e) {
+            throw new CloudproofException("failed reading the collection size: " + e.getMessage(), e);
+        }
+        List<T> result = new ArrayList<T>(size);
+        for (int i = 0; i < size; i++) {
             result.add(this.readObject(clazzOfT));
         }
         return result;
@@ -78,8 +76,14 @@ public class Leb128Reader {
     public <K extends Leb128Serializable, V extends Leb128Serializable> Map<K, V> readMap(Class<? extends Leb128Serializable> clazzOfK,
                                                                                           Class<? extends Leb128Serializable> clazzOfV)
         throws CloudproofException {
-        Map<K, V> map = new HashMap<>();
-        while (!this.reachedCollectionEnd()) {
+        int size;
+        try {
+            size = (int) Leb128.readU64(this.in);
+        } catch (IOException e) {
+            throw new CloudproofException("failed reading the map size: " + e.getMessage(), e);
+        }
+        Map<K, V> map = new HashMap<>(size);
+        for (int i = 0; i < size; i++) {
             Entry<K, V> entry = this.readEntry(clazzOfK, clazzOfV);
             map.put(entry.getKey(), entry.getValue());
         }

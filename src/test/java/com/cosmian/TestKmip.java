@@ -30,6 +30,7 @@ import com.cosmian.rest.kmip.types.LinkType;
 import com.cosmian.rest.kmip.types.LinkedObjectIdentifier;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.UniqueIdentifier;
+import com.cosmian.utils.Resources;
 import com.fasterxml.classmate.MemberResolver;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;

@@ -13,9 +13,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.findex.Sqlite;
-import com.cosmian.jna.findex.EntryTableValue;
-import com.cosmian.jna.findex.Uid;
 import com.cosmian.jna.findex.serde.Tuple;
+import com.cosmian.jna.findex.structs.EntryTableValue;
+import com.cosmian.jna.findex.structs.Uid32;
 
 public class TestSqlite {
 
@@ -38,11 +38,11 @@ public class TestSqlite {
             byte[] uidBuffer = new byte[32];
             byte[] valueBuffer = new byte[64];
             int NEW_TOTAL = 999;
-            HashMap<Uid, Tuple<EntryTableValue, EntryTableValue>> originalValues = new HashMap<>();
-            HashMap<Uid, Tuple<EntryTableValue, EntryTableValue>> updatedValues = new HashMap<>();
+            HashMap<Uid32, Tuple<EntryTableValue, EntryTableValue>> originalValues = new HashMap<>();
+            HashMap<Uid32, Tuple<EntryTableValue, EntryTableValue>> updatedValues = new HashMap<>();
             for (int i = 0; i < NEW_TOTAL; i++) {
                 rand.nextBytes(uidBuffer);
-                Uid uid = new Uid(Arrays.copyOf(uidBuffer, uidBuffer.length));
+                Uid32 uid = new Uid32(Arrays.copyOf(uidBuffer, uidBuffer.length));
                 rand.nextBytes(valueBuffer);
                 Tuple<EntryTableValue, EntryTableValue> tuple = new Tuple<>(
                     new EntryTableValue(new byte[] {}),
@@ -58,7 +58,7 @@ public class TestSqlite {
             System.out.println(" .  Updated  Values: " + updatedValues.size());
 
             // insert originals
-            Map<Uid, byte[]> failed = db.conditionalUpsert(originalValues, tableName);
+            Map<Uid32, byte[]> failed = db.conditionalUpsert(originalValues, tableName);
             assertEquals(0, failed.size());
 
             // the number of entries that should fail on update
@@ -71,7 +71,7 @@ public class TestSqlite {
 
             int counterSuccess = 0;
             int counterFail = 0;
-            for (Entry<Uid, Tuple<EntryTableValue, EntryTableValue>> entry : originalValues.entrySet()) {
+            for (Entry<Uid32, Tuple<EntryTableValue, EntryTableValue>> entry : originalValues.entrySet()) {
                 rand.nextBytes(valueBuffer);
                 EntryTableValue newValue = new EntryTableValue(Arrays.copyOf(valueBuffer, valueBuffer.length));
                 if (++counterSuccess <= numOverlapSuccess) {

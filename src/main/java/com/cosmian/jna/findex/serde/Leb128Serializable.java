@@ -3,7 +3,7 @@ package com.cosmian.jna.findex.serde;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.cosmian.CloudproofException;
+import com.cosmian.utils.CloudproofException;
 
 /**
  * Serializable objects across the native interface must implement this interface

@@ -6,6 +6,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import com.cosmian.utils.RestClient;
+import com.cosmian.utils.RestException;
+
 public final class TestUtils {
 
     public static void initLogging() {

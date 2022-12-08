@@ -8,13 +8,15 @@ import java.util.Random;
 
 import org.apache.commons.codec.binary.Hex;
 
-import com.cosmian.CloudproofException;
-import com.cosmian.Leb128;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.Leb128;
 
 /**
  * A serializable byte array to use with the native interface
  */
 public abstract class Leb128ByteArray implements Leb128Serializable {
+
+    protected final static int FIXED_SIZE = -1;
 
     protected byte[] bytes;
 
@@ -24,6 +26,15 @@ public abstract class Leb128ByteArray implements Leb128Serializable {
 
     public Leb128ByteArray(byte[] bytes) {
         this.bytes = bytes;
+    }
+
+    /**
+     * If -1, the array is of variable size and it must be read as an LEB128 first; if not use the given value
+     * 
+     * @return the array fixed size or -1 for variable size (default)
+     */
+    public int fixedSize() {
+        return -1;
     }
 
     /**
@@ -67,7 +78,15 @@ public abstract class Leb128ByteArray implements Leb128Serializable {
     @Override
     public void writeObject(OutputStream out) throws CloudproofException {
         try {
-            Leb128.writeU64(out, this.bytes.length);
+            if (this.fixedSize() < 0) {
+                Leb128.writeU64(out, this.bytes.length);
+            } else {
+                if (this.bytes.length != this.fixedSize()) {
+                    throw new IOException(
+                        "failed serializing invalid " + this.getClass().getSimpleName() + ": expected size="
+                            + this.fixedSize() + ", actual=" + this.bytes.length);
+                }
+            }
             if (this.bytes.length > 0) {
                 out.write(this.bytes);
             }
@@ -80,22 +99,21 @@ public abstract class Leb128ByteArray implements Leb128Serializable {
     @Override
     public void readObject(InputStream in) throws CloudproofException {
         try {
-            int length = (int) Leb128.readU64(in);
+            int length = this.fixedSize() >= 0 ? this.fixedSize() : (int) Leb128.readU64(in);
             if (length == 0) {
                 this.bytes = new byte[] {};
             } else {
                 byte[] buffer = new byte[length];
                 int actual = in.read(buffer);
                 if (actual != length) {
-                    throw new IOException("Invalid serialized " + this.getClass().getSimpleName());
+                    throw new IOException("Invalid serialized " + this.getClass().getSimpleName() + ": expected size="
+                        + length + ", actual=" + actual);
                 }
                 this.bytes = buffer;
             }
-        } catch (
-
-        IOException e) {
+        } catch (IOException e) {
             throw new CloudproofException(
-                "failed serializing " + this.getClass().getSimpleName() + ": " + e.getMessage(), e);
+                "failed deserializing " + this.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }
     }
 

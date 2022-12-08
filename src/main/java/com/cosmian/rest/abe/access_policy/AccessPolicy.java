@@ -2,8 +2,8 @@ package com.cosmian.rest.abe.access_policy;
 
 import java.nio.charset.StandardCharsets;
 
-import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.types.VendorAttribute;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

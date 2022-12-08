@@ -1,10 +1,10 @@
 package com.cosmian.rest.kmip;
 
-import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.data_structures.KeyValue;
 import com.cosmian.rest.kmip.data_structures.KeyWrappingData;
 import com.cosmian.rest.kmip.data_structures.TransparentSymmetricKey;
+import com.cosmian.utils.CloudproofException;
 
 public class KmipUtils {
 

@@ -2,11 +2,11 @@ package com.cosmian.rest.kmip.objects;
 
 import java.lang.reflect.InvocationTargetException;
 
-import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.json.KmipStruct;
 import com.cosmian.rest.kmip.json.KmipStructDeserializer;
 import com.cosmian.rest.kmip.json.KmipStructSerializer;
 import com.cosmian.rest.kmip.types.ObjectType;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -35,7 +35,9 @@ public abstract class KmipObject implements KmipStruct {
         }
     }
 
-    protected static <T extends KmipObject> T fromJson(String json, Class<T> clazz) throws CloudproofException {
+    protected static <T extends KmipObject> T fromJson(String json,
+                                                       Class<T> clazz)
+        throws CloudproofException {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(json, clazz);

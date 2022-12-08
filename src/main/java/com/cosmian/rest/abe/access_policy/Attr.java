@@ -3,8 +3,8 @@ package com.cosmian.rest.abe.access_policy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.types.VendorAttribute;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -99,7 +99,8 @@ public class Attr extends AccessPolicy {
         return new Attr(axis, name);
     }
 
-    public static VendorAttribute toVendorAttribute(Attr[] policyAttributes, String vendor_attribute_abe)
+    public static VendorAttribute toVendorAttribute(Attr[] policyAttributes,
+                                                    String vendor_attribute_abe)
         throws CloudproofException {
         // The value must be the JSON array of the String representation of the Attrs
         ArrayList<String> array = new ArrayList<String>();

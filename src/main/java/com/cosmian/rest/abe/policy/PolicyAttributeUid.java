@@ -3,7 +3,7 @@ package com.cosmian.rest.abe.policy;
 import java.io.Serializable;
 import java.util.Objects;
 
-import com.cosmian.CloudproofException;
+import com.cosmian.utils.CloudproofException;
 
 /**
  * An attribute in a policy group is characterized by the policy axis and its own name within that axis

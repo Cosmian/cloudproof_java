@@ -6,8 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -25,7 +27,7 @@ import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
-import com.cosmian.jna.findex.structs.NextKeyword;
+import com.cosmian.utils.CloudproofException;
 import com.cosmian.utils.Resources;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,6 +44,45 @@ public class TestNativeFindex {
         return passHash;
     }
 
+    /**
+     * Index the given Datasets
+     * 
+     * @param testFindexDataset the list of {@link UsersDataset}
+     * @return the clear text index
+     */
+    private HashMap<IndexedValue, Set<Keyword>> index(UsersDataset[] testFindexDataset) {
+
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
+        Set<Keyword> keywords = new HashSet<>();
+        List<Integer> originalLocationIds = new ArrayList<>();
+        for (UsersDataset user : testFindexDataset) {
+            originalLocationIds.add(user.id);
+            ByteBuffer buf = ByteBuffer.allocate(32);
+            buf.order(ByteOrder.BIG_ENDIAN);
+            buf.putInt(user.id);
+            byte[] dbUid = buf.array();
+            indexedValuesAndWords.put(new Location(dbUid).toIndexedValue(), user.values());
+            keywords.addAll(user.values());
+        }
+
+        // stats
+        System.out.println("Num keywords: " + keywords.size() + ", indexed Values: " + indexedValuesAndWords.size());
+        return indexedValuesAndWords;
+    }
+
+    private byte[] loadKey() throws IOException {
+        return Base64.getDecoder().decode(Resources.load_resource("findex/key.b64"));
+    }
+
+    private byte[] loadLabel() throws IOException {
+        return Resources.load_resource_as_bytes("findex/label");
+    }
+
+    private UsersDataset[] loadDatasets() throws IOException, CloudproofException {
+        String dataJson = Resources.load_resource("findex/data.json");
+        return UsersDataset.fromJson(dataJson);
+    }
+
     @Test
     public void testUpsertAndSearchSqlite() throws Exception {
         System.out.println("");
@@ -53,9 +94,9 @@ public class TestNativeFindex {
         //
         // Recover master keys (k and k*)
         //
-        byte[] key = Base64.getDecoder().decode(Resources.load_resource("findex/key.b64"));
+        byte[] key = loadKey();
         assertEquals(32, key.length);
-        byte[] label = Resources.load_resource_as_bytes("findex/label");
+        byte[] label = loadLabel();
 
         //
         // Recover test vectors
@@ -68,20 +109,8 @@ public class TestNativeFindex {
         //
         // Build dataset with DB uids and words
         //
-        String dataJson = Resources.load_resource("findex/data.json");
-        UsersDataset[] testFindexDataset = UsersDataset.fromJson(dataJson);
-        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
-        Set<Keyword> keywords = new HashSet<>();
-        for (UsersDataset user : testFindexDataset) {
-            ByteBuffer buf = ByteBuffer.allocate(32);
-            buf.putInt(user.id);
-            byte[] dbUid = buf.array();
-            indexedValuesAndWords.put(new Location(dbUid), user.values());
-            keywords.addAll(user.values());
-        }
-
-        // stats
-        System.out.println("Num keywords: " + keywords.size() + ", indexed Values: " + indexedValuesAndWords.size());
+        UsersDataset[] testFindexDataset = loadDatasets();
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = index(testFindexDataset);
 
         //
         // Prepare Sqlite tables and users
@@ -109,72 +138,82 @@ public class TestNativeFindex {
 
             {
                 List<IndexedValue> indexedValuesList =
-                    Findex.search(key, label, new NextKeyword[] {new NextKeyword("France")},
-                        0,
-                        -1, db.progressCallback(), db.fetchEntryCallback(), db.fetchChainCallback());
+                    Findex.search(
+                        key,
+                        label,
+                        new HashSet<>(Arrays.asList(new Keyword("France"))),
+                        0, -1, db);
                 int[] dbLocations = indexedValuesBytesListToArray(indexedValuesList);
-
+                assertEquals(expectedDbLocations.length, dbLocations.length);
                 assertArrayEquals(expectedDbLocations, dbLocations);
+                System.out.println("<== successfully found all original French locations");
             }
 
-            // TODO fix compact
-            // // This compact should do nothing except changing the label since the users
-            // // table didn't change.
-            // Findex.compact(1, key, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain,
-            // db.fetchAllEntry,
-            // db.updateLines, db.listRemovedLocations);
-
-            // {
-            // // Search with old label
-            // List<byte[]> indexedValuesList = Findex.search(key, label, new Word[] { new
-            // Word("France") },
-            // 0,
-            // -1, db.progress, db.fetchEntry, db.fetchChain);
-            // int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
-
-            // assertEquals(0, dbUids.length);
-            // }
+            // This compact should do nothing except changing the label since the users
+            // table didn't change.
+            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            {
+                // Search with old label
+                List<IndexedValue> indexedValuesList =
+                    Findex.search(
+                        key,
+                        label,
+                        new HashSet<>(Arrays.asList(new Keyword("France"))),
+                        0, -1, db);
+                int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+                assertEquals(0, dbUids.length);
+                System.out.println("<== successfully compacted and changed the label");
+            }
 
             {
                 // Search with new label and without user changes
-                List<IndexedValue> indexedValuesList = Findex.search(key, "NewLabel".getBytes(),
-                    new NextKeyword[] {new NextKeyword("France")}, 0, -1, db.progressCallback(),
-                    db.fetchEntryCallback(), db.fetchChainCallback());
+                List<IndexedValue> indexedValuesList = Findex.search(
+                    key,
+                    "NewLabel".getBytes(),
+                    new HashSet<>(Arrays.asList(new Keyword("France"))),
+                    0, -1, db);
                 int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
-
                 assertArrayEquals(expectedDbLocations, dbUids);
+                System.out.println("<== successfully found all French locations with the new label");
             }
 
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
             int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbLocations, 17);
+            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            {
+                // Search should return everyone but n°17
+                List<IndexedValue> indexedValuesList = Findex.search(
+                    key,
+                    "NewLabel".getBytes(),
+                    new HashSet<>(Arrays.asList(new Keyword("France"))),
+                    0, -1, db);
+                int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+                assertArrayEquals(newExpectedDbUids, dbUids);
+                System.out
+                    .println("<== successfully found all French locations after removing one and compacting");
+            }
+        }
+    }
 
-            // TODO fix compact
-            // Findex.compact(1, key, "NewLabel".getBytes(), db.fetchEntry, db.fetchChain,
-            // db.fetchAllEntry,
-            // db.updateLines, db.listRemovedLocations);
+    /**
+     * Check allocation problem during insertions. Allocation problem could occur when fetching entry table /* values
+     * whose sizes depend on words being indexed: the Entry Table Encrypted value is: `EncSym(𝐾value, (ict_uid𝑥𝑤𝑖,
+     * 𝐾𝑤𝑖 , 𝑤𝑖))`
+     */
+    @Test
+    public void testCheckAllocations() throws Exception {
 
-            // {
-            // // Search should return everyone instead of n°17
-
-            // List<byte[]> indexedValuesList = Findex.search(key, "NewLabel".getBytes(),
-            // new Word[] { new Word("France") }, 0, -1, db.progress, db.fetchEntry,
-            // db.fetchChain);
-            // int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
-
-            // assertArrayEquals(newExpectedDbUids, dbUids);
-            // }
-
-            // Check allocation problem during insertions. Allocation problem could occur
-            // when fetching entry table
-            // values
-            // whose sizes depend on words being indexed: the Entry Table Encrypted value
-            // is:
-            // `EncSym(𝐾value, (ict_uid𝑥𝑤𝑖, 𝐾𝑤𝑖 , 𝑤𝑖))`
+        byte[] key = loadKey();
+        byte[] label = loadLabel();
+        UsersDataset[] datasets = loadDatasets();
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = index(datasets);
+        try (Sqlite db = new Sqlite()) {
             for (int i = 0; i < 100; i++) {
                 Findex.upsert(key, label, indexedValuesAndWords, db);
             }
         }
+        System.out.println("<== successfully performed 100 upserts");
     }
 
     private static boolean available(int port) {
@@ -367,7 +406,10 @@ public class TestNativeFindex {
         int count = 0;
         for (IndexedValue iv : indexedValuesList) {
             byte[] location = iv.getLocation().getBytes();
-            dbLocations[count] = ByteBuffer.wrap(location).getInt();
+            ByteBuffer buf = ByteBuffer.wrap(location);
+            buf.order(ByteOrder.BIG_ENDIAN);
+            int dbLocation = buf.getInt();
+            dbLocations[count] = dbLocation;
             count++;
         }
         Arrays.sort(dbLocations);

@@ -3,6 +3,7 @@ package com.cosmian.findex;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -28,7 +29,6 @@ import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertChain;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertEntry;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.serde.Leb128ByteArray;
-import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
@@ -157,8 +157,8 @@ public class Sqlite extends Database implements Closeable {
         // result.length);
     }
 
-    public Map<Uid32, byte[]> conditionalUpsert(Map<Uid32, Tuple<EntryTableValue, EntryTableValue>> uidsAndValues,
-                                                String tableName)
+    public Map<Uid32, EntryTableValue> conditionalUpsert(Map<Uid32, EntryTableValues> uidsAndValues,
+                                                         String tableName)
         throws SQLException {
         if (uidsAndValues.size() == 0) {
             return new HashMap<>();
@@ -168,13 +168,13 @@ public class Sqlite extends Database implements Closeable {
                 + "(uid, value) VALUES(?,?) ON CONFLICT(uid) DO UPDATE SET value=? WHERE value=?;");
         // this.connection.setAutoCommit(false);
         ArrayList<Uid32> uids = new ArrayList<>(uidsAndValues.size());
-        for (Entry<Uid32, Tuple<EntryTableValue, EntryTableValue>> entry : uidsAndValues.entrySet()) {
+        for (Entry<Uid32, EntryTableValues> entry : uidsAndValues.entrySet()) {
             Uid32 uid = entry.getKey();
             uids.add(uid);
             updatePreparedStatement.setBytes(1, uid.getBytes());
-            updatePreparedStatement.setBytes(2, entry.getValue().getRight().getBytes());
-            updatePreparedStatement.setBytes(3, entry.getValue().getRight().getBytes());
-            updatePreparedStatement.setBytes(4, entry.getValue().getLeft().getBytes());
+            updatePreparedStatement.setBytes(2, entry.getValue().getNew().getBytes());
+            updatePreparedStatement.setBytes(3, entry.getValue().getNew().getBytes());
+            updatePreparedStatement.setBytes(4, entry.getValue().getPrevious().getBytes());
             updatePreparedStatement.addBatch();
         }
         // this.connection.commit();
@@ -190,7 +190,7 @@ public class Sqlite extends Database implements Closeable {
         }
 
         // Select all the failed uids and their corresponding
-        HashMap<Uid32, byte[]> failed = new HashMap<>(failedUids.size(), 1);
+        HashMap<Uid32, EntryTableValue> failed = new HashMap<>(failedUids.size(), 1);
         PreparedStatement selectPreparedStatement = connection
             .prepareStatement("SELECT uid, value FROM " + tableName
                 + " WHERE uid IN (" + questionMarks(failedUids.size()) + ")");
@@ -205,8 +205,10 @@ public class Sqlite extends Database implements Closeable {
         ResultSet selectResults = selectPreparedStatement.executeQuery();
         while (selectResults.next()) {
             Uid32 uid = new Uid32(selectResults.getBytes("uid"));
-            failed.put(uid, selectResults.getBytes("value"));
+            failed.put(uid, new EntryTableValue(selectResults.getBytes("value")));
         }
+        System.out.println("TO UPSERT: " + uidsAndValues.size());
+        System.out.println("FAILED   : " + failed.size());
         return failed;
     }
 
@@ -245,7 +247,6 @@ public class Sqlite extends Database implements Closeable {
         throws SQLException {
         PreparedStatement pstmt = this.connection
             .prepareStatement("SELECT id FROM users WHERE id IN (" + questionMarks(ids.size()) + ")");
-
         int count = 1;
         for (Integer bs : ids) {
             pstmt.setInt(count, bs);
@@ -328,20 +329,14 @@ public class Sqlite extends Database implements Closeable {
     @Override
     protected DBUpsertEntry upsertEntry() {
         return new DBUpsertEntry() {
-            // @Override
-            // public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws
-            // CloudproofException {
-            // try {
-            // databaseUpsert(uidsAndValues, "entry_table");
-            // } catch (SQLException e) {
-            // throw new CloudproofException("Failed entry upsert: " + e.toString());
-            // }
-            // }
-
             @Override
             public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> uidsAndValues)
                 throws CloudproofException {
-                throw new CloudproofException("DBUpsertEntry not implemented");
+                try {
+                    return Sqlite.this.conditionalUpsert(uidsAndValues, "entry_table");
+                } catch (SQLException e) {
+                    throw new CloudproofException("Failed entry upsert: " + e.toString());
+                }
             }
         };
     }
@@ -386,11 +381,15 @@ public class Sqlite extends Database implements Closeable {
             @Override
             public List<Location> list(List<Location> locations) throws CloudproofException {
                 List<Integer> ids = locations.stream()
-                    .map((Location location) -> ByteBuffer.wrap(location.getBytes()).getInt())
+                    .map((Location location) -> {
+                        ByteBuffer buf = ByteBuffer.wrap(location.getBytes());
+                        buf.order(ByteOrder.BIG_ENDIAN);
+                        return buf.getInt();
+                    })
                     .collect(Collectors.toList());
-
                 try {
-                    return listRemovedIds("users", ids).stream()
+                    List<Integer> removedIds = listRemovedIds("users", ids);
+                    return removedIds.stream()
                         .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
                         .collect(Collectors.toList());
                 } catch (SQLException e) {
@@ -411,4 +410,5 @@ public class Sqlite extends Database implements Closeable {
             };
         };
     }
+
 }

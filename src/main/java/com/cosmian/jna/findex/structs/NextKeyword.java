@@ -2,16 +2,24 @@ package com.cosmian.jna.findex.structs;
 
 import java.nio.charset.Charset;
 
-public class NextKeyword extends IndexedValue {
+import com.cosmian.jna.findex.serde.Leb128ByteArray;
+
+public class NextKeyword extends Leb128ByteArray {
+
+    public NextKeyword() {
+        super();
+    }
 
     public NextKeyword(byte[] keyword) {
-        super(new byte[keyword.length + 1]);
-        this.bytes[0] = WORD_BYTE;
-        System.arraycopy(keyword, 0, this.bytes, 1, keyword.length);
+        super(keyword);
     }
 
     public NextKeyword(String keyword) {
         this(keyword.getBytes(Charset.defaultCharset()));
+    }
+
+    public IndexedValue toIndexedValue() {
+        return new IndexedValue(this);
     }
 
 }

@@ -14,7 +14,8 @@
     "Kmip",
     "serializers",
     "Sqlite",
-    "uids"
+    "uids",
+    "upserts"
   ],
   "java.format.settings.url": ".vscode/codestyle-java.xml",
   "[java]": {

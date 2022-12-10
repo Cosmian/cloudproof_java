@@ -13,8 +13,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.findex.Sqlite;
-import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.EntryTableValue;
+import com.cosmian.jna.findex.structs.EntryTableValues;
 import com.cosmian.jna.findex.structs.Uid32;
 
 public class TestSqlite {
@@ -38,15 +38,15 @@ public class TestSqlite {
             byte[] uidBuffer = new byte[32];
             byte[] valueBuffer = new byte[64];
             int NEW_TOTAL = 999;
-            HashMap<Uid32, Tuple<EntryTableValue, EntryTableValue>> originalValues = new HashMap<>();
-            HashMap<Uid32, Tuple<EntryTableValue, EntryTableValue>> updatedValues = new HashMap<>();
+            HashMap<Uid32, EntryTableValues> originalValues = new HashMap<>();
+            HashMap<Uid32, EntryTableValues> updatedValues = new HashMap<>();
             for (int i = 0; i < NEW_TOTAL; i++) {
                 rand.nextBytes(uidBuffer);
                 Uid32 uid = new Uid32(Arrays.copyOf(uidBuffer, uidBuffer.length));
                 rand.nextBytes(valueBuffer);
-                Tuple<EntryTableValue, EntryTableValue> tuple = new Tuple<>(
-                    new EntryTableValue(new byte[] {}),
-                    new EntryTableValue(Arrays.copyOf(valueBuffer, valueBuffer.length)));
+                EntryTableValues tuple = new EntryTableValues(
+                    new byte[] {},
+                    Arrays.copyOf(valueBuffer, valueBuffer.length));
                 if (i % 3 == 0) {
                     updatedValues.put(uid, tuple);
                 } else {
@@ -58,7 +58,7 @@ public class TestSqlite {
             System.out.println(" .  Updated  Values: " + updatedValues.size());
 
             // insert originals
-            Map<Uid32, byte[]> failed = db.conditionalUpsert(originalValues, tableName);
+            Map<Uid32, EntryTableValue> failed = db.conditionalUpsert(originalValues, tableName);
             assertEquals(0, failed.size());
 
             // the number of entries that should fail on update
@@ -71,17 +71,17 @@ public class TestSqlite {
 
             int counterSuccess = 0;
             int counterFail = 0;
-            for (Entry<Uid32, Tuple<EntryTableValue, EntryTableValue>> entry : originalValues.entrySet()) {
+            for (Entry<Uid32, EntryTableValues> entry : originalValues.entrySet()) {
                 rand.nextBytes(valueBuffer);
                 EntryTableValue newValue = new EntryTableValue(Arrays.copyOf(valueBuffer, valueBuffer.length));
                 if (++counterSuccess <= numOverlapSuccess) {
                     updatedValues.put(
                         entry.getKey(),
-                        new Tuple<>(entry.getValue().getRight(), newValue));
+                        new EntryTableValues(entry.getValue().getNew(), newValue));
                 } else if (++counterFail <= numOverlapFail) {
                     updatedValues.put(
                         entry.getKey(),
-                        new Tuple<>(
+                        new EntryTableValues(
                             new EntryTableValue(new byte[] {'f', 'a', 'i', 'l'}), newValue));
                 } else {
                     break;

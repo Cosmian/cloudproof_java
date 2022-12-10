@@ -2,16 +2,23 @@ package com.cosmian.jna.findex.structs;
 
 import java.nio.charset.Charset;
 
-public class Location extends IndexedValue {
+import com.cosmian.jna.findex.serde.Leb128ByteArray;
 
-    public Location(byte[] location) {
-        super(new byte[location.length + 1]);
-        this.bytes[0] = LOCATION_BYTE;
-        System.arraycopy(location, 0, this.bytes, 1, location.length);
+public class Location extends Leb128ByteArray {
+
+    public Location() {
+        super();
+    }
+
+    public Location(byte[] value) {
+        super(value);
     }
 
     public Location(String location) {
         this(location.getBytes(Charset.defaultCharset()));
     }
 
+    public IndexedValue toIndexedValue() {
+        return new IndexedValue(this);
+    }
 }

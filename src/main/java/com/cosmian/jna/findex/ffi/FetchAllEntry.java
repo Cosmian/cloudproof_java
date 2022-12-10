@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchAllEntryCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchAllEntriesCallback;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchAllEntries;
 import com.cosmian.jna.findex.serde.Leb128Writer;
 import com.cosmian.jna.findex.structs.EntryTableValue;
@@ -14,7 +14,7 @@ import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
-public class FetchAllEntry implements FetchAllEntryCallback {
+public class FetchAllEntry implements FetchAllEntriesCallback {
     private DBFetchAllEntries fetch;
 
     private Iterator<Entry<Uid32, EntryTableValue>> entrySetIterator;

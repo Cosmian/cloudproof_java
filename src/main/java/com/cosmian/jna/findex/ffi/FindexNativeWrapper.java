@@ -26,7 +26,7 @@ public interface FindexNativeWrapper extends Library {
             throws CloudproofException;
     }
 
-    interface FetchAllEntryCallback extends Callback {
+    interface FetchAllEntriesCallback extends Callback {
         int apply(Pointer output,
                   IntByReference outputSize,
                   int numberOfEntries)
@@ -44,7 +44,7 @@ public interface FindexNativeWrapper extends Library {
     interface UpsertEntryCallback extends Callback {
         int apply(
                   Pointer entries,
-                  int entriesLength,
+                  IntByReference entriesLength,
                   Pointer outputs,
                   IntByReference outputsLength)
             throws CloudproofException;
@@ -52,7 +52,7 @@ public interface FindexNativeWrapper extends Library {
 
     interface UpsertChainCallback extends Callback {
         int apply(Pointer chains,
-                  int chainsLength)
+                  IntByReference chainsLength)
             throws CloudproofException;
     }
 
@@ -90,21 +90,16 @@ public interface FindexNativeWrapper extends Library {
                  UpsertEntryCallback upsertEntry,
                  UpsertChainCallback upsertChain);
 
-    int h_graph_upsert(String masterKeysJson,
-                       Pointer labelPointer,
-                       int labelSize,
-                       String dbUidsAndWordsJson,
-                       FetchEntryCallback fetchEntry,
-                       UpsertEntryCallback upsertEntry,
-                       UpsertChainCallback upsertChain);
-
     int h_compact(int numberOfReindexingPhasesBeforeFullSet,
-                  String masterKeysJson,
+                  Pointer existingKeyPointer,
+                  int existingKeySize,
+                  Pointer newKeyPointer,
+                  int newKeySize,
                   Pointer labelPointer,
                   int labelSize,
                   FetchEntryCallback fetchEntry,
                   FetchChainCallback fetchChain,
-                  FetchAllEntryCallback fetchAllEntry,
+                  FetchAllEntriesCallback fetchAllEntry,
                   UpdateLinesCallback updateLines,
                   ListRemovedLocationsCallback listRemovedLocations);
 

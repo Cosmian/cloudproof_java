@@ -9,6 +9,7 @@ import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
 
 public class UpsertChain implements UpsertChainCallback {
 
@@ -20,13 +21,13 @@ public class UpsertChain implements UpsertChainCallback {
 
     @Override
     public int apply(Pointer items,
-                     int itemsLength)
+                     IntByReference itemsLength)
         throws CloudproofException {
         //
         // Read `items` until `itemsLength`
         //
-        byte[] itemsBytes = new byte[itemsLength];
-        items.read(0, itemsBytes, 0, itemsLength);
+        byte[] itemsBytes = new byte[itemsLength.getValue()];
+        items.read(0, itemsBytes, 0, itemsLength.getValue());
 
         //
         // Deserialize the chain table items

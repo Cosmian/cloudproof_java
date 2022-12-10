@@ -3,7 +3,6 @@ package com.cosmian.jna.findex.ffi;
 import java.util.List;
 import java.util.Map;
 
-import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchEntry;
 import com.cosmian.jna.findex.serde.Leb128Reader;
@@ -45,7 +44,7 @@ public class FetchEntry implements FetchEntryCallback {
         //
         // Serialize results
         //
-        return Findex.mapToOutputPointer(uidsAndValues, output, outputSize);
+        return FFiUtils.mapToOutputPointer(uidsAndValues, output, outputSize);
     }
 
 }

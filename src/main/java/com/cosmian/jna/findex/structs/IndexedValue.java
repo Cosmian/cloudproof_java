@@ -16,8 +16,28 @@ public class IndexedValue extends Leb128ByteArray {
 
     protected final byte WORD_BYTE = 'w';
 
+    public IndexedValue() {
+        super();
+    }
+
     public IndexedValue(byte[] bytes) {
         super(bytes);
+    }
+
+    public IndexedValue(Location location) {
+        super(new byte[location.getBytes().length + 1]);
+        this.bytes[0] = LOCATION_BYTE;
+        System.arraycopy(
+            location.getBytes(), 0,
+            this.bytes, 1, location.getBytes().length);
+    }
+
+    public IndexedValue(NextKeyword keyword) {
+        super(new byte[keyword.getBytes().length + 1]);
+        this.bytes[0] = WORD_BYTE;
+        System.arraycopy(
+            keyword.getBytes(), 0,
+            this.bytes, 1, keyword.getBytes().length);
     }
 
     public boolean isLocation() {
@@ -30,16 +50,16 @@ public class IndexedValue extends Leb128ByteArray {
 
     public Location getLocation() throws CloudproofException {
         if (isLocation()) {
-            return (Location) this;
+            return new Location(Arrays.copyOfRange(this.bytes, 1, this.bytes.length));
         }
         throw new CloudproofException("IndexValue is not a location");
     }
 
     public NextKeyword getWord() throws CloudproofException {
         if (isWord()) {
-            return (NextKeyword) this;
+            return new NextKeyword(Arrays.copyOfRange(this.bytes, 1, this.bytes.length));
         }
-        throw new CloudproofException("IndexValue is not a word");
+        throw new CloudproofException("IndexValue is not a next keyword");
     }
 
     @Override

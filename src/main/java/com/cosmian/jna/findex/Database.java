@@ -3,7 +3,7 @@ package com.cosmian.jna.findex;
 import com.cosmian.jna.findex.ffi.FetchAllEntry;
 import com.cosmian.jna.findex.ffi.FetchChain;
 import com.cosmian.jna.findex.ffi.FetchEntry;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchAllEntryCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchAllEntriesCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.ListRemovedLocationsCallback;
@@ -47,7 +47,7 @@ public abstract class Database {
         return new FetchEntry(fetchEntry());
     }
 
-    public FetchAllEntryCallback fetchAllEntriesCallback() {
+    public FetchAllEntriesCallback fetchAllEntriesCallback() {
         return new FetchAllEntry(fetchAllEntries());
     }
 

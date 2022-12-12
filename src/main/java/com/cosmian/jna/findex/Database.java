@@ -37,6 +37,40 @@ public abstract class Database {
 
     protected abstract DBUpsertChain upsertChain();
 
+    /**
+     * <pre>
+     *  Update the database with the new values. This function should:
+     *  - remove all the Index Entry Table
+     *  - add `new_encrypted_entry_table_items` to the Index Entry Table
+     *  - remove `removed_chain_table_uids` from the Index Chain Table
+     *  - add `new_encrypted_chain_table_items` to the Index Chain Table
+     * 
+     *  The order of these operation is not important but have some implications:
+     * 
+     *  ### Option 1
+     * 
+     *  Keep the database small but prevent using the index during the
+     *  `update_lines`.
+     * 
+     *  1. remove all the Index Entry Table
+     *  2. add `new_encrypted_entry_table_items` to the Index Entry Table
+     *  3. remove `removed_chain_table_uids` from the Index Chain Table
+     *  4. add `new_encrypted_chain_table_items` to the Index Chain Table
+     * 
+     *  ### Option 2
+     * 
+     *  During a small duration, the index tables are much bigger but users can
+     *  continue
+     *  using the index during the `update_lines`.
+     * 
+     *  1. save all UIDs from the current Index Entry Table
+     *  2. add `new_encrypted_entry_table_items` to the Index Entry Table
+     *  3. add `new_encrypted_chain_table_items` to the Index Chain Table
+     *  4. publish new label to users
+     *  5. remove old lines from the Index Entry Table (using the saved UIDs in 1.)
+     *  6. remove `removed_chain_table_uids` from the Index Chain Table
+     * </pre>
+     */
     protected abstract DBUpdateLines updateLines();
 
     protected abstract DBListRemovedLocations listRemovedLocations();

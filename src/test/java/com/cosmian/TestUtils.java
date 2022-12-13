@@ -1,5 +1,7 @@
 package com.cosmian;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.Optional;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -55,5 +57,49 @@ public final class TestUtils {
             System.out.println("ERROR: " + e.getMessage());
             return false;
         }
+    }
+
+    public static boolean portAvailable(int port) {
+        System.out.println("--------------Testing port " + port);
+        Socket s = null;
+        try {
+            s = new Socket("localhost", port);
+            // If the code makes it this far without an exception it means
+            // something is using the port and has responded.
+            System.out.println("--------------Port " + port + " is not available");
+            return false;
+        } catch (IOException e) {
+            System.out.println("--------------Port " + port + " is available");
+            return true;
+        } finally {
+            if (s != null) {
+                try {
+                    s.close();
+                } catch (IOException e) {
+                    throw new RuntimeException("Error not handled.", e);
+                }
+            }
+        }
+    }
+
+    public static String redisHostname() {
+        String v = System.getenv("REDIS_HOSTNAME");
+        if (v == null) {
+            return "localhost";
+        }
+        return v;
+    }
+
+    public static int redisPort() {
+        String v = System.getenv("REDIS_PORT");
+        if (v == null) {
+            return 6379;
+        }
+        return Integer.parseInt(v);
+    }
+
+    public static String redisPassword() {
+        String v = System.getenv("REDIS_PASSWORD");
+        return v;
     }
 }

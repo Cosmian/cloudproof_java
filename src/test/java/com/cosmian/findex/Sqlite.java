@@ -381,16 +381,14 @@ public class Sqlite extends Database implements Closeable {
             @Override
             public List<Location> list(List<Location> locations) throws CloudproofException {
                 List<Integer> ids = locations.stream()
-                    .map((Location location) -> {
-                        ByteBuffer buf = ByteBuffer.wrap(location.getBytes());
-                        buf.order(ByteOrder.BIG_ENDIAN);
-                        return buf.getInt();
-                    })
+                    .map((Location location) -> ByteBuffer.wrap(location.getBytes()).order(ByteOrder.BIG_ENDIAN)
+                        .getInt())
                     .collect(Collectors.toList());
                 try {
                     List<Integer> removedIds = listRemovedIds("users", ids);
                     return removedIds.stream()
-                        .map((Integer id) -> new Location(ByteBuffer.allocate(32).putInt(id).array()))
+                        .map((Integer id) -> new Location(
+                            ByteBuffer.allocate(32).order(ByteOrder.BIG_ENDIAN).putInt(id).array()))
                         .collect(Collectors.toList());
                 } catch (SQLException e) {
                     throw new CloudproofException("Failed list removed locations: " + e.toString());

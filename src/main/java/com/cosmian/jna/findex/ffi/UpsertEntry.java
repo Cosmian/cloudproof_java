@@ -29,7 +29,6 @@ public class UpsertEntry implements UpsertEntryCallback {
         //
         // Read `entries` until `itemsLength`
         //
-        System.out.println("ENTRIES LENGTH " + entriesLength.getValue());
         byte[] entriesBytes = new byte[entriesLength.getValue()];
         entries.read(0, entriesBytes, 0, entriesLength.getValue());
 

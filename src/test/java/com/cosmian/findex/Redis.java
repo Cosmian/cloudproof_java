@@ -3,6 +3,7 @@ package com.cosmian.findex;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.Database;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchAllEntries;
@@ -22,10 +25,9 @@ import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpdateLines;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertChain;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertEntry;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
-import com.cosmian.jna.findex.ffi.UpdateLines;
-import com.cosmian.jna.findex.ffi.UpsertEntry;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
+import com.cosmian.jna.findex.structs.EntryTableValues;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.Uid32;
@@ -38,7 +40,16 @@ import redis.clients.jedis.Transaction;
 
 public class Redis extends Database implements Closeable {
 
-    // private static final Logger logger = Logger.getLogger(Redis.class.getName());
+    private final static byte[] CONDITIONAL_UPSERT_SCRIPT =
+        ("local value=redis.call('GET',KEYS[1])\n" +
+            "if((value==false) or (not(value == false) and (ARGV[1] == value))) then \n" +
+            "  redis.call('SET', KEYS[1], ARGV[2])\n" +
+            "  return {} \n" +
+            "else \n" +
+            "  return {value} \n" +
+            "end").getBytes(StandardCharsets.UTF_8);
+
+    private static final Logger logger = Logger.getLogger(Redis.class.getName());
 
     public static final String PREFIX_STORAGE = "cosmian";
 
@@ -82,7 +93,7 @@ public class Redis extends Database implements Closeable {
             jedis.auth(password);
     }
 
-    public static Redis create(String uri) {
+    static Redis create(String uri) {
         return new Redis(uri);
     }
 
@@ -102,92 +113,14 @@ public class Redis extends Database implements Closeable {
         return Integer.parseInt(v);
     }
 
-    static String redisPassword() {
+    public static String redisPassword() {
         String v = System.getenv("REDIS_PASSWORD");
         return v;
     }
 
     //
-    // Very basic redis functions
-    public byte[] get(byte[] key) throws CloudproofException {
-        return this.jedis.get(key);
-    }
-
-    public long del(byte[] key) throws CloudproofException {
-        return this.jedis.del(key);
-    }
-
-    public byte[] set(byte[] key,
-                      byte[] value)
-        throws CloudproofException {
-        return this.jedis.getSet(key, value);
-    }
-
-    //
     // Declare all callbacks
     //
-
-    public UpsertEntry upsertEntry = new UpsertEntry(new com.cosmian.jna.findex.FindexWrapper.UpsertEntryInterface() {
-        @Override
-        public void upsert(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
-            try {
-                setEntries(uidsAndValues);
-            } catch (CloudproofException e) {
-                throw new CloudproofException("Failed entry upsert: " + e.toString());
-            }
-        }
-
-        @Override
-        public HashMap<byte[], byte[]> upsert(HashMap<byte[], EntryTableValue> uidsAndValues)
-            throws CloudproofException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-    });
-
-    /// Update the database with the new values. This function should:
-    /// - remove all the Index Entry Table
-    /// - add `new_encrypted_entry_table_items` to the Index Entry Table
-    /// - remove `removed_chain_table_uids` from the Index Chain Table
-    /// - add `new_encrypted_chain_table_items` to the Index Chain Table
-    ///
-    /// The order of these operation is not important but have some implications:
-    ///
-    /// ### Option 1
-    ///
-    /// Keep the database small but prevent using the index during the
-    /// `update_lines`.
-    ///
-    /// 1. remove all the Index Entry Table
-    /// 2. add `new_encrypted_entry_table_items` to the Index Entry Table
-    /// 3. remove `removed_chain_table_uids` from the Index Chain Table
-    /// 4. add `new_encrypted_chain_table_items` to the Index Chain Table
-    ///
-    /// ### Option 2
-    ///
-    /// During a small duration, the index tables are much bigger but users can
-    /// continue
-    /// using the index during the `update_lines`.
-    ///
-    /// 1. save all UIDs from the current Index Entry Table
-    /// 2. add `new_encrypted_entry_table_items` to the Index Entry Table
-    /// 3. add `new_encrypted_chain_table_items` to the Index Chain Table
-    /// 4. publish new label to users
-    /// 5. remove old lines from the Index Entry Table (using the saved UIDs in 1.)
-    /// 6. remove `removed_chain_table_uids` from the Index Chain Table
-    public UpdateLines updateLines = new UpdateLines(new com.cosmian.jna.findex.FindexWrapper.UpdateLinesInterface() {
-        @Override
-        public void update(List<byte[]> removedChains,
-                           HashMap<byte[], byte[]> newEntries,
-                           HashMap<byte[], byte[]> newChains)
-            throws CloudproofException {
-            try {
-
-            } catch (CloudproofException e) {
-                throw new CloudproofException("Failed update lines: " + e.toString());
-            }
-        }
-    });
 
     /**
      * Format Redis key as NUMBER:HEX_UID
@@ -201,7 +134,7 @@ public class Redis extends Database implements Closeable {
                              int number,
                              byte[] uid) {
         byte[] prefixBytes = prefix.getBytes(StandardCharsets.UTF_8);
-        byte[] numberBytes = ByteBuffer.allocate(4).putInt(number).array();
+        byte[] numberBytes = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(number).array();
         byte[] result = Arrays.copyOf(prefixBytes, prefixBytes.length + numberBytes.length + uid.length);
         System.arraycopy(numberBytes, 0, result, prefixBytes.length, numberBytes.length);
         System.arraycopy(uid, 0, result, prefixBytes.length + numberBytes.length, uid.length);
@@ -230,23 +163,6 @@ public class Redis extends Database implements Closeable {
             tx.getSet(key, entry.getValue());
         }
         tx.exec();
-    }
-
-    public byte[] getDataEntry(byte[] uid) throws CloudproofException {
-        byte[] key = key(PREFIX_STORAGE, DATA_TABLE_INDEX, uid);
-        return get(key);
-    }
-
-    public byte[] setDataEntry(byte[] uid,
-                               byte[] value)
-        throws CloudproofException {
-        byte[] key = key(PREFIX_STORAGE, DATA_TABLE_INDEX, uid);
-        return set(key, value);
-    }
-
-    public long delDataEntry(byte[] uid) throws CloudproofException {
-        byte[] key = key(PREFIX_STORAGE, DATA_TABLE_INDEX, uid);
-        return del(key);
     }
 
     public List<byte[]> getAllKeys(int redisTableIndex) throws CloudproofException {
@@ -282,16 +198,17 @@ public class Redis extends Database implements Closeable {
 
     public void insertUsers(UsersDataset[] testFindexDataset) throws CloudproofException {
         for (UsersDataset user : testFindexDataset) {
-            String json = user.toString();
-            byte[] keySuffix = ByteBuffer.allocate(4).putInt(user.id).array();
-            setDataEntry(keySuffix, json.getBytes());
+            byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(user.id).array();
+            byte[] key = key(PREFIX_STORAGE, DATA_TABLE_INDEX, keySuffix);
+            byte[] value = user.toString().getBytes(StandardCharsets.UTF_8);
+            this.jedis.set(key, value);
         }
     }
 
     public long deleteUser(int uid) throws CloudproofException {
-        byte[] keySuffix = ByteBuffer.allocate(4).putInt(uid).array();
+        byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(uid).array();
         byte[] key = key(PREFIX_STORAGE, DATA_TABLE_INDEX, keySuffix);
-        return del(key);
+        return this.jedis.del(key);
     }
 
     @Override
@@ -372,7 +289,8 @@ public class Redis extends Database implements Closeable {
                 Iterator<Location> it = locations.iterator();
                 while (it.hasNext()) {
                     Location location = it.next();
-                    byte[] value = getDataEntry(location.getBytes());
+                    byte[] key = key(PREFIX_STORAGE, DATA_TABLE_INDEX, location.getBytes());
+                    byte[] value = Redis.this.jedis.get(key);
                     if (value != null) {
                         it.remove();
                     }
@@ -389,6 +307,16 @@ public class Redis extends Database implements Closeable {
             @Override
             public boolean notify(List<IndexedValue> indexedValues) throws CloudproofException {
                 // You may want to do something here such as User feedback
+                List<Integer> ids =
+                    indexedValues.stream().map((IndexedValue iv) -> {
+                        try {
+                            return ByteBuffer.wrap(iv.getLocation().getBytes())
+                                .order(ByteOrder.BIG_ENDIAN).getInt();
+                        } catch (CloudproofException e) {
+                            return -1;
+                        }
+                    }).collect(Collectors.toList());
+                logger.info("Progress: " + ids.toString());
                 return true;
             }
 
@@ -404,10 +332,24 @@ public class Redis extends Database implements Closeable {
                                Map<Uid32, EntryTableValue> newEntries,
                                Map<Uid32, ChainTableValue> newChains)
                 throws CloudproofException {
+
+                // truncate the EN
                 delAllEntries(ENTRY_TABLE_INDEX);
-                setEntries(newEntries);
-                setChains(newChains);
-                delEntries(removedChains, CHAIN_TABLE_INDEX);
+                // set the new Entries
+                for (Entry<Uid32, EntryTableValue> newEntry : newEntries.entrySet()) {
+                    byte[] key = key(PREFIX_STORAGE, ENTRY_TABLE_INDEX, newEntry.getKey().getBytes());
+                    Redis.this.jedis.set(key, newEntry.getValue().getBytes());
+                }
+                // set (upsert) the new chains
+                for (Entry<Uid32, ChainTableValue> newChain : newChains.entrySet()) {
+                    byte[] key = key(PREFIX_STORAGE, CHAIN_TABLE_INDEX, newChain.getKey().getBytes());
+                    Redis.this.jedis.set(key, newChain.getValue().getBytes());
+                }
+                // clean up the Chain Table
+                for (Uid32 uid : removedChains) {
+                    byte[] key = key(PREFIX_STORAGE, CHAIN_TABLE_INDEX, uid.getBytes());
+                    Redis.this.jedis.del(key);
+                }
 
             }
 
@@ -433,8 +375,27 @@ public class Redis extends Database implements Closeable {
 
     @Override
     protected DBUpsertEntry upsertEntry() {
-        // TODO Auto-generated method stub
-        return null;
+        return new DBUpsertEntry() {
+
+            @Override
+            public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> uidsAndValues)
+                throws CloudproofException {
+                final Map<Uid32, EntryTableValue> failed = new HashMap<>();
+                for (final Entry<Uid32, EntryTableValues> entry : uidsAndValues.entrySet()) {
+                    List<byte[]> keys =
+                        Arrays.asList(key(PREFIX_STORAGE, CHAIN_TABLE_INDEX, entry.getKey().getBytes()));
+                    List<byte[]> args =
+                        Arrays.asList(entry.getValue().getPrevious().getBytes(), entry.getValue().getNew().getBytes());
+                    @SuppressWarnings("unchecked")
+                    List<byte[]> response =
+                        (List<byte[]>) Redis.this.jedis.eval(CONDITIONAL_UPSERT_SCRIPT, keys, args);
+                    if (response.size() > 0) {
+                        failed.put(entry.getKey(), new EntryTableValue(response.get(0)));
+                    }
+                }
+                return failed;
+            }
+        };
     }
 
     @Override

@@ -97,7 +97,6 @@ public class TestConditionalUpsert {
 
             System.out.println("<== success");
         }
-
     }
 
     @Test
@@ -110,6 +109,9 @@ public class TestConditionalUpsert {
         }
 
         try (Redis db = new Redis()) {
+
+            // delete all items
+            db.jedis.flushAll();
 
             // generate some random uid and values
             Random rand = new Random();
@@ -170,8 +172,8 @@ public class TestConditionalUpsert {
             failed = db.upsertEntry().upsert(updatedValues);
             assertEquals(numOverlapFail, failed.size());
 
-            // cleanup
-            db.delAllEntries(Redis.ENTRY_TABLE_INDEX);
+            // delete all items
+            db.jedis.flushAll();
 
             System.out.println("<== success");
         }

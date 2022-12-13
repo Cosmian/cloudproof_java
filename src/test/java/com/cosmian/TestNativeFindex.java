@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import com.cosmian.findex.Redis;
 import com.cosmian.findex.Sqlite;
 import com.cosmian.findex.UsersDataset;
+import com.cosmian.jna.findex.Database;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
@@ -129,9 +130,9 @@ public class TestNativeFindex {
             //
             Findex.upsert(key, label, indexedValuesAndWords, db);
             System.out
-                .println("After insertion: entry_table: nb indexes: " + db.getAllKeyValueItems("entry_table").size());
+                .println("After insertion: entry_table size: " + db.getAllKeyValueItems("entry_table").size());
             System.out
-                .println("After insertion: chain_table: nb indexes: " + db.getAllKeyValueItems("chain_table").size());
+                .println("After insertion: chain_table size: " + db.getAllKeyValueItems("chain_table").size());
 
             //
             // Search
@@ -222,14 +223,14 @@ public class TestNativeFindex {
         System.out.println("<== successfully performed 100 upserts");
     }
 
-    // private void verifyFindexSearch(MasterKeys masterKeys,
+    // private void verifyFindexSearch(byte[] key,
     // byte[] label,
     // String word,
     // Redis db,
     // int expectedResultsNumber)
     // throws Exception {
-    // List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), label, new Word[] {new Word(word)}, 0, -1,
-    // db.progress, db.fetchEntry, db.fetchChain);
+    // List<IndexedValue> indexedValuesList =
+    // Findex.search(key, label, new HashSet<>(Arrays.asList(new Keyword(word))), 0, -1, db);
     // int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
 
     // assertEquals(expectedResultsNumber, dbUids.length);
@@ -272,60 +273,96 @@ public class TestNativeFindex {
         try (Redis db = new Redis()) {
             db.jedis.flushAll();
             db.insertUsers(testFindexDataset);
+            System.out
+                .println("After insertion: data_table size: " + db.getAllKeys(Redis.DATA_TABLE_INDEX).size());
 
             //
             // Upsert
             //
             Findex.upsert(key, label, indexedValuesAndWords, db);
             System.out
-                .println("After insertion: entry_table: nb indexes: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
+                .println("After insertion: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
             System.out
-                .println("After insertion: chain_table: nb indexes: " + db.getAllKeys(Redis.CHAIN_TABLE_INDEX).size());
+                .println("After insertion: chain_table size: " + db.getAllKeys(Redis.CHAIN_TABLE_INDEX).size());
 
-            // //
-            // // Upsert
-            // //
-            // Findex.graph_upsert(masterKeys, label, indexedValuesAndWords, db.fetchEntry,
-            // db.upsertEntry, db.upsertChain);
-            // System.out.println("After insertion: entry_table: nb indexes: "
-            // + db.getAllKeysAndValues(Redis.INDEX_TABLE_ENTRY_STORAGE).size());
-            // System.out.println("After insertion: chain_table: nb indexes: "
-            // + db.getAllKeysAndValues(Redis.INDEX_TABLE_CHAIN_STORAGE).size());
+            //
+            // Search
+            //
+            System.out.println("");
+            System.out.println("---------------------------------------");
+            System.out.println("Findex Search Redis");
+            System.out.println("---------------------------------------");
+            System.out.println("");
 
-            // //
-            // // Search
-            // //
-            // System.out.println("");
-            // System.out.println("---------------------------------------");
-            // System.out.println("Findex Search Redis");
-            // System.out.println("---------------------------------------");
-            // System.out.println("");
-
-            // {
-            // List<byte[]> indexedValuesList = Findex.search(masterKeys.getK(), label, new
-            // Word[] { new Word("France") },
-            // 0,
-            // -1, db.progress, db.fetchEntry, db.fetchChain);
-            // int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
-
-            // assertArrayEquals(expectedDbUids, dbUids);
-            // }
+            {
+                List<IndexedValue> indexedValuesList =
+                    Findex.search(
+                        key,
+                        label,
+                        new HashSet<>(Arrays.asList(new Keyword("France"))),
+                        0, -1, db);
+                int[] dbLocations = indexedValuesBytesListToArray(indexedValuesList);
+                assertEquals(expectedDbLocations.length, dbLocations.length);
+                assertArrayEquals(expectedDbLocations, dbLocations);
+                System.out.println("<== successfully found all original French locations");
+            }
 
             // // With graph upsertions, we can search from 3-letters words
-            // verifyFindexSearch(masterKeys, label, "fel", db, 2);
-            // verifyFindexSearch(masterKeys, label, "Fel", db, 3);
-            // verifyFindexSearch(masterKeys, label, "Fra", db, 30);
-            // verifyFindexSearch(masterKeys, label, "Kia", db, 1);
-            // verifyFindexSearch(masterKeys, label, "vit", db, 2); // 2 emails starting
-            // with `vit`
+            // verifyFindexSearch(key, label, "fel", db, 2);
+            // verifyFindexSearch(key, label, "Fel", db, 3);
+            // verifyFindexSearch(key, label, "Fra", db, 30);
+            // verifyFindexSearch(key, label, "Kia", db, 1);
+            // verifyFindexSearch(key, label, "vit", db, 2); // 2 emails starting with `vit`
 
-            // // This compact should do nothing except changing the label since the users
-            // // table didn't change.
-            // Findex.compact(1, masterKeys, "NewLabel".getBytes(), db.fetchEntry,
-            // db.fetchChain, db.fetchAllEntry,
-            // db.updateLines, db.listRemovedLocations);
+            // This compact should do nothing except changing the label since the users
+            // table didn't change.
+            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            System.out
+                .println("After first compact: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
+            System.out
+                .println("After first compact: chain_table size: " + db.getAllKeys(Redis.CHAIN_TABLE_INDEX).size());
 
-            // verifyFindexSearch(masterKeys, label, "France", db, 0);
+            {
+                // Search with old label
+                List<IndexedValue> indexedValuesList =
+                    Findex.search(
+                        key,
+                        label,
+                        new HashSet<>(Arrays.asList(new Keyword("France"))),
+                        0, -1, db);
+                int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+                assertEquals(0, dbUids.length);
+                System.out.println("<== successfully compacted and changed the label");
+            }
+
+            {
+                // Search with new label and without user changes
+                List<IndexedValue> indexedValuesList = Findex.search(
+                    key,
+                    "NewLabel".getBytes(),
+                    new HashSet<>(Arrays.asList(new Keyword("France"))),
+                    0, -1, db);
+                int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+                assertArrayEquals(expectedDbLocations, dbUids);
+                System.out.println("<== successfully found all French locations with the new label");
+            }
+
+            // Delete the user n°17 to test the compact indexes
+            db.deleteUser(17);
+            int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbLocations, 17);
+            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            {
+                // Search should return everyone but n°17
+                List<IndexedValue> indexedValuesList = Findex.search(
+                    key,
+                    "NewLabel".getBytes(),
+                    new HashSet<>(Arrays.asList(new Keyword("France"))),
+                    0, -1, db);
+                int[] dbUids = indexedValuesBytesListToArray(indexedValuesList);
+                assertArrayEquals(newExpectedDbUids, dbUids);
+                System.out
+                    .println("<== successfully found all French locations after removing one and compacting");
+            }
 
             // {
             // // Search with new label and without user changes
@@ -395,6 +432,10 @@ public class TestNativeFindex {
         }
         Arrays.sort(dbLocations);
         return dbLocations;
+    }
+
+    private void testDB(Database db) throws Exception {
+
     }
 
 }

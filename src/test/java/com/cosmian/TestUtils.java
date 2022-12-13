@@ -81,25 +81,4 @@ public final class TestUtils {
             }
         }
     }
-
-    public static String redisHostname() {
-        String v = System.getenv("REDIS_HOSTNAME");
-        if (v == null) {
-            return "localhost";
-        }
-        return v;
-    }
-
-    public static int redisPort() {
-        String v = System.getenv("REDIS_PORT");
-        if (v == null) {
-            return 6379;
-        }
-        return Integer.parseInt(v);
-    }
-
-    public static String redisPassword() {
-        String v = System.getenv("REDIS_PASSWORD");
-        return v;
-    }
 }

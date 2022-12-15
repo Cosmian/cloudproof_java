@@ -40,18 +40,18 @@ import redis.clients.jedis.Transaction;
 
 public class Redis extends Database implements Closeable {
 
-    private final static byte[] CONDITIONAL_UPSERT_SCRIPT =
-        ("local value=redis.call('GET',KEYS[1])\n" +
+    private final static String CONDITIONAL_UPSERT_SCRIPT =
+        "local value=redis.call('GET',KEYS[1])\n" +
             "if((value==false) or (not(value == false) and (ARGV[1] == value))) then \n" +
             "  redis.call('SET', KEYS[1], ARGV[2])\n" +
             "  return {} \n" +
             "else \n" +
             "  return {value} \n" +
-            "end").getBytes(StandardCharsets.UTF_8);
+            "end";
 
     private static final Logger logger = Logger.getLogger(Redis.class.getName());
 
-    public static final byte[] PREFIX_STORAGE = "cosmian".getBytes(StandardCharsets.UTF_8);
+    public static final byte[] STORAGE_PREFIX = "cosmian".getBytes(StandardCharsets.UTF_8);
 
     public static final int DATA_TABLE_INDEX = 3;
 
@@ -61,22 +61,40 @@ public class Redis extends Database implements Closeable {
 
     private final JedisPool pool;
 
-    public final Jedis jedis;
+    private final String conditionalUpsertSha;
 
-    //
-    // Constructors
-    //
-    public Redis(String uri) {
-        this.pool = new JedisPool(uri);
-        this.jedis = this.pool.getResource();
+    private final String redisPassword;
 
+    // public final Jedis jedis;
+
+    /**
+     * Internal constructor instantiating from an existing pool and loading the Conditional Upsert Lua script
+     * 
+     * @param pool the existing {@link JedisPool}
+     * @param redisPassword the password to use to authenticate
+     */
+    protected Redis(JedisPool pool, String redisPassword) {
+        this.pool = pool;
+        this.redisPassword = redisPassword;
+        try (final Jedis jedis = getJedis()) {
+            this.conditionalUpsertSha = jedis.scriptLoad(CONDITIONAL_UPSERT_SCRIPT);
+        }
     }
 
+    /**
+     * Instantiate a Redis instance from a URI
+     * 
+     * @param uri the URI to the Redis server
+     */
+    public Redis(String uri) {
+        this(new JedisPool(uri), redisPassword());
+    }
+
+    /**
+     * Instantiate a Redis instance from a server hostname and port passed as environment variables
+     */
     public Redis() {
-        this.pool = new JedisPool(redisHostname(), redisPort());
-        this.jedis = this.pool.getResource();
-        if (redisPassword() != null)
-            jedis.auth(redisPassword());
+        this(new JedisPool(redisHostname(), redisPort()), redisPassword());
     }
 
     /**
@@ -87,16 +105,27 @@ public class Redis extends Database implements Closeable {
      * @param password the authentication password or token
      */
     public Redis(String hostname, int port, String password) {
-        this.pool = new JedisPool(hostname, port);
-        this.jedis = this.pool.getResource();
-        if (!password.isEmpty())
-            jedis.auth(password);
+        this(new JedisPool(hostname, port), password);
     }
 
-    static Redis create(String uri) {
-        return new Redis(uri);
+    /**
+     * Get a Jedis connection from the pool, authenticating it if needed
+     * 
+     * @return the {@link Jedis} connection
+     */
+    private Jedis getJedis() {
+        Jedis jedis = pool.getResource();
+        if (redisPassword() != null) {
+            jedis.auth(this.redisPassword);
+        }
+        return jedis;
     }
 
+    /**
+     * The Redis server hostname from the REDIS_HOSTNAME environment variable. Defaults to localhost if not found.
+     * 
+     * @return the hostname
+     */
     static String redisHostname() {
         String v = System.getenv("REDIS_HOSTNAME");
         if (v == null) {
@@ -105,6 +134,11 @@ public class Redis extends Database implements Closeable {
         return v;
     }
 
+    /**
+     * The Redis server port from the REDIS_PORT environment variable. Defaults to 6379 if not found.
+     * 
+     * @return the port
+     */
     static int redisPort() {
         String v = System.getenv("REDIS_PORT");
         if (v == null) {
@@ -113,28 +147,29 @@ public class Redis extends Database implements Closeable {
         return Integer.parseInt(v);
     }
 
+    /**
+     * The Redis server password from the REDIS_PASSWORD environment variable. Defaults to null if not found.
+     * 
+     * @return the password
+     */
     public static String redisPassword() {
         String v = System.getenv("REDIS_PASSWORD");
         return v;
     }
 
-    //
-    // Declare all callbacks
-    //
-
     /**
      * Format Redis key as NUMBER:HEX_UID
      *
      * @param number the index of the table
-     * @param uid which is the UID of
+     * @param uid the {@link Uid32} value of the key
      * @return key as prefix|number on 4 bytes|uid
      */
     public static byte[] key(int number,
                              byte[] uid) {
         byte[] numberBytes = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(number).array();
-        byte[] result = Arrays.copyOf(PREFIX_STORAGE, PREFIX_STORAGE.length + numberBytes.length + uid.length);
-        System.arraycopy(numberBytes, 0, result, PREFIX_STORAGE.length, numberBytes.length);
-        System.arraycopy(uid, 0, result, PREFIX_STORAGE.length + numberBytes.length, uid.length);
+        byte[] result = Arrays.copyOf(STORAGE_PREFIX, STORAGE_PREFIX.length + numberBytes.length + uid.length);
+        System.arraycopy(numberBytes, 0, result, STORAGE_PREFIX.length, numberBytes.length);
+        System.arraycopy(uid, 0, result, STORAGE_PREFIX.length + numberBytes.length, uid.length);
         return result;
     }
 
@@ -145,57 +180,81 @@ public class Redis extends Database implements Closeable {
      * @return the {@link Uid32}
      */
     public static Uid32 uid(byte[] key) {
-        return new Uid32(Arrays.copyOfRange(key, PREFIX_STORAGE.length + 4, key.length));
+        return new Uid32(Arrays.copyOfRange(key, STORAGE_PREFIX.length + 4, key.length));
     }
 
-    public Response<List<byte[]>> getEntries(List<Uid32> uids,
-                                             int redisPrefix)
-        throws CloudproofException {
-        Transaction tx = this.jedis.multi();
-        List<byte[]> keys = new ArrayList<>();
-        for (Uid32 uid : uids) {
-            byte[] key = key(redisPrefix, uid.getBytes());
-            keys.add(key);
+    /**
+     * Retrieve multiple raw values from a list of Uids in a particular "table"
+     * 
+     * @param uids the {@link Uid32} to retrieve
+     * @param redisPrefix the "table"prefix
+     * @return the list of raw values
+     */
+    protected List<byte[]> getEntries(List<Uid32> uids,
+                                      int redisPrefix) {
+
+        try (Jedis jedis = getJedis()) {
+            List<byte[]> keys = new ArrayList<>();
+            for (Uid32 uid : uids) {
+                byte[] key = key(redisPrefix, uid.getBytes());
+                keys.add(key);
+            }
+            byte[][] keysArray = keys.toArray(new byte[0][]);
+            List<byte[]> mgetResults = jedis.mget(keysArray);
+            return mgetResults;
         }
-        byte[][] keysArray = keys.toArray(new byte[0][]);
-        Response<List<byte[]>> mgetResults = tx.mget(keysArray);
-        tx.exec();
-        return mgetResults;
     }
 
-    public void setEntries(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
-        Transaction tx = this.jedis.multi();
-        for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
-            byte[] key = key(ENTRY_TABLE_INDEX, entry.getKey());
-            tx.getSet(key, entry.getValue());
-        }
-        tx.exec();
-    }
+    // protected void setEntries(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
+    // try (Jedis jedis = getJedis(); Transaction tx = jedis.multi();) {
+    // for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
+    // byte[] key = key(ENTRY_TABLE_INDEX, entry.getKey());
+    // tx.set(key, entry.getValue());
+    // }
+    // tx.exec();
+    // }
+    // }
 
     /**
      * Return all the keys in the raw format
      */
-    public Set<byte[]> getAllKeys(int redisTableIndex) throws CloudproofException {
+    protected Set<byte[]> getAllKeys(int redisTableIndex) throws CloudproofException {
         byte[] pattern = key(redisTableIndex, "*".getBytes());
-        return this.jedis.keys(pattern);
-    }
-
-    public void delEntries(List<byte[]> uids,
-                           int redisPrefix)
-        throws CloudproofException {
-        for (byte[] uid : uids) {
-            byte[] key = key(redisPrefix, uid);
-            this.jedis.del(key);
+        try (Jedis jedis = getJedis()) {
+            return jedis.keys(pattern);
         }
     }
 
-    public void delAllEntries(int redisPrefix) throws CloudproofException {
-        Set<byte[]> keys = getAllKeys(redisPrefix);
-        for (byte[] key : keys) {
-            this.jedis.del(key);
+    // protected void delEntries(List<byte[]> uids,
+    // int redisPrefix)
+    // throws CloudproofException {
+    // try (Jedis jedis = getJedis()) {
+    // for (byte[] uid : uids) {
+    // byte[] key = key(redisPrefix, uid);
+    // jedis.del(key);
+    // }
+    // }
+    // }
+
+    /**
+     * Delete all entries in the given "table"
+     * 
+     * @param redisTableIndex the "table" index
+     * @throws CloudproofException
+     */
+    public void delAllEntries(int redisTableIndex) throws CloudproofException {
+        Set<byte[]> keys = getAllKeys(redisTableIndex);
+        try (Jedis jedis = getJedis()) {
+            jedis.del(keys.toArray(new byte[keys.size()][]));
         }
     }
 
+    /**
+     * Insert all the users in the data "table"
+     * 
+     * @param testFindexDataset the dataset containing the user records
+     * @throws CloudproofException
+     */
     public void insertUsers(UsersDataset[] testFindexDataset) throws CloudproofException {
         for (UsersDataset user : testFindexDataset) {
             byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(user.id).array();
@@ -205,11 +264,22 @@ public class Redis extends Database implements Closeable {
         }
     }
 
+    /**
+     * Delete a user from the data "table"
+     * 
+     * @param userId the id of the user to delete
+     * @return
+     * @throws CloudproofException
+     */
     public long deleteUser(int userId) throws CloudproofException {
         byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(userId).array();
         byte[] key = key(DATA_TABLE_INDEX, keySuffix);
         return this.jedis.del(key);
     }
+
+    //
+    // Implement all callbacks
+    //
 
     @Override
     protected DBFetchAllEntries fetchAllEntries() {

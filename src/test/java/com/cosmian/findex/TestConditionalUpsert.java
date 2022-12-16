@@ -17,6 +17,8 @@ import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
 import com.cosmian.jna.findex.structs.Uid32;
 
+import redis.clients.jedis.Jedis;
+
 public class TestConditionalUpsert {
 
     @BeforeAll
@@ -111,7 +113,9 @@ public class TestConditionalUpsert {
         try (Redis db = new Redis()) {
 
             // delete all items
-            db.jedis.flushAll();
+            try (Jedis jedis = db.getJedis()) {
+                jedis.flushAll();
+            }
 
             // generate some random uid and values
             Random rand = new Random();
@@ -173,7 +177,10 @@ public class TestConditionalUpsert {
             assertEquals(numOverlapFail, failed.size());
 
             // delete all items
-            db.jedis.flushAll();
+            // delete all items
+            try (Jedis jedis = db.getJedis()) {
+                jedis.flushAll();
+            }
 
             System.out.println("<== success");
         }

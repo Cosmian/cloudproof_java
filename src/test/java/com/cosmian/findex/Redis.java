@@ -35,7 +35,6 @@ import com.cosmian.utils.CloudproofException;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 
 public class Redis extends Database implements Closeable {
@@ -61,7 +60,7 @@ public class Redis extends Database implements Closeable {
 
     private final JedisPool pool;
 
-    private final String conditionalUpsertSha;
+    private final byte[] conditionalUpsertSha;
 
     private final String redisPassword;
 
@@ -77,7 +76,7 @@ public class Redis extends Database implements Closeable {
         this.pool = pool;
         this.redisPassword = redisPassword;
         try (final Jedis jedis = getJedis()) {
-            this.conditionalUpsertSha = jedis.scriptLoad(CONDITIONAL_UPSERT_SCRIPT);
+            this.conditionalUpsertSha = jedis.scriptLoad(CONDITIONAL_UPSERT_SCRIPT.getBytes(StandardCharsets.UTF_8));
         }
     }
 
@@ -113,7 +112,7 @@ public class Redis extends Database implements Closeable {
      * 
      * @return the {@link Jedis} connection
      */
-    private Jedis getJedis() {
+    protected Jedis getJedis() {
         Jedis jedis = pool.getResource();
         if (redisPassword() != null) {
             jedis.auth(this.redisPassword);
@@ -205,16 +204,6 @@ public class Redis extends Database implements Closeable {
         }
     }
 
-    // protected void setEntries(HashMap<byte[], byte[]> uidsAndValues) throws CloudproofException {
-    // try (Jedis jedis = getJedis(); Transaction tx = jedis.multi();) {
-    // for (Entry<byte[], byte[]> entry : uidsAndValues.entrySet()) {
-    // byte[] key = key(ENTRY_TABLE_INDEX, entry.getKey());
-    // tx.set(key, entry.getValue());
-    // }
-    // tx.exec();
-    // }
-    // }
-
     /**
      * Return all the keys in the raw format
      */
@@ -224,17 +213,6 @@ public class Redis extends Database implements Closeable {
             return jedis.keys(pattern);
         }
     }
-
-    // protected void delEntries(List<byte[]> uids,
-    // int redisPrefix)
-    // throws CloudproofException {
-    // try (Jedis jedis = getJedis()) {
-    // for (byte[] uid : uids) {
-    // byte[] key = key(redisPrefix, uid);
-    // jedis.del(key);
-    // }
-    // }
-    // }
 
     /**
      * Delete all entries in the given "table"
@@ -256,11 +234,13 @@ public class Redis extends Database implements Closeable {
      * @throws CloudproofException
      */
     public void insertUsers(UsersDataset[] testFindexDataset) throws CloudproofException {
-        for (UsersDataset user : testFindexDataset) {
-            byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(user.id).array();
-            byte[] key = key(DATA_TABLE_INDEX, keySuffix);
-            byte[] value = user.toString().getBytes(StandardCharsets.UTF_8);
-            this.jedis.set(key, value);
+        try (Jedis jedis = getJedis()) {
+            for (UsersDataset user : testFindexDataset) {
+                byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(user.id).array();
+                byte[] key = key(DATA_TABLE_INDEX, keySuffix);
+                byte[] value = user.toString().getBytes(StandardCharsets.UTF_8);
+                jedis.set(key, value);
+            }
         }
     }
 
@@ -274,7 +254,9 @@ public class Redis extends Database implements Closeable {
     public long deleteUser(int userId) throws CloudproofException {
         byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(userId).array();
         byte[] key = key(DATA_TABLE_INDEX, keySuffix);
-        return this.jedis.del(key);
+        try (Jedis jedis = getJedis()) {
+            return jedis.del(key);
+        }
     }
 
     //
@@ -312,11 +294,11 @@ public class Redis extends Database implements Closeable {
 
             @Override
             public Map<Uid32, ChainTableValue> fetch(List<Uid32> uids) throws CloudproofException {
-                Response<List<byte[]>> response = getEntries(uids, CHAIN_TABLE_INDEX);
+                List<byte[]> response = getEntries(uids, CHAIN_TABLE_INDEX);
                 HashMap<Uid32, ChainTableValue> keysAndValues = new HashMap<>();
-                for (int i = 0; i < response.get().size(); i++) {
+                for (int i = 0; i < response.size(); i++) {
                     Uid32 key = uids.get(i);
-                    byte[] value = response.get().get(i);
+                    byte[] value = response.get(i);
                     if (value != null) {
                         keysAndValues.put(key, new ChainTableValue(value));
                     }
@@ -333,11 +315,11 @@ public class Redis extends Database implements Closeable {
 
             @Override
             public Map<Uid32, EntryTableValue> fetch(List<Uid32> uids) throws CloudproofException {
-                Response<List<byte[]>> response = getEntries(uids, ENTRY_TABLE_INDEX);
+                List<byte[]> response = getEntries(uids, ENTRY_TABLE_INDEX);
                 HashMap<Uid32, EntryTableValue> keysAndValues = new HashMap<>();
-                for (int i = 0; i < response.get().size(); i++) {
+                for (int i = 0; i < response.size(); i++) {
                     Uid32 key = uids.get(i);
-                    byte[] value = response.get().get(i);
+                    byte[] value = response.get(i);
                     if (value != null) {
                         keysAndValues.put(key, new EntryTableValue(value));
                     }
@@ -355,16 +337,18 @@ public class Redis extends Database implements Closeable {
             @Override
             public List<Location> list(List<Location> locations) throws CloudproofException {
 
-                Iterator<Location> it = locations.iterator();
-                while (it.hasNext()) {
-                    Location location = it.next();
-                    byte[] key = key(DATA_TABLE_INDEX, Arrays.copyOfRange(location.getBytes(), 0, 4));
-                    byte[] value = Redis.this.jedis.get(key);
-                    if (value != null) {
-                        it.remove();
+                try (Jedis jedis = getJedis()) {
+                    Iterator<Location> it = locations.iterator();
+                    while (it.hasNext()) {
+                        Location location = it.next();
+                        byte[] key = key(DATA_TABLE_INDEX, Arrays.copyOfRange(location.getBytes(), 0, 4));
+                        byte[] value = jedis.get(key);
+                        if (value != null) {
+                            it.remove();
+                        }
                     }
+                    return locations;
                 }
-                return locations;
             }
         };
     }
@@ -379,8 +363,7 @@ public class Redis extends Database implements Closeable {
                 List<Integer> ids =
                     indexedValues.stream().map((IndexedValue iv) -> {
                         try {
-                            return ByteBuffer.wrap(iv.getLocation().getBytes())
-                                .order(ByteOrder.BIG_ENDIAN).getInt();
+                            return IndexUtils.locationToUserId(iv.getLocation());
                         } catch (CloudproofException e) {
                             return -1;
                         }
@@ -404,20 +387,23 @@ public class Redis extends Database implements Closeable {
 
                 // truncate the EN
                 delAllEntries(ENTRY_TABLE_INDEX);
-                // set the new Entries
-                for (Entry<Uid32, EntryTableValue> newEntry : newEntries.entrySet()) {
-                    byte[] key = key(ENTRY_TABLE_INDEX, newEntry.getKey().getBytes());
-                    Redis.this.jedis.set(key, newEntry.getValue().getBytes());
-                }
-                // set (upsert) the new chains
-                for (Entry<Uid32, ChainTableValue> newChain : newChains.entrySet()) {
-                    byte[] key = key(CHAIN_TABLE_INDEX, newChain.getKey().getBytes());
-                    Redis.this.jedis.set(key, newChain.getValue().getBytes());
-                }
-                // clean up the Chain Table
-                for (Uid32 uid : removedChains) {
-                    byte[] key = key(CHAIN_TABLE_INDEX, uid.getBytes());
-                    Redis.this.jedis.del(key);
+
+                try (Jedis jedis = getJedis()) {
+                    // set the new Entries
+                    for (Entry<Uid32, EntryTableValue> newEntry : newEntries.entrySet()) {
+                        byte[] key = key(ENTRY_TABLE_INDEX, newEntry.getKey().getBytes());
+                        jedis.set(key, newEntry.getValue().getBytes());
+                    }
+                    // set (upsert) the new chains
+                    for (Entry<Uid32, ChainTableValue> newChain : newChains.entrySet()) {
+                        byte[] key = key(CHAIN_TABLE_INDEX, newChain.getKey().getBytes());
+                        jedis.set(key, newChain.getValue().getBytes());
+                    }
+                    // clean up the Chain Table
+                    for (Uid32 uid : removedChains) {
+                        byte[] key = key(CHAIN_TABLE_INDEX, uid.getBytes());
+                        jedis.del(key);
+                    }
                 }
 
             }
@@ -431,7 +417,7 @@ public class Redis extends Database implements Closeable {
 
             @Override
             public void upsert(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
-                try (Transaction tx = Redis.this.jedis.multi();) {
+                try (Jedis jedis = getJedis(); Transaction tx = jedis.multi();) {
                     for (Entry<Uid32, ChainTableValue> entry : uidsAndValues.entrySet()) {
                         byte[] key = key(CHAIN_TABLE_INDEX, entry.getKey().getBytes());
                         tx.getSet(key, entry.getValue().getBytes());
@@ -450,16 +436,19 @@ public class Redis extends Database implements Closeable {
             public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> uidsAndValues)
                 throws CloudproofException {
                 final Map<Uid32, EntryTableValue> failed = new HashMap<>();
-                for (final Entry<Uid32, EntryTableValues> entry : uidsAndValues.entrySet()) {
-                    List<byte[]> keys =
-                        Arrays.asList(key(ENTRY_TABLE_INDEX, entry.getKey().getBytes()));
-                    List<byte[]> args =
-                        Arrays.asList(entry.getValue().getPrevious().getBytes(), entry.getValue().getNew().getBytes());
-                    @SuppressWarnings("unchecked")
-                    List<byte[]> response =
-                        (List<byte[]>) Redis.this.jedis.eval(CONDITIONAL_UPSERT_SCRIPT, keys, args);
-                    if (response.size() > 0) {
-                        failed.put(entry.getKey(), new EntryTableValue(response.get(0)));
+                try (Jedis jedis = getJedis()) {
+                    for (final Entry<Uid32, EntryTableValues> entry : uidsAndValues.entrySet()) {
+                        List<byte[]> keys =
+                            Arrays.asList(key(ENTRY_TABLE_INDEX, entry.getKey().getBytes()));
+                        List<byte[]> args =
+                            Arrays.asList(entry.getValue().getPrevious().getBytes(),
+                                entry.getValue().getNew().getBytes());
+                        @SuppressWarnings("unchecked")
+                        List<byte[]> response =
+                            (List<byte[]>) jedis.evalsha(Redis.this.conditionalUpsertSha, keys, args);
+                        if (response.size() > 0) {
+                            failed.put(entry.getKey(), new EntryTableValue(response.get(0)));
+                        }
                     }
                 }
                 return failed;
@@ -469,7 +458,7 @@ public class Redis extends Database implements Closeable {
 
     @Override
     public void close() throws IOException {
-        this.jedis.close();
+        this.pool.close();
     }
 
 }

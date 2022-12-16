@@ -2,8 +2,6 @@ package com.cosmian.findex;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -381,14 +379,12 @@ public class Sqlite extends Database implements Closeable {
             @Override
             public List<Location> list(List<Location> locations) throws CloudproofException {
                 List<Integer> ids = locations.stream()
-                    .map((Location location) -> ByteBuffer.wrap(location.getBytes()).order(ByteOrder.BIG_ENDIAN)
-                        .getInt())
+                    .map((Location location) -> IndexUtils.locationToUserId(location))
                     .collect(Collectors.toList());
                 try {
                     List<Integer> removedIds = listRemovedIds("users", ids);
                     return removedIds.stream()
-                        .map((Integer id) -> new Location(
-                            ByteBuffer.allocate(32).order(ByteOrder.BIG_ENDIAN).putInt(id).array()))
+                        .map((Integer id) -> IndexUtils.userIdToLocation(id))
                         .collect(Collectors.toList());
                 } catch (SQLException e) {
                     throw new CloudproofException("Failed list removed locations: " + e.toString());

@@ -22,15 +22,15 @@ public class UpsertEntry implements UpsertEntryCallback {
 
     @Override
     public int apply(Pointer entries,
-                     IntByReference entriesLength,
+                     int entriesLength,
                      Pointer outputs,
                      IntByReference outputsLength)
         throws CloudproofException {
         //
         // Read `entries` until `itemsLength`
         //
-        byte[] entriesBytes = new byte[entriesLength.getValue()];
-        entries.read(0, entriesBytes, 0, entriesLength.getValue());
+        byte[] entriesBytes = new byte[entriesLength];
+        entries.read(0, entriesBytes, 0, entriesLength);
 
         Map<Uid32, EntryTableValues> map =
             Leb128Reader.deserializeMap(Uid32.class, EntryTableValues.class, entriesBytes);

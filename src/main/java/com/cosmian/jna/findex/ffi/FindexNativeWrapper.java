@@ -44,7 +44,7 @@ public interface FindexNativeWrapper extends Library {
     interface UpsertEntryCallback extends Callback {
         int apply(
                   Pointer entries,
-                  IntByReference entriesLength,
+                  int entriesLength,
                   Pointer outputs,
                   IntByReference outputsLength)
             throws CloudproofException;
@@ -52,7 +52,7 @@ public interface FindexNativeWrapper extends Library {
 
     interface UpsertChainCallback extends Callback {
         int apply(Pointer chains,
-                  IntByReference chainsLength)
+                  int chainsLength)
             throws CloudproofException;
     }
 

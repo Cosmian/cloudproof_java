@@ -70,6 +70,8 @@ public abstract class Database {
      *  5. remove old lines from the Index Entry Table (using the saved UIDs in 1.)
      *  6. remove `removed_chain_table_uids` from the Index Chain Table
      * </pre>
+     * 
+     * @return DBUpdateLines callback
      */
     protected abstract DBUpdateLines updateLines();
 

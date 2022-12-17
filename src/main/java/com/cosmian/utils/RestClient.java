@@ -57,7 +57,7 @@ public class RestClient {
         this.read_timeout = read_timeout;
         SSLContext ssl_context;
         try {
-            ssl_context = SSLContext.getInstance("TLS");
+            ssl_context = SSLContext.getInstance("TLSv1.3");
             ssl_context.init(null, null, null);
         } catch (NoSuchAlgorithmException e) {
             String err = "TLS is not available ! " + e.getMessage();

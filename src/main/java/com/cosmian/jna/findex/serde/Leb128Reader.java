@@ -3,6 +3,7 @@ package com.cosmian.jna.findex.serde;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,9 +35,10 @@ public class Leb128Reader {
         T element;
         try {
             @SuppressWarnings("unchecked")
-            final T el = (T) clazzOfT.newInstance();
+            final T el = (T) clazzOfT.getConstructor().newInstance();
             element = el;
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+            | NoSuchMethodException | SecurityException e) {
             throw new CloudproofException(
                 "Leb128 reader: failed instantiating a " + clazzOfT.getSimpleName() + ": " + e.getMessage(), e);
         }

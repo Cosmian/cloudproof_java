@@ -2,16 +2,16 @@
 
 ![workflow](https://github.com/Cosmian/cloudproof_java/actions/workflows/maven.yml/badge.svg)
 
-The Cloudproof Java library provides a Java-friendly API to the [Cosmian Cloudproof Encryption product](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/).
+The Cloudproof Java library provides a Java-friendly API to [Cosmian's Cloudproof Encryption](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/).
 
-In summary, Cloudproof Encryption product secures data repositories in the cloud with attributes-based access control encryption and encrypted search.
+Cloudproof Encryption secures data repositories and applications in the cloud with advanced application-level encryption and encrypted search.
 
 <!-- toc -->
 
 - [Getting started](#getting-started)
 - [Using in Java projects](#using-in-java-projects)
 - [Versions Correspondence](#versions-correspondence)
-- [Update native libraries](#update-native-libraries)
+- [Updating the native libraries](#updating-the-native-libraries)
 
 <!-- tocstop -->
 
@@ -28,48 +28,32 @@ In addition, please have a look at the following tests for implementation exampl
 - [TestCoverCrypt](./src/test/java/com/cosmian/TestKmsCoverCrypt.java) for using the CoverCrypt scheme with Cosmian KMS
 - [TestFfiCoverCrypt](./src/test/java/com/cosmian/TestNativeCoverCrypt.java) for using the CoverCrypt scheme with the local native library
 - [TestKmip](./src/test/java/com/cosmian/TestKmip.java) for using the KMIP 2.1 interface with the Cosmian KMS
-- [TestFfiFindex](./src/test/java/com/cosmian/TestNativeFindex.java) for using the SSE Findex scheme with the local native library
+- [TestSqliteFindex](./src/test/java/com/cosmian/findex/TestSqlite.java) for using the Encrypted Search Findex scheme using Sqlite (or other SQL DBs) as a backend
+- [TestRedisFindex](./src/test/java/com/cosmian/findex/TestRedis.java) for using the Encrypted Search Findex scheme using Redis as a backend
 
 ## Using in Java projects
 
-This library is free software and is available on Maven Central
+This library is open-source software and is available on Maven Central.
 
 ```xml
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>2.1.0</version>
+    <version>3.0.0</version>
 </dependency>
 ```
 
 ## Versions Correspondence
 
-When using local encryption and decryption with [GPSW](https://github.com/Cosmian/abe_gpsw) and [CoverCrypt](https://github.com/Cosmian/cover_crypt), native libraries are required.
+This table shows the compatible versions of the various components
 
-Check the main pages of the respective projects to build the native libraries appropriate for your systems. The [test directory](./src/test/resources/linux-x86-64/) provides pre-built libraries for Linux GLIBC 2.17. These libraries should run fine on a system with a more recent GLIBC version.
+| This lib | KMS Server | CoverCrypt | Findex |
+| -------- | ---------- | ---------- | ------ |
+| 3.0.0    | 4.0.1      | 8.0.1      | 0.12.0 |
 
-This table shows the minimum versions correspondences between the various components
+## Updating the native libraries
 
-| KMS Server | Java Lib  | GPSW lib  | CoverCrypt lib | Findex |
-| ---------- | --------- | --------- | -------------- | ------ |
-| 1.2.0      | 0.5.0     | 0.3.0     | N/A            | N/A    |
-| 1.2.1      | 0.5.2     | 0.4.0     | N/A            | N/A    |
-| 1.2.1      | ~~0.6.0~~ | ~~0.6.0~~ | N/A            | N/A    |
-| 1.2.1      | 0.6.1     | 0.6.1     | N/A            | N/A    |
-| 2.0.1      | 0.7.2     | 0.6.5     | 1.0.2          | N/A    |
-| 2.0.2      | 0.7.5     | 0.6.10    | 2.0.0          | N/A    |
-| 2.1.0      | 0.7.7     | 1.1.1     | 4.0.0          | 0.2.3  |
-| 2.2.0      | 0.8.0     | 2.0.1     | 6.0.1          | 0.4.1  |
-| 2.2.0      | 0.9.0     | 2.0.1     | 6.0.1          | 0.5.0  |
-| 2.2.0      | 0.10.1    | 2.0.1     | 6.0.1          | 0.6.1  |
-| 2.2.0      | 0.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
-| 2.3.0      | 1.11.0    | 2.0.1     | 6.0.1          | 0.7.0  |
-| 3.0.0      | 2.0.0     | N/A       | 7.1.0          | 0.10.0 |
-| 3.0.0      | 2.1.0     | N/A       | 7.1.1          | 0.10.0 |
-
-## Update native libraries
-
-The Cloudproof Java lib uses JNA to access functions of 2 native shared libraries:
+The Cloudproof Java lib uses JNA to access functions of the 2 native cryptographic libraries:
 
 - `CoverCrypt`
 - `Findex`
@@ -82,3 +66,6 @@ Those libraries must be found either in the classpath or in subfolders of `src/r
   - `win32-x86-64` for windows
 
 For tests, it is possible to override these libraries by placing them in the equivalent sub-folders of `src/test/resources`
+
+Please check the CoverCrypt and Findex projects on Github.
+Their `build` directory contains instructions on how to build the native libraries for your system.

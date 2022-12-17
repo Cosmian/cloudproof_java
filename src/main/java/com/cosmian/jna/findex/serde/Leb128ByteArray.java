@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.Random;
+import java.security.SecureRandom;
 
 import org.apache.commons.codec.binary.Hex;
 
@@ -45,7 +45,7 @@ public abstract class Leb128ByteArray implements Leb128Serializable {
     public Leb128ByteArray(int len) {
         this.bytes = new byte[len];
         if (len > 0) {
-            Random rd = new Random();
+            SecureRandom rd = new SecureRandom();
             rd.nextBytes(bytes);
         }
     }

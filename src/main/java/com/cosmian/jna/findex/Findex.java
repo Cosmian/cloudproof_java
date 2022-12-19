@@ -5,15 +5,16 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper;
+import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -115,59 +116,12 @@ public final class Findex {
         return indexedValuesAndWordsJson;
     }
 
-    // public static void graph_upsert(MasterKeys masterKeys,
-    // byte[] label,
-    // HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords,
-    // FetchEntryCallback fetchEntry,
-    // UpsertEntryCallback upsertEntry,
-    // UpsertChainCallback upsertChain)
-    // throws CloudproofException {
-
-    // // For the JSON strings
-    // ObjectMapper mapper = new ObjectMapper();
-
-    // // Findex master keys
-    // String masterKeysJson;
-    // try {
-    // masterKeysJson = mapper.writeValueAsString(masterKeys);
-    // } catch (JsonProcessingException e) {
-    // throw new CloudproofException("Invalid master keys", e);
-    // }
-
-    // try (final Memory labelPointer = new Memory(label.length)) {
-    // labelPointer.write(0, label, 0, label.length);
-
-    // // Findex indexed values and words
-    // HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
-    // for (Entry<IndexedValue, Set<Keyword>> entry : indexedValuesAndWords.entrySet()) {
-    // String[] words = new String[entry.getValue().size()];
-    // int i = 0;
-    // for (Keyword word : entry.getValue()) {
-    // words[i++] = word.toString();
-    // }
-    // indexedValuesAndWordsString.put(entry.getKey().toString(), words);
-    // }
-
-    // String indexedValuesAndWordsJson;
-    // try {
-    // indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
-    // } catch (JsonProcessingException e) {
-    // throw new CloudproofException("Invalid indexed values and words", e);
-    // }
-
-    // // Indexes creation + insertion/update
-    // unwrap(Findex.INSTANCE.h_graph_upsert(masterKeysJson, labelPointer, label.length, indexedValuesAndWordsJson,
-    // fetchEntry,
-    // upsertEntry, upsertChain));
-    // }
-    // }
-
-    public static List<IndexedValue> search(byte[] key,
-                                            byte[] label,
-                                            Set<Keyword> keyWords,
-                                            int loopIterationLimit,
-                                            int maxDepth,
-                                            Database db)
+    public static Map<Keyword, Set<Location>> search(byte[] key,
+                                                     byte[] label,
+                                                     Set<Keyword> keyWords,
+                                                     int maxResultsPerKeyword,
+                                                     int maxDepth,
+                                                     Database db)
         throws CloudproofException {
         //
         // Prepare outputs
@@ -210,7 +164,7 @@ public final class Findex {
                 keyPointer, key.length,
                 labelPointer, label.length,
                 wordsJson,
-                loopIterationLimit,
+                maxResultsPerKeyword,
                 maxDepth,
                 db.progressCallback(),
                 db.fetchEntryCallback(),
@@ -223,11 +177,12 @@ public final class Findex {
                     keyPointer, key.length,
                     labelPointer, label.length,
                     wordsJson,
-                    loopIterationLimit,
+                    maxResultsPerKeyword,
                     maxDepth,
                     db.progressCallback(),
                     db.fetchEntryCallback(),
                     db.fetchChainCallback());
+                System.out.println("SEACH RETURNED WITH CODE: " + ffiCode);
                 if (ffiCode != 0) {
                     throw new CloudproofException(get_last_error(4095));
                 }
@@ -235,7 +190,8 @@ public final class Findex {
 
             byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
 
-            return Leb128Reader.deserializeCollection(IndexedValue.class, indexedValuesBytes);
+            SearchResults searchResults = new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
+            return searchResults.getResults();
         }
     }
 
@@ -267,7 +223,6 @@ public final class Findex {
                 labelPointer, label.length,
                 database.fetchEntryCallback(),
                 database.fetchChainCallback(),
-                database.fetchAllEntriesCallback(),
                 database.updateLinesCallback(),
                 database.listRemoveLocationsCallback()));
         }

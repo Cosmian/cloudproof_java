@@ -18,7 +18,6 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.Database;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchAllEntries;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchChain;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchEntry;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBListRemovedLocations;
@@ -205,8 +204,6 @@ public class Sqlite extends Database implements Closeable {
             Uid32 uid = new Uid32(selectResults.getBytes("uid"));
             failed.put(uid, new EntryTableValue(selectResults.getBytes("value")));
         }
-        System.out.println("TO UPSERT: " + uidsAndValues.size());
-        System.out.println("FAILED   : " + failed.size());
         return failed;
     }
 
@@ -287,24 +284,15 @@ public class Sqlite extends Database implements Closeable {
             @Override
             public Map<Uid32, EntryTableValue> fetch(List<Uid32> uids) throws CloudproofException {
                 try {
-                    Map<Uid32, EntryTableValue> found = fetchEntryTableItems(uids);
+                    Map<Uid32, EntryTableValue> found;
+                    if (uids.size() == 0) {
+                        found = fetchAllEntryTableItems();
+                    } else {
+                        found = fetchEntryTableItems(uids);
+                    }
                     return found;
                 } catch (SQLException e) {
                     throw new CloudproofException("Failed fetch entry: " + e.toString());
-                }
-            }
-        };
-    }
-
-    @Override
-    protected DBFetchAllEntries fetchAllEntries() {
-        return new DBFetchAllEntries() {
-            @Override
-            public Map<Uid32, EntryTableValue> fetch() throws CloudproofException {
-                try {
-                    return fetchAllEntryTableItems();
-                } catch (SQLException e) {
-                    throw new CloudproofException("Failed fetch all entry: " + e.toString());
                 }
             }
         };

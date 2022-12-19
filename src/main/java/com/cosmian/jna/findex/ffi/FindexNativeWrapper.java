@@ -42,11 +42,10 @@ public interface FindexNativeWrapper extends Library {
     }
 
     interface UpsertEntryCallback extends Callback {
-        int apply(
+        int apply(Pointer outputs,
+                  IntByReference outputsLength,
                   Pointer entries,
-                  int entriesLength,
-                  Pointer outputs,
-                  IntByReference outputsLength)
+                  int entriesLength)
             throws CloudproofException;
     }
 
@@ -99,7 +98,6 @@ public interface FindexNativeWrapper extends Library {
                   int labelSize,
                   FetchEntryCallback fetchEntry,
                   FetchChainCallback fetchChain,
-                  FetchAllEntriesCallback fetchAllEntry,
                   UpdateLinesCallback updateLines,
                   ListRemovedLocationsCallback listRemovedLocations);
 
@@ -110,7 +108,7 @@ public interface FindexNativeWrapper extends Library {
                  Pointer labelPointer,
                  int labelSize,
                  String words,
-                 int loopIterationLimit,
+                 int maxResultsPerKeyword,
                  int maxDepth,
                  ProgressCallback progress,
                  FetchEntryCallback fetchEntry,

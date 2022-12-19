@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.Database;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchAllEntries;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchChain;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchEntry;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBListRemovedLocations;
@@ -264,31 +263,6 @@ public class Redis extends Database implements Closeable {
     //
 
     @Override
-    protected DBFetchAllEntries fetchAllEntries() {
-        return new DBFetchAllEntries() {
-
-            @Override
-            public Map<Uid32, EntryTableValue> fetch() throws CloudproofException {
-                Set<byte[]> keys = getAllKeys(ENTRY_TABLE_INDEX);
-
-                // Get all values now
-                byte[][] keysArray = keys.toArray(new byte[0][]);
-                List<byte[]> mgetResults = Redis.this.pool.getResource().mget(keysArray);
-
-                HashMap<Uid32, EntryTableValue> keysAndValues = new HashMap<>();
-                for (int i = 0; i < keysArray.length; i++) {
-                    byte[] value = mgetResults.get(i);
-                    if (value != null) {
-                        keysAndValues.put(uid(keysArray[i]), new EntryTableValue(value));
-                    }
-                }
-
-                return keysAndValues;
-            }
-        };
-    }
-
-    @Override
     protected DBFetchChain fetchChain() {
         return new DBFetchChain() {
 
@@ -315,11 +289,20 @@ public class Redis extends Database implements Closeable {
 
             @Override
             public Map<Uid32, EntryTableValue> fetch(List<Uid32> uids) throws CloudproofException {
-                List<byte[]> response = getEntries(uids, ENTRY_TABLE_INDEX);
+                List<byte[]> values;
+                if (uids.size() == 0) {
+                    Set<byte[]> keys = getAllKeys(ENTRY_TABLE_INDEX);
+                    // Get all values now
+                    byte[][] keysArray = keys.toArray(new byte[0][]);
+                    values = Redis.this.pool.getResource().mget(keysArray);
+                } else {
+                    values = getEntries(uids, ENTRY_TABLE_INDEX);
+                }
+                // post process
                 HashMap<Uid32, EntryTableValue> keysAndValues = new HashMap<>();
-                for (int i = 0; i < response.size(); i++) {
+                for (int i = 0; i < values.size(); i++) {
                     Uid32 key = uids.get(i);
-                    byte[] value = response.get(i);
+                    byte[] value = values.get(i);
                     if (value != null) {
                         keysAndValues.put(key, new EntryTableValue(value));
                     }
@@ -336,7 +319,6 @@ public class Redis extends Database implements Closeable {
 
             @Override
             public List<Location> list(List<Location> locations) throws CloudproofException {
-
                 try (Jedis jedis = getJedis()) {
                     Iterator<Location> it = locations.iterator();
                     while (it.hasNext()) {
@@ -369,6 +351,7 @@ public class Redis extends Database implements Closeable {
                         }
                     }).collect(Collectors.toList());
                 logger.info("Progress: " + ids.toString());
+                System.out.println("Progress: " + ids.toString());
                 return true;
             }
 

@@ -1,7 +1,9 @@
 package com.cosmian.jna.findex.ffi;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchChain;
@@ -13,6 +15,8 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 public class FetchChain implements FetchChainCallback {
+
+    final Logger logger = Logger.getLogger(this.getClass().getName());
 
     private DBFetchChain fetch;
 
@@ -26,6 +30,12 @@ public class FetchChain implements FetchChainCallback {
                      Pointer uidsPointer,
                      int uidsLength)
         throws CloudproofException {
+
+        if (uidsLength == 0 && uidsPointer == null) {
+            logger.fine("callback called with 0 Uids");
+            return FFiUtils.mapToOutputPointer(new HashMap<>(), output, outputSize);
+        }
+
         //
         // Read `uidsPointer` until `uidsLength`
         //

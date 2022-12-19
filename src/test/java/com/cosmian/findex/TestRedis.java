@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -17,6 +17,7 @@ import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.jna.findex.structs.Location;
 
 import redis.clients.jedis.Jedis;
 
@@ -44,7 +45,7 @@ public class TestRedis {
         // Recover key and label
         //
         byte[] key = IndexUtils.loadKey();
-        assertEquals(32, key.length);
+        assertEquals(16, key.length);
         byte[] label = IndexUtils.loadLabel();
 
         //
@@ -89,13 +90,15 @@ public class TestRedis {
             System.out.println("");
 
             {
-                List<IndexedValue> indexedValuesList =
+                Map<Keyword, Set<Location>> searchResults =
                     Findex.search(
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
-                        0, -1, db);
-                int[] dbLocations = IndexUtils.indexedValuesBytesListToArray(indexedValuesList);
+                        Integer.MAX_VALUE, -1, db);
+                System.out.println(
+                    "Search results: " + searchResults.size() + " " + searchResults.values().iterator().next().size());
+                int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
                 assertEquals(expectedDbLocations.length, dbLocations.length);
                 assertArrayEquals(expectedDbLocations, dbLocations);
                 System.out.println("<== successfully found all original French locations");
@@ -111,25 +114,25 @@ public class TestRedis {
 
             {
                 // Search with old label
-                List<IndexedValue> indexedValuesList =
+                Map<Keyword, Set<Location>> searchResults =
                     Findex.search(
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         0, -1, db);
-                int[] dbUids = IndexUtils.indexedValuesBytesListToArray(indexedValuesList);
+                int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
                 assertEquals(0, dbUids.length);
                 System.out.println("<== successfully compacted and changed the label");
             }
 
             {
                 // Search with new label and without user changes
-                List<IndexedValue> indexedValuesList = Findex.search(
+                Map<Keyword, Set<Location>> searchResults = Findex.search(
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     0, -1, db);
-                int[] dbUids = IndexUtils.indexedValuesBytesListToArray(indexedValuesList);
+                int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
                 assertArrayEquals(expectedDbLocations, dbUids);
                 System.out.println("<== successfully found all French locations with the new label");
             }
@@ -140,12 +143,12 @@ public class TestRedis {
             Findex.compact(1, key, key, "NewLabel".getBytes(), db);
             {
                 // Search should return everyone but n°17
-                List<IndexedValue> indexedValuesList = Findex.search(
+                Map<Keyword, Set<Location>> searchResults = Findex.search(
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     0, -1, db);
-                int[] dbUids = IndexUtils.indexedValuesBytesListToArray(indexedValuesList);
+                int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
                 assertArrayEquals(newExpectedDbUids, dbUids);
                 System.out
                     .println("<== successfully found all French locations after removing one and compacting");

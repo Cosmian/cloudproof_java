@@ -5,11 +5,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.cosmian.jna.findex.structs.IndexedValue;
@@ -72,7 +72,11 @@ public class IndexUtils {
     }
 
     public static byte[] loadKey() throws IOException {
-        return Base64.getDecoder().decode(Resources.load_resource("findex/key.b64"));
+        // return Base64.getDecoder().decode(Resources.load_resource("findex/key.b64"));
+        byte[] key = new byte[16];
+        SecureRandom sr = new SecureRandom();
+        sr.nextBytes(key);
+        return key;
     }
 
     public static byte[] loadLabel() throws IOException {
@@ -94,19 +98,20 @@ public class IndexUtils {
     }
 
     /*
-     * Helper function to transform the list of bytes returned by the FFI (representing `IndexedValue`) to a sorted
-     * array of int (representing the DB id of users).
+     * Helper function to transform the results returned by the FFI to a sorted array of int (representing the DB id of
+     * users).
      */
-    public static int[] indexedValuesBytesListToArray(List<IndexedValue> indexedValuesList) throws Exception {
-        int[] dbLocations = new int[indexedValuesList.size()];
-        int count = 0;
-        for (IndexedValue iv : indexedValuesList) {
-            int dbLocation = locationToUserId(iv.getLocation());
-            dbLocations[count] = dbLocation;
-            count++;
+    public static int[] searchResultsToDbUids(Map<Keyword, Set<Location>> searchResults) throws Exception {
+        HashSet<Integer> dbLocations = new HashSet<>();
+        for (Set<Location> locations : searchResults.values()) {
+            for (Location location : locations) {
+                int dbLocation = locationToUserId(location);
+                dbLocations.add(dbLocation);
+            }
         }
-        Arrays.sort(dbLocations);
-        return dbLocations;
+        int[] dbUids = dbLocations.stream().mapToInt(Integer::intValue).toArray();
+        Arrays.sort(dbUids);
+        return dbUids;
     }
 
 }

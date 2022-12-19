@@ -21,10 +21,11 @@ public class UpsertEntry implements UpsertEntryCallback {
     }
 
     @Override
-    public int apply(Pointer entries,
-                     int entriesLength,
+    public int apply(
                      Pointer outputs,
-                     IntByReference outputsLength)
+                     IntByReference outputsLength,
+                     Pointer entries,
+                     int entriesLength)
         throws CloudproofException {
         //
         // Read `entries` until `itemsLength`

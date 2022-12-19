@@ -17,10 +17,6 @@ public interface FindexUserCallbacks {
         public Map<Uid32, EntryTableValue> fetch(List<Uid32> uids) throws CloudproofException;
     }
 
-    interface DBFetchAllEntries {
-        public Map<Uid32, EntryTableValue> fetch() throws CloudproofException;
-    }
-
     interface DBFetchChain {
         public Map<Uid32, ChainTableValue> fetch(List<Uid32> uids) throws CloudproofException;
     }

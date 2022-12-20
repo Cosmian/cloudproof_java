@@ -214,7 +214,6 @@ public class Sqlite extends Database implements Closeable {
 
     public void truncate(String tableName) throws SQLException {
         connection.createStatement().execute("DELETE FROM " + tableName);
-        System.out.println("Table " + tableName + " has been truncated");
     }
 
     public Map<byte[], byte[]> getAllKeyValueItems(String tableName) throws SQLException {

@@ -40,6 +40,8 @@ public abstract class Database {
 
     /**
      * Fetch all Uids of the Entry Table
+     * <p>
+     * Implementation of this method is only required to compact the index
      * 
      * @return the {@link Set} of all {@link Uid32}
      * @throws CloudproofException if anything goes wrong
@@ -49,6 +51,8 @@ public abstract class Database {
     /**
      * Fetch the Entry Table lines for the list of given {@link Uid32}. If a line does not exist, there should be not
      * entry in the returned map.
+     * <p>
+     * Implementation of this only method is required to search or compact the index
      * 
      * @param uids the unique {@link Uid32}s used as line id
      * @return a {@link Map} of {@link Uid32} to {@link EntryTableValue}
@@ -59,6 +63,8 @@ public abstract class Database {
     /**
      * Fetch the Chain Table lines for the list of given {@link Uid32}. If a line does not exist, there should be not
      * entry in the returned map.
+     * <p>
+     * Implementation of this only method is required to search or compact the index
      * 
      * @param uids the unique {@link Uid32}s used as line id
      * @return a {@link Map} of {@link Uid32} to {@link ChainTableValue}
@@ -72,7 +78,9 @@ public abstract class Database {
      * The {@link EntryTableValues} structure contains both the new value to be upserted and the previous value known at
      * the time of fetch. To avoid concurrency issues, the new value of an existing {@link Uid32} must <b>not</b> be
      * updated if the current value in the database does not match the previous value of the structure. In such a case,
-     * the {@link Uid32} and the <b>current</b> database value must be returned as part of the returned {@link Map}.
+     * the {@link Uid32} and the <b>current</b> database value must be returned as part of the returned {@link Map}. *
+     * <p>
+     * Implementation of this only method is required to update or compact the index
      * 
      * @see the Redis and SQlite implementations for implementation examples
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link EntryTableValues}
@@ -83,7 +91,9 @@ public abstract class Database {
         throws CloudproofException;
 
     /**
-     * Upsert the given lines into the Chain Table
+     * Upsert the given lines into the Chain Table *
+     * <p>
+     * Implementation of this only method is required to update or compact the index
      * 
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link ChainTableValue}
      * @throws CloudproofException if anything goes wrong
@@ -124,6 +134,9 @@ public abstract class Database {
      * <li>remove <i>removed_chain_table_uids</i> from the Index Chain Table</li>
      * </ul>
      * </p>
+     * *
+     * <p>
+     * Implementation of this only method is required to compact the index
      * 
      * @param removedChains a list of lines to remove from the Chain Table
      * @param newEntries a list of lines to add to the Entry Table (after if has been dropped)
@@ -136,7 +149,9 @@ public abstract class Database {
         throws CloudproofException;
 
     /**
-     * Determine which of the passed {@link Location} do no longer exist in the main database/storage and return them.
+     * Determine which of the passed {@link Location} do no longer exist in the main database/storage and return them. *
+     * <p>
+     * Implementation of this only method is required to compact the index
      * 
      * @param locations the list to check for existence
      * @return the list of locations that no longer exist in the main database/storage
@@ -148,11 +163,13 @@ public abstract class Database {
      * The Findex search mechanism will call this method as the search for keywords progresses through the search graph.
      * <p>
      * The user should return <i>false</i> to immediately stop have the search return and stop from further progressing
-     * down the graph.
+     * down the graph. *
+     * <p>
+     * Implementation of this only method is required to search the index
      * 
      * @param indexedValues A list of {@link IndexedValue} already found by the search
      * @return false to stop the graph from progressing
-     * @throws CloudproofException
+     * @throws CloudproofException if anything goes wrong
      */
     protected abstract boolean searchProgress(List<IndexedValue> indexedValues) throws CloudproofException;
 

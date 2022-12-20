@@ -136,7 +136,7 @@ public final class Findex {
 
         // Findex master keys
         if (key == null) {
-            throw new CloudproofException("Key k cannot be null");
+            throw new CloudproofException("Key cannot be null");
         }
         try (final Memory keyPointer = new Memory(key.length);
             final Memory labelPointer = new Memory(label.length)) {
@@ -182,7 +182,6 @@ public final class Findex {
                     db.progressCallback(),
                     db.fetchEntryCallback(),
                     db.fetchChainCallback());
-                System.out.println("SEACH RETURNED WITH CODE: " + ffiCode);
                 if (ffiCode != 0) {
                     throw new CloudproofException(get_last_error(4095));
                 }

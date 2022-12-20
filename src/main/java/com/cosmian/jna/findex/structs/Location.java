@@ -1,6 +1,6 @@
 package com.cosmian.jna.findex.structs;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import com.cosmian.jna.findex.serde.Leb128ByteArray;
 
@@ -15,7 +15,7 @@ public class Location extends Leb128ByteArray {
     }
 
     public Location(String location) {
-        this(location.getBytes(Charset.defaultCharset()));
+        this(location.getBytes(StandardCharsets.UTF_8));
     }
 
     public IndexedValue toIndexedValue() {

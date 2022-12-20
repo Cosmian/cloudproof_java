@@ -1,6 +1,7 @@
 package com.cosmian.jna.findex.ffi;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.cosmian.jna.findex.serde.Leb128Serializable;
 import com.cosmian.jna.findex.serde.Leb128Writer;
@@ -27,6 +28,20 @@ public class FFiUtils {
                                                                                                       IntByReference outputSize)
         throws CloudproofException {
         byte[] uidsAndValuesBytes = Leb128Writer.serializeMap(map);
+        if (outputSize.getValue() < uidsAndValuesBytes.length) {
+            outputSize.setValue(uidsAndValuesBytes.length);
+            return 1;
+        }
+        outputSize.setValue(uidsAndValuesBytes.length);
+        output.write(0, uidsAndValuesBytes, 0, uidsAndValuesBytes.length);
+        return 0;
+    }
+
+    public static <V extends Leb128Serializable> int setToOutputPointer(Set<V> set,
+                                                                        Pointer output,
+                                                                        IntByReference outputSize)
+        throws CloudproofException {
+        byte[] uidsAndValuesBytes = Leb128Writer.serializeCollection(set);
         if (outputSize.getValue() < uidsAndValuesBytes.length) {
             outputSize.setValue(uidsAndValuesBytes.length);
             return 1;

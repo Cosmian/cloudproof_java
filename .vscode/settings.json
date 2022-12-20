@@ -10,6 +10,7 @@
     "findex",
     "Findex",
     "instanceof",
+    "jedis",
     "Jedis",
     "kmip",
     "Kmip",

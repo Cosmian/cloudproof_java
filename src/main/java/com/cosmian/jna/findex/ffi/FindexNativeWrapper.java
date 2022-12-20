@@ -26,10 +26,9 @@ public interface FindexNativeWrapper extends Library {
             throws CloudproofException;
     }
 
-    interface FetchAllEntriesCallback extends Callback {
-        int apply(Pointer output,
-                  IntByReference outputSize,
-                  int numberOfEntries)
+    interface FetchAllEntryTableUidsCallback extends Callback {
+        int apply(Pointer uidsPointer,
+                  IntByReference uidsSize)
             throws CloudproofException;
     }
 
@@ -96,6 +95,7 @@ public interface FindexNativeWrapper extends Library {
                   int newKeySize,
                   Pointer labelPointer,
                   int labelSize,
+                  FetchAllEntryTableUidsCallback fetchAllEntryTableUids,
                   FetchEntryCallback fetchEntry,
                   FetchChainCallback fetchChain,
                   UpdateLinesCallback updateLines,

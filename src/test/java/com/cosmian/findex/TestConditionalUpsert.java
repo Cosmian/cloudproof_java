@@ -60,7 +60,7 @@ public class TestConditionalUpsert {
             System.out.println(" .  Updated  Values: " + updatedValues.size());
 
             // insert originals
-            Map<Uid32, EntryTableValue> failed = db.upsertEntry().upsert(originalValues);
+            Map<Uid32, EntryTableValue> failed = db.upsertEntries(originalValues);
             assertEquals(0, failed.size());
 
             // the number of entries that should fail on update
@@ -91,7 +91,7 @@ public class TestConditionalUpsert {
             }
 
             // insert updated
-            failed = db.upsertEntry().upsert(updatedValues);
+            failed = db.upsertEntries(updatedValues);
             assertEquals(numOverlapFail, failed.size());
 
             // cleanup
@@ -142,7 +142,7 @@ public class TestConditionalUpsert {
             System.out.println(" .  Updated  Values: " + updatedValues.size());
 
             // insert originals
-            Map<Uid32, EntryTableValue> failed = db.upsertEntry().upsert(originalValues);
+            Map<Uid32, EntryTableValue> failed = db.upsertEntries(originalValues);
             assertEquals(0, failed.size());
 
             // the number of entries that should fail on update
@@ -173,7 +173,7 @@ public class TestConditionalUpsert {
             }
 
             // insert updated
-            failed = db.upsertEntry().upsert(updatedValues);
+            failed = db.upsertEntries(updatedValues);
             assertEquals(numOverlapFail, failed.size());
 
             // delete all items

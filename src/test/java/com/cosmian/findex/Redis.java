@@ -17,13 +17,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.Database;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchChain;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchEntry;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBListRemovedLocations;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpdateLines;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertChain;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertEntry;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
@@ -263,185 +256,128 @@ public class Redis extends Database implements Closeable {
     //
 
     @Override
-    protected DBFetchChain fetchChain() {
-        return new DBFetchChain() {
-
-            @Override
-            public Map<Uid32, ChainTableValue> fetch(List<Uid32> uids) throws CloudproofException {
-                List<byte[]> response = getEntries(uids, CHAIN_TABLE_INDEX);
-                HashMap<Uid32, ChainTableValue> keysAndValues = new HashMap<>();
-                for (int i = 0; i < response.size(); i++) {
-                    Uid32 key = uids.get(i);
-                    byte[] value = response.get(i);
-                    if (value != null) {
-                        keysAndValues.put(key, new ChainTableValue(value));
-                    }
-                }
-                return keysAndValues;
-            }
-
-        };
-    }
-
-    @Override
-    protected DBFetchEntry fetchEntry() {
-        return new DBFetchEntry() {
-
-            @Override
-            public Map<Uid32, EntryTableValue> fetch(List<Uid32> uids) throws CloudproofException {
-                List<byte[]> values;
-                if (uids.size() == 0) {
-                    Set<byte[]> keys = getAllKeys(ENTRY_TABLE_INDEX);
-                    // Get all values now
-                    byte[][] keysArray = keys.toArray(new byte[0][]);
-                    values = Redis.this.pool.getResource().mget(keysArray);
-                } else {
-                    values = getEntries(uids, ENTRY_TABLE_INDEX);
-                }
-                // post process
-                HashMap<Uid32, EntryTableValue> keysAndValues = new HashMap<>();
-                for (int i = 0; i < values.size(); i++) {
-                    Uid32 key = uids.get(i);
-                    byte[] value = values.get(i);
-                    if (value != null) {
-                        keysAndValues.put(key, new EntryTableValue(value));
-                    }
-                }
-                return keysAndValues;
-            }
-
-        };
-    }
-
-    @Override
-    protected DBListRemovedLocations listRemovedLocations() {
-        return new DBListRemovedLocations() {
-
-            @Override
-            public List<Location> list(List<Location> locations) throws CloudproofException {
-                try (Jedis jedis = getJedis()) {
-                    Iterator<Location> it = locations.iterator();
-                    while (it.hasNext()) {
-                        Location location = it.next();
-                        byte[] key = key(DATA_TABLE_INDEX, Arrays.copyOfRange(location.getBytes(), 0, 4));
-                        byte[] value = jedis.get(key);
-                        if (value != null) {
-                            it.remove();
-                        }
-                    }
-                    return locations;
-                }
-            }
-        };
-    }
-
-    @Override
-    protected SearchProgress progress() {
-        return new SearchProgress() {
-
-            @Override
-            public boolean notify(List<IndexedValue> indexedValues) throws CloudproofException {
-                // You may want to do something here such as User feedback
-                List<Integer> ids =
-                    indexedValues.stream().map((IndexedValue iv) -> {
-                        try {
-                            return IndexUtils.locationToUserId(iv.getLocation());
-                        } catch (CloudproofException e) {
-                            return -1;
-                        }
-                    }).collect(Collectors.toList());
-                logger.info("Progress: " + ids.toString());
-                System.out.println("Progress: " + ids.toString());
-                return true;
-            }
-
-        };
-    }
-
-    @Override
-    protected DBUpdateLines updateLines() {
-        return new DBUpdateLines() {
-
-            @Override
-            public void update(List<Uid32> removedChains,
-                               Map<Uid32, EntryTableValue> newEntries,
-                               Map<Uid32, ChainTableValue> newChains)
-                throws CloudproofException {
-
-                // truncate the EN
-                delAllEntries(ENTRY_TABLE_INDEX);
-
-                try (Jedis jedis = getJedis()) {
-                    // set the new Entries
-                    for (Entry<Uid32, EntryTableValue> newEntry : newEntries.entrySet()) {
-                        byte[] key = key(ENTRY_TABLE_INDEX, newEntry.getKey().getBytes());
-                        jedis.set(key, newEntry.getValue().getBytes());
-                    }
-                    // set (upsert) the new chains
-                    for (Entry<Uid32, ChainTableValue> newChain : newChains.entrySet()) {
-                        byte[] key = key(CHAIN_TABLE_INDEX, newChain.getKey().getBytes());
-                        jedis.set(key, newChain.getValue().getBytes());
-                    }
-                    // clean up the Chain Table
-                    for (Uid32 uid : removedChains) {
-                        byte[] key = key(CHAIN_TABLE_INDEX, uid.getBytes());
-                        jedis.del(key);
-                    }
-                }
-
-            }
-
-        };
-    }
-
-    @Override
-    protected DBUpsertChain upsertChain() {
-        return new DBUpsertChain() {
-
-            @Override
-            public void upsert(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
-                try (Jedis jedis = getJedis(); Transaction tx = jedis.multi();) {
-                    for (Entry<Uid32, ChainTableValue> entry : uidsAndValues.entrySet()) {
-                        byte[] key = key(CHAIN_TABLE_INDEX, entry.getKey().getBytes());
-                        tx.getSet(key, entry.getValue().getBytes());
-                    }
-                    tx.exec();
-                }
-            }
-        };
-    }
-
-    @Override
-    protected DBUpsertEntry upsertEntry() {
-        return new DBUpsertEntry() {
-
-            @Override
-            public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> uidsAndValues)
-                throws CloudproofException {
-                final Map<Uid32, EntryTableValue> failed = new HashMap<>();
-                try (Jedis jedis = getJedis()) {
-                    for (final Entry<Uid32, EntryTableValues> entry : uidsAndValues.entrySet()) {
-                        List<byte[]> keys =
-                            Arrays.asList(key(ENTRY_TABLE_INDEX, entry.getKey().getBytes()));
-                        List<byte[]> args =
-                            Arrays.asList(entry.getValue().getPrevious().getBytes(),
-                                entry.getValue().getNew().getBytes());
-                        @SuppressWarnings("unchecked")
-                        List<byte[]> response =
-                            (List<byte[]>) jedis.evalsha(Redis.this.conditionalUpsertSha, keys, args);
-                        if (response.size() > 0) {
-                            failed.put(entry.getKey(), new EntryTableValue(response.get(0)));
-                        }
-                    }
-                }
-                return failed;
-            }
-        };
-    }
-
-    @Override
     public void close() throws IOException {
         this.pool.close();
+    }
+
+    @Override
+    protected Set<Uid32> fetchAllEntryTableUids() throws CloudproofException {
+        return getAllKeys(ENTRY_TABLE_INDEX).stream().map((byte[] b) -> uid(b))
+            .collect(Collectors.toSet());
+    }
+
+    @Override
+    protected Map<Uid32, EntryTableValue> fetchEntries(List<Uid32> uids) throws CloudproofException {
+        List<byte[]> values = getEntries(uids, ENTRY_TABLE_INDEX);
+        // post process
+        HashMap<Uid32, EntryTableValue> keysAndValues = new HashMap<>();
+        for (int i = 0; i < values.size(); i++) {
+            Uid32 key = uids.get(i);
+            byte[] value = values.get(i);
+            if (value != null) {
+                keysAndValues.put(key, new EntryTableValue(value));
+            }
+        }
+        return keysAndValues;
+    }
+
+    @Override
+    protected Map<Uid32, ChainTableValue> fetchChains(List<Uid32> uids) throws CloudproofException {
+        List<byte[]> response = getEntries(uids, CHAIN_TABLE_INDEX);
+
+        HashMap<Uid32, ChainTableValue> keysAndValues = new HashMap<>();
+        for (int i = 0; i < response.size(); i++) {
+            Uid32 key = uids.get(i);
+            byte[] value = response.get(i);
+            if (value != null) {
+                keysAndValues.put(key, new ChainTableValue(value));
+            }
+        }
+        return keysAndValues;
+    }
+
+    @Override
+    protected Map<Uid32, EntryTableValue> upsertEntries(Map<Uid32, EntryTableValues> uidsAndValues)
+        throws CloudproofException {
+        final Map<Uid32, EntryTableValue> failed = new HashMap<>();
+        try (Jedis jedis = getJedis()) {
+            for (final Entry<Uid32, EntryTableValues> entry : uidsAndValues.entrySet()) {
+                List<byte[]> keys =
+                    Arrays.asList(key(ENTRY_TABLE_INDEX, entry.getKey().getBytes()));
+                List<byte[]> args =
+                    Arrays.asList(entry.getValue().getPrevious().getBytes(),
+                        entry.getValue().getNew().getBytes());
+                @SuppressWarnings("unchecked")
+                List<byte[]> response =
+                    (List<byte[]>) jedis.evalsha(Redis.this.conditionalUpsertSha, keys, args);
+                if (response.size() > 0) {
+                    failed.put(entry.getKey(), new EntryTableValue(response.get(0)));
+                }
+            }
+        }
+        return failed;
+    }
+
+    @Override
+    protected void upsertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
+        try (Jedis jedis = getJedis(); Transaction tx = jedis.multi();) {
+            for (Entry<Uid32, ChainTableValue> entry : uidsAndValues.entrySet()) {
+                byte[] key = key(CHAIN_TABLE_INDEX, entry.getKey().getBytes());
+                tx.getSet(key, entry.getValue().getBytes());
+            }
+            tx.exec();
+        }
+    }
+
+    @Override
+    protected void updateTables(List<Uid32> removedChains,
+                                Map<Uid32, EntryTableValue> newEntries,
+                                Map<Uid32, ChainTableValue> newChains)
+        throws CloudproofException {
+        // truncate the EN
+        delAllEntries(ENTRY_TABLE_INDEX);
+
+        try (Jedis jedis = getJedis()) {
+            // set the new Entries
+            for (Entry<Uid32, EntryTableValue> newEntry : newEntries.entrySet()) {
+                byte[] key = key(ENTRY_TABLE_INDEX, newEntry.getKey().getBytes());
+                jedis.set(key, newEntry.getValue().getBytes());
+            }
+            // set (upsert) the new chains
+            for (Entry<Uid32, ChainTableValue> newChain : newChains.entrySet()) {
+                byte[] key = key(CHAIN_TABLE_INDEX, newChain.getKey().getBytes());
+                jedis.set(key, newChain.getValue().getBytes());
+            }
+            // clean up the Chain Table
+            for (Uid32 uid : removedChains) {
+                byte[] key = key(CHAIN_TABLE_INDEX, uid.getBytes());
+                jedis.del(key);
+            }
+        }
+    }
+
+    @Override
+    protected List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException {
+        try (Jedis jedis = getJedis()) {
+            Iterator<Location> it = locations.iterator();
+            while (it.hasNext()) {
+                Location location = it.next();
+                byte[] key = key(DATA_TABLE_INDEX, Arrays.copyOfRange(location.getBytes(), 0, 4));
+                byte[] value = jedis.get(key);
+                if (value != null) {
+                    it.remove();
+
+                }
+            }
+            return locations;
+        }
+    }
+
+    @Override
+    protected boolean searchProgress(List<IndexedValue> indexedValues) throws CloudproofException {
+        // let the search progress
+        logger.fine("progress called with " + indexedValues.size() + " values");
+        return true;
     }
 
 }

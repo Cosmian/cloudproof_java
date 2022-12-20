@@ -221,6 +221,7 @@ public final class Findex {
                 existingKeyPointer, existingKey.length,
                 newKeyPointer, newKey.length,
                 labelPointer, label.length,
+                database.fetchAllEntryTableUidsCallback(),
                 database.fetchEntryCallback(),
                 database.fetchChainCallback(),
                 database.updateLinesCallback(),

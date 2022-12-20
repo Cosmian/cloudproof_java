@@ -2,6 +2,7 @@ package com.cosmian.jna.findex.ffi;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
@@ -13,6 +14,11 @@ import com.cosmian.utils.CloudproofException;
 
 public interface FindexUserCallbacks {
     /* Customer high-level callbacks */
+
+    interface DBFetchAllEntryTableUids {
+        public Set<Uid32> fetchAll() throws CloudproofException;
+    }
+
     interface DBFetchEntry {
         public Map<Uid32, EntryTableValue> fetch(List<Uid32> uids) throws CloudproofException;
     }

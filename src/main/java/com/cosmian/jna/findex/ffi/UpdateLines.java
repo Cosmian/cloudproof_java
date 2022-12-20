@@ -43,9 +43,6 @@ public class UpdateLines implements UpdateLinesCallback {
         Map<Uid32, ChainTableValue> newChains =
             Leb128Reader.deserializeMap(Uid32.class, ChainTableValue.class, newChainsBytes);
 
-        System.err.println("REMOVED CHAIN LENGTH: " + removedChains.size());
-        System.err.println("NEW ENTRIES LENGTH: " + newEntries.size());
-        System.err.println("NEW CHAINS LENGTH: " + newChains.size());
         this.update.update(removedChains, newEntries, newChains);
         return 0;
     }

@@ -15,16 +15,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.Database;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchChain;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchEntry;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBListRemovedLocations;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpdateLines;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertChain;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertEntry;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.serde.Leb128ByteArray;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
@@ -96,21 +90,18 @@ public class Sqlite extends Database implements Closeable {
         return uidsAndValues;
     }
 
-    public Map<Uid32, EntryTableValue> fetchAllEntryTableItems() throws SQLException {
-        PreparedStatement pstmt = this.connection.prepareStatement("SELECT uid, value FROM entry_table");
+    public Set<Uid32> fetchAllEntryUids() throws SQLException {
+        PreparedStatement pstmt = this.connection.prepareStatement("SELECT uid FROM entry_table");
         ResultSet rs = pstmt.executeQuery();
 
         //
         // Recover all results
         //
-        HashMap<Uid32, EntryTableValue> uidsAndValues = new HashMap<>();
+        Set<Uid32> uids = new HashSet<>();
         while (rs.next()) {
-            uidsAndValues.put(
-                new Uid32(rs.getBytes("uid")),
-                new EntryTableValue(rs.getBytes("value")));
+            uids.add(new Uid32(rs.getBytes("uid")));
         }
-
-        return uidsAndValues;
+        return uids;
     }
 
     public Map<Uid32, EntryTableValue> fetchEntryTableItems(List<Uid32> uids) throws SQLException {
@@ -275,122 +266,89 @@ public class Sqlite extends Database implements Closeable {
         } catch (SQLException e) {
             throw new IOException("failed closing the Sqlite connection: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    protected Set<Uid32> fetchAllEntryTableUids() throws CloudproofException {
+        try {
+            return this.fetchAllEntryUids();
+        } catch (Exception e) {
+            throw new CloudproofException("Failed fetching all entry UIDs: " + e.toString());
+        }
+    }
+
+    @Override
+    protected Map<Uid32, EntryTableValue> fetchEntries(List<Uid32> uids) throws CloudproofException {
+        try {
+            return fetchEntryTableItems(uids);
+        } catch (SQLException e) {
+            throw new CloudproofException("Failed fetch entry: " + e.toString());
+        }
+    }
+
+    @Override
+    protected Map<Uid32, ChainTableValue> fetchChains(List<Uid32> uids) throws CloudproofException {
+        try {
+            return fetchChainTableItems(uids);
+        } catch (SQLException e) {
+            throw new CloudproofException("Failed fetch chain: " + e.toString());
+        }
+    }
+
+    @Override
+    protected Map<Uid32, EntryTableValue> upsertEntries(Map<Uid32, EntryTableValues> uidsAndValues)
+        throws CloudproofException {
+        try {
+            return Sqlite.this.conditionalUpsert(uidsAndValues, "entry_table");
+        } catch (SQLException e) {
+            throw new CloudproofException("Failed entry upsert: " + e.toString());
+        }
+    }
+
+    @Override
+    protected void upsertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
+        try {
+            Sqlite.this.upsert(uidsAndValues, "chain_table");
+        } catch (SQLException e) {
+            throw new CloudproofException("Failed chain upsert: " + e.toString());
+        }
+    }
+
+    @Override
+    protected void updateTables(List<Uid32> removedChains,
+                                Map<Uid32, EntryTableValue> newEntries,
+                                Map<Uid32, ChainTableValue> newChains)
+        throws CloudproofException {
+        try {
+            truncate("entry_table");
+            upsert(newEntries, "entry_table");
+            upsert(newChains, "chain_table");
+            remove(removedChains, "chain_table");
+        } catch (SQLException e) {
+            throw new CloudproofException("Failed update lines: " + e.toString());
+        }
 
     }
 
     @Override
-    protected DBFetchEntry fetchEntry() {
-        return new DBFetchEntry() {
-            @Override
-            public Map<Uid32, EntryTableValue> fetch(List<Uid32> uids) throws CloudproofException {
-                try {
-                    Map<Uid32, EntryTableValue> found;
-                    if (uids.size() == 0) {
-                        found = fetchAllEntryTableItems();
-                    } else {
-                        found = fetchEntryTableItems(uids);
-                    }
-                    return found;
-                } catch (SQLException e) {
-                    throw new CloudproofException("Failed fetch entry: " + e.toString());
-                }
-            }
-        };
+    protected List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException {
+        List<Integer> ids = locations.stream()
+            .map((Location location) -> IndexUtils.locationToUserId(location))
+            .collect(Collectors.toList());
+        try {
+            List<Integer> removedIds = listRemovedIds("users", ids);
+            return removedIds.stream()
+                .map((Integer id) -> IndexUtils.userIdToLocation(id))
+                .collect(Collectors.toList());
+        } catch (SQLException e) {
+            throw new CloudproofException("Failed list removed locations: " + e.toString());
+        }
     }
 
     @Override
-    protected DBFetchChain fetchChain() {
-        return new DBFetchChain() {
-            @Override
-            public Map<Uid32, ChainTableValue> fetch(List<Uid32> uids) throws CloudproofException {
-                try {
-                    return fetchChainTableItems(uids);
-                } catch (SQLException e) {
-                    throw new CloudproofException("Failed fetch chain: " + e.toString());
-                }
-            }
-        };
-    }
-
-    @Override
-    protected DBUpsertEntry upsertEntry() {
-        return new DBUpsertEntry() {
-            @Override
-            public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> uidsAndValues)
-                throws CloudproofException {
-                try {
-                    return Sqlite.this.conditionalUpsert(uidsAndValues, "entry_table");
-                } catch (SQLException e) {
-                    throw new CloudproofException("Failed entry upsert: " + e.toString());
-                }
-            }
-        };
-    }
-
-    @Override
-    protected DBUpsertChain upsertChain() {
-        return new DBUpsertChain() {
-            @Override
-            public void upsert(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
-                try {
-                    Sqlite.this.upsert(uidsAndValues, "chain_table");
-                } catch (SQLException e) {
-                    throw new CloudproofException("Failed chain upsert: " + e.toString());
-                }
-            }
-        };
-    }
-
-    @Override
-    protected DBUpdateLines updateLines() {
-        return new DBUpdateLines() {
-            @Override
-            public void update(List<Uid32> removedChains,
-                               Map<Uid32, EntryTableValue> newEntries,
-                               Map<Uid32, ChainTableValue> newChains)
-                throws CloudproofException {
-                try {
-                    truncate("entry_table");
-                    upsert(newEntries, "entry_table");
-                    upsert(newChains, "chain_table");
-                    remove(removedChains, "chain_table");
-                } catch (SQLException e) {
-                    throw new CloudproofException("Failed update lines: " + e.toString());
-                }
-            }
-        };
-    }
-
-    @Override
-    protected DBListRemovedLocations listRemovedLocations() {
-        return new DBListRemovedLocations() {
-            @Override
-            public List<Location> list(List<Location> locations) throws CloudproofException {
-                List<Integer> ids = locations.stream()
-                    .map((Location location) -> IndexUtils.locationToUserId(location))
-                    .collect(Collectors.toList());
-                try {
-                    List<Integer> removedIds = listRemovedIds("users", ids);
-                    return removedIds.stream()
-                        .map((Integer id) -> IndexUtils.userIdToLocation(id))
-                        .collect(Collectors.toList());
-                } catch (SQLException e) {
-                    throw new CloudproofException("Failed list removed locations: " + e.toString());
-                }
-            }
-        };
-    }
-
-    @Override
-    protected SearchProgress progress() {
-        return new SearchProgress() {
-
-            @Override
-            public boolean notify(List<IndexedValue> indexedValues) throws CloudproofException {
-                return true;
-
-            };
-        };
+    protected boolean searchProgress(List<IndexedValue> indexedValues) throws CloudproofException {
+        // let search progress
+        return true;
     }
 
 }

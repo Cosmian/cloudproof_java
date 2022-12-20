@@ -1,6 +1,5 @@
 package com.cosmian.jna.findex.ffi;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -31,21 +30,15 @@ public class FetchEntry implements FetchEntryCallback {
                      int uidsLength)
         throws CloudproofException {
 
-        List<Uid32> entryTableUids;
-        if (uidsLength == 0 && uidsPointer == null) {
-            logger.fine("fetching all entries");
-            entryTableUids = new ArrayList<>();
-        } else {
-            //
-            // Read `uidsPointer` until `uidsLength`
-            //
-            byte[] uids = new byte[uidsLength];
-            uidsPointer.read(0, uids, 0, uidsLength);
-            //
-            // Deserialize Entry Table uids
-            //
-            entryTableUids = Leb128Reader.deserializeCollection(Uid32.class, uids);
-        }
+        //
+        // Read `uidsPointer` until `uidsLength`
+        //
+        byte[] uids = new byte[uidsLength];
+        uidsPointer.read(0, uids, 0, uidsLength);
+        //
+        // Deserialize Entry Table uids
+        //
+        List<Uid32> entryTableUids = Leb128Reader.deserializeCollection(Uid32.class, uids);
 
         //
         // Select uids and values in EntryTable

@@ -81,8 +81,10 @@ public abstract class Database {
      * the {@link Uid32} and the <b>current</b> database value must be returned as part of the returned {@link Map}. *
      * <p>
      * Implementation of this only method is required to update or compact the index
+     * <p>
+     * see the Redis and SQlite implementations for implementation examples
+     * <p>
      * 
-     * @see the Redis and SQlite implementations for implementation examples
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link EntryTableValues}
      * @return a map of the {@link Uid32} that could not be updated and the current database value for the entry.
      * @throws CloudproofException if anything goes wrong
@@ -104,36 +106,36 @@ public abstract class Database {
      * Update the database tables with the new values. This function should:
      * <ul>
      * <li>remove all the Index Entry Table</li>
-     * <li>add <i>new_encrypted_entry_table_items</i> to the Index Entry Table</li>
-     * <li>remove <i>removed_chain_table_uids</i> from the Index Chain Table</li>
-     * <li>add <i>new_encrypted_chain_table_items</i> to the Index Chain Table</li>
+     * <li>add _new_encrypted_entry_table_items_ to the Index Entry Table</li>
+     * <li>remove _removed_chain_table_uids_ from the Index Chain Table</li>
+     * <li>add _new_encrypted_chain_table_items_ to the Index Chain Table</li>
      * </ul>
      * The order of these operation is not important but have some implications:
-     * </p>
+     * <p>
      * <b>Option 1</b>
      * </P>
-     * Keep the database small but prevent using the index during the <i>update_lines</i>.
+     * Keep the database small but prevent using the index during the _update_lines_.
      * <ul>
      * <li>remove all the Index Entry Table</li>
-     * <li>add <i>new_encrypted_entry_table_items</i> to the Index Entry Table</li>
-     * <li>remove <i>removed_chain_table_uids</i> from the Index Chain Table</li>
-     * <li>add <i>new_encrypted_chain_table_items</i> to the Index Chain Table</li>
+     * <li>add _new_encrypted_entry_table_items_ to the Index Entry Table</li>
+     * <li>remove _removed_chain_table_uids_ from the Index Chain Table</li>
+     * <li>add _new_encrypted_chain_table_items_ to the Index Chain Table</li>
      * </ul>
-     * <br/>
-     * <br/>
+     * <br>
+     * <br>
      * <b>Option 2</b>
-     * </p>
+     * <p>
      * During a small duration, the index tables are much bigger but users can continue using the index during the
-     * <i>update_lines`.
+     * _update_lines`.
      * <ul>
      * <li>save all UIDs from the current Index Entry Table</li>
-     * <li>add <i>new_encrypted_entry_table_items</i> to the Index Entry Table</li>
-     * <li>add <i>new_encrypted_chain_table_items</i> to the Index Chain Table</li>
+     * <li>add _new_encrypted_entry_table_items_ to the Index Entry Table</li>
+     * <li>add _new_encrypted_chain_table_items_ to the Index Chain Table</li>
      * <li>publish new label to users</li>
      * <li>remove old lines from the Index Entry Table (using the saved UIDs in 1.)</li>
-     * <li>remove <i>removed_chain_table_uids</i> from the Index Chain Table</li>
+     * <li>remove _removed_chain_table_uids_ from the Index Chain Table</li>
      * </ul>
-     * </p>
+     * <p>
      * *
      * <p>
      * Implementation of this only method is required to compact the index

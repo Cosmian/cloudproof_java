@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.1.0] - 2022-11-22
+## [3.0.0] - 2022-12-21
 
 ### Added
 
@@ -12,7 +12,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - changed `Abe` class to `KmipClient`
-- updated CoverCrypt to 7.1.1
+- refactored packages to more natural locations
+- updated CoverCrypt to 8.0.2
+- updated Findex to 1.0.1
 
 ### Removed
 

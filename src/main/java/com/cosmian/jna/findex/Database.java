@@ -52,7 +52,7 @@ public abstract class Database {
      * Fetch the Entry Table lines for the list of given {@link Uid32}. If a line does not exist, there should be not
      * entry in the returned map.
      * <p>
-     * Implementation of this only method is required to search or compact the index
+     * Implementation of this only method is required to search, update or compact the index
      * 
      * @param uids the unique {@link Uid32}s used as line id
      * @return a {@link Map} of {@link Uid32} to {@link EntryTableValue}
@@ -82,7 +82,7 @@ public abstract class Database {
      * <p>
      * Implementation of this only method is required to update or compact the index
      * <p>
-     * see the Redis and SQlite implementations for implementation examples
+     * See the Redis and Sqlite implementations for implementation examples
      * <p>
      * 
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link EntryTableValues}
@@ -110,7 +110,7 @@ public abstract class Database {
      * <li>remove _removed_chain_table_uids_ from the Index Chain Table</li>
      * <li>add _new_encrypted_chain_table_items_ to the Index Chain Table</li>
      * </ul>
-     * The order of these operation is not important but have some implications:
+     * The order of these operations is not important but have some implications:
      * <p>
      * <b>Option 1</b>
      * </P>
@@ -141,8 +141,8 @@ public abstract class Database {
      * Implementation of this only method is required to compact the index
      * 
      * @param removedChains a list of lines to remove from the Chain Table
-     * @param newEntries a list of lines to add to the Entry Table (after if has been dropped)
-     * @param newChains a lis of lines to add to the Chain Table
+     * @param newEntries a list of lines to add to the Entry Table (after it has been dropped)
+     * @param newChains a list of lines to add to the Chain Table
      * @throws CloudproofException if anything goes wrong
      */
     protected abstract void updateTables(List<Uid32> removedChains,
@@ -151,7 +151,7 @@ public abstract class Database {
         throws CloudproofException;
 
     /**
-     * Determine which of the passed {@link Location} do no longer exist in the main database/storage and return them. *
+     * Determine which of the passed {@link Location} no longer exist in the main database/storage and return them. *
      * <p>
      * Implementation of this only method is required to compact the index
      * 
@@ -164,8 +164,8 @@ public abstract class Database {
     /**
      * The Findex search mechanism will call this method as the search for keywords progresses through the search graph.
      * <p>
-     * The user should return <i>false</i> to immediately stop have the search return and stop from further progressing
-     * down the graph. *
+     * The user should return <i>false</i> to immediately have the search return and stop further progressing down the
+     * graph. *
      * <p>
      * Implementation of this only method is required to search the index
      * 

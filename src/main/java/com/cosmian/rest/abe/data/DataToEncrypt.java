@@ -5,13 +5,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import com.cosmian.CloudproofException;
-import com.cosmian.Leb128;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.Leb128;
 
 public class DataToEncrypt {
 
     private final String encryptionPolicy;
+
     private final byte[] plaintext;
+
     private final Optional<byte[]> headerMetaData;
 
     public DataToEncrypt(String encryptionPolicy, byte[] plaintext, Optional<byte[]> headerMetaData) {

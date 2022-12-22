@@ -1,7 +1,11 @@
 package com.cosmian.findex;
 
-import com.cosmian.CloudproofException;
-import com.cosmian.jna.findex.Word;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,10 +41,12 @@ public class UsersDataset {
     public UsersDataset() {
     }
 
-    public Word[] values() {
-        return new Word[] {new Word(this.firstName), new Word(this.lastName), new Word(this.phone),
-            new Word(this.email), new Word(this.country), new Word(this.region), new Word(this.employeeNumber),
-            new Word(this.security)};
+    public Set<Keyword> values() {
+        return new HashSet<>(
+            Arrays.asList(new Keyword(this.firstName), new Keyword(this.lastName), new Keyword(this.phone),
+                new Keyword(this.email), new Keyword(this.country), new Keyword(this.region),
+                new Keyword(this.employeeNumber),
+                new Keyword(this.security)));
     }
 
     public String toString() {

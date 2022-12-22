@@ -2,8 +2,6 @@ package com.cosmian.rest.kmip;
 
 import java.util.logging.Logger;
 
-import com.cosmian.CloudproofException;
-import com.cosmian.RestClient;
 import com.cosmian.rest.kmip.operations.Create;
 import com.cosmian.rest.kmip.operations.CreateKeyPair;
 import com.cosmian.rest.kmip.operations.CreateKeyPairResponse;
@@ -24,6 +22,8 @@ import com.cosmian.rest.kmip.operations.ReKeyKeyPair;
 import com.cosmian.rest.kmip.operations.ReKeyKeyPairResponse;
 import com.cosmian.rest.kmip.operations.Revoke;
 import com.cosmian.rest.kmip.operations.RevokeResponse;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.RestClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 // KMIP Specs: https://docs.oasis-open.org/kmip/kmip-spec/v2.1/cs01/kmip-spec-v2.1-cs01.html

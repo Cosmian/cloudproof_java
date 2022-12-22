@@ -7,10 +7,17 @@
     "Cosmian",
     "Deserialization",
     "deserializers",
+    "findex",
+    "Findex",
     "instanceof",
+    "jedis",
+    "Jedis",
     "kmip",
     "Kmip",
-    "serializers"
+    "serializers",
+    "Sqlite",
+    "uids",
+    "upserts"
   ],
   "java.format.settings.url": ".vscode/codestyle-java.xml",
   "[java]": {

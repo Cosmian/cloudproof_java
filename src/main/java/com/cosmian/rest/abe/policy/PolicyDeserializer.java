@@ -7,8 +7,8 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.json.KmipJsonDeserializer;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -16,7 +16,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class PolicyDeserializer extends KmipJsonDeserializer<Policy> {
 
     @Override
-    public Policy deserialize(JsonNode node, DeserializationContext ctxt) throws IOException, JacksonException {
+    public Policy deserialize(JsonNode node,
+                              DeserializationContext ctxt)
+        throws IOException, JacksonException {
 
         JsonNode lastAttributeValueNode = node.get("last_attribute_value");
         if (lastAttributeValueNode == null) {

@@ -6,10 +6,10 @@ import java.util.logging.Logger;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import com.cosmian.CloudproofException;
-import com.cosmian.RestClient;
 import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.kmip.Kmip;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.RestClient;
 
 public class Cosmian {
 
@@ -105,7 +105,8 @@ public class Cosmian {
      * @param b second byte array
      * @return the merged byte array
      */
-    public static byte[] concat(byte[] a, byte[] b) {
+    public static byte[] concat(byte[] a,
+                                byte[] b) {
         byte[] result = new byte[a.length + b.length];
         System.arraycopy(a, 0, result, 0, a.length);
         System.arraycopy(b, 0, result, a.length, b.length);

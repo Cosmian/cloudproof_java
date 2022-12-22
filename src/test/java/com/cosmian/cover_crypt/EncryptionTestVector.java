@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 
-import com.cosmian.CloudproofException;
-import com.cosmian.jna.abe.CoverCrypt;
+import com.cosmian.jna.covercrypt.CoverCrypt;
 import com.cosmian.rest.abe.data.DecryptedData;
 import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EncryptionTestVector {
@@ -36,10 +36,13 @@ public class EncryptionTestVector {
         assertTrue(Arrays.equals(this.headerMetadata, res.getHeaderMetaData()));
     }
 
-    public static EncryptionTestVector generate(Policy policy, byte[] publicKey, String encryptionPolicy,
-        String plaintext,
-        byte[] headerMetadata,
-        byte[] authenticationData) throws CloudproofException {
+    public static EncryptionTestVector generate(Policy policy,
+                                                byte[] publicKey,
+                                                String encryptionPolicy,
+                                                String plaintext,
+                                                byte[] headerMetadata,
+                                                byte[] authenticationData)
+        throws CloudproofException {
 
         EncryptionTestVector out = new EncryptionTestVector();
         out.plaintext = plaintext.getBytes();

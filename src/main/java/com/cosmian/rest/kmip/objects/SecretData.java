@@ -2,10 +2,10 @@ package com.cosmian.rest.kmip.objects;
 
 import java.util.Objects;
 
-import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.SecretDataType;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SecretData extends KmipObject {

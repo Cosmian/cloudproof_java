@@ -1,0 +1,9 @@
+# Sonatype Lift Configuration
+
+# gitignore formatted string of files to ignore.
+ignoreFiles = """
+.github/
+.mvn/
+.vscode/
+src/test/
+"""

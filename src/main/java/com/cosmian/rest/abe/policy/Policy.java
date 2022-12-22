@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.TreeSet;
 
-import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.VendorAttribute;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -65,7 +65,10 @@ public class Policy implements Serializable {
      * @return the update Policy
      * @throws CloudproofException if the addition fails
      */
-    public Policy addAxis(String name, String[] attributes, boolean hierarchical) throws CloudproofException {
+    public Policy addAxis(String name,
+                          String[] attributes,
+                          boolean hierarchical)
+        throws CloudproofException {
         PolicyAxis axis = new PolicyAxis(name, attributes, hierarchical);
         if (axis.getLen() + this.lastAttributeValue > this.maxAttributeCreations) {
             throw new CloudproofException("Attribute capacity overflow");

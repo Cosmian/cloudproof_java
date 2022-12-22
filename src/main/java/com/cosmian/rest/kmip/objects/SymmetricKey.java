@@ -2,10 +2,10 @@ package com.cosmian.rest.kmip.objects;
 
 import java.util.Objects;
 
-import com.cosmian.CloudproofException;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.ObjectType;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SymmetricKey extends KmipObject {

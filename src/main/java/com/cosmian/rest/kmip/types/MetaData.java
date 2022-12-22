@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.cosmian.CloudproofException;
+import com.cosmian.utils.CloudproofException;
 
 /**
  * The symmetric encryption optional meta data: - the uid uniquely identifies the resource and is part of the AEAD of

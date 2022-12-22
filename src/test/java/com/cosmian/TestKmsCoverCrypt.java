@@ -29,6 +29,8 @@ import com.cosmian.rest.kmip.types.CryptographicAlgorithm;
 import com.cosmian.rest.kmip.types.KeyFormatType;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.VendorAttribute;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.Resources;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestKmsCoverCrypt {
@@ -42,8 +44,8 @@ public class TestKmsCoverCrypt {
 
     private Policy policy() throws CloudproofException {
         return new Policy(20)
-                .addAxis("Security Level", new String[] { "Protected", "Confidential", "Top Secret" }, true)
-                .addAxis("Department", new String[] { "FIN", "MKG", "HR" }, false);
+            .addAxis("Security Level", new String[] {"Protected", "Confidential", "Top Secret"}, true)
+            .addAxis("Department", new String[] {"FIN", "MKG", "HR"}, false);
     }
 
     private String accessPolicyProtected() throws CloudproofException {
@@ -77,8 +79,8 @@ public class TestKmsCoverCrypt {
         Attributes attributes = new Attributes(ObjectType.Private_Key, Optional.of(CryptographicAlgorithm.CoverCrypt));
         attributes.keyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
         attributes.vendorAttributes(
-                Optional.of(new VendorAttribute[] { Attr.toVendorAttribute(new Attr[] { new Attr("Department", "MKG") },
-                        VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ATTR) }));
+            Optional.of(new VendorAttribute[] {Attr.toVendorAttribute(new Attr[] {new Attr("Department", "MKG")},
+                VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ATTR)}));
         ObjectMapper mapper = new ObjectMapper();
         String str = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(attributes);
         logger.info(str);
@@ -124,8 +126,8 @@ public class TestKmsCoverCrypt {
         }
         // allow overwrite
         String publicMasterKeyUniqueIdentifier_ = kmsClient.importCoverCryptPublicMasterKey(
-                publicMasterKeyUniqueIdentifier,
-                publicMasterKey, true);
+            publicMasterKeyUniqueIdentifier,
+            publicMasterKey, true);
         logger.info("Imported Public Key with id: " + publicMasterKeyUniqueIdentifier_);
         // retrieve it again
         PublicKey publicMasterKey_ = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
@@ -135,7 +137,7 @@ public class TestKmsCoverCrypt {
 
         // User decryption key
         String userDecryptionKeyUniqueIdentifier = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
-                privateMasterKeyUniqueIdentifier);
+            privateMasterKeyUniqueIdentifier);
         logger.info("Created User Decryption Key with id: " + userDecryptionKeyUniqueIdentifier);
         // ... retrieve it
         PrivateKey userDecryptionKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userDecryptionKeyUniqueIdentifier);
@@ -168,54 +170,54 @@ public class TestKmsCoverCrypt {
         assertEquals(KeyFormatType.CoverCryptSecretKey, privateMasterKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, privateMasterKey.getKeyBlock().getCryptographicAlgorithm());
         Resources.write_resource("cover_crypt/private_master_key.json",
-                privateMasterKey.toJson().getBytes(StandardCharsets.UTF_8));
+            privateMasterKey.toJson().getBytes(StandardCharsets.UTF_8));
 
         String publicMasterKeyUniqueIdentifier = ids[1];
         PublicKey publicMasterKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
         assertEquals(KeyFormatType.CoverCryptPublicKey, publicMasterKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, publicMasterKey.getKeyBlock().getCryptographicAlgorithm());
         Resources.write_resource("cover_crypt/public_master_key.json",
-                publicMasterKey.toJson().getBytes(StandardCharsets.UTF_8));
+            publicMasterKey.toJson().getBytes(StandardCharsets.UTF_8));
 
         // encryption
         String protected_fin_data = "protected_fin_attributes";
         String protected_fin_enc_policy = "Department::FIN && Security Level::Protected";
         byte[] protected_fin_ct = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier,
-                protected_fin_data.getBytes(StandardCharsets.UTF_8), protected_fin_enc_policy);
+            protected_fin_data.getBytes(StandardCharsets.UTF_8), protected_fin_enc_policy);
 
         String confidential_fin_data = "confidential_fin_attributes";
         String confidential_fin_enc_policy = "Department::FIN && Security Level::Confidential";
         byte[] confidential_fin_ct = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier,
-                confidential_fin_data.getBytes(StandardCharsets.UTF_8), confidential_fin_enc_policy);
+            confidential_fin_data.getBytes(StandardCharsets.UTF_8), confidential_fin_enc_policy);
 
         // User decryption key Protected, FIN, MKG
         String fin_mkg_protected_user_key = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
-                privateMasterKeyID);
+            privateMasterKeyID);
         PrivateKey userKey_1 = kmsClient.retrieveCoverCryptUserDecryptionKey(fin_mkg_protected_user_key);
         Resources.write_resource("cover_crypt/fin_mkg_protected_user_key.json",
-                userKey_1.toJson().getBytes(StandardCharsets.UTF_8));
+            userKey_1.toJson().getBytes(StandardCharsets.UTF_8));
 
         // User decryption key Confidential, FIN
         String fin_confidential_user_key = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyConfidential(),
-                privateMasterKeyID);
+            privateMasterKeyID);
         PrivateKey userKey_2 = kmsClient.retrieveCoverCryptUserDecryptionKey(fin_confidential_user_key);
         Resources.write_resource("cover_crypt/fin_confidential_user_key.json",
-                userKey_2.toJson().getBytes(StandardCharsets.UTF_8));
+            userKey_2.toJson().getBytes(StandardCharsets.UTF_8));
 
         // User decryption key Protected should be able to decrypt protected_fin_ct
         String plaintext_1_1 = new String(kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, protected_fin_ct)
-                .getPlaintext(), StandardCharsets.UTF_8);
+            .getPlaintext(), StandardCharsets.UTF_8);
         assertEquals(protected_fin_data, plaintext_1_1);
         // User decryption key Confidential should be able to decrypt protected_fin_ct
         String plaintext_1_2 = new String(kmsClient.coverCryptDecrypt(fin_confidential_user_key, protected_fin_ct)
-                .getPlaintext(), StandardCharsets.UTF_8);
+            .getPlaintext(), StandardCharsets.UTF_8);
         assertEquals(protected_fin_data, plaintext_1_2);
 
         // User decryption key Protected should not be able to decrypt
         // confidential_fin_ct
         try {
             new String(kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, confidential_fin_ct)
-                    .getPlaintext(), StandardCharsets.UTF_8);
+                .getPlaintext(), StandardCharsets.UTF_8);
             throw new RuntimeException("User with key Confidential should not be able to decrypt data Confidential");
         } catch (CloudproofException e) {
             // fine: should not be able to decrypt
@@ -224,7 +226,7 @@ public class TestKmsCoverCrypt {
         // User decryption key Confidential should not be able to decrypt
         // confidential_fin_ct
         String plaintext_2_2 = new String(kmsClient.coverCryptDecrypt(fin_confidential_user_key, confidential_fin_ct)
-                .getPlaintext(), StandardCharsets.UTF_8);
+            .getPlaintext(), StandardCharsets.UTF_8);
         assertEquals(confidential_fin_data, plaintext_2_2);
     }
 
@@ -251,18 +253,18 @@ public class TestKmsCoverCrypt {
         byte[] authenticationData = "authentication".getBytes(StandardCharsets.UTF_8);
         byte[] headerMetaData = "headerMeta".getBytes(StandardCharsets.UTF_8);
         byte[] protected_fin_ct = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier,
-                protected_fin_data, protected_fin_enc_policy, authenticationData, headerMetaData);
+            protected_fin_data, protected_fin_enc_policy, authenticationData, headerMetaData);
 
         // User decryption key Protected, FIN, MKG
         String fin_mkg_protected_user_key = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
-                privateMasterKeyID);
+            privateMasterKeyID);
         PrivateKey userKey_1 = kmsClient.retrieveCoverCryptUserDecryptionKey(fin_mkg_protected_user_key);
         Resources.write_resource("cover_crypt/fin_mkg_protected_user_key.json",
-                userKey_1.toJson().getBytes(StandardCharsets.UTF_8));
+            userKey_1.toJson().getBytes(StandardCharsets.UTF_8));
 
         // User decryption key Protected should be able to decrypt protected_fin_ct
         DecryptedData decryptedData = kmsClient.coverCryptDecrypt(fin_mkg_protected_user_key, protected_fin_ct,
-                authenticationData);
+            authenticationData);
         byte[] plaintext_ = decryptedData.getPlaintext();
         byte[] headerMetadata_ = decryptedData.getHeaderMetaData();
         assertArrayEquals(protected_fin_data, plaintext_);
@@ -272,10 +274,11 @@ public class TestKmsCoverCrypt {
     @Test
     public void testAccessPolicy() throws Exception {
 
-        String expected = "{\"And\":[{\"Or\":[{\"Attr\":\"Department::FIN\"},{\"Attr\":\"Department::MKG\"}]},{\"Attr\":\"Levels::Sec_level_1\"}]}";
+        String expected =
+            "{\"And\":[{\"Or\":[{\"Attr\":\"Department::FIN\"},{\"Attr\":\"Department::MKG\"}]},{\"Attr\":\"Levels::Sec_level_1\"}]}";
 
         AccessPolicy accessPolicy = new And(new Or(new Attr("Department", "FIN"), new Attr("Department", "MKG")),
-                new Attr("Levels", "Sec_level_1"));
+            new Attr("Levels", "Sec_level_1"));
 
         ObjectMapper mapper = new ObjectMapper();
         String actual = mapper.writeValueAsString(accessPolicy);

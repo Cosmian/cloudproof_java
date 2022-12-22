@@ -10,6 +10,8 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.cosmian.utils.Leb128;
+
 public class TestLeb128 {
 
     @BeforeAll
@@ -22,9 +24,9 @@ public class TestLeb128 {
         // see Wikipedia https://en.wikipedia.org/wiki/LEB128
         final long canonicalVal = Long.parseUnsignedLong("10011000011101100101", 2); // new Random().nextLong();
         final byte[] canonicalLeb128 = new byte[] {
-                (byte) Integer.parseInt("11100101", 2),
-                (byte) Integer.parseInt("10001110", 2),
-                (byte) Integer.parseInt("00100110", 2) };
+            (byte) Integer.parseInt("11100101", 2),
+            (byte) Integer.parseInt("10001110", 2),
+            (byte) Integer.parseInt("00100110", 2)};
         // encode
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Leb128.writeU64(bos, canonicalVal);

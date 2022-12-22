@@ -49,7 +49,7 @@ This table shows the compatible versions of the various components
 
 | This lib | KMS Server | CoverCrypt | Findex |
 | -------- | ---------- | ---------- | ------ |
-| 3.0.0    | 4.0.1      | 8.0.1      | 0.12.0 |
+| 3.0.0    | 4.0.1      | 8.0.1      | 1.0.1 |
 
 ## Updating the native libraries
 

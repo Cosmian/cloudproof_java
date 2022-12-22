@@ -1,10 +1,10 @@
 package com.cosmian.rest.kmip;
 
-import com.cosmian.CosmianException;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.data_structures.KeyValue;
 import com.cosmian.rest.kmip.data_structures.KeyWrappingData;
 import com.cosmian.rest.kmip.data_structures.TransparentSymmetricKey;
+import com.cosmian.utils.CloudproofException;
 
 public class KmipUtils {
 
@@ -13,9 +13,9 @@ public class KmipUtils {
      *
      * @param keyBlock the {@link KeyBlock}
      * @return the bytes of the key
-     * @throws CosmianException if the {@link KeyBlock} is malformed the bytes cannot be found
+     * @throws CloudproofException if the {@link KeyBlock} is malformed the bytes cannot be found
      */
-    public static byte[] bytesFromKeyBlock(KeyBlock keyBlock) throws CosmianException {
+    public static byte[] bytesFromKeyBlock(KeyBlock keyBlock) throws CloudproofException {
         Object keyValueContent = keyBlock.getKeyValue();
         Object keyMaterialContent = ((KeyValue) keyValueContent).getKeyMaterial().get();
         byte[] bytes;
@@ -24,7 +24,7 @@ public class KmipUtils {
         } else if (keyMaterialContent instanceof TransparentSymmetricKey) {
             bytes = ((TransparentSymmetricKey) keyMaterialContent).getKey();
         } else {
-            throw new CosmianException(
+            throw new CloudproofException(
                 "KeyMaterial has type " + keyMaterialContent.getClass().getName() + " and is not made of byte[]");
 
         }
@@ -39,11 +39,11 @@ public class KmipUtils {
      *
      * @param keyWrappingData the {@link KeyWrappingData}
      * @return the bytes of the Nonce
-     * @throws CosmianException if no Noce is available
+     * @throws CloudproofException if no Noce is available
      */
-    public static byte[] nonceFromKeyWrappingData(KeyWrappingData keyWrappingData) throws CosmianException {
+    public static byte[] nonceFromKeyWrappingData(KeyWrappingData keyWrappingData) throws CloudproofException {
         if (!keyWrappingData.getIv_counter_nonce().isPresent()) {
-            throw new CosmianException("No IV/counter/nonce found for key wrapping data");
+            throw new CloudproofException("No IV/counter/nonce found for key wrapping data");
         }
 
         return keyWrappingData.getIv_counter_nonce().get();

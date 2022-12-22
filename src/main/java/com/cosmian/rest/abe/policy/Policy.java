@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.TreeSet;
 
-import com.cosmian.CosmianException;
 import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.VendorAttribute;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -41,6 +41,13 @@ public class Policy implements Serializable {
     }
 
     /**
+     * Instantiate an empty policy allowing up to 2^32 rotation of attributes
+     */
+    public Policy() {
+        this.maxAttributeCreations = Integer.MAX_VALUE;
+    }
+
+    /**
      * Instantiate an empty policy allowing the given max number of revocations of attributes
      *
      * @param maxAttributeCreations the maximum number of possible attributes
@@ -56,15 +63,18 @@ public class Policy implements Serializable {
      * @param attributes policy attributes of the axis
      * @param hierarchical whether the axis is hierarchical
      * @return the update Policy
-     * @throws CosmianException if the addition fails
+     * @throws CloudproofException if the addition fails
      */
-    public Policy addAxis(String name, String[] attributes, boolean hierarchical) throws CosmianException {
+    public Policy addAxis(String name,
+                          String[] attributes,
+                          boolean hierarchical)
+        throws CloudproofException {
         PolicyAxis axis = new PolicyAxis(name, attributes, hierarchical);
         if (axis.getLen() + this.lastAttributeValue > this.maxAttributeCreations) {
-            throw new CosmianException("Attribute capacity overflow");
+            throw new CloudproofException("Attribute capacity overflow");
         }
         if (this.axes.get(axis.getName()) != null) {
-            throw new CosmianException("Policy " + axis.getName() + " already exists");
+            throw new CloudproofException("Policy " + axis.getName() + " already exists");
         }
         this.axes.put(axis.getName(), axis);
         for (String attribute : axis.getAttributes()) {
@@ -78,19 +88,18 @@ public class Policy implements Serializable {
     /**
      * Convert the policy to a KMIP Vendor attribute that can be set on a KMIP Object
      *
-     * @param policyVendorAttribute {@link VendorAttribute#VENDOR_ATTR_COVER_CRYPT_POLICY} or
-     *            {@link VendorAttribute#VENDOR_ATTR_ABE_POLICY}
      * @return the {@link VendorAttribute}
-     * @throws CosmianException if the JSON cannot be serialized
+     * @throws CloudproofException if the JSON cannot be serialized
      */
-    public VendorAttribute toVendorAttribute(String policyVendorAttribute) throws CosmianException {
+    public VendorAttribute toVendorAttribute() throws CloudproofException {
         String json;
         try {
             json = new ObjectMapper().writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new CosmianException("Failed serializing the Policy to json: " + e.getMessage(), e);
+            throw new CloudproofException("Failed serializing the Policy to json: " + e.getMessage(), e);
         }
-        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN, policyVendorAttribute,
+        return new VendorAttribute(VendorAttribute.VENDOR_ID_COSMIAN,
+            VendorAttribute.VENDOR_ATTR_COVER_CRYPT_POLICY,
             json.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -99,14 +108,14 @@ public class Policy implements Serializable {
      * 
      * @param attributes the key attributes
      * @return the {Policy}
-     * @throws CosmianException if there is no policy in the attributes
+     * @throws CloudproofException if there is no policy in the attributes
      */
-    public static Policy fromAttributes(Attributes attributes) throws CosmianException {
+    public static Policy fromAttributes(Attributes attributes) throws CloudproofException {
         VendorAttribute[] vas;
         if (attributes.getVendorAttributes().isPresent()) {
             vas = attributes.getVendorAttributes().get();
         } else {
-            throw new CosmianException("No policy available in the attributes: no vendor attributes");
+            throw new CloudproofException("No policy available in the attributes: no vendor attributes");
         }
         for (VendorAttribute va : vas) {
             if (va.getVendor_identification().equals(VendorAttribute.VENDOR_ID_COSMIAN)) {
@@ -117,12 +126,12 @@ public class Policy implements Serializable {
                     try {
                         return mapper.readValue(policyJson, Policy.class);
                     } catch (Exception e) {
-                        throw new CosmianException("Invalid policy JSON: " + policyJson);
+                        throw new CloudproofException("Invalid policy JSON: " + policyJson);
                     }
                 }
             }
         }
-        throw new CosmianException("No policy available in the vendor attributes");
+        throw new CloudproofException("No policy available in the vendor attributes");
     }
 
     /**

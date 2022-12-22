@@ -1,10 +1,15 @@
 package com.cosmian;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.Optional;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import com.cosmian.utils.RestClient;
+import com.cosmian.utils.RestException;
 
 public final class TestUtils {
 
@@ -51,6 +56,30 @@ public final class TestUtils {
             }
             System.out.println("ERROR: " + e.getMessage());
             return false;
+        }
+    }
+
+    public static boolean portAvailable(int port) {
+        Logger logger = Logger.getLogger(TestUtils.class.getName());
+        logger.fine("--------------Testing port " + port);
+        Socket s = null;
+        try {
+            s = new Socket("localhost", port);
+            // If the code makes it this far without an exception it means
+            // something is using the port and has responded.
+            logger.fine("--------------Redis likely running: port " + port + " is not available");
+            return false;
+        } catch (IOException e) {
+            logger.fine("--------------Redis not running: port " + port + " is available");
+            return true;
+        } finally {
+            if (s != null) {
+                try {
+                    s.close();
+                } catch (IOException e) {
+                    throw new RuntimeException("Error not handled.", e);
+                }
+            }
         }
     }
 }

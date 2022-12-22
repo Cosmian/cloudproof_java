@@ -4,10 +4,10 @@ import java.math.BigInteger;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.cosmian.CosmianException;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.SplitKeyMethod;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SplitKey extends KmipObject {
@@ -161,9 +161,9 @@ public class SplitKey extends KmipObject {
      * 
      * @param json the key in JSON form
      * @return the Split Key
-     * @throws CosmianException if the parsing fails
+     * @throws CloudproofException if the parsing fails
      */
-    public static SplitKey fromJson(String json) throws CosmianException {
+    public static SplitKey fromJson(String json) throws CloudproofException {
         return KmipObject.fromJson(json, SplitKey.class);
     }
 }

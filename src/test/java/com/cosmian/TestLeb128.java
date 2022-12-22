@@ -10,6 +10,8 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.cosmian.utils.Leb128;
+
 public class TestLeb128 {
 
     @BeforeAll
@@ -68,6 +70,20 @@ public class TestLeb128 {
             byte[] buffer_ = Leb128.readByteArray(bis);
             assertArrayEquals(buffer, buffer_);
         }
+    }
+
+    @Test
+    public void testZeroLengthArray() throws Exception {
+        byte[] array = new byte[] {};
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        Leb128.writeArray(bos, array);
+        byte[] data = bos.toByteArray();
+        assertEquals(1, data.length);
+        //
+        ByteArrayInputStream bis = new ByteArrayInputStream(data);
+        byte[] array_ = Leb128.readByteArray(bis);
+        assertArrayEquals(array, array_);
+
     }
 
 }

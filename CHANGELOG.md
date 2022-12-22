@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2022-12-21
+
+### Added
+
+- support for access policy as boolean expressions to create user decryption keys
+- regression test vectors for CoverCrypt
+
+### Changed
+
+- changed `Abe` class to `KmipClient`
+- refactored packages to more natural locations
+- updated CoverCrypt to 8.0.2
+- updated Findex to 1.0.1
+
+### Removed
+
+- support for GPSW
+
+---
+
 ## [2.0.0] - 2022-11-15
 
 ### Added
@@ -10,36 +30,22 @@ All notable changes to this project will be documented in this file.
 
 - updated CoverCrypt to 7 and Findex to 0.10
 
-### Fixed
-
-### Removed
+---
 
 ## [1.11.2] - 2022-10-16
-
-### Added
-
-### Changed
 
 ### Fixed
 
 - renamed revoke attributes, rotate attributes and fixed documentation
 
-### Removed
-
 ---
 
 ## [1.11.1] - 2022-10-14
-
-### Added
 
 ### Changed
 
 - Update license
 - CI: use KMS version from Gitlab variable
-
-### Fixed
-
-### Removed
 
 ---
 
@@ -59,35 +65,21 @@ All notable changes to this project will be documented in this file.
 
 - Make Link[] optional for KMIP Attributes
 
-### Removed
-
 ---
 
 ## [0.11.1]
-
-### Added
 
 ### Changed
 
 - Rename `cosmian_java_lib` to `cloudproof_java`
 
-### Fixed
-
-### Removed
-
 ---
 
 ## [0.11.0]
 
-### Added
-
 ### Changed
 
 - Findex: change search signature for graph compliance
-
-### Fixed
-
-### Removed
 
 ---
 
@@ -105,8 +97,6 @@ All notable changes to this project will be documented in this file.
 
 - FFI: fetch callbacks: send correct allocation size in case of insufficient allocated size in order to retry in Rust code
 
-### Removed
-
 ---
 
 ## [0.10.0]
@@ -119,10 +109,6 @@ All notable changes to this project will be documented in this file.
 
 - Add `label` to `search` and `update` functions
 
-### Fixed
-
-### Removed
-
 ---
 
 ## [0.9.0] - 2022-09-15
@@ -131,21 +117,9 @@ All notable changes to this project will be documented in this file.
 
 - Update `findex` shared library to 0.5.0
 
-### Changed
-
--
-
-### Fixed
-
-### Removed
-
 ---
 
 ## [0.8.2] - 2022-09-14
-
-### Added
-
-### Changed
 
 ### Fixed
 
@@ -187,14 +161,8 @@ All notable changes to this project will be documented in this file.
 
 ## [0.7.7] - 2022-07-28
 
-### Added
-
-### Changed
-
 ### Fixed
 
 - KMIP KeyValue structure has changed in KMS from version 2.0.5
-
-### Removed
 
 ---

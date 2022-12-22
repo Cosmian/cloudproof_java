@@ -1,0 +1,6 @@
+[default.extend-words]
+ser = "ser"
+GOST = "GOST"
+
+[default.extend-identifiers]
+vas = "vas"

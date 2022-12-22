@@ -3,9 +3,9 @@ package com.cosmian.rest.kmip.objects;
 import java.util.Arrays;
 import java.util.Objects;
 
-import com.cosmian.CosmianException;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.OpaqueDataType;
+import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class OpaqueObject extends KmipObject {
@@ -83,9 +83,9 @@ public class OpaqueObject extends KmipObject {
      * 
      * @param json the JSON string
      * @return the {@link OpaqueObject}
-     * @throws CosmianException if the parsing fails
+     * @throws CloudproofException if the parsing fails
      */
-    public static OpaqueObject fromJson(String json) throws CosmianException {
+    public static OpaqueObject fromJson(String json) throws CloudproofException {
         return KmipObject.fromJson(json, OpaqueObject.class);
     }
 }

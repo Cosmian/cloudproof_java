@@ -6,10 +6,10 @@ import java.util.logging.Logger;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import com.cosmian.CosmianException;
-import com.cosmian.RestClient;
-import com.cosmian.rest.abe.Abe;
+import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.kmip.Kmip;
+import com.cosmian.utils.CloudproofException;
+import com.cosmian.utils.RestClient;
 
 public class Cosmian {
 
@@ -64,8 +64,8 @@ public class Cosmian {
      *
      * @return an Abe instance exposing the endpoints
      */
-    public Abe abe() {
-        return new Abe(this.rest_client);
+    public KmsClient abe() {
+        return new KmsClient(this.rest_client);
     }
 
     /**
@@ -83,17 +83,18 @@ public class Cosmian {
      *
      * @param hex_encoded_string the hex encoded String
      * @return the decoded bytes
-     * @throws CosmianException if the hex String is invalid
+     * @throws CloudproofException if the hex String is invalid
      */
-    public static byte[] hex_decode(String hex_encoded_string) throws CosmianException {
+    public static byte[] hex_decode(String hex_encoded_string) throws CloudproofException {
         try {
-            // conversion to char array to make the library compatible with older versions of commons-codec
+            // conversion to char array to make the library compatible with older versions
+            // of commons-codec
             // such as the ones found in spark-2.7
             return Hex.decodeHex(hex_encoded_string.toCharArray());
         } catch (DecoderException e) {
             String err = "Failed decoding the hex encoded String: " + e.getMessage();
             logger.severe(err);
-            throw new CosmianException(err);
+            throw new CloudproofException(err);
         }
     }
 
@@ -104,7 +105,8 @@ public class Cosmian {
      * @param b second byte array
      * @return the merged byte array
      */
-    public static byte[] concat(byte[] a, byte[] b) {
+    public static byte[] concat(byte[] a,
+                                byte[] b) {
         byte[] result = new byte[a.length + b.length];
         System.arraycopy(a, 0, result, 0, a.length);
         System.arraycopy(b, 0, result, a.length, b.length);

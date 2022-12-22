@@ -1,3 +1,4 @@
+---
 image: gitlab.cosmian.com:5000/core/ci-java-8:latest
 
 variables:
@@ -12,7 +13,7 @@ stages:
   - build
   - publish
 
-build:
+.build:
   stage: build
   services:
     - name: gitlab.cosmian.com:5000/core/kms:${KMS_VERSION}_ci
@@ -23,12 +24,20 @@ build:
     - mvn dependency:copy-dependencies
     - git archive --verbose --format=zip --output=${CI_PROJECT_NAME}.zip HEAD
   artifacts:
-    name: '${CI_PROJECT_NAME}_${CI_COMMIT_TAG}'
+    name: ${CI_PROJECT_NAME}_${CI_COMMIT_TAG}
     paths:
       - target/*.jar
       - target/dependency/*.jar
       - ${CI_PROJECT_NAME}.zip
     expire_in: 3 mos
+
+build_linux:
+  extends: .build
+
+build_mac:
+  extends: .build
+  tags:
+    - mac
 
 publish:
   stage: publish
@@ -41,4 +50,4 @@ publish:
   script:
     - mvn clean deploy -Dmaven.test.skip
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v\d+.\d+.\d+$/'
+    - if: $CI_COMMIT_TAG =~ /^v\d+.\d+.\d+$/

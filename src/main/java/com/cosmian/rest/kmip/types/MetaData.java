@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.cosmian.CosmianException;
+import com.cosmian.utils.CloudproofException;
 
 /**
  * The symmetric encryption optional meta data: - the uid uniquely identifies the resource and is part of the AEAD of
@@ -26,14 +26,14 @@ public class MetaData {
      * 
      * @param bytes the meta data obtained using the {@link #toBytes()} method
      * @return the parsed {@link MetaData}
-     * @throws CosmianException if the data cannot be parsed
+     * @throws CloudproofException if the data cannot be parsed
      */
-    public static MetaData fromBytes(byte[] bytes) throws CosmianException {
+    public static MetaData fromBytes(byte[] bytes) throws CloudproofException {
         if (bytes.length == 0) {
             return new MetaData();
         }
         if (bytes.length < 4) {
-            throw new CosmianException("Invalid meta data length");
+            throw new CloudproofException("Invalid meta data length");
         }
         // Parse the metadata by first recovering the header length
         int headerSize_ = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getInt(0);
@@ -67,9 +67,9 @@ public class MetaData {
      * first 4 bytes is the u32 size of the uid in big endian format.
      * 
      * @return the meta data as a byte array
-     * @throws CosmianException if the {@link MetaData} cannot be serialized
+     * @throws CloudproofException if the {@link MetaData} cannot be serialized
      */
-    public byte[] toBytes() throws CosmianException {
+    public byte[] toBytes() throws CloudproofException {
         // The length of the uid is pre-pended.
         ByteBuffer uidSize = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN)
             .putInt(this.getUid().isPresent() ? this.uid.get().length : 0);
@@ -85,7 +85,7 @@ public class MetaData {
             }
             bao.flush();
         } catch (IOException e) {
-            throw new CosmianException("failed serializing the meta data: " + e.getMessage(), e);
+            throw new CloudproofException("failed serializing the meta data: " + e.getMessage(), e);
         }
         return bao.toByteArray();
     }

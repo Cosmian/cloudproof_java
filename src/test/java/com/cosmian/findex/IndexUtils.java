@@ -7,6 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -23,7 +24,7 @@ public class IndexUtils {
 
     /**
      * Index the given Datasets
-     * 
+     *
      * @param testFindexDataset the list of {@link UsersDataset}
      * @return the clear text index
      */
@@ -51,7 +52,7 @@ public class IndexUtils {
 
     /**
      * Extract the user Id from the location returned by the index
-     * 
+     *
      * @param location
      */
     public static int locationToUserId(Location location) {
@@ -60,7 +61,7 @@ public class IndexUtils {
 
     /**
      * A Sha 256 hash
-     * 
+     *
      * @param data the data to hash
      * @return the 32 byte hash value
      * @throws NoSuchAlgorithmException
@@ -71,12 +72,16 @@ public class IndexUtils {
         return passHash;
     }
 
-    public static byte[] loadKey() throws IOException {
+    public static byte[] generateKey() throws IOException {
         // return Base64.getDecoder().decode(Resources.load_resource("findex/key.b64"));
         byte[] key = new byte[16];
         SecureRandom sr = new SecureRandom();
         sr.nextBytes(key);
         return key;
+    }
+
+    public static byte[] loadKey() throws IOException {
+        return Base64.getDecoder().decode(Resources.load_resource("findex/key.b64"));
     }
 
     public static byte[] loadLabel() throws IOException {

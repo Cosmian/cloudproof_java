@@ -18,6 +18,7 @@ import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
+import com.cosmian.utils.Resources;
 
 public class TestSqlite {
 
@@ -35,7 +36,7 @@ public class TestSqlite {
         System.out.println("");
 
         //
-        // Recover key and label
+        // Generate key and label
         //
         byte[] key = IndexUtils.loadKey();
         assertEquals(16, key.length);
@@ -156,4 +157,137 @@ public class TestSqlite {
         System.out.println("<== successfully performed 100 upserts");
     }
 
+    void verify(byte[] key,
+                byte[] label,
+                HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords,
+                String dbPath,
+                int[] expectedDbLocations)
+        throws Exception {
+        Sqlite db = new Sqlite(dbPath);
+        int initialEntryTableSize = db.getAllKeyValueItems("entry_table").size();
+        int initialChainTableSize = db.getAllKeyValueItems("chain_table").size();
+        System.out
+            .println("Before insertion: entry_table size: " + initialEntryTableSize);
+        System.out
+            .println("Before insertion: chain_table size: " + initialChainTableSize);
+
+        //
+        // Search
+        //
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Search Sqlite in " + dbPath);
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        {
+            Map<Keyword, Set<Location>> searchResults =
+                Findex.search(
+                    key,
+                    label,
+                    new HashSet<>(Arrays.asList(new Keyword("France"))),
+                    -1, -1, db);
+            int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
+            assertEquals(expectedDbLocations.length, dbLocations.length);
+            System.out.println("<== successfully found all original French locations");
+        }
+
+        //
+        // Upsert
+        //
+        HashMap<IndexedValue, Set<Keyword>> singleUserIndexedValuesAndWords = IndexUtils.index(UsersDataset.fromJson(
+            Resources.load_resource("findex/single_user.json")));
+        Findex.upsert(key, label, singleUserIndexedValuesAndWords, db);
+
+        int currentEntryTableSize = db.getAllKeyValueItems("entry_table").size();
+        int currentChainTableSize = db.getAllKeyValueItems("chain_table").size();
+        System.out
+            .println("After insertion: entry_table size: " + currentEntryTableSize);
+        System.out
+            .println("After insertion: chain_table size: " + currentChainTableSize);
+        assertEquals(initialEntryTableSize + 6, currentEntryTableSize);
+        assertEquals(initialChainTableSize + 8, currentChainTableSize);
+
+        //
+        // Search
+        //
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Search Sqlite");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        {
+            Map<Keyword, Set<Location>> searchResults =
+                Findex.search(
+                    key,
+                    label,
+                    new HashSet<>(Arrays.asList(new Keyword("France"))),
+                    -1, -1, db);
+            int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
+            assertEquals(expectedDbLocations.length + 1, dbLocations.length);
+        }
+    }
+
+    @Test
+    public void test_non_regression_vectors() throws Exception {
+        //
+        // Recover key and label
+        //
+        byte[] key = IndexUtils.loadKey();
+        assertEquals(16, key.length);
+        byte[] label = IndexUtils.loadLabel();
+
+        //
+        // Recover test vectors
+        //
+        int[] expectedDbLocations = IndexUtils.loadExpectedDBLocations();
+
+        //
+        // Build dataset with DB uids and words
+        //
+        UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+
+        //
+        // Browse all sqlite.db and check them
+        //
+        String testFolder = "src/test/resources/findex/non_regression";
+        for (String file : TestUtils.listFiles(testFolder)) {
+            String fullPath = testFolder + "/" + file;
+            String newPath = System.getProperty("java.io.tmpdir") + "/" + file;
+            java.nio.file.Files.copy(
+                new java.io.File(fullPath).toPath(),
+                new java.io.File(newPath).toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                java.nio.file.StandardCopyOption.COPY_ATTRIBUTES,
+                java.nio.file.LinkOption.NOFOLLOW_LINKS);
+            System.out.println("Non-regression test file: " + newPath);
+            verify(key, label, indexedValuesAndWords, newPath, expectedDbLocations);
+        }
+    }
+
+    @Test
+    public void test_generate_non_regression_vectors() throws Exception {
+        //
+        // Recover key and label
+        //
+        byte[] key = IndexUtils.loadKey();
+        assertEquals(16, key.length);
+        byte[] label = IndexUtils.loadLabel();
+
+        //
+        // Build dataset with DB uids and words
+        //
+        UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+
+        //
+        // Generate non regression sqlite - uncomment if needed
+        //
+        //
+        // Upsert
+        //
+        Findex.upsert(key, label, indexedValuesAndWords, new Sqlite("./target/sqlite.db"));
+    }
 }

@@ -1,12 +1,16 @@
 package com.cosmian;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.cosmian.utils.RestClient;
 import com.cosmian.utils.RestException;
@@ -81,5 +85,12 @@ public final class TestUtils {
                 }
             }
         }
+    }
+
+    public static Set<String> listFiles(String dir) {
+        return Stream.of(new File(dir).listFiles())
+            .filter(file -> !file.isDirectory())
+            .map(File::getName)
+            .collect(Collectors.toSet());
     }
 }

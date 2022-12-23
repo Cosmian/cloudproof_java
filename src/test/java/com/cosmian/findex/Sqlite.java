@@ -37,6 +37,11 @@ public class Sqlite extends Database implements Closeable {
         this.createTables();
     }
 
+    public Sqlite(String url) throws SQLException {
+        this.connection = DriverManager.getConnection("jdbc:sqlite:" + url);
+        this.createTables();
+    }
+
     public Connection getConnection() {
         return connection;
     }

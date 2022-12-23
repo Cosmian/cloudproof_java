@@ -1,6 +1,7 @@
 package com.cosmian.utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Resources {
@@ -42,10 +44,10 @@ public class Resources {
                                       byte[] bytes)
         throws IOException {
         String parentDir = Resources.class.getClassLoader().getResource(".").getFile();
-        Files.createDirectories(Paths.get(parentDir, resource_name).getParent());
-        String path = Paths.get(parentDir, resource_name).toString();
+        Path parentPath = Paths.get(new File(parentDir).getAbsolutePath(), resource_name);
+        Files.createDirectories(parentPath.getParent());
 
-        try (OutputStream os = new FileOutputStream(path)) {
+        try (OutputStream os = new FileOutputStream(parentPath.toString())) {
             os.write(bytes);
             os.flush();
         }

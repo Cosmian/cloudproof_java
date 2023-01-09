@@ -8,6 +8,7 @@ Cloudproof Encryption secures data repositories and applications in the cloud wi
 
 <!-- toc -->
 
+- [Licensing](#licensing)
 - [Getting started](#getting-started)
 - [Using in Java projects](#using-in-java-projects)
 - [Versions Correspondence](#versions-correspondence)
@@ -39,7 +40,7 @@ This library is open-source software and is available on Maven Central.
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
 </dependency>
 ```
 
@@ -48,8 +49,8 @@ This library is open-source software and is available on Maven Central.
 This table shows the compatible versions of the various components
 
 | This lib | KMS Server | CoverCrypt | Findex |
-| -------- | ---------- | ---------- | ------ |
-| 3.0.0    | 4.0.1      | 8.0.1      | 1.0.1 |
+|----------|------------|------------|--------|
+| >=3.0.0  | 4.0.1      | 8.0.1      | 1.0.1  |
 
 ## Updating the native libraries
 

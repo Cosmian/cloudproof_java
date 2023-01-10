@@ -44,7 +44,7 @@ public class TestRedis {
         //
         // Recover key and label
         //
-        byte[] key = IndexUtils.loadKey();
+        byte[] key = IndexUtils.generateKey();
         assertEquals(16, key.length);
         byte[] label = IndexUtils.loadLabel();
 

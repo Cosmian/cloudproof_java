@@ -30,7 +30,6 @@ import com.cosmian.rest.kmip.types.KeyFormatType;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.cosmian.rest.kmip.types.VendorAttribute;
 import com.cosmian.utils.CloudproofException;
-import com.cosmian.utils.Resources;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestKmsCoverCrypt {
@@ -169,14 +168,14 @@ public class TestKmsCoverCrypt {
         PrivateKey privateMasterKey = kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyID);
         assertEquals(KeyFormatType.CoverCryptSecretKey, privateMasterKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, privateMasterKey.getKeyBlock().getCryptographicAlgorithm());
-        Resources.write_resource("cover_crypt/private_master_key.json",
+        TestUtils.writeResource("cover_crypt/private_master_key.json",
             privateMasterKey.toJson().getBytes(StandardCharsets.UTF_8));
 
         String publicMasterKeyUniqueIdentifier = ids[1];
         PublicKey publicMasterKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
         assertEquals(KeyFormatType.CoverCryptPublicKey, publicMasterKey.getKeyBlock().getKeyFormatType());
         assertEquals(CryptographicAlgorithm.CoverCrypt, publicMasterKey.getKeyBlock().getCryptographicAlgorithm());
-        Resources.write_resource("cover_crypt/public_master_key.json",
+        TestUtils.writeResource("cover_crypt/public_master_key.json",
             publicMasterKey.toJson().getBytes(StandardCharsets.UTF_8));
 
         // encryption
@@ -194,14 +193,14 @@ public class TestKmsCoverCrypt {
         String fin_mkg_protected_user_key = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
             privateMasterKeyID);
         PrivateKey userKey_1 = kmsClient.retrieveCoverCryptUserDecryptionKey(fin_mkg_protected_user_key);
-        Resources.write_resource("cover_crypt/fin_mkg_protected_user_key.json",
+        TestUtils.writeResource("cover_crypt/fin_mkg_protected_user_key.json",
             userKey_1.toJson().getBytes(StandardCharsets.UTF_8));
 
         // User decryption key Confidential, FIN
         String fin_confidential_user_key = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyConfidential(),
             privateMasterKeyID);
         PrivateKey userKey_2 = kmsClient.retrieveCoverCryptUserDecryptionKey(fin_confidential_user_key);
-        Resources.write_resource("cover_crypt/fin_confidential_user_key.json",
+        TestUtils.writeResource("cover_crypt/fin_confidential_user_key.json",
             userKey_2.toJson().getBytes(StandardCharsets.UTF_8));
 
         // User decryption key Protected should be able to decrypt protected_fin_ct
@@ -259,7 +258,7 @@ public class TestKmsCoverCrypt {
         String fin_mkg_protected_user_key = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyProtected(),
             privateMasterKeyID);
         PrivateKey userKey_1 = kmsClient.retrieveCoverCryptUserDecryptionKey(fin_mkg_protected_user_key);
-        Resources.write_resource("cover_crypt/fin_mkg_protected_user_key.json",
+        TestUtils.writeResource("cover_crypt/fin_mkg_protected_user_key.json",
             userKey_1.toJson().getBytes(StandardCharsets.UTF_8));
 
         // User decryption key Protected should be able to decrypt protected_fin_ct

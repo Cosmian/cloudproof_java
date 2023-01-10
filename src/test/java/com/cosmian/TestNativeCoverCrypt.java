@@ -4,18 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,7 +30,6 @@ import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
 import com.cosmian.utils.CloudproofException;
-import com.cosmian.utils.Resources;
 
 public class TestNativeCoverCrypt {
     static final CoverCrypt coverCrypt = new CoverCrypt();
@@ -45,7 +42,7 @@ public class TestNativeCoverCrypt {
     @Test
     public void testError() throws Exception {
         assertEquals("", coverCrypt.get_last_error());
-        String error = "An Error éà";
+        String error = "An Error";
         coverCrypt.set_error(error);
         assertEquals("FFI error: " + error, coverCrypt.get_last_error());
         String base = "0123456789";
@@ -710,22 +707,13 @@ public class TestNativeCoverCrypt {
     @Test
     public void test_non_regression_vectors_generation() throws Exception {
         NonRegressionVector nrv = NonRegressionVector.generate();
-        Resources.write_resource(
-            "java_non_regression_vector.json",
-            nrv.toJson().getBytes(StandardCharsets.UTF_8));
-    }
-
-    public Set<String> listFiles(String dir) {
-        return Stream.of(new File(dir).listFiles())
-            .filter(file -> !file.isDirectory())
-            .map(File::getName)
-            .collect(Collectors.toSet());
+        Files.write(Paths.get("./target/non_regression_vector.json"), nrv.toJson().getBytes(StandardCharsets.UTF_8));
     }
 
     @Test
     public void test_non_regression_vectors() throws Exception {
-        String testFolder = "src/test/resources/cover_crypt/";
-        for (String file : listFiles("src/test/resources/cover_crypt")) {
+        String testFolder = "src/test/resources/cover_crypt/non_regression/";
+        for (String file : TestUtils.listFiles(testFolder)) {
             System.out.println("Non-regression test file: " + file);
             NonRegressionVector.verify(testFolder + file);
         }

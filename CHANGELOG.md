@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.1] - 2023-01-10
+
+### Added
+
+- regression test vectors for Findex
+
+---
+
 ## [3.0.0] - 2022-12-21
 
 ### Added

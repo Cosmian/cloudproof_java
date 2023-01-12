@@ -119,8 +119,17 @@ public final class Findex {
     public static Map<Keyword, Set<Location>> search(byte[] key,
                                                      byte[] label,
                                                      Set<Keyword> keyWords,
+                                                     Database db)
+        throws CloudproofException {
+        return search(key, label, keyWords, 0, -1, 0, db);
+    }
+
+    public static Map<Keyword, Set<Location>> search(byte[] key,
+                                                     byte[] label,
+                                                     Set<Keyword> keyWords,
                                                      int maxResultsPerKeyword,
                                                      int maxDepth,
+                                                     int insecureFetchChainsBatchSize,
                                                      Database db)
         throws CloudproofException {
         //
@@ -166,6 +175,7 @@ public final class Findex {
                 wordsJson,
                 maxResultsPerKeyword,
                 maxDepth,
+                insecureFetchChainsBatchSize,
                 db.progressCallback(),
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
@@ -179,6 +189,7 @@ public final class Findex {
                     wordsJson,
                     maxResultsPerKeyword,
                     maxDepth,
+                    insecureFetchChainsBatchSize,
                     db.progressCallback(),
                     db.fetchEntryCallback(),
                     db.fetchChainCallback());

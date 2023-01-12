@@ -129,6 +129,16 @@ public final class Findex {
                                                      Set<Keyword> keyWords,
                                                      int maxResultsPerKeyword,
                                                      int maxDepth,
+                                                     Database db)
+        throws CloudproofException {
+        return search(key, label, keyWords, maxResultsPerKeyword, maxDepth, 0, db);
+    }
+
+    public static Map<Keyword, Set<Location>> search(byte[] key,
+                                                     byte[] label,
+                                                     Set<Keyword> keyWords,
+                                                     int maxResultsPerKeyword,
+                                                     int maxDepth,
                                                      int insecureFetchChainsBatchSize,
                                                      Database db)
         throws CloudproofException {

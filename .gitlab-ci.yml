@@ -32,9 +32,16 @@ stages:
     expire_in: 3 mos
 
 build_linux:
+  before_script:
+    - yum -y install python3 python3-pip
+    - pip3 install -r scripts/requirements.txt
+    - python3 scripts/get_native_libraries.py
   extends: .build
 
 build_mac:
+  before_script:
+    - pip3 install -r scripts/requirements.txt
+    - python3 scripts/get_native_libraries.py
   extends: .build
   tags:
     - mac

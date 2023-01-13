@@ -95,7 +95,7 @@ public class TestRedis {
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
-                        Integer.MAX_VALUE, -1, db);
+                        db);
                 System.out.println(
                     "Search results: " + searchResults.size() + " " + searchResults.values().iterator().next().size());
                 int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
@@ -119,7 +119,7 @@ public class TestRedis {
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
-                        0, -1, db);
+                        db);
                 int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
                 assertEquals(0, dbUids.length);
                 System.out.println("<== successfully compacted and changed the label");
@@ -131,7 +131,7 @@ public class TestRedis {
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    0, -1, db);
+                    db);
                 int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
                 assertArrayEquals(expectedDbLocations, dbUids);
                 System.out.println("<== successfully found all French locations with the new label");
@@ -147,7 +147,7 @@ public class TestRedis {
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    0, -1, db);
+                    db);
                 int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
                 assertArrayEquals(newExpectedDbUids, dbUids);
                 System.out

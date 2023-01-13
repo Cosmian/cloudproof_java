@@ -110,6 +110,7 @@ public interface FindexNativeWrapper extends Library {
                  String words,
                  int maxResultsPerKeyword,
                  int maxDepth,
+                 int insecureFetchChainsBatchSize,
                  ProgressCallback progress,
                  FetchEntryCallback fetchEntry,
                  FetchChainCallback fetchChain);

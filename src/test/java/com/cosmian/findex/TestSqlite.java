@@ -83,7 +83,7 @@ public class TestSqlite {
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
-                        -1, -1, db);
+                        db);
                 int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
                 assertEquals(expectedDbLocations.length, dbLocations.length);
                 assertArrayEquals(expectedDbLocations, dbLocations);
@@ -100,7 +100,7 @@ public class TestSqlite {
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
-                        0, -1, db);
+                        db);
                 int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
                 assertEquals(0, dbUids.length);
                 System.out.println("<== successfully compacted and changed the label");
@@ -112,7 +112,7 @@ public class TestSqlite {
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    0, -1, db);
+                    db);
                 int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
                 assertArrayEquals(expectedDbLocations, dbUids);
                 System.out.println("<== successfully found all French locations with the new label");
@@ -128,7 +128,7 @@ public class TestSqlite {
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    0, -1, db);
+                    db);
                 int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
                 assertArrayEquals(newExpectedDbUids, dbUids);
                 System.out

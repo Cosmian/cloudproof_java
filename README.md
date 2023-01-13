@@ -40,7 +40,7 @@ This library is open-source software and is available on Maven Central.
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>3.0.1</version>
+    <version>3.0.2</version>
 </dependency>
 ```
 

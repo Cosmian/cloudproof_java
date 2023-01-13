@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [3.0.1] - 2023-01-10
+## [3.0.2] - 2023-01-13
+
+### Added
+
+- Add `insecureFetchChainsBatchSize` argument to `Findex.search` to reduce the number of `fetchChains` calls during searches
+- Add an overload to `Findex.search` with default parameters for `maxResultsPerKeyword` and `maxDepth`
+
+---
+
+## [3.0.1] - 2023-01-08
 
 ### Added
 

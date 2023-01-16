@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import requests
 import shutil
+import urllib.request
 import zipfile
 
 from os import path, remove
@@ -21,8 +21,8 @@ def download_native_libraries(name: str, version: str, destination: str):
         )
 
         url = f'https://package.cosmian.com/{name}/{version}/all.zip'
-        r = requests.get(url, allow_redirects=True)
-        if r.status_code != 200:
+        r = urllib.request.urlopen(url)
+        if r.getcode() != 200:
             download_native_libraries(name, 'last_build', destination)
         else:
             if path.exists('tmp'):
@@ -30,7 +30,7 @@ def download_native_libraries(name: str, version: str, destination: str):
             if path.exists('all.zip'):
                 remove('all.zip')
 
-            open('all.zip', 'wb').write(r.content)
+            open('all.zip', 'wb').write(r.read())
             with zipfile.ZipFile('all.zip', 'r') as zip_ref:
                 zip_ref.extractall('tmp')
                 shutil.copyfile(

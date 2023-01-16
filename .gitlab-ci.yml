@@ -20,6 +20,7 @@ stages:
       alias: kms_ci
     - redis:latest
   script:
+    - python3 scripts/get_native_libraries.py
     - mvn package
     - mvn dependency:copy-dependencies
     - git archive --verbose --format=zip --output=${CI_PROJECT_NAME}.zip HEAD
@@ -34,14 +35,9 @@ stages:
 build_linux:
   before_script:
     - yum -y install python3 python3-pip
-    - pip3 install -r scripts/requirements.txt
-    - python3 scripts/get_native_libraries.py
   extends: .build
 
 build_mac:
-  before_script:
-    - pip3 install -r scripts/requirements.txt
-    - python3 scripts/get_native_libraries.py
   extends: .build
   tags:
     - mac

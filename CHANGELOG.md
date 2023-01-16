@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.3] - 2023-01-16
+
+### Deleted
+
+- All native libraries are downloadable from <https://package.cosmian.com>
+
 ## [3.0.2] - 2023-01-13
 
 ### Added

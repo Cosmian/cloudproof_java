@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>3.0.2</version>
+    <version>3.0.3</version>
 
     <name>cloudproof_java</name>
     <description>The Cloudproof Java Lib secures data repositories in the cloud with attributes-based access control encryption and encrypted search</description>
@@ -135,7 +135,8 @@
                         </manifest>
                     </archive>
                     <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                        <descriptorRef>
+                            jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                 </configuration>
             </plugin>
@@ -177,7 +178,8 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-                            <keyname>95C0EA7C0347901B</keyname>
+                            <keyname>
+                                95C0EA7C0347901B</keyname>
                             <passphraseServerId>95C0EA7C0347901B</passphraseServerId>
                         </configuration>
                     </execution>
@@ -189,7 +191,8 @@
                 <version>1.6.7</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <serverId>ossrh</serverId>
+                    <serverId>
+                        ossrh</serverId>
                     <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>

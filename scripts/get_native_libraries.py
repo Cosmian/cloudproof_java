@@ -24,7 +24,9 @@ def download_native_libraries(name: str, version: str, destination: str):
         try:
             r = urllib.request.urlopen(url)
             if r.getcode() != 200:
-                download_native_libraries(name, 'last_build', destination)
+                print(
+                    f'Cannot get {name} {version} (status code: {r.getcode()})'
+                )
             else:
                 if path.exists('tmp'):
                     shutil.rmtree('tmp')
@@ -55,4 +57,6 @@ def download_native_libraries(name: str, version: str, destination: str):
 
 if __name__ == '__main__':
     download_native_libraries('findex', 'v2.0.0', 'src/main/resources')
+    download_native_libraries('findex', 'last_build', 'src/main/resources')
     download_native_libraries('cover_crypt', 'v8.0.2', 'src/main/resources')
+    download_native_libraries('cover_crypt', 'last_build', 'src/main/resources')

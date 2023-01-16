@@ -63,7 +63,6 @@ For tests, it is possible to override these libraries by placing them in the equ
 To download them, please run the following script that will fetch the releases in the public URL [package.cosmian.com](https://package.cosmian.com):
 
 ```bash
-pip3 install -r scripts/requirements.txt
 python3 scripts/get_native_libraries.py
 ```
 

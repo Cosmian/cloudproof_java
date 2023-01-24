@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.cosmian.jna.findex.serde.Leb128Serializable;
-import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.CloudproofException;
@@ -37,11 +36,7 @@ public class SearchResults implements Leb128Serializable {
                 int numResults = (int) Leb128.readU64(is);
                 Set<Location> locations = new HashSet<>();
                 for (int j = 0; j < numResults; j++) {
-                    IndexedValue iv = new IndexedValue(Leb128.readByteArray(is));
-                    // discard results which are not locations
-                    if (iv.isLocation()) {
-                        locations.add(iv.getLocation());
-                    }
+                    locations.add(new Location(Leb128.readByteArray(is)));
                 }
                 results.put(keyword, locations);
             }

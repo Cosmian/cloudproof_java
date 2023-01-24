@@ -3,19 +3,15 @@ import shutil
 import urllib.request
 import zipfile
 
-from os import path, remove
+from os import path, remove, getenv
 
 
-def download_native_libraries(name: str, version: str, destination: str):
+def download_native_libraries(name: str, version: str, destination: str) -> bool:
     mac = f'{destination}/darwin-x86-64/libcosmian_{name}.dylib'
     linux = f'{destination}/linux-x86-64/libcosmian_{name}.so'
     windows = f'{destination}/win32-x86-64/cosmian_{name}.dll'
 
-    if (
-        not path.exists(mac)
-        or not path.exists(linux)
-        or not path.exists(windows)
-    ):
+    if not path.exists(mac) or not path.exists(linux) or not path.exists(windows):
         print(
             f'Missing {name} native library. Copy {name} {version} to {destination}...'
         )
@@ -24,9 +20,7 @@ def download_native_libraries(name: str, version: str, destination: str):
         try:
             r = urllib.request.urlopen(url)
             if r.getcode() != 200:
-                print(
-                    f'Cannot get {name} {version} (status code: {r.getcode()})'
-                )
+                print(f'Cannot get {name} {version} (status code: {r.getcode()})')
             else:
                 if path.exists('tmp'):
                     shutil.rmtree('tmp')
@@ -52,11 +46,15 @@ def download_native_libraries(name: str, version: str, destination: str):
                 remove('all.zip')
         except Exception as e:
             print(f'Cannot get {name} {version} ({e})')
-            download_native_libraries(name, 'last_build', destination)
+            return False
+    return True
 
 
 if __name__ == '__main__':
-    download_native_libraries('findex', 'v2.0.0', 'src/main/resources')
-    download_native_libraries('findex', 'last_build', 'src/main/resources')
-    download_native_libraries('cover_crypt', 'v8.0.2', 'src/main/resources')
-    download_native_libraries('cover_crypt', 'last_build', 'src/main/resources')
+    ret = download_native_libraries('findex', 'v2.0.0', 'src/main/resources')
+    if ret is False and getenv('GITHUB_ACTIONS'):
+        download_native_libraries('findex', 'last_build', 'src/main/resources')
+
+    ret = download_native_libraries('cover_crypt', 'v8.0.2', 'src/main/resources')
+    if ret is False and getenv('GITHUB_ACTIONS'):
+        download_native_libraries('cover_crypt', 'last_build', 'src/main/resources')

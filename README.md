@@ -10,9 +10,10 @@ Cloudproof Encryption secures data repositories and applications in the cloud wi
 
 - [Licensing](#licensing)
 - [Getting started](#getting-started)
+- [Versions Correspondence](#versions-correspondence)
 - [Using in Java projects](#using-in-java-projects)
   - [Download required native libraries](#download-required-native-libraries)
-- [Versions Correspondence](#versions-correspondence)
+  - [Building the native libraries on your own](#building-the-native-libraries-on-your-own)
 
 <!-- tocstop -->
 
@@ -31,6 +32,18 @@ In addition, please have a look at the following tests for implementation exampl
 - [TestKmip](./src/test/java/com/cosmian/TestKmip.java) for using the KMIP 2.1 interface with the Cosmian KMS
 - [TestSqliteFindex](./src/test/java/com/cosmian/findex/TestSqlite.java) for using the Encrypted Search Findex scheme using Sqlite (or other SQL DBs) as a backend
 - [TestRedisFindex](./src/test/java/com/cosmian/findex/TestRedis.java) for using the Encrypted Search Findex scheme using Redis as a backend
+
+## Versions Correspondence
+
+This library uses the 2 native libraries CoverCrypt and Findex for performance and safe implementation reasons.
+
+This table shows the compatible versions of the various components
+
+| This lib | KMS Server | CoverCrypt | Findex |
+|----------|------------|------------|--------|
+| 3.0.0    | 4.0.1      | 8.0.1      | 1.0.1  |
+| 3.0.2    | 4.0.1      | 8.0.1      | 2.0.0  |
+| 3.0.3    | 4.0.1      | 8.0.2      | 2.0.0  |
 
 ## Using in Java projects
 
@@ -68,11 +81,20 @@ python3 scripts/get_native_libraries.py
 
 Otherwise, to build those libraries manually, please check the CoverCrypt and Findex projects on Github: their `build` directory contains instructions on how to build the native libraries for your system.
 
-## Versions Correspondence
+### Building the native libraries on your own
 
-This table shows the compatible versions of the various components
+For `CoverCrypt`:
 
-| This lib | KMS Server | CoverCrypt | Findex |
-|----------|------------|------------|--------|
-| 3.0.0    | 4.0.1      | 8.0.1      | 1.0.1  |
-| 3.0.2    | 4.0.1      | 8.0.1      | 2.0.0  |
+```bash
+git clone https://github.com/Cosmian/cover_crypt.git
+cargo build --release --features ffi
+```
+
+For `Findex`:
+
+```bash
+git clone https://github.com/Cosmian/findex.git
+cargo build --release --features ffi
+```
+
+And copy the new binaries from `target/release/<.dylib,.so,.dll>` to `cloudproof_java` FFI directory: check the right platform/architecture directory in [Download required native libraries](#download-required-native-libraries).

@@ -45,3 +45,35 @@ jobs:
 
       - name: Build with Maven
         run: mvn -B package --file pom.xml
+
+      - name: Maven deploy
+        if: contains(runner.os, 'Linux') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg2
+          mkdir -p ~/.m2 ~/.gpg
+          echo "$M2_SETTINGS" > ~/.m2/settings.xml
+          echo "$MAVEN_GPG_PRIVATE_KEY" > ~/.gpg/maven_gpg_private_key.asc
+          gpg --import ~/.gpg/maven_gpg_private_key.asc
+          mvn clean deploy -Dmaven.test.skip
+        env:
+          M2_SETTINGS: ${{ secrets.M2_SETTINGS }}
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+
+  release:
+    needs:
+      - build
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Release
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+
+  cleanup:
+    needs:
+      - release
+    uses: Cosmian/reusable_workflows/.github/workflows/cleanup_cache.yml@main
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    secrets: inherit

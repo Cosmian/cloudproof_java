@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import com.cosmian.jna.covercrypt.CoverCrypt;
 import com.cosmian.rest.abe.data.DecryptedData;
-import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.jna.covercrypt.structs.Policy;
 import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 

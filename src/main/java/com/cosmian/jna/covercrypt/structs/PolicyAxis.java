@@ -1,33 +1,39 @@
-package com.cosmian.rest.abe.policy;
+package com.cosmian.jna.covercrypt.structs;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 public class PolicyAxis implements Serializable {
     final private String name;
 
-    final private List<String> attributes;
+    final private PolicyAxisAttribute[] attributes;
 
     final private boolean hierarchical;
 
-    public PolicyAxis(String name, String[] attributes, boolean hierarchical) {
+    public PolicyAxis(String name, PolicyAxisAttribute[] attributes, boolean hierarchical) {
         this.name = name;
-        this.attributes = Arrays.asList(attributes);
+        this.attributes = attributes;
         this.hierarchical = hierarchical;
     }
 
     public int getLen() {
-        return this.attributes.size();
+        return attributes.length;
     }
 
     public String getName() {
         return this.name;
     }
 
-    public List<String> getAttributes() {
-        return this.attributes;
+    public String getAxisAttributeProperties() {
+        String attributes = "[";
+        for (int i = 0; i < this.attributes.length; i++) {
+            attributes += this.attributes[i].toString();
+            if (i != this.attributes.length - 1) {
+                attributes += ", ";
+            }
+        }
+        attributes += "]";
+        return attributes;
     }
 
     public boolean isHierarchical() {
@@ -57,8 +63,9 @@ public class PolicyAxis implements Serializable {
 
     @Override
     public String toString() {
-        return "{" + " name='" + getName() + "'" + ", attributes='" + getAttributes() + "'" + ", hierarchical='"
-            + isHierarchical() + "'" + "}";
+        return "{ \"name\": \"" + getName() + "\", \"attributes_properties\": " + getAxisAttributeProperties()
+            + ", \"hierarchical\": "
+            + isHierarchical() + " }";
     }
 
 }

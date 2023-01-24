@@ -7,10 +7,9 @@ import org.junit.jupiter.api.Test;
 
 import com.cosmian.jna.covercrypt.CoverCrypt;
 import com.cosmian.jna.covercrypt.structs.MasterKeys;
+import com.cosmian.jna.covercrypt.structs.Policy;
 import com.cosmian.rest.abe.KmsClient;
-import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.data.DecryptedData;
-import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
 import com.cosmian.utils.CloudproofException;
@@ -44,27 +43,6 @@ public class TestDemo {
     // attribute of this axis to a user does not give access to any other
     // attribute. Each attribute must be granted individually.
 
-    static Policy policy() throws CloudproofException {
-        return new Policy()
-            // Integer.MAX_VALUE is an arbitrary value that represents
-            // the maximum number of attributes that can be
-            // used in policy
-            .addAxis("Security Level",
-                new String[] {
-                    "Protected",
-                    "Confidential",
-                    "Top Secret"
-                },
-                true) // <- hierarchical axis
-            .addAxis("Department",
-                new String[] {
-                    "FIN",
-                    "MKG",
-                    "HR"
-                },
-                false); // <- non hierarchical axis
-    }
-
     @Test
     public void testDocDemoKMS() throws CloudproofException {
 
@@ -81,7 +59,7 @@ public class TestDemo {
         final CoverCrypt coverCrypt = new CoverCrypt();
 
         // Instantiate a policy; see comments in the policy() method for details
-        Policy policy = policy();
+        Policy policy = TestNativeCoverCrypt.policy();
 
         String[] ids = kmsClient.createCoverCryptMasterKeyPair(policy);
         String privateMasterKeyUniqueIdentifier = ids[0];
@@ -89,10 +67,12 @@ public class TestDemo {
 
         // Master Keys can be exported from the KMS
         // export the private master key
-        // PrivateKey privateMasterKey = kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyUniqueIdentifier);
+        // PrivateKey privateMasterKey =
+        // kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyUniqueIdentifier);
         // byte[] _privateMasterKeyBytes = privateMasterKey.bytes();
         // export the public key
-        // PublicKey publicKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
+        // PublicKey publicKey =
+        // kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
         // byte[] _publicKeyBytes = publicKey.bytes();
 
         byte[] protectedMkgData = "protectedMkgMessage".getBytes(StandardCharsets.UTF_8);
@@ -130,7 +110,8 @@ public class TestDemo {
         // native library
         // PrivateKey confidentialMkgUserKey_ =
         // kmsClient.retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
-        // PrivateKey topSecretMkgFinUserKey = kmsClient.retrieveCoverCryptUserDecryptionKey(topSecretMkgFinUserKeyUid);
+        // PrivateKey topSecretMkgFinUserKey =
+        // kmsClient.retrieveCoverCryptUserDecryptionKey(topSecretMkgFinUserKeyUid);
 
         // The confidential marketing user can successfully decrypt a low-security
         // marketing message
@@ -171,14 +152,16 @@ public class TestDemo {
         // Before rotating attributes, let us make a local copy of the current
         // `confidential marketing` user to show
         // what happens to non-refreshed keys after the attribute rotation.
-        PrivateKey oldConfidentialMkgUserKey = kmsClient.retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
+        PrivateKey oldConfidentialMkgUserKey = kmsClient
+            .retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
 
         // Now rotate the MKG attribute - all active keys will be rekeyed
         kmsClient.rotateCoverCryptAttributes(privateMasterKeyUniqueIdentifier,
-            new Attr[] {new Attr("Department", "MKG")});
+            new String[] {"Department::MKG"});
 
         // Retrieve the rekeyed public key from the KMS
-        PublicKey rekeyedPublicKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
+        PublicKey rekeyedPublicKey = kmsClient
+            .retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
         // Retrieve the updated policy
         Policy updatedPolicy = Policy.fromAttributes(rekeyedPublicKey.attributes());
 
@@ -244,7 +227,7 @@ public class TestDemo {
         final CoverCrypt coverCrypt = new CoverCrypt();
 
         // Instantiate a policy; see comments in the policy() method for details
-        Policy policy = policy();
+        Policy policy = TestNativeCoverCrypt.policy();
 
         MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
         byte[] privateMasterKeyBytes = masterKeys.getPrivateKey();
@@ -286,7 +269,8 @@ public class TestDemo {
             "(Department::MKG || Department::FIN) && Security Level::Top Secret",
             policy);
 
-        // The confidential marketing user can successfully decrypt a low-security marketing message
+        // The confidential marketing user can successfully decrypt a low-security
+        // marketing message
         DecryptedData protectedMkg = coverCrypt.decrypt(confidentialMkgUserKey, protectedMkgCT);
         assert Arrays.equals(protectedMkgData, protectedMkg.getPlaintext());
 
@@ -306,7 +290,8 @@ public class TestDemo {
             // ==> fine, the user is not able to decrypt
         }
 
-        // As expected, the top-secret marketing financial user can successfully decrypt all messages
+        // As expected, the top-secret marketing financial user can successfully decrypt
+        // all messages
         DecryptedData protectedMkg_ = coverCrypt.decrypt(topSecretMkgFinUserKeyUid, protectedMkgCT);
         assert Arrays.equals(protectedMkgData, protectedMkg_.getPlaintext());
 

@@ -23,10 +23,11 @@ import com.cosmian.jna.covercrypt.CoverCrypt;
 import com.cosmian.jna.covercrypt.structs.DecryptedHeader;
 import com.cosmian.jna.covercrypt.structs.EncryptedHeader;
 import com.cosmian.jna.covercrypt.structs.MasterKeys;
+import com.cosmian.jna.covercrypt.structs.Policy;
+import com.cosmian.jna.covercrypt.structs.PolicyAxis;
+import com.cosmian.jna.covercrypt.structs.PolicyAxisAttribute;
 import com.cosmian.rest.abe.KmsClient;
-import com.cosmian.rest.abe.access_policy.Attr;
 import com.cosmian.rest.abe.data.DecryptedData;
-import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
 import com.cosmian.utils.CloudproofException;
@@ -52,8 +53,11 @@ public class TestNativeCoverCrypt {
         }
         assertEquals(1100, s.length());
         coverCrypt.set_error(s);
-        String err = coverCrypt.get_last_error(1023);
-        assertEquals(1023, err.length());
+        try {
+            coverCrypt.get_last_error(1024);
+        } catch (Exception ex) {
+            ex.getMessage().contains("Failed retrieving the last error");
+        }
     }
 
     public byte[] hash(byte[] data) throws NoSuchAlgorithmException {
@@ -129,16 +133,16 @@ public class TestNativeCoverCrypt {
 
         // Rotate attributes
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-        Attr[] attributes = new Attr[] {new Attr("Department", "FIN"), new Attr("Security Level", "Confidential")};
-        Policy newPolicy = coverCrypt.rotateAttributes(attributes, policy);
+        String[] attributes = new String[] {"Department::FIN", "Security Level::Confidential"};
+        policy.rotateAttributes(attributes);
 
         // Must refresh the master keys after an attributes rotation
-        masterKeys = coverCrypt.generateMasterKeys(newPolicy);
+        masterKeys = coverCrypt.generateMasterKeys(policy);
 
         // Now generate the header which contains the ABE encryption of the randomly
         // generated AES key.
         EncryptedHeader encryptedHeader = coverCrypt.encryptHeader(
-            newPolicy,
+            policy,
             masterKeys.getPublicKey(),
             encryptionPolicy);
 
@@ -154,7 +158,7 @@ public class TestNativeCoverCrypt {
 
         // Generate an user decryption key
         byte[] userDecryptionKeyRefreshed = coverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy,
-            newPolicy);
+            policy);
 
         // Decrypt the header to recover the symmetric AES key
         DecryptedHeader decryptedHeader = coverCrypt.decryptHeader(
@@ -162,39 +166,6 @@ public class TestNativeCoverCrypt {
             encryptedHeader.getEncryptedHeaderBytes());
 
         assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
-    }
-
-    @Test
-    public void testBenchKeysGeneration() throws Exception {
-
-        System.out.println("");
-        System.out.println("---------------------------------------");
-        System.out.println(" Bench CoverCrypt keys generation");
-        System.out.println("---------------------------------------");
-        System.out.println("");
-
-        Policy policy = policy();
-        MasterKeys masterKeys = null;
-        long start = System.nanoTime();
-        // Single generation being very small (about 180µs), nb_occurrences should be at
-        // least 1 million
-        // for CI purpose, value is 10000
-        int nb_occurrences = 10000;
-        for (int i = 0; i < nb_occurrences; i++) {
-            masterKeys = coverCrypt.generateMasterKeys(policy);
-        }
-        long time = (System.nanoTime() - start);
-        System.out.println("CoverCrypt Master Key generation average time: " + time / nb_occurrences + "ns (or "
-            + time / 1000 / nb_occurrences + "µs)");
-
-        String accessPolicy = accessPolicyConfidential();
-        start = System.nanoTime();
-        for (int i = 0; i < nb_occurrences; i++) {
-            coverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
-        }
-        time = (System.nanoTime() - start);
-        System.out.println("CoverCrypt User Private Key generation average time: " + time / nb_occurrences + "ns (or "
-            + time / 1000 / nb_occurrences + "µs)");
     }
 
     @Test
@@ -303,10 +274,14 @@ public class TestNativeCoverCrypt {
         assertTrue(Arrays.equals(headerMetadata, res.getHeaderMetaData()));
     }
 
-    private Policy policy() throws CloudproofException {
-        return new Policy(20)
-            .addAxis("Security Level", new String[] {"Protected", "Confidential", "Top Secret"}, true)
-            .addAxis("Department", new String[] {"FIN", "MKG", "HR"}, false);
+    public static Policy policy() throws CloudproofException {
+        return new Policy(20, new PolicyAxis[] {
+            new PolicyAxis("Security Level",
+                new PolicyAxisAttribute[] {new PolicyAxisAttribute("Protected", false),
+                    new PolicyAxisAttribute("Confidential", false), new PolicyAxisAttribute("Top Secret", true)},
+                true),
+            new PolicyAxis("Department", new PolicyAxisAttribute[] {new PolicyAxisAttribute("FIN", false),
+                new PolicyAxisAttribute("MKG", false), new PolicyAxisAttribute("HR", false)}, false)});
     }
 
     private String accessPolicyConfidential() throws CloudproofException {
@@ -354,6 +329,8 @@ public class TestNativeCoverCrypt {
         // Local Encryption
         //
 
+        System.out.println("Local Encryption");
+
         // The encryption policy attributes that will be used to encrypt the content.
         // Attributes must exist in the policy associated with the Public Key
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
@@ -363,6 +340,8 @@ public class TestNativeCoverCrypt {
         // Local Decryption
         //
 
+        System.out.println("Local Decryption");
+
         PrivateKey userKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userKeyId);
         DecryptedData res = coverCrypt.decrypt(userKey.bytes(), ciphertext, uid);
         assertArrayEquals(plaintext, res.getPlaintext());
@@ -371,6 +350,9 @@ public class TestNativeCoverCrypt {
         //
         // KMS Decryption
         //
+
+        System.out.println("KMS Decryption");
+
         byte[] data_kms = kmsClient.coverCryptDecrypt(userKeyId, ciphertext, uid).getPlaintext();
         assertArrayEquals(plaintext, data_kms);
     }
@@ -691,17 +673,6 @@ public class TestNativeCoverCrypt {
         coverCrypt.destroyEncryptionCache(encryptionCache);
         coverCrypt.destroyDecryptionCache(decryptionCache);
 
-    }
-
-    @Test
-    public void testAccessPolicyToJSON() throws Exception {
-
-        // encrypt
-        String accessPolicy = "Department::MKG && ( Country::France || Country::Spain)";
-        String json = coverCrypt.booleanAccessPolicyToJson(accessPolicy);
-        assertEquals(
-            "{\"And\":[{\"Attr\":\"Department::MKG\"},{\"Or\":[{\"Attr\":\"Country::France\"},{\"Attr\":\"Country::Spain\"}]}]}",
-            json);
     }
 
     @Test

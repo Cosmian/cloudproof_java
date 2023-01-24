@@ -1,7 +1,7 @@
 package com.cosmian.cover_crypt;
 
 import com.cosmian.jna.covercrypt.CoverCrypt;
-import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.jna.covercrypt.structs.Policy;
 import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -24,12 +24,12 @@ public class UserSecretKeyTestVector {
 
     public static UserSecretKeyTestVector generate(byte[] masterSecretKey,
                                                    Policy policy,
-                                                   String accessPolicy)
+                                                   String userPolicy)
         throws CloudproofException {
         byte[] key = coverCrypt.generateUserPrivateKey(masterSecretKey,
-            accessPolicy, policy);
+            userPolicy, policy);
         UserSecretKeyTestVector userKey = new UserSecretKeyTestVector();
-        userKey.accessPolicy = accessPolicy;
+        userKey.accessPolicy = userPolicy;
         userKey.key = key;
         return userKey;
     }

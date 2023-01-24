@@ -1,33 +1,27 @@
 package com.cosmian.jna.covercrypt;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 
 import com.cosmian.jna.covercrypt.ffi.CoverCryptWrapper;
+import com.cosmian.jna.covercrypt.structs.AccessPolicy;
 import com.cosmian.jna.covercrypt.structs.DecryptedHeader;
 import com.cosmian.jna.covercrypt.structs.EncryptedHeader;
+import com.cosmian.jna.covercrypt.structs.Ffi;
 import com.cosmian.jna.covercrypt.structs.MasterKeys;
-import com.cosmian.rest.abe.access_policy.AccessPolicy;
-import com.cosmian.rest.abe.access_policy.Attr;
+import com.cosmian.jna.covercrypt.structs.Policy;
 import com.cosmian.rest.abe.data.DecryptedData;
-import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
 import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
-public final class CoverCrypt {
+public final class CoverCrypt extends Ffi {
 
     // For the JSON strings
     private final static ObjectMapper mapper = new ObjectMapper();
@@ -45,45 +39,6 @@ public final class CoverCrypt {
 
     public CoverCrypt(CoverCryptWrapper instance) {
         this.instance = instance;
-    }
-
-    /**
-     * Return the last error in a String that does not exceed 1023 bytes
-     *
-     * @return the last error recorded by the native library
-     * @throws CloudproofException in case of native library error
-     */
-    public String get_last_error() throws CloudproofException {
-        return get_last_error(1023);
-    }
-
-    /**
-     * Return the last error in a String that does not exceed `max_len` bytes
-     *
-     * @param max_len the maximum number of bytes to return
-     * @throws CloudproofException in case of native library error
-     * @return the error
-     */
-    public String get_last_error(int max_len) throws CloudproofException {
-        if (max_len < 1) {
-            throw new CloudproofException("get_last_error: max_lem must be at least one");
-        }
-        byte[] output = new byte[max_len + 1];
-        IntByReference outputSize = new IntByReference(output.length);
-        if (this.instance.get_last_error(output, outputSize) == 0) {
-            return new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
-        }
-        throw new CloudproofException("Failed retrieving the last error; check the debug logs");
-    }
-
-    /**
-     * Set the last error on the native lib
-     *
-     * @param error_msg the last error to set on the native lib
-     * @throws CloudproofException n case of native library error
-     */
-    public void set_error(String error_msg) throws CloudproofException {
-        unwrap(this.instance.set_error(error_msg));
     }
 
     /**
@@ -116,15 +71,6 @@ public final class CoverCrypt {
     public int createEncryptionCache(Policy policy,
                                      byte[] publicKeyBytes)
         throws CloudproofException {
-
-        // Policy
-        String policyJson;
-        try {
-            policyJson = mapper.writeValueAsString(policy);
-        } catch (JsonProcessingException e) {
-            throw new CloudproofException("Invalid Policy", e);
-        }
-
         // Public Key
         final Pointer publicKeyPointer = new Memory(publicKeyBytes.length);
         publicKeyPointer.write(0, publicKeyBytes, 0, publicKeyBytes.length);
@@ -133,7 +79,9 @@ public final class CoverCrypt {
         IntByReference cacheHandle = new IntByReference();
 
         // cache ptr ptr
-        unwrap(this.instance.h_aes_create_encryption_cache(cacheHandle, policyJson, publicKeyPointer,
+        unwrap(this.instance.h_create_encryption_cache(cacheHandle, policy.getBytes(),
+            policy.getBytes().length,
+            publicKeyPointer,
             publicKeyBytes.length));
 
         return cacheHandle.getValue();
@@ -147,7 +95,7 @@ public final class CoverCrypt {
      * @throws CloudproofException in case of other errors
      */
     public void destroyEncryptionCache(int cacheHandle) throws CloudproofException {
-        unwrap(this.instance.h_aes_destroy_encryption_cache(cacheHandle));
+        unwrap(this.instance.h_destroy_encryption_cache(cacheHandle));
     }
 
     /**
@@ -230,7 +178,7 @@ public final class CoverCrypt {
         }
 
         try {
-            unwrap(this.instance.h_aes_encrypt_header_using_cache(
+            unwrap(this.instance.h_encrypt_header_using_cache(
                 symmetricKeyBuffer, symmetricKeyBufferSize,
                 headerBytesBuffer, headerBytesBufferSize,
                 cacheHandle,
@@ -351,14 +299,6 @@ public final class CoverCrypt {
         byte[] headerBytesBuffer = new byte[8192 + additionalDataLength + authenticationDataLength];
         IntByReference headerBytesBufferSize = new IntByReference(headerBytesBuffer.length);
 
-        // Policy
-        String policyJson;
-        try {
-            policyJson = mapper.writeValueAsString(policy);
-        } catch (JsonProcessingException e) {
-            throw new CloudproofException("Invalid Policy", e);
-        }
-
         // Public Key
         final Pointer publicKeyPointer = new Memory(publicKeyBytes.length);
         publicKeyPointer.write(0, publicKeyBytes, 0, publicKeyBytes.length);
@@ -381,10 +321,11 @@ public final class CoverCrypt {
             authenticationDataPointer.write(0, authenticationData.get(), 0, authenticationDataLength);
         }
 
-        unwrap(this.instance.h_aes_encrypt_header(
+        unwrap(this.instance.h_encrypt_header(
             symmetricKeyBuffer, symmetricKeyBufferSize,
             headerBytesBuffer, headerBytesBufferSize,
-            policyJson,
+            policy.getBytes(),
+            policy.getBytes().length,
             publicKeyPointer, publicKeyBytes.length,
             encryptionPolicy,
             additionalDataPointer, additionalDataLength,
@@ -432,7 +373,7 @@ public final class CoverCrypt {
         // Cache Handle
         IntByReference cacheHandle = new IntByReference();
 
-        unwrap(this.instance.h_aes_create_decryption_cache(cacheHandle, userDecryptionKeyPointer,
+        unwrap(this.instance.h_create_decryption_cache(cacheHandle, userDecryptionKeyPointer,
             userDecryptionKeyBytes.length));
 
         return cacheHandle.getValue();
@@ -446,7 +387,7 @@ public final class CoverCrypt {
      * @throws CloudproofException in case of other errors
      */
     public void destroyDecryptionCache(int cacheHandle) throws CloudproofException {
-        unwrap(this.instance.h_aes_destroy_decryption_cache(cacheHandle));
+        unwrap(this.instance.h_destroy_decryption_cache(cacheHandle));
     }
 
     /**
@@ -510,7 +451,7 @@ public final class CoverCrypt {
             authenticationDataLen = 0;
         }
 
-        unwrap(this.instance.h_aes_decrypt_header_using_cache(
+        unwrap(this.instance.h_decrypt_header_using_cache(
             symmetricKeyBuffer, symmetricKeyBufferSize,
             additionalDataBuffer, additionalDataBufferSize,
             encryptedHeaderBytesPointer, encryptedHeaderBytes.length,
@@ -621,7 +562,7 @@ public final class CoverCrypt {
         final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKeyBytes.length);
         userDecryptionKeyPointer.write(0, userDecryptionKeyBytes, 0, userDecryptionKeyBytes.length);
 
-        unwrap(this.instance.h_aes_decrypt_header(
+        unwrap(this.instance.h_decrypt_header(
             symmetricKeyBuffer, symmetricKeyBufferSize,
             additionalDataBuffer, additionalDataBufferSize,
             encryptedHeaderBytesPointer, encryptedHeaderBytes.length,
@@ -640,7 +581,7 @@ public final class CoverCrypt {
      * @return the overhead bytes
      */
     public int symmetricEncryptionOverhead() {
-        return this.instance.h_aes_symmetric_encryption_overhead();
+        return this.instance.h_symmetric_encryption_overhead();
     }
 
     /**
@@ -674,7 +615,7 @@ public final class CoverCrypt {
         throws CloudproofException {
 
         // Ciphertext OUT
-        byte[] ciphertextBuffer = new byte[this.instance.h_aes_symmetric_encryption_overhead() + clearText.length];
+        byte[] ciphertextBuffer = new byte[this.instance.h_symmetric_encryption_overhead() + clearText.length];
         IntByReference ciphertextBufferSize = new IntByReference(ciphertextBuffer.length);
 
         // Symmetric Key
@@ -694,7 +635,7 @@ public final class CoverCrypt {
         final Pointer dataPointer = new Memory(clearText.length);
         dataPointer.write(0, clearText, 0, clearText.length);
 
-        unwrap(this.instance.h_aes_encrypt_block(
+        unwrap(this.instance.h_dem_encrypt(
             ciphertextBuffer, ciphertextBufferSize,
             symmetricKeyPointer, symmetricKey.length,
             associatedDataPointer, authenticationData.length,
@@ -735,7 +676,7 @@ public final class CoverCrypt {
         throws CloudproofException {
 
         // Clear Text Bytes OUT
-        byte[] clearTextBuffer = new byte[encryptedBytes.length - this.instance.h_aes_symmetric_encryption_overhead()];
+        byte[] clearTextBuffer = new byte[encryptedBytes.length - this.instance.h_symmetric_encryption_overhead()];
         IntByReference clearTextBufferSize = new IntByReference(clearTextBuffer.length);
 
         // Symmetric Key
@@ -755,7 +696,7 @@ public final class CoverCrypt {
         final Pointer encryptedBytesPointer = new Memory(encryptedBytes.length);
         encryptedBytesPointer.write(0, encryptedBytes, 0, encryptedBytes.length);
 
-        unwrap(this.instance.h_aes_decrypt_block(
+        unwrap(this.instance.h_dem_decrypt(
             clearTextBuffer, clearTextBufferSize,
             symmetricKeyPointer, symmetricKey.length,
             authenticationDataPointer, authenticationData.length,
@@ -773,55 +714,44 @@ public final class CoverCrypt {
      */
     public MasterKeys generateMasterKeys(Policy policy) throws CloudproofException {
         // Master keys Bytes OUT
-        byte[] masterKeysBuffer = new byte[8192];
-        IntByReference masterKeysBufferSize = new IntByReference(masterKeysBuffer.length);
+        byte[] masterPrivateKeyBuffer = new byte[8 * 1024];
+        IntByReference masterPrivateKeyBufferSize = new IntByReference(masterPrivateKeyBuffer.length);
+        byte[] masterPublicKeyBuffer = new byte[8 * 1024];
+        IntByReference masterPublicKeyBufferSize = new IntByReference(masterPublicKeyBuffer.length);
 
-        // Policy
-        String policyJson;
-        try {
-            policyJson = mapper.writeValueAsString(policy);
-        } catch (JsonProcessingException e) {
-            throw new CloudproofException("Invalid Policy", e);
-        }
+        int ffiCode = this.instance.h_generate_master_keys(masterPrivateKeyBuffer, masterPrivateKeyBufferSize,
+            masterPublicKeyBuffer, masterPublicKeyBufferSize, policy.getBytes(), policy.getBytes().length);
 
-        int ffiCode = this.instance.h_generate_master_keys(masterKeysBuffer, masterKeysBufferSize, policyJson);
         if (ffiCode != 0) {
             // Retry with correct allocated size
-            masterKeysBuffer = new byte[masterKeysBufferSize.getValue()];
-            ffiCode = this.instance.h_generate_master_keys(masterKeysBuffer, masterKeysBufferSize, policyJson);
-            if (ffiCode != 0) {
-                throw new CloudproofException(get_last_error(4095));
-            }
+            masterPrivateKeyBuffer = new byte[masterPrivateKeyBufferSize.getValue()];
+            masterPublicKeyBuffer = new byte[masterPublicKeyBufferSize.getValue()];
+            unwrap(this.instance.h_generate_master_keys(masterPrivateKeyBuffer, masterPrivateKeyBufferSize,
+                masterPublicKeyBuffer, masterPublicKeyBufferSize, policy.getBytes(),
+                policy.getBytes().length));
         }
 
-        byte[] masterKeysBytes = Arrays.copyOfRange(masterKeysBuffer, 0, masterKeysBufferSize.getValue());
-        if (masterKeysBytes.length < 4) {
-            throw new CloudproofException("Invalid master key bytes length. Must be at least 4 bytes");
-        }
-
-        int privateKeySize = ByteBuffer.wrap(Arrays.copyOfRange(masterKeysBytes, 0, 4)).getInt();
-        byte[] privateKey = Arrays.copyOfRange(masterKeysBytes, 4, 4 + privateKeySize);
-        byte[] publicKey = Arrays.copyOfRange(masterKeysBytes, 4 + privateKeySize, masterKeysBufferSize.getValue());
+        byte[] privateKey = Arrays.copyOfRange(masterPrivateKeyBuffer, 0, masterPrivateKeyBufferSize.getValue());
+        byte[] publicKey = Arrays.copyOfRange(masterPublicKeyBuffer, 0, masterPublicKeyBufferSize.getValue());
 
         return new MasterKeys(privateKey, publicKey);
     }
 
     /**
-     * Generate the user private key
+     * Generates a user private key based on a master private key, a user policy string, and a policy object.
      *
-     * @param masterPrivateKey the master private key in bytes
-     * @param booleanAccessPolicy the access policy of the user private key as an boolean expression
-     * @param policy the ABE policy
-     * @return the corresponding user private key
-     * @throws CloudproofException in case of native library error
+     * @param masterPrivateKey the master private key used to generate the user private key
+     * @param userPolicy the string representation of the user policy
+     * @param policy the policy object to be used in the generation of the user private key
+     * @return the generated user private key
+     * @throws CloudproofException if the user private key cannot be generated
      */
     public byte[] generateUserPrivateKey(byte[] masterPrivateKey,
-                                         String booleanAccessPolicy,
+                                         String userPolicy,
                                          Policy policy)
         throws CloudproofException {
 
-        String json = this.booleanAccessPolicyToJson(booleanAccessPolicy);
-        return generateUserPrivateKey_(masterPrivateKey, json, policy);
+        return generateUserPrivateKey_(masterPrivateKey, userPolicy, policy);
     }
 
     /**
@@ -854,13 +784,13 @@ public final class CoverCrypt {
      * Generate the user private key
      *
      * @param masterPrivateKey the master private key in bytes
-     * @param accessPolicyJson the access policy of the user private key as a JSON version of an AccessPolicy instance
+     * @param userPolicy the access policy of the user private key as a JSON version of an AccessPolicy instance
      * @param policy the ABE policy
      * @return the corresponding user private key
      * @throws CloudproofException in case of native library error
      */
     byte[] generateUserPrivateKey_(byte[] masterPrivateKey,
-                                   String accessPolicyJson,
+                                   String userPolicy,
                                    Policy policy)
         throws CloudproofException {
         // User private key Bytes OUT
@@ -871,97 +801,21 @@ public final class CoverCrypt {
         try (final Memory masterPrivateKeyPointer = new Memory(masterPrivateKey.length)) {
             masterPrivateKeyPointer.write(0, masterPrivateKey, 0, masterPrivateKey.length);
 
-            // Policy
-            String policyJson;
-            try {
-                policyJson = mapper.writeValueAsString(policy);
-            } catch (JsonProcessingException e) {
-                throw new CloudproofException("Invalid Policy", e);
-            }
-
             int ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
-                masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
+                masterPrivateKeyPointer, masterPrivateKey.length, userPolicy, policy.getBytes(),
+                policy.getBytes().length);
             if (ffiCode != 0) {
                 // Retry with correct allocated size
                 userPrivateKeyBuffer = new byte[userPrivateKeyBufferSize.getValue()];
                 ffiCode = this.instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
-                    masterPrivateKeyPointer, masterPrivateKey.length, accessPolicyJson, policyJson);
+                    masterPrivateKeyPointer, masterPrivateKey.length, userPolicy, policy.getBytes(),
+                    policy.getBytes().length);
                 if (ffiCode != 0) {
-                    throw new CloudproofException(get_last_error(4095));
+                    throw new CloudproofException(get_last_error(4096));
                 }
             }
             return Arrays.copyOfRange(userPrivateKeyBuffer, 0, userPrivateKeyBufferSize.getValue());
         }
-    }
-
-    /**
-     * Rotate attributes, changing their underlying value with that of an unused slot
-     *
-     * @param attributes: a list of attributes to rotate
-     * @param policy: the current policy returns the new Policy
-     * @return the new policy
-     * @throws CloudproofException in case of native library error
-     * @throws IOException standard IO exceptions
-     * @throws DatabindException standard databind exceptions
-     * @throws StreamReadException stream read exceptions
-     */
-    public Policy rotateAttributes(Attr[] attributes,
-                                   Policy policy)
-        throws CloudproofException, StreamReadException, DatabindException, IOException {
-        // New policy Bytes OUT
-        byte[] policyBuffer = new byte[4096];
-        IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
-
-        // Attributes
-        // The value must be the JSON array of the String representation of the Attrs
-        ArrayList<String> attributesArray = new ArrayList<String>();
-        for (Attr attr : attributes) {
-            attributesArray.add(attr.toString());
-        }
-        String attributesJson;
-        try {
-            attributesJson = mapper.writeValueAsString(attributesArray);
-        } catch (JsonProcessingException e) {
-            throw new CloudproofException("Invalid Attributes", e);
-        }
-
-        // Policy
-        String policyJson;
-        try {
-            policyJson = mapper.writeValueAsString(policy);
-        } catch (JsonProcessingException e) {
-            throw new CloudproofException("Invalid Policy", e);
-        }
-
-        int ffiCode = this.instance.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson);
-
-        if (ffiCode != 0) {
-            // Retry with correct allocated size
-            policyBuffer = new byte[policyBufferSize.getValue()];
-            ffiCode = this.instance.h_rotate_attributes(policyBuffer, policyBufferSize, attributesJson, policyJson);
-            if (ffiCode != 0) {
-                throw new CloudproofException(get_last_error(4095));
-            }
-        }
-
-        byte[] policyBytes = Arrays.copyOfRange(policyBuffer, 0, policyBufferSize.getValue());
-        Policy newPolicy = mapper.readValue(policyBytes, Policy.class);
-        return newPolicy;
-    }
-
-    /**
-     * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
-     * exception wrapping it.
-     *
-     * @param result the result of the FFI call
-     * @return the result if it is different from 1
-     * @throws CloudproofException in case of native library error (result is 1)
-     */
-    public int unwrap(int result) throws CloudproofException {
-        if (result == 1) {
-            throw new CloudproofException(get_last_error(4095));
-        }
-        return result;
     }
 
     /**
@@ -1074,14 +928,6 @@ public final class CoverCrypt {
         byte[] ciphertext = new byte[8192 + plaintext.length];
         IntByReference ciphertextSize = new IntByReference(ciphertext.length);
 
-        // Policy
-        String policyJson;
-        try {
-            policyJson = mapper.writeValueAsString(policy);
-        } catch (JsonProcessingException e) {
-            throw new CloudproofException("Invalid Policy", e);
-        }
-
         // Public Key
         final Pointer publicKeyPointer = new Memory(publicKeyBytes.length);
         publicKeyPointer.write(0, publicKeyBytes, 0, publicKeyBytes.length);
@@ -1108,9 +954,10 @@ public final class CoverCrypt {
             authenticationDataPointer.write(0, authenticationData.get(), 0, authenticationDataLength);
         }
 
-        unwrap(this.instance.h_aes_encrypt(
+        unwrap(instance.h_hybrid_encrypt(
             ciphertext, ciphertextSize,
-            policyJson,
+            policy.getBytes(),
+            policy.getBytes().length,
             publicKeyPointer, publicKeyBytes.length,
             encryptionPolicy,
             plaintextPointer, plaintext.length,
@@ -1192,7 +1039,7 @@ public final class CoverCrypt {
         final Pointer userDecryptionKeyPointer = new Memory(userDecryptionKeyBytes.length);
         userDecryptionKeyPointer.write(0, userDecryptionKeyBytes, 0, userDecryptionKeyBytes.length);
 
-        unwrap(this.instance.h_aes_decrypt(
+        unwrap(this.instance.h_hybrid_decrypt(
             plaintext, plaintextSize,
             additionalData, additionalDataSize,
             ciphertextPointer, ciphertext.length,
@@ -1202,26 +1049,5 @@ public final class CoverCrypt {
         return new DecryptedData(
             Arrays.copyOfRange(plaintext, 0, plaintextSize.getValue()),
             Arrays.copyOfRange(additionalData, 0, additionalDataSize.getValue()));
-    }
-
-    /**
-     * Convert a boolean access policy expression to JSON that can be used in KMIP calls to create user decryption keys.
-     *
-     * @param booleanExpression access policy in the form of a boolean expression
-     * @throws CloudproofException in case of native library error
-     * @return the JSON expression as a {@link String}
-     */
-    public String booleanAccessPolicyToJson(String booleanExpression) throws CloudproofException {
-        int len = booleanExpression.length() * 2;
-        byte[] output = new byte[len];
-        IntByReference outputSize = new IntByReference(output.length);
-        do {
-            int res = unwrap(this.instance.h_access_policy_expression_to_json(output, outputSize, booleanExpression));
-            if (res == 0) {
-                break;
-            }
-            output = new byte[res];
-        } while (true);
-        return new String(Arrays.copyOfRange(output, 0, outputSize.getValue() - 1), StandardCharsets.UTF_8);
     }
 }

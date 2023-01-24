@@ -9,19 +9,27 @@ import com.sun.jna.ptr.IntByReference;
  */
 public interface CoverCryptWrapper extends Library {
 
-    int set_error(String errorMsg);
+    //
+    // Error management
+    //
 
-    int get_last_error(byte[] output,
-                       IntByReference outputSize);
+    int h_set_error(String errorMsg);
 
-    int h_aes_symmetric_encryption_overhead();
+    int h_get_error(byte[] output,
+                    IntByReference outputSize);
 
-    int h_aes_encrypt_header(
-                             byte[] symmetricKey,
+    //
+    // CoverCrypt APIs
+    //
+
+    int h_symmetric_encryption_overhead();
+
+    int h_encrypt_header(byte[] symmetricKey,
                              IntByReference symmetricKeySize,
                              byte[] headerBytes,
                              IntByReference headerBytesSize,
-                             String policyJson,
+                             byte[] policyBytes,
+                             int policyBytesSize,
                              Pointer publicKeyPointer,
                              int publicKeyLength,
                              String encryptionPolicy,
@@ -30,8 +38,7 @@ public interface CoverCryptWrapper extends Library {
                              Pointer authenticatedDataPointer,
                              int authenticatedDataLength);
 
-    int h_aes_decrypt_header(
-                             byte[] symmetricKey,
+    int h_decrypt_header(byte[] symmetricKey,
                              IntByReference symmetricKeySize,
                              byte[] additionalDataPointer,
                              IntByReference additionalDataLen,
@@ -42,8 +49,7 @@ public interface CoverCryptWrapper extends Library {
                              Pointer userDecryptionKeyPointer,
                              int userDecryptionKeyLength);
 
-    int h_aes_encrypt_block(
-                            byte[] encrypted,
+    int h_dem_encrypt(byte[] encrypted,
                             IntByReference encryptedSize,
                             Pointer symmetricKeyPointer,
                             int symmetricKeyLength,
@@ -52,8 +58,7 @@ public interface CoverCryptWrapper extends Library {
                             Pointer dataPointer,
                             int dataLength);
 
-    int h_aes_decrypt_block(
-                            byte[] clearText,
+    int h_dem_decrypt(byte[] clearText,
                             IntByReference clearTextSize,
                             Pointer symmetricKeyPointer,
                             int symmetricKeyLength,
@@ -62,14 +67,15 @@ public interface CoverCryptWrapper extends Library {
                             Pointer clearTextPointer,
                             int clearTextLength);
 
-    int h_aes_create_encryption_cache(IntByReference cacheHandle,
-                                      String policyJson,
+    int h_create_encryption_cache(IntByReference cacheHandle,
+                                  byte[] policyBytes,
+                                  int policyBytesSize,
                                       Pointer publicKeyPointer,
                                       int publicKeyLength);
 
-    int h_aes_destroy_encryption_cache(int cacheHandle);
+    int h_destroy_encryption_cache(int cacheHandle);
 
-    int h_aes_encrypt_header_using_cache(byte[] symmetricKey,
+    int h_encrypt_header_using_cache(byte[] symmetricKey,
                                          IntByReference symmetricKeySize,
                                          byte[] headerBytes,
                                          IntByReference headerBytesSize,
@@ -80,13 +86,13 @@ public interface CoverCryptWrapper extends Library {
                                          Pointer authenticatedPointer,
                                          int authenticatedLen);
 
-    int h_aes_create_decryption_cache(IntByReference cacheHandle,
+    int h_create_decryption_cache(IntByReference cacheHandle,
                                       Pointer userDecryptionKeyPointer,
                                       int userDecryptionKeyLength);
 
-    int h_aes_destroy_decryption_cache(int cacheHandle);
+    int h_destroy_decryption_cache(int cacheHandle);
 
-    int h_aes_decrypt_header_using_cache(byte[] symmetricKey,
+    int h_decrypt_header_using_cache(byte[] symmetricKey,
                                          IntByReference symmetricKeySize,
                                          byte[] additionalDataPointer,
                                          IntByReference additionalDataLen,
@@ -96,26 +102,25 @@ public interface CoverCryptWrapper extends Library {
                                          int authenticatedDataLength,
                                          int cacheHandle);
 
-    int h_generate_master_keys(byte[] masterKeys,
-                               IntByReference masterKeysSize,
-                               String policyJson);
+    int h_generate_master_keys(byte[] masterPrivateKeyBuffer,
+                               IntByReference masterPrivateKeyBufferSize,
+                               byte[] masterPublicKeyBuffer,
+                               IntByReference masterPublicKeyBufferSize,
+                               byte[] policyBytes,
+                               int policyBytesSize);
 
     int h_generate_user_secret_key(byte[] userPrivateKeyPtr,
                                    IntByReference userPrivateKeySize,
                                    Pointer masterPrivateKeyPtr,
                                    int masterPrivateKeyLen,
-                                   String accessPolicyJson,
-                                   String policyJson);
+                                   String userPolicy,
+                                   byte[] policyBytes,
+                                   int policyBytesSize);
 
-    int h_rotate_attributes(byte[] policyBuffer,
-                            IntByReference policyBufferSize,
-                            String attributesJson,
-                            String policyJson);
-
-    int h_aes_encrypt(
-                      byte[] ciphertext,
+    int h_hybrid_encrypt(byte[] ciphertext,
                       IntByReference ciphertextSize,
-                      String policyJson,
+                      byte[] policyBytes,
+                      int policyBytesSize,
                       Pointer publicKeyPointer,
                       int publicKeyLength,
                       String encryptionPolicy,
@@ -126,8 +131,7 @@ public interface CoverCryptWrapper extends Library {
                       Pointer authenticatedDataPointer,
                       int authenticatedDataLength);
 
-    int h_aes_decrypt(
-                      byte[] plaintext,
+    int h_hybrid_decrypt(byte[] plaintext,
                       IntByReference plaintextSize,
                       byte[] additionalData,
                       IntByReference additionalDataSize,
@@ -138,8 +142,27 @@ public interface CoverCryptWrapper extends Library {
                       Pointer userDecryptionKeyPointer,
                       int userDecryptionKeyLength);
 
-    int h_access_policy_expression_to_json(
-                                           byte[] jsonExpr,
-                                           IntByReference jsonExprSize,
-                                           String booleanExpression);
+    //
+    // Policy APIs
+    //
+
+    int h_policy(byte[] policyBuffer,
+                 IntByReference policyBufferSize,
+                 int maxAttributeCreations);
+
+    int h_add_policy_axis(byte[] updatedPolicyBuffer,
+                          IntByReference updatedPolicyBufferSize,
+                          byte[] currentPolicyBuffer,
+                          int currentPolicyBufferSize,
+                          String axis);
+
+    int h_rotate_attribute(byte[] updatedPolicyBuffer,
+                           IntByReference updatedPolicyBufferSize,
+                           byte[] currentPolicyBuffer,
+                           int currentPolicyBufferSize,
+                           String attribute);
+
+    int h_validate_boolean_expression(String booleanExpression);
+
+    int h_validate_attribute(String booleanExpression);
 }

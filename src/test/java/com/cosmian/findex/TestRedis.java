@@ -30,7 +30,7 @@ public class TestRedis {
 
     @Test
     public void testUpsertAndSearchRedis() throws Exception {
-        if (TestUtils.portAvailable(6379)) {
+        if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
             System.out.println("Ignore test since Redis is down");
             return;
         }

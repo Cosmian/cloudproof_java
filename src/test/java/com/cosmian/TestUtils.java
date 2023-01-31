@@ -68,12 +68,12 @@ public final class TestUtils {
         }
     }
 
-    public static boolean portAvailable(int port) {
+    public static boolean portAvailable(String hostname, int port) {
         Logger logger = Logger.getLogger(TestUtils.class.getName());
         logger.fine("--------------Testing port " + port);
         Socket s = null;
         try {
-            s = new Socket("localhost", port);
+            s = new Socket(hostname, port);
             // If the code makes it this far without an exception it means
             // something is using the port and has responded.
             logger.fine("--------------Redis likely running: port " + port + " is not available");

@@ -97,7 +97,7 @@ jobs:
         run: mvn package
         env:
           COSMIAN_SERVER_URL: http://kms:9998
-          REDIS_HOST: redis
+          REDIS_HOSTNAME: redis
           REDIS_PORT: 6379
           LANG: en_US.UTF-8
           LANGUAGE: en_US:en

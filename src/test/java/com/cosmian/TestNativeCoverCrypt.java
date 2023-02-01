@@ -42,10 +42,10 @@ public class TestNativeCoverCrypt {
 
     @Test
     public void testError() throws Exception {
-        assertEquals("", coverCrypt.get_last_error());
+        assertEquals("", CoverCrypt.get_last_error());
         String error = "An Error";
         coverCrypt.set_error(error);
-        assertEquals("FFI error: " + error, coverCrypt.get_last_error());
+        assertEquals("FFI error: " + error, CoverCrypt.get_last_error());
         String base = "0123456789";
         String s = "";
         for (int i = 0; i < 110; i++) {
@@ -54,7 +54,7 @@ public class TestNativeCoverCrypt {
         assertEquals(1100, s.length());
         coverCrypt.set_error(s);
         try {
-            coverCrypt.get_last_error(1024);
+            CoverCrypt.get_last_error(1024);
         } catch (Exception ex) {
             ex.getMessage().contains("Failed retrieving the last error");
         }
@@ -79,11 +79,11 @@ public class TestNativeCoverCrypt {
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // Generate an user decryption key
         String accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = coverCrypt.generateUserPrivateKey(
+        byte[] userDecryptionKey = CoverCrypt.generateUserPrivateKey(
             masterKeys.getPrivateKey(),
             accessPolicy,
             policy);
@@ -93,21 +93,15 @@ public class TestNativeCoverCrypt {
 
         // Now generate the header which contains the ABE encryption of the randomly
         // generated AES key.
-        EncryptedHeader encryptedHeader = coverCrypt.encryptHeader(
-            policy,
-            masterKeys.getPublicKey(),
-            encryptionPolicy,
-            Optional.empty(),
-            Optional.empty());
+        EncryptedHeader encryptedHeader = CoverCrypt.encryptHeader(policy, masterKeys.getPublicKey(), encryptionPolicy);
 
         System.out.println("USER KEY SIZE: " + userDecryptionKey.length);
         System.out.println("HEADER BYTES SIZE: " + encryptedHeader.getEncryptedHeaderBytes().length);
         System.out.println("SYMMETRIC KEY SIZE: " + encryptedHeader.getSymmetricKey().length);
 
         // Decrypt the header to recover the symmetric AES key
-        DecryptedHeader decryptedHeader = coverCrypt.decryptHeader(
-            userDecryptionKey,
-            encryptedHeader.getEncryptedHeaderBytes());
+        DecryptedHeader decryptedHeader =
+            CoverCrypt.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(), Optional.empty());
 
         assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
     }
@@ -125,11 +119,11 @@ public class TestNativeCoverCrypt {
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // Generate an user decryption key
         String accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = coverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
+        byte[] userDecryptionKey = CoverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy, policy);
 
         // Rotate attributes
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
@@ -137,19 +131,16 @@ public class TestNativeCoverCrypt {
         policy.rotateAttributes(attributes);
 
         // Must refresh the master keys after an attributes rotation
-        masterKeys = coverCrypt.generateMasterKeys(policy);
+        masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // Now generate the header which contains the ABE encryption of the randomly
         // generated AES key.
-        EncryptedHeader encryptedHeader = coverCrypt.encryptHeader(
-            policy,
-            masterKeys.getPublicKey(),
-            encryptionPolicy);
+        EncryptedHeader encryptedHeader = CoverCrypt.encryptHeader(policy, masterKeys.getPublicKey(), encryptionPolicy);
 
         // Decrypt the header to recover the symmetric AES key
         // Should fail since user decryption key has not been refreshed
         try {
-            coverCrypt.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes());
+            CoverCrypt.decryptHeader(userDecryptionKey, encryptedHeader.getEncryptedHeaderBytes(), Optional.empty());
         } catch (Exception ex) {
             System.out.println(
                 "As expected, user cannot be decrypt CoverCrypt Header since his user decryption key has not been refreshed: "
@@ -157,13 +148,12 @@ public class TestNativeCoverCrypt {
         }
 
         // Generate an user decryption key
-        byte[] userDecryptionKeyRefreshed = coverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy,
+        byte[] userDecryptionKeyRefreshed = CoverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy,
             policy);
 
         // Decrypt the header to recover the symmetric AES key
-        DecryptedHeader decryptedHeader = coverCrypt.decryptHeader(
-            userDecryptionKeyRefreshed,
-            encryptedHeader.getEncryptedHeaderBytes());
+        DecryptedHeader decryptedHeader = CoverCrypt.decryptHeader(userDecryptionKeyRefreshed,
+            encryptedHeader.getEncryptedHeaderBytes(), Optional.empty());
 
         assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
     }
@@ -184,7 +174,7 @@ public class TestNativeCoverCrypt {
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // A unique ID associated with this message. The unique id is used to
         // authenticate the message in the AES encryption scheme.
@@ -198,7 +188,8 @@ public class TestNativeCoverCrypt {
 
         // now hybrid encrypt the data using the uid as authentication in the symmetric
         // cipher
-        byte[] ciphertext = coverCrypt.encrypt(policy, masterKeys.getPublicKey(), encryptionPolicy, plaintext, uid);
+        byte[] ciphertext = CoverCrypt.encrypt(policy, masterKeys.getPublicKey(), encryptionPolicy, plaintext,
+            Optional.of(uid), Optional.empty());
 
         //
         // Decryption
@@ -206,14 +197,14 @@ public class TestNativeCoverCrypt {
 
         // Generate an user decryption key
         String accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = coverCrypt.generateUserPrivateKey(
+        byte[] userDecryptionKey = CoverCrypt.generateUserPrivateKey(
             masterKeys.getPrivateKey(),
             accessPolicy,
             policy);
 
         // decrypt the ciphertext using the uid as authentication in the symmetric
         // cipher
-        DecryptedData res = coverCrypt.decrypt(userDecryptionKey, ciphertext, uid);
+        DecryptedData res = CoverCrypt.decrypt(userDecryptionKey, ciphertext, Optional.of(uid));
 
         // Verify everything is correct
         assertTrue(Arrays.equals(plaintext, res.getPlaintext()));
@@ -237,7 +228,7 @@ public class TestNativeCoverCrypt {
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // A unique ID associated with this message. The unique id is used to
         // authenticate the message in the AES encryption scheme.
@@ -251,8 +242,8 @@ public class TestNativeCoverCrypt {
 
         // now hybrid encrypt the data using the uid as authentication in the symmetric
         // cipher
-        byte[] ciphertext = coverCrypt.encrypt(policy, masterKeys.getPublicKey(), encryptionPolicy, data,
-            uid, headerMetadata);
+        byte[] ciphertext = CoverCrypt.encrypt(policy, masterKeys.getPublicKey(), encryptionPolicy, data,
+            Optional.of(uid), Optional.of(headerMetadata));
 
         //
         // Decryption
@@ -260,14 +251,14 @@ public class TestNativeCoverCrypt {
 
         // Generate an user decryption key
         String accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = coverCrypt.generateUserPrivateKey(
+        byte[] userDecryptionKey = CoverCrypt.generateUserPrivateKey(
             masterKeys.getPrivateKey(),
             accessPolicy,
             policy);
 
         // decrypt the ciphertext using the uid as authentication in the symmetric
         // cipher
-        DecryptedData res = coverCrypt.decrypt(userDecryptionKey, ciphertext, uid);
+        DecryptedData res = CoverCrypt.decrypt(userDecryptionKey, ciphertext, Optional.of(uid));
 
         // Verify everything is correct
         assertTrue(Arrays.equals(data, res.getPlaintext()));
@@ -334,7 +325,8 @@ public class TestNativeCoverCrypt {
         // The encryption policy attributes that will be used to encrypt the content.
         // Attributes must exist in the policy associated with the Public Key
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-        byte[] ciphertext = coverCrypt.encrypt(policy, publicKey.bytes(), encryptionPolicy, plaintext, uid);
+        byte[] ciphertext = CoverCrypt.encrypt(policy, publicKey.bytes(), encryptionPolicy, plaintext, Optional.of(uid),
+            Optional.empty());
 
         //
         // Local Decryption
@@ -343,7 +335,7 @@ public class TestNativeCoverCrypt {
         System.out.println("Local Decryption");
 
         PrivateKey userKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userKeyId);
-        DecryptedData res = coverCrypt.decrypt(userKey.bytes(), ciphertext, uid);
+        DecryptedData res = CoverCrypt.decrypt(userKey.bytes(), ciphertext, Optional.of(uid));
         assertArrayEquals(plaintext, res.getPlaintext());
         assertArrayEquals(new byte[] {}, res.getHeaderMetaData());
 
@@ -413,7 +405,7 @@ public class TestNativeCoverCrypt {
         //
 
         PrivateKey userKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userKeyId);
-        DecryptedData res = coverCrypt.decrypt(userKey.bytes(), ciphertext, uid);
+        DecryptedData res = CoverCrypt.decrypt(userKey.bytes(), ciphertext, Optional.of(uid));
         assertArrayEquals(plaintext, res.getPlaintext());
         assertArrayEquals(new byte[] {}, res.getHeaderMetaData());
 
@@ -426,133 +418,120 @@ public class TestNativeCoverCrypt {
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // create encryption cache
-        int encryptionCacheHandle = coverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
+        int encryptionCacheHandle = CoverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
 
         // encrypt
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-        byte[] uid = new byte[] {1, 2, 3, 4, 5};
-        byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
+        byte[] headerMetadata = new byte[] {1, 2, 3, 4, 5};
+        byte[] authenticationData = new byte[] {6, 7, 8, 9, 10};
 
-        EncryptedHeader encryptedHeader = coverCrypt.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy,
-            Optional.of(uid), Optional.of(additional_data));
+        EncryptedHeader encryptedHeader =
+            CoverCrypt.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy, headerMetadata,
+                authenticationData);
 
-        coverCrypt.destroyEncryptionCache(encryptionCacheHandle);
+        CoverCrypt.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
         // Generate an user decryption key
         String accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = coverCrypt.generateUserPrivateKey(
+        byte[] userDecryptionKey = CoverCrypt.generateUserPrivateKey(
             masterKeys.getPrivateKey(),
             accessPolicy,
             policy);
 
-        int decryptionCacheHandle = coverCrypt.createDecryptionCache(userDecryptionKey);
+        int decryptionCacheHandle = CoverCrypt.createDecryptionCache(userDecryptionKey);
 
-        DecryptedHeader decryptedHeader = coverCrypt.decryptHeaderUsingCache(decryptionCacheHandle,
-            encryptedHeader.getEncryptedHeaderBytes(), 10,
-            Optional.of(uid));
+        DecryptedHeader decryptedHeader = CoverCrypt.decryptHeaderUsingCache(decryptionCacheHandle,
+            encryptedHeader.getEncryptedHeaderBytes(), Optional.of(headerMetadata));
 
-        coverCrypt.destroyDecryptionCache(decryptionCacheHandle);
+        CoverCrypt.destroyDecryptionCache(decryptionCacheHandle);
 
         // assert
-
         assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
-        assertArrayEquals(uid, decryptedHeader.getUid());
-        assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
+        assertArrayEquals(authenticationData, decryptedHeader.getAdditionalData());
     }
 
     @Test
-    public void testHybridEncryptionDecryptionUsingCacheLocalNoUid() throws Exception {
+    public void testHybridEncryptionDecryptionUsingCacheLocalNoAuthenticatedData() throws Exception {
 
         // Declare the CoverCrypt Policy
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // create encryption cache
-        int encryptionCacheHandle = coverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
+        int encryptionCacheHandle = CoverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
 
         // encrypt
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-        byte[] uid = new byte[] {1, 2, 3, 4, 5};
+        byte[] headerMetadata = new byte[] {1, 2, 3, 4, 5};
 
-        EncryptedHeader encryptedHeader = coverCrypt.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy,
-            Optional.of(uid), Optional.empty());
+        EncryptedHeader encryptedHeader =
+            CoverCrypt.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy, headerMetadata);
 
-        coverCrypt.destroyEncryptionCache(encryptionCacheHandle);
+        CoverCrypt.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
         // Generate an user decryption key
         String accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = coverCrypt.generateUserPrivateKey(
+        byte[] userDecryptionKey = CoverCrypt.generateUserPrivateKey(
             masterKeys.getPrivateKey(),
             accessPolicy,
             policy);
 
-        int decryptionCacheHandle = coverCrypt.createDecryptionCache(userDecryptionKey);
+        int decryptionCacheHandle = CoverCrypt.createDecryptionCache(userDecryptionKey);
 
-        DecryptedHeader decryptedHeader = coverCrypt.decryptHeaderUsingCache(decryptionCacheHandle,
-            encryptedHeader.getEncryptedHeaderBytes(), 10,
-            Optional.of(uid));
+        DecryptedHeader decryptedHeader = CoverCrypt.decryptHeaderUsingCache(decryptionCacheHandle,
+            encryptedHeader.getEncryptedHeaderBytes(), Optional.of(headerMetadata));
 
-        coverCrypt.destroyDecryptionCache(decryptionCacheHandle);
+        CoverCrypt.destroyDecryptionCache(decryptionCacheHandle);
 
         // assert
 
         assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
-        assertArrayEquals(uid, decryptedHeader.getUid());
         assertArrayEquals(new byte[] {}, decryptedHeader.getAdditionalData());
     }
 
     @Test
-    public void testHybridEncryptionDecryptionUsingCacheLocalUidNoData() throws Exception {
+    public void testHybridEncryptionDecryptionUsingCacheLocalNoHeaderMetadataNoAuthenticationData() throws Exception {
 
         // Declare the CoverCrypt Policy
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // create encryption cache
-        int encryptionCacheHandle = coverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
+        int encryptionCacheHandle = CoverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
 
         // encrypt
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-        byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
-
-        EncryptedHeader encryptedHeader = coverCrypt.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy,
-            Optional.empty(), Optional.of(additional_data));
-
-        coverCrypt.destroyEncryptionCache(encryptionCacheHandle);
+        EncryptedHeader encryptedHeader = CoverCrypt.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy);
+        CoverCrypt.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
-
         // Generate an user decryption key
         String accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = coverCrypt.generateUserPrivateKey(
+        byte[] userDecryptionKey = CoverCrypt.generateUserPrivateKey(
             masterKeys.getPrivateKey(),
             accessPolicy,
             policy);
 
-        int decryptionCacheHandle = coverCrypt.createDecryptionCache(userDecryptionKey);
+        int decryptionCacheHandle = CoverCrypt.createDecryptionCache(userDecryptionKey);
 
-        DecryptedHeader decryptedHeader = coverCrypt.decryptHeaderUsingCache(decryptionCacheHandle,
-            encryptedHeader.getEncryptedHeaderBytes(), 10,
-            Optional.empty());
+        DecryptedHeader decryptedHeader = CoverCrypt.decryptHeaderUsingCache(decryptionCacheHandle,
+            encryptedHeader.getEncryptedHeaderBytes(), Optional.empty());
 
-        coverCrypt.destroyDecryptionCache(decryptionCacheHandle);
+        CoverCrypt.destroyDecryptionCache(decryptionCacheHandle);
 
         // assert
-
         assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
-        assertArrayEquals(new byte[] {}, decryptedHeader.getUid());
-        assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
     }
 
     @Test
@@ -562,39 +541,35 @@ public class TestNativeCoverCrypt {
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // create encryption cache
-        int encryptionCacheHandle = coverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
+        int encryptionCacheHandle = CoverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
 
         // encrypt
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-
-        EncryptedHeader encryptedHeader = coverCrypt.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy);
-
-        coverCrypt.destroyEncryptionCache(encryptionCacheHandle);
+        EncryptedHeader encryptedHeader = CoverCrypt.encryptHeaderUsingCache(encryptionCacheHandle, encryptionPolicy);
+        CoverCrypt.destroyEncryptionCache(encryptionCacheHandle);
 
         // decrypt
 
         // Generate an user decryption key
         String accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = coverCrypt.generateUserPrivateKey(
+        byte[] userDecryptionKey = CoverCrypt.generateUserPrivateKey(
             masterKeys.getPrivateKey(),
             accessPolicy,
             policy);
 
-        int decryptionCacheHandle = coverCrypt.createDecryptionCache(userDecryptionKey);
+        int decryptionCacheHandle = CoverCrypt.createDecryptionCache(userDecryptionKey);
 
-        DecryptedHeader decryptedHeader = coverCrypt.decryptHeaderUsingCache(decryptionCacheHandle,
-            encryptedHeader.getEncryptedHeaderBytes(), 10,
-            Optional.empty());
+        DecryptedHeader decryptedHeader = CoverCrypt.decryptHeaderUsingCache(decryptionCacheHandle,
+            encryptedHeader.getEncryptedHeaderBytes(), Optional.empty());
 
-        coverCrypt.destroyDecryptionCache(decryptionCacheHandle);
+        CoverCrypt.destroyDecryptionCache(decryptionCacheHandle);
 
         // assert
 
         assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
-        assertArrayEquals(new byte[] {}, decryptedHeader.getUid());
         assertArrayEquals(new byte[] {}, decryptedHeader.getAdditionalData());
     }
 
@@ -605,25 +580,25 @@ public class TestNativeCoverCrypt {
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // create encryption cache
-        int encryptionCache = coverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
+        int encryptionCache = CoverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
 
         // encrypt
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-        byte[] uid = new byte[] {1, 2, 3, 4, 5};
-        byte[] additional_data = new byte[] {6, 7, 8, 9, 10};
+        byte[] headerMetadata = new byte[] {1, 2, 3, 4, 5};
+        byte[] authenticationData = new byte[] {6, 7, 8, 9, 10};
 
         // Generate an user decryption key
         String accessPolicy = accessPolicyConfidential();
-        byte[] userDecryptionKey = coverCrypt.generateUserPrivateKey(
+        byte[] userDecryptionKey = CoverCrypt.generateUserPrivateKey(
             masterKeys.getPrivateKey(),
             accessPolicy,
             policy);
 
         // serialize decryption cache
-        int decryptionCache = coverCrypt.createDecryptionCache(userDecryptionKey);
+        int decryptionCache = CoverCrypt.createDecryptionCache(userDecryptionKey);
 
         int threads = 4;
         ExecutorService executor = Executors.newFixedThreadPool(threads);
@@ -636,17 +611,14 @@ public class TestNativeCoverCrypt {
                 EncryptedHeader encryptedHeader;
                 DecryptedHeader decryptedHeader;
                 try {
-
-                    encryptedHeader = coverCrypt.encryptHeaderUsingCache(encryptionCache, encryptionPolicy,
-                        Optional.of(uid),
-                        Optional.of(additional_data));
-                    decryptedHeader = coverCrypt.decryptHeaderUsingCache(decryptionCache,
-                        encryptedHeader.getEncryptedHeaderBytes(), 10,
-                        Optional.of(uid));
+                    encryptedHeader =
+                        CoverCrypt.encryptHeaderUsingCache(encryptionCache, encryptionPolicy, headerMetadata,
+                            authenticationData);
+                    decryptedHeader = CoverCrypt.decryptHeaderUsingCache(decryptionCache,
+                        encryptedHeader.getEncryptedHeaderBytes(), Optional.of(headerMetadata));
 
                     assertArrayEquals(encryptedHeader.getSymmetricKey(), decryptedHeader.getSymmetricKey());
-                    assertArrayEquals(uid, decryptedHeader.getUid());
-                    assertArrayEquals(additional_data, decryptedHeader.getAdditionalData());
+                    assertArrayEquals(authenticationData, decryptedHeader.getAdditionalData());
 
                     System.out.println("Thread name " + threadName + " OK");
                 } catch (Throwable e) {
@@ -670,8 +642,8 @@ public class TestNativeCoverCrypt {
             System.out.println("shutdown finished");
         }
 
-        coverCrypt.destroyEncryptionCache(encryptionCache);
-        coverCrypt.destroyDecryptionCache(decryptionCache);
+        CoverCrypt.destroyEncryptionCache(encryptionCache);
+        CoverCrypt.destroyDecryptionCache(decryptionCache);
 
     }
 

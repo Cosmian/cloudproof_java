@@ -3,6 +3,7 @@ package com.cosmian.cover_crypt;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import com.cosmian.jna.covercrypt.CoverCrypt;
 import com.cosmian.rest.abe.data.DecryptedData;
@@ -29,7 +30,7 @@ public class EncryptionTestVector {
     private byte[] authenticationData;
 
     public void decrypt(byte[] key) throws CloudproofException {
-        DecryptedData res = coverCrypt.decrypt(key, ciphertext, authenticationData);
+        DecryptedData res = CoverCrypt.decrypt(key, ciphertext, Optional.of(authenticationData));
 
         // Verify everything is correct
         assertTrue(Arrays.equals(this.plaintext, res.getPlaintext()));
@@ -46,10 +47,8 @@ public class EncryptionTestVector {
 
         EncryptionTestVector out = new EncryptionTestVector();
         out.plaintext = plaintext.getBytes();
-        out.ciphertext = coverCrypt.encrypt(policy, publicKey,
-            encryptionPolicy,
-            out.plaintext,
-            authenticationData, headerMetadata);
+        out.ciphertext = CoverCrypt.encrypt(policy, publicKey, encryptionPolicy, out.plaintext,
+            Optional.of(authenticationData), Optional.of(headerMetadata));
         out.headerMetadata = headerMetadata;
         out.authenticationData = authenticationData;
         out.encryptionPolicy = encryptionPolicy;

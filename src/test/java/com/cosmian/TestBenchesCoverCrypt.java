@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -29,15 +30,15 @@ public class TestBenchesCoverCrypt {
 
     private Policy policy() throws CloudproofException {
         PolicyAxis security = new PolicyAxis("Security Level",
-                new PolicyAxisAttribute[] { new PolicyAxisAttribute("Protected", false),
-                        new PolicyAxisAttribute("Confidential", false), new PolicyAxisAttribute("Top Secret", false) },
-                true);
+            new PolicyAxisAttribute[] {new PolicyAxisAttribute("Protected", false),
+                new PolicyAxisAttribute("Confidential", false), new PolicyAxisAttribute("Top Secret", false)},
+            true);
         PolicyAxis departments = new PolicyAxis("Department",
-                new PolicyAxisAttribute[] {
-                        new PolicyAxisAttribute("FIN", false), new PolicyAxisAttribute("MKG", false),
-                        new PolicyAxisAttribute("HR", false), new PolicyAxisAttribute("R&D", false),
-                        new PolicyAxisAttribute("CYBER", false) },
-                false);
+            new PolicyAxisAttribute[] {
+                new PolicyAxisAttribute("FIN", false), new PolicyAxisAttribute("MKG", false),
+                new PolicyAxisAttribute("HR", false), new PolicyAxisAttribute("R&D", false),
+                new PolicyAxisAttribute("CYBER", false)},
+            false);
 
         Policy policy = new Policy(30);
 
@@ -52,27 +53,27 @@ public class TestBenchesCoverCrypt {
 
     private String[] accessPolicies() throws CloudproofException {
         return new String[] {
-                "Department::FIN && Security Level::Protected",
-                "(Department::FIN && Department::MKG) && Security Level::Protected",
-                "(Department::FIN && Department::MKG && Department::HR) && Security Level::Protected",
-                "(Department::R&D && Department::FIN && Department::MKG && Department::HR) && Security Level::Protected",
-                "(Department::R&D && Department::FIN && Department::MKG && Department::HR && Department::CYBER) && Security Level::Protected"
+            "Department::FIN && Security Level::Protected",
+            "(Department::FIN && Department::MKG) && Security Level::Protected",
+            "(Department::FIN && Department::MKG && Department::HR) && Security Level::Protected",
+            "(Department::R&D && Department::FIN && Department::MKG && Department::HR) && Security Level::Protected",
+            "(Department::R&D && Department::FIN && Department::MKG && Department::HR && Department::CYBER) && Security Level::Protected"
         };
     }
 
     private byte[][] generateUserDecryptionKeys(byte[] msk,
-            Policy policy)
-            throws CloudproofException {
+                                                Policy policy)
+        throws CloudproofException {
         return IntStream.range(0, accessPolicies().length)
-                .mapToObj(i -> {
-                    try {
-                        return coverCrypt.generateUserPrivateKey(msk, accessPolicies()[i], policy);
-                    } catch (CloudproofException e) {
-                        e.printStackTrace();
-                        throw new RuntimeException("User decryption key generation");
-                    }
-                })
-                .toArray(byte[][]::new);
+            .mapToObj(i -> {
+                try {
+                    return CoverCrypt.generateUserPrivateKey(msk, accessPolicies()[i], policy);
+                } catch (CloudproofException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException("User decryption key generation");
+                }
+            })
+            .toArray(byte[][]::new);
     }
 
     @Test
@@ -91,59 +92,59 @@ public class TestBenchesCoverCrypt {
         // at least 1 million for CI purpose, value is 10000
         int nb_occurrences = 10000;
         for (int i = 0; i < nb_occurrences; i++) {
-            masterKeys = coverCrypt.generateMasterKeys(policy);
+            masterKeys = CoverCrypt.generateMasterKeys(policy);
         }
         long time = (System.nanoTime() - start);
         System.out.println("CoverCrypt Master Key generation average time: " + time /
-                nb_occurrences + "ns (or "
-                + time / 1000 / nb_occurrences + "µs)");
+            nb_occurrences + "ns (or "
+            + time / 1000 / nb_occurrences + "µs)");
 
         String accessPolicy = accessPolicyConfidential();
         start = System.nanoTime();
         for (int i = 0; i < nb_occurrences; i++) {
-            coverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy,
-                    policy);
+            CoverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy,
+                policy);
         }
         time = (System.nanoTime() - start);
         System.out.println("CoverCrypt User Private Key generation average time: " +
-                time / nb_occurrences + "ns (or "
-                + time / 1000 / nb_occurrences + "µs)");
+            time / nb_occurrences + "ns (or "
+            + time / 1000 / nb_occurrences + "µs)");
     }
 
     byte[] encryptionTime(byte[] plaintext,
-            Policy policy,
-            MasterKeys masterKeys,
-            byte[] uid,
-            String accessPolicy)
-            throws NoSuchAlgorithmException, CloudproofException {
+                          Policy policy,
+                          MasterKeys masterKeys,
+                          byte[] uid,
+                          String accessPolicy)
+        throws NoSuchAlgorithmException, CloudproofException {
         // The data we want to encrypt/decrypt
         byte[] ciphertext = new byte[0];
         int nb_occurrences = 10000;
         long start = System.nanoTime();
         for (int i = 0; i < nb_occurrences; i++) {
-            ciphertext = coverCrypt.encrypt(policy, masterKeys.getPublicKey(), accessPolicy, plaintext, uid);
+            ciphertext = CoverCrypt.encrypt(policy, masterKeys.getPublicKey(), accessPolicy, plaintext, Optional.of(uid), Optional.empty());
         }
         long time = (System.nanoTime() - start);
         System.out.print(
-                "Encryption average time: " + time / nb_occurrences + "ns ("
-                        + time / 1000 / nb_occurrences + "µs). ");
+            "Encryption average time: " + time / nb_occurrences + "ns ("
+                + time / 1000 / nb_occurrences + "µs). ");
 
         return ciphertext;
     }
 
     byte[] decryptionTime(byte[] userDecryptionKey,
-            byte[] ciphertext,
-            byte[] uid)
-            throws CloudproofException {
+                          byte[] ciphertext,
+                          byte[] uid)
+        throws CloudproofException {
         int nb_occurrences = 10000;
         long start = System.nanoTime();
         DecryptedData res = new DecryptedData(new byte[0], new byte[0]);
         for (int i = 0; i < nb_occurrences; i++) {
-            res = coverCrypt.decrypt(userDecryptionKey, ciphertext, uid);
+            res = CoverCrypt.decrypt(userDecryptionKey, ciphertext, Optional.of(uid));
         }
         long time = (System.nanoTime() - start);
         System.out.println("Decryption average time: " + time / nb_occurrences + "ns ("
-                + time / 1000 / nb_occurrences + "µs)");
+            + time / 1000 / nb_occurrences + "µs)");
         return res.getPlaintext();
     }
 
@@ -163,11 +164,11 @@ public class TestBenchesCoverCrypt {
         Policy policy = policy();
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // Generate the user decryption keys
         byte[][] userDecryptionKeys = generateUserDecryptionKeys(masterKeys.getPrivateKey(),
-                policy);
+            policy);
 
         // A unique ID associated with this message. The unique id is used to
         // authenticate the message in the AES encryption scheme.

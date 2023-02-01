@@ -1,7 +1,6 @@
 package com.cosmian.jna.covercrypt.ffi;
 
 import com.sun.jna.Library;
-import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 /**
@@ -25,82 +24,82 @@ public interface CoverCryptWrapper extends Library {
     int h_symmetric_encryption_overhead();
 
     int h_encrypt_header(byte[] symmetricKey,
-                             IntByReference symmetricKeySize,
-                             byte[] headerBytes,
-                             IntByReference headerBytesSize,
-                             byte[] policyBytes,
-                             int policyBytesSize,
-                             Pointer publicKeyPointer,
-                             int publicKeyLength,
-                             String encryptionPolicy,
-                             Pointer additionalDataPointer,
-                             int additionalDataLen,
-                             Pointer authenticatedDataPointer,
-                             int authenticatedDataLength);
+                         IntByReference symmetricKeySize,
+                         byte[] headerBytes,
+                         IntByReference headerBytesSize,
+                         byte[] policyBytes,
+                         int policyBytesSize,
+                         byte[] publicKeyBuffer,
+                         int publicKeyLength,
+                         String encryptionPolicy,
+                         byte[] additionalDataBuffer,
+                         int additionalDataLen,
+                         byte[] authenticatedDataBuffer,
+                         int authenticatedDataLength);
 
     int h_decrypt_header(byte[] symmetricKey,
-                             IntByReference symmetricKeySize,
-                             byte[] additionalDataPointer,
-                             IntByReference additionalDataLen,
-                             Pointer encryptedHeaderBytes,
-                             int encryptedHeaderBytesSize,
-                             Pointer authenticatedDataPointer,
-                             int authenticatedDataLength,
-                             Pointer userDecryptionKeyPointer,
-                             int userDecryptionKeyLength);
+                         IntByReference symmetricKeySize,
+                         byte[] additionalDataBuffer,
+                         IntByReference additionalDataLen,
+                         byte[] encryptedHeaderBytes,
+                         int encryptedHeaderBytesSize,
+                         byte[] authenticatedDataBuffer,
+                         int authenticatedDataLength,
+                         byte[] userDecryptionKeyBuffer,
+                         int userDecryptionKeyLength);
 
     int h_dem_encrypt(byte[] encrypted,
-                            IntByReference encryptedSize,
-                            Pointer symmetricKeyPointer,
-                            int symmetricKeyLength,
-                            Pointer associatedDatePointer,
-                            int associatedDateLen,
-                            Pointer dataPointer,
-                            int dataLength);
+                      IntByReference encryptedSize,
+                      byte[] symmetricKeyBuffer,
+                      int symmetricKeyLength,
+                      byte[] associatedDateBuffer,
+                      int associatedDateLen,
+                      byte[] dataBuffer,
+                      int dataLength);
 
     int h_dem_decrypt(byte[] clearText,
-                            IntByReference clearTextSize,
-                            Pointer symmetricKeyPointer,
-                            int symmetricKeyLength,
-                            Pointer authenticationDataPointer,
-                            int authenticationDataLen,
-                            Pointer clearTextPointer,
-                            int clearTextLength);
+                      IntByReference clearTextSize,
+                      byte[] symmetricKeyBuffer,
+                      int symmetricKeyLength,
+                      byte[] authenticationDataBuffer,
+                      int authenticationDataLen,
+                      byte[] clearTextBuffer,
+                      int clearTextLength);
 
     int h_create_encryption_cache(IntByReference cacheHandle,
                                   byte[] policyBytes,
                                   int policyBytesSize,
-                                      Pointer publicKeyPointer,
-                                      int publicKeyLength);
+                                  byte[] publicKeyBuffer,
+                                  int publicKeyLength);
 
     int h_destroy_encryption_cache(int cacheHandle);
 
     int h_encrypt_header_using_cache(byte[] symmetricKey,
-                                         IntByReference symmetricKeySize,
-                                         byte[] headerBytes,
-                                         IntByReference headerBytesSize,
-                                         int cacheHandle,
-                                         String encryptionPolicy,
-                                         Pointer additionalDataPointer,
-                                         int additionalDataLength,
-                                         Pointer authenticatedPointer,
-                                         int authenticatedLen);
+                                     IntByReference symmetricKeySize,
+                                     byte[] headerBytes,
+                                     IntByReference headerBytesSize,
+                                     int cacheHandle,
+                                     String encryptionPolicy,
+                                     byte[] additionalDataBuffer,
+                                     int additionalDataLength,
+                                     byte[] authenticatedBuffer,
+                                     int authenticatedLen);
 
     int h_create_decryption_cache(IntByReference cacheHandle,
-                                      Pointer userDecryptionKeyPointer,
-                                      int userDecryptionKeyLength);
+                                  byte[] userDecryptionKeyBuffer,
+                                  int userDecryptionKeyLength);
 
     int h_destroy_decryption_cache(int cacheHandle);
 
     int h_decrypt_header_using_cache(byte[] symmetricKey,
-                                         IntByReference symmetricKeySize,
-                                         byte[] additionalDataPointer,
-                                         IntByReference additionalDataLen,
-                                         Pointer encryptedHeaderBytes,
-                                         int encryptedHeaderBytesSize,
-                                         Pointer authenticatedDataPointer,
-                                         int authenticatedDataLength,
-                                         int cacheHandle);
+                                     IntByReference symmetricKeySize,
+                                     byte[] additionalDataBuffer,
+                                     IntByReference additionalDataLen,
+                                     byte[] encryptedHeaderBytes,
+                                     int encryptedHeaderBytesSize,
+                                     byte[] authenticatedDataBuffer,
+                                     int authenticatedDataLength,
+                                     int cacheHandle);
 
     int h_generate_master_keys(byte[] masterPrivateKeyBuffer,
                                IntByReference masterPrivateKeyBufferSize,
@@ -111,36 +110,36 @@ public interface CoverCryptWrapper extends Library {
 
     int h_generate_user_secret_key(byte[] userPrivateKeyPtr,
                                    IntByReference userPrivateKeySize,
-                                   Pointer masterPrivateKeyPtr,
+                                   byte[] masterPrivateKeyPtr,
                                    int masterPrivateKeyLen,
                                    String userPolicy,
                                    byte[] policyBytes,
                                    int policyBytesSize);
 
     int h_hybrid_encrypt(byte[] ciphertext,
-                      IntByReference ciphertextSize,
-                      byte[] policyBytes,
-                      int policyBytesSize,
-                      Pointer publicKeyPointer,
-                      int publicKeyLength,
-                      String encryptionPolicy,
-                      Pointer plaintextPointer,
-                      int plaintextLen,
-                      Pointer additionalDataPointer,
-                      int additionalDataLen,
-                      Pointer authenticatedDataPointer,
-                      int authenticatedDataLength);
+                         IntByReference ciphertextSize,
+                         byte[] policyBytes,
+                         int policyBytesSize,
+                         byte[] publicKeyBuffer,
+                         int publicKeyLength,
+                         String encryptionBuffer,
+                         byte[] plaintextBuffer,
+                         int plaintextLen,
+                         byte[] additionalDataBuffer,
+                         int additionalDataLen,
+                         byte[] authenticatedDataBuffer,
+                         int authenticatedDataLength);
 
     int h_hybrid_decrypt(byte[] plaintext,
-                      IntByReference plaintextSize,
-                      byte[] additionalData,
-                      IntByReference additionalDataSize,
-                      Pointer ciphertextBytes,
-                      int ciphertextBytesSize,
-                      Pointer authenticatedDataPointer,
-                      int authenticatedDataLength,
-                      Pointer userDecryptionKeyPointer,
-                      int userDecryptionKeyLength);
+                         IntByReference plaintextSize,
+                         byte[] additionalData,
+                         IntByReference additionalDataSize,
+                         byte[] ciphertextBytes,
+                         int ciphertextBytesSize,
+                         byte[] authenticatedDataBuffer,
+                         int authenticatedDataLength,
+                         byte[] userDecryptionKeyBuffer,
+                         int userDecryptionKeyLength);
 
     //
     // Policy APIs

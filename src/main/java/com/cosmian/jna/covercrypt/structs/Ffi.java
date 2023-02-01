@@ -20,7 +20,7 @@ public class Ffi {
      * @return the result if it is different from 1
      * @throws CloudproofException in case of native library error (result is 1)
      */
-    public int unwrap(int result) throws CloudproofException {
+    public static int unwrap(int result) throws CloudproofException {
         if (result != 0) {
             throw new CloudproofException(get_last_error(4096));
         }
@@ -33,7 +33,7 @@ public class Ffi {
      * @return the last error recorded by the native library
      * @throws CloudproofException in case of native library error
      */
-    public String get_last_error() throws CloudproofException {
+    public static String get_last_error() throws CloudproofException {
         return get_last_error(1024);
     }
 
@@ -44,7 +44,7 @@ public class Ffi {
      * @throws CloudproofException in case of native library error
      * @return the error
      */
-    public String get_last_error(int max_len) throws CloudproofException {
+    public static String get_last_error(int max_len) throws CloudproofException {
         if (max_len < 1) {
             throw new CloudproofException("get_last_error: max_len must be at least one");
         }

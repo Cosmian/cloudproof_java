@@ -1,7 +1,6 @@
 package com.cosmian.rest.kmip.data_structures;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import com.cosmian.rest.kmip.json.KmipStruct;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -46,7 +45,7 @@ public class TransparentSymmetricKey implements KmipStruct {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(key);
+        return Arrays.hashCode(key);
     }
 
     @Override

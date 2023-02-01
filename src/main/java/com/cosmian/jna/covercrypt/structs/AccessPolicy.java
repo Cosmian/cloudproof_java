@@ -1,5 +1,7 @@
 package com.cosmian.jna.covercrypt.structs;
 
+import java.nio.charset.StandardCharsets;
+
 import com.cosmian.rest.kmip.types.VendorAttribute;
 import com.cosmian.utils.CloudproofException;
 
@@ -22,6 +24,6 @@ public class AccessPolicy extends Ffi {
      * Return the UTF-8 encoding of the access policy string.
      */
     public byte[] getBytes() {
-        return _booleanExpression.getBytes();
+        return _booleanExpression.getBytes(StandardCharsets.UTF_8);
     }
 }

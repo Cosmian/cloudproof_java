@@ -1,6 +1,7 @@
 package com.cosmian.jna.covercrypt.structs;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class PolicyAxis implements Serializable {
@@ -52,13 +53,13 @@ public class PolicyAxis implements Serializable {
             return false;
         }
         PolicyAxis policyAxis = (PolicyAxis) o;
-        return Objects.equals(name, policyAxis.name) && Objects.equals(attributes, policyAxis.attributes)
+        return Objects.equals(name, policyAxis.name) && attributes == policyAxis.attributes
             && hierarchical == policyAxis.hierarchical;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, attributes, hierarchical);
+        return Objects.hash(name, Arrays.hashCode(attributes), hierarchical);
     }
 
     @Override

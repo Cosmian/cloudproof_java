@@ -1,7 +1,6 @@
 package com.cosmian.jna.covercrypt.structs;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import com.cosmian.rest.kmip.types.Attributes;
 import com.cosmian.rest.kmip.types.VendorAttribute;
@@ -158,6 +157,6 @@ public class Policy extends Ffi {
 
     @Override
     public int hashCode() {
-        return Objects.hash(_bytes);
+        return Arrays.hashCode(_bytes);
     }
 }

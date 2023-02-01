@@ -122,7 +122,7 @@ public class VendorAttribute implements KmipStruct {
 
     @Override
     public int hashCode() {
-        return Objects.hash(vendor_identification, attribute_name, attribute_value);
+        return Objects.hash(vendor_identification, attribute_name, Arrays.hashCode(attribute_value));
     }
 
     @Override

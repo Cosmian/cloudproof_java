@@ -48,33 +48,40 @@ In addition, please have a look at the following tests for implementation exampl
 
 ## Benchmarks
 
-The following benchmarks are obtained using an Intel(R) Core(TM) i5-6200U CPU @
-2.30GHz:
+The following benchmarks are obtained using an Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz.
 
 ```
 -----------------------------------------------------
  Benches CoverCrypt Encryption/Decryption With Cache
 -----------------------------------------------------
 
-
 Classic encryption
 ==================
 
-Number of partitions: 1: Encrypted Header size: 131. Encryption average time: 313328ns (313µs). Decryption average time: 263773ns (263µs)
-Number of partitions: 2: Encrypted Header size: 164. Encryption average time: 413057ns (413µs). Decryption average time: 347139ns (347µs)
-Number of partitions: 3: Encrypted Header size: 197. Encryption average time: 563070ns (563µs). Decryption average time: 472140ns (472µs)
-Number of partitions: 4: Encrypted Header size: 230. Encryption average time: 623080ns (623µs). Decryption average time: 587180ns (587µs)
-Number of partitions: 5: Encrypted Header size: 263. Encryption average time: 697873ns (697µs). Decryption average time: 736017ns (736µs)
+Number of partitions: 1: Encrypted Header size: 131. Encryption average time: 262971ns (262µs). Decryption average time: 221256ns (221µs)
+Number of partitions: 2: Encrypted Header size: 164. Encryption average time: 347328ns (347µs). Decryption average time: 257798ns (257µs)
+Number of partitions: 3: Encrypted Header size: 197. Encryption average time: 431084ns (431µs). Decryption average time: 411985ns (411µs)
+Number of partitions: 4: Encrypted Header size: 230. Encryption average time: 513750ns (513µs). Decryption average time: 473802ns (473µs)
+Number of partitions: 5: Encrypted Header size: 263. Encryption average time: 599409ns (599µs). Decryption average time: 536418ns (536µs)
 
 Hrybridized encryption
 ======================
 
-Number of partitions: 1: Encrypted Header size: 1187. Encryption average time: 374655ns (374µs). Decryption average time: 268278ns (268µs)
-Number of partitions: 2: Encrypted Header size: 2276. Encryption average time: 534487ns (534µs). Decryption average time: 315069ns (315µs)
-Number of partitions: 3: Encrypted Header size: 3365. Encryption average time: 730085ns (730µs). Decryption average time: 376721ns (376µs)
-Number of partitions: 4: Encrypted Header size: 4454. Encryption average time: 870906ns (870µs). Decryption average time: 415766ns (415µs)
-Number of partitions: 5: Encrypted Header size: 5543. Encryption average time: 1048326ns (1048µs). Decryption average time: 462689ns (462µs)
+Number of partitions: 1: Encrypted Header size: 1187. Encryption average time: 320732ns (320µs). Decryption average time: 232779ns (232µs)
+Number of partitions: 2: Encrypted Header size: 2276. Encryption average time: 467049ns (467µs). Decryption average time: 273931ns (273µs)
+Number of partitions: 3: Encrypted Header size: 3365. Encryption average time: 611346ns (611µs). Decryption average time: 315654ns (315µs)
+Number of partitions: 4: Encrypted Header size: 4454. Encryption average time: 754446ns (754µs). Decryption average time: 358415ns (358µs)
+Number of partitions: 5: Encrypted Header size: 5543. Encryption average time: 900514ns (900µs). Decryption average time: 400720ns (400µs)
 ```
+
+The version without using the cache adds the deserialization time for the
+policy and public key during the encryption process, and the user decryption
+key during the decryption process. This time may vary depending on the size of
+these objects.
+
+In the case of the above benchmark, deserializing the policy and the public key
+takes about 200µs for sizes of 1037 and 18935 bytes respectively (the public
+key is half hybridized).
 
 ## Versions Correspondence
 

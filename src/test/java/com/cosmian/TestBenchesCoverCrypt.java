@@ -109,17 +109,25 @@ public class TestBenchesCoverCrypt {
             masterKeys = CoverCrypt.generateMasterKeys(policy);
         }
         long time = (System.nanoTime() - start);
+
+        System.out.println("CoverCrypt Policy size: " + policy.getBytes().length + " bytes");
+        System.out.println("CoverCrypt Public Key size: " + masterKeys.getPublicKey().length + " bytes");
+
         System.out.println("CoverCrypt Master Key generation average time: " + time /
             nb_occurrences + "ns (or "
             + time / 1000 / nb_occurrences + "µs)");
 
         String accessPolicy = accessPolicyConfidential();
+        byte[] userPrivateKey = new byte[0];
         start = System.nanoTime();
         for (int i = 0; i < nb_occurrences; i++) {
-            CoverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy,
+            userPrivateKey = CoverCrypt.generateUserPrivateKey(masterKeys.getPrivateKey(), accessPolicy,
                 policy);
         }
         time = (System.nanoTime() - start);
+
+        System.out.println("CoverCrypt User Private Key size: " + userPrivateKey.length + " bytes");
+
         System.out.println("CoverCrypt User Private Key generation average time: " +
             time / nb_occurrences + "ns (or "
             + time / 1000 / nb_occurrences + "µs)");

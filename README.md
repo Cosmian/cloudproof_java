@@ -10,6 +10,7 @@ Cloudproof Encryption secures data repositories and applications in the cloud wi
 
 - [Licensing](#licensing)
 - [Getting started](#getting-started)
+- [Benchmarks](#benchmarks)
 - [Versions Correspondence](#versions-correspondence)
 - [Using in Java projects](#using-in-java-projects)
   - [Download required native libraries](#download-required-native-libraries)
@@ -44,6 +45,36 @@ In addition, please have a look at the following tests for implementation exampl
 - [TestKmip](./src/test/java/com/cosmian/TestKmip.java) for using the KMIP 2.1 interface with the Cosmian KMS
 - [TestSqliteFindex](./src/test/java/com/cosmian/findex/TestSqlite.java) for using the Encrypted Search Findex scheme using Sqlite (or other SQL DBs) as a backend
 - [TestRedisFindex](./src/test/java/com/cosmian/findex/TestRedis.java) for using the Encrypted Search Findex scheme using Redis as a backend
+
+## Benchmarks
+
+The following benchmarks are obtained using an Intel(R) Core(TM) i5-6200U CPU @
+2.30GHz:
+
+```
+-----------------------------------------------------
+ Benches CoverCrypt Encryption/Decryption With Cache
+-----------------------------------------------------
+
+
+Classic encryption
+==================
+
+Number of partitions: 1: Encrypted Header size: 131. Encryption average time: 313328ns (313µs). Decryption average time: 263773ns (263µs)
+Number of partitions: 2: Encrypted Header size: 164. Encryption average time: 413057ns (413µs). Decryption average time: 347139ns (347µs)
+Number of partitions: 3: Encrypted Header size: 197. Encryption average time: 563070ns (563µs). Decryption average time: 472140ns (472µs)
+Number of partitions: 4: Encrypted Header size: 230. Encryption average time: 623080ns (623µs). Decryption average time: 587180ns (587µs)
+Number of partitions: 5: Encrypted Header size: 263. Encryption average time: 697873ns (697µs). Decryption average time: 736017ns (736µs)
+
+Hrybridized encryption
+======================
+
+Number of partitions: 1: Encrypted Header size: 1187. Encryption average time: 374655ns (374µs). Decryption average time: 268278ns (268µs)
+Number of partitions: 2: Encrypted Header size: 2276. Encryption average time: 534487ns (534µs). Decryption average time: 315069ns (315µs)
+Number of partitions: 3: Encrypted Header size: 3365. Encryption average time: 730085ns (730µs). Decryption average time: 376721ns (376µs)
+Number of partitions: 4: Encrypted Header size: 4454. Encryption average time: 870906ns (870µs). Decryption average time: 415766ns (415µs)
+Number of partitions: 5: Encrypted Header size: 5543. Encryption average time: 1048326ns (1048µs). Decryption average time: 462689ns (462µs)
+```
 
 ## Versions Correspondence
 
@@ -111,3 +142,5 @@ cargo build --release --features ffi
 ```
 
 And copy the new binaries from `target/release/<.dylib,.so,.dll>` to `cloudproof_java` FFI directory: check the right platform/architecture directory in [Download required native libraries](#download-required-native-libraries).
+
+

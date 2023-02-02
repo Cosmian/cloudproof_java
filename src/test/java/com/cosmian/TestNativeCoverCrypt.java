@@ -42,7 +42,8 @@ public class TestNativeCoverCrypt {
 
     @Test
     public void testError() throws Exception {
-        assertEquals("", CoverCrypt.get_last_error());
+        coverCrypt.set_error("");
+        assertEquals("FFI error: ", CoverCrypt.get_last_error());
         String error = "An Error";
         coverCrypt.set_error(error);
         assertEquals("FFI error: " + error, CoverCrypt.get_last_error());

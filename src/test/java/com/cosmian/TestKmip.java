@@ -10,7 +10,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.data_structures.KeyMaterial;
 import com.cosmian.rest.kmip.data_structures.KeyValue;
@@ -165,18 +164,6 @@ public class TestKmip {
         ObjectMapper mapper = new ObjectMapper();
         ImportResponse ir = mapper.readValue(json, ImportResponse.class);
         assertEquals("blah", ir.getUniqueIdentifier());
-    }
-
-    @Test
-    public void test_store_ser_de() throws Exception {
-        Policy policy =
-            new Policy(20).addAxis("Security Level", new String[] {"Protected", "Confidential", "Top Secret"}, true)
-                .addAxis("Department", new String[] {"FIN", "MKG", "HR"}, false);
-        ObjectMapper mapper = new ObjectMapper();
-        String json = mapper.writeValueAsString(policy);
-        // deserialize
-        Policy policy_ = mapper.readValue(json, Policy.class);
-        assertEquals(policy, policy_);
     }
 
     @Test

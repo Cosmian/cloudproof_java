@@ -1,5 +1,6 @@
 package com.cosmian.rest.kmip.data_structures;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.cosmian.rest.kmip.json.KmipStruct;
@@ -57,17 +58,17 @@ public class TransparentECPublicKey implements KmipStruct {
         }
         TransparentECPublicKey transparentECPublicKey = (TransparentECPublicKey) o;
         return Objects.equals(recommendedCurve, transparentECPublicKey.recommendedCurve)
-            && Objects.equals(qString, transparentECPublicKey.qString);
+            && Arrays.equals(qString, transparentECPublicKey.qString);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(recommendedCurve, qString);
+        return Objects.hash(recommendedCurve, Arrays.hashCode(qString));
     }
 
     @Override
     public String toString() {
-        return "{" + " recommendedCurve='" + getRecommendedCurve() + "'" + ", qString='" + getQString() + "'" + "}";
+        return "{" + " recommendedCurve='" + getRecommendedCurve() + "'" + ", qString='" + Arrays.toString(getQString()) + "'" + "}";
     }
 
 }

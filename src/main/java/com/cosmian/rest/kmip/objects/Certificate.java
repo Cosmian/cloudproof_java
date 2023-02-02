@@ -30,7 +30,7 @@ public class Certificate extends KmipObject {
 
     /**
      * Get the {@link CertificateType}
-     * 
+     *
      * @return the {@link CertificateType}
      */
     public CertificateType getCertificateType() {
@@ -39,7 +39,7 @@ public class Certificate extends KmipObject {
 
     /**
      * Set the {@link CertificateType}
-     * 
+     *
      * @param certificateType the type
      */
     public void setCertificateType(CertificateType certificateType) {
@@ -48,7 +48,7 @@ public class Certificate extends KmipObject {
 
     /**
      * Get the {@link Certificate} value
-     * 
+     *
      * @return the value
      */
     public byte[] getCertificateValue() {
@@ -57,7 +57,7 @@ public class Certificate extends KmipObject {
 
     /**
      * Set the {@link Certificate} value
-     * 
+     *
      * @param certificateValue the value
      */
     public void setCertificateValue(byte[] certificateValue) {
@@ -66,7 +66,7 @@ public class Certificate extends KmipObject {
 
     /**
      * Set the {@link CertificateType}
-     * 
+     *
      * @param certificateType the {@link CertificateType}
      * @return the {@link Certificate}
      */
@@ -77,7 +77,7 @@ public class Certificate extends KmipObject {
 
     /**
      * Set the {@link Certificate} value
-     * 
+     *
      * @param certificateValue the value
      * @return the {@link Certificate}
      */
@@ -100,13 +100,13 @@ public class Certificate extends KmipObject {
 
     @Override
     public int hashCode() {
-        return Objects.hash(certificateType, certificateValue);
+        return Objects.hash(certificateType, Arrays.hashCode(certificateValue));
     }
 
     @Override
     public String toString() {
-        return "{" + " certificateType='" + getCertificateType() + "'" + ", certificateValue='" + getCertificateValue()
-            + "'" + "}";
+        return "{" + " certificateType='" + getCertificateType() + "'" + ", certificateValue='"
+            + Arrays.toString(getCertificateValue()) + "'" + "}";
     }
 
     @Override
@@ -116,7 +116,7 @@ public class Certificate extends KmipObject {
 
     /**
      * Deserialize an instance from its Json representation obtained using toJson()
-     * 
+     *
      * @param json the JSON string
      * @return the {@link Certificate}
      * @throws CloudproofException if the {@link Certificate} cannot be parsed

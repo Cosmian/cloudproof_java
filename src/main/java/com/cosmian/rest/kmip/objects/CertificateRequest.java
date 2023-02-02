@@ -64,13 +64,13 @@ public class CertificateRequest extends KmipObject {
 
     @Override
     public int hashCode() {
-        return Objects.hash(certificate_request_type, certificate_request_value);
+        return Objects.hash(certificate_request_type, Arrays.hashCode(certificate_request_value));
     }
 
     @Override
     public String toString() {
         return "{" + " certificate_request_type='" + getCertificate_request_type() + "'"
-            + ", certificate_request_value='" + getCertificate_request_value() + "'" + "}";
+            + ", certificate_request_value='" + Arrays.toString(getCertificate_request_value()) + "'" + "}";
     }
 
     @Override
@@ -80,7 +80,7 @@ public class CertificateRequest extends KmipObject {
 
     /**
      * Deserialize an instance from its Json representation obtained using toJson()
-     * 
+     *
      * @param json the JSON string
      * @return the {@link CertificateRequest}
      * @throws CloudproofException if the parsing fails

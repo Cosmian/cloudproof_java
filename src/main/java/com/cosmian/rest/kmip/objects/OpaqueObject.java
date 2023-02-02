@@ -64,13 +64,13 @@ public class OpaqueObject extends KmipObject {
 
     @Override
     public int hashCode() {
-        return Objects.hash(opaque_data_type, opaque_data_value);
+        return Objects.hash(opaque_data_type, Arrays.hashCode(opaque_data_value));
     }
 
     @Override
     public String toString() {
         return "{" + " opaque_data_type='" + getOpaque_data_type() + "'" + ", opaque_data_value='"
-            + getOpaque_data_value() + "'" + "}";
+            + Arrays.toString(getOpaque_data_value()) + "'" + "}";
     }
 
     @Override
@@ -80,7 +80,7 @@ public class OpaqueObject extends KmipObject {
 
     /**
      * Deserialize an instance from its Json representation obtained using toJson()
-     * 
+     *
      * @param json the JSON string
      * @return the {@link OpaqueObject}
      * @throws CloudproofException if the parsing fails

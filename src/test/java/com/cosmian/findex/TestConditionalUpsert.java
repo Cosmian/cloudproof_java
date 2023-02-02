@@ -105,7 +105,7 @@ public class TestConditionalUpsert {
     public void testRedisConditionalUpsert() throws Exception {
         System.out.println("Redis conditional upsert");
 
-        if (TestUtils.portAvailable(6379)) {
+        if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
             System.out.println("Ignore test since Redis is down");
             return;
         }

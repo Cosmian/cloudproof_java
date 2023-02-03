@@ -14,8 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class NonRegressionVector {
-    static final CoverCrypt coverCrypt = new CoverCrypt();
-
     @JsonProperty("public_key")
     private byte[] publicKey;
 
@@ -81,20 +79,20 @@ public class NonRegressionVector {
 
     public static NonRegressionVector generate() throws JsonProcessingException, CloudproofException {
         Policy policy = new Policy(100);
-	policy.addAxis(new PolicyAxis("Security Level", new PolicyAxisAttribute[] {
-			new PolicyAxisAttribute("Protected", false),
-			new PolicyAxisAttribute("Low Secret", false),
-			new PolicyAxisAttribute("Medium Secret", false),
-			new PolicyAxisAttribute("High Secret", true),
-			new PolicyAxisAttribute("Top Secret", true) }, true));
-	policy.addAxis(new PolicyAxis("Department", new PolicyAxisAttribute[] {
-			new PolicyAxisAttribute("R&D", false),
-			new PolicyAxisAttribute("HR", false),
-			new PolicyAxisAttribute("MKG", false),
-			new PolicyAxisAttribute("FIN", false) }, false));
+        policy.addAxis(new PolicyAxis("Security Level", new PolicyAxisAttribute[] {
+            new PolicyAxisAttribute("Protected", false),
+            new PolicyAxisAttribute("Low Secret", false),
+            new PolicyAxisAttribute("Medium Secret", false),
+            new PolicyAxisAttribute("High Secret", true),
+            new PolicyAxisAttribute("Top Secret", true)}, true));
+        policy.addAxis(new PolicyAxis("Department", new PolicyAxisAttribute[] {
+            new PolicyAxisAttribute("R&D", false),
+            new PolicyAxisAttribute("HR", false),
+            new PolicyAxisAttribute("MKG", false),
+            new PolicyAxisAttribute("FIN", false)}, false));
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // Generate user decryption keys
         NonRegressionVector nrv = new NonRegressionVector();

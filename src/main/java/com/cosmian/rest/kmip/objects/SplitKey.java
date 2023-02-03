@@ -158,7 +158,7 @@ public class SplitKey extends KmipObject {
 
     /**
      * Deserialize an instance from its Json representation obtained using toJson()
-     * 
+     *
      * @param json the key in JSON form
      * @return the Split Key
      * @throws CloudproofException if the parsing fails

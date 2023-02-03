@@ -21,7 +21,7 @@ public abstract class KmipJsonDeserializer<E> extends JsonDeserializer<E> {
 
     /**
      * Deserializes an already existing {@link JsonNode}
-     * 
+     *
      * @see #deserialize(JsonNode, DeserializationContext)
      * @param n the {@link JsonNode}
      * @param context a {@link DeserializationContext}

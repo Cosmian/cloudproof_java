@@ -50,7 +50,7 @@ In addition, please have a look at the following tests for implementation exampl
 
 The following benchmarks are obtained using an Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz.
 
-```
+```c
 -----------------------------------------------------
  Benches CoverCrypt Encryption/Decryption With Cache
 -----------------------------------------------------
@@ -64,7 +64,7 @@ Number of partitions: 3: Encrypted Header size: 197. Encryption average time: 43
 Number of partitions: 4: Encrypted Header size: 230. Encryption average time: 513750ns (513µs). Decryption average time: 473802ns (473µs)
 Number of partitions: 5: Encrypted Header size: 263. Encryption average time: 599409ns (599µs). Decryption average time: 536418ns (536µs)
 
-Hrybridized encryption
+Hybridized encryption
 ======================
 
 Number of partitions: 1: Encrypted Header size: 1187. Encryption average time: 320732ns (320µs). Decryption average time: 232779ns (232µs)
@@ -149,5 +149,3 @@ cargo build --release --features ffi
 ```
 
 And copy the new binaries from `target/release/<.dylib,.so,.dll>` to `cloudproof_java` FFI directory: check the right platform/architecture directory in [Download required native libraries](#download-required-native-libraries).
-
-

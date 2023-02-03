@@ -171,7 +171,7 @@ public class TestDemo {
 
         // Decrypting the messages with the rekeyed key
         // The automatically rekeyed confidential marketing user key can still decrypt
-        // the “old” protected marketing
+        // the "old" protected marketing
         // message, as well as the new confidential marketing message.
 
         // Retrieving the rekeyed `confidential marketing user` decryption key

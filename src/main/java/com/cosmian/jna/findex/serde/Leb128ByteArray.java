@@ -30,7 +30,7 @@ public abstract class Leb128ByteArray implements Leb128Serializable {
 
     /**
      * If -1, the array is of variable size and it must be read as an LEB128 first; if not use the given value
-     * 
+     *
      * @return the array fixed size or -1 for variable size (default)
      */
     public int fixedSize() {
@@ -39,7 +39,7 @@ public abstract class Leb128ByteArray implements Leb128Serializable {
 
     /**
      * Generate a random array of len bytes
-     * 
+     *
      * @param len the length of the array
      */
     public Leb128ByteArray(int len) {

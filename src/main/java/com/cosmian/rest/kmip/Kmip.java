@@ -192,10 +192,10 @@ public class Kmip {
      * format conversion MAY be supported by the server. If Key Format Type is specified to be PKCS#12 then the response
      * payload shall be a PKCS#12 container as specified by [RFC7292]. The Unique Identifier shall be either that of a
      * private key or certificate to be included in the response. The container shall be protected using the Secret Data
-     * object specified via the private key or certificate’s PKCS#12 Password Link. The current certificate chain shall
-     * also be included as determined by using the private key’s Public Key link to get the corresponding public key
-     * (where relevant), and then using that public key’s PKCS#12 Certificate Link to get the base certificate, and then
-     * using each certificate’s Certificate Link to build the certificate chain. It is an error if there is more than
+     * object specified via the private key or certificate's PKCS#12 Password Link. The current certificate chain shall
+     * also be included as determined by using the private key's Public Key link to get the corresponding public key
+     * (where relevant), and then using that public key's PKCS#12 Certificate Link to get the base certificate, and then
+     * using each certificate's Certificate Link to build the certificate chain. It is an error if there is more than
      * one valid certificate chain.
      *
      * @param request The Get request
@@ -218,7 +218,7 @@ public class Kmip {
     /**
      * This operation requests the server to Import a Managed Object specified by its Unique Identifier. The request
      * specifies the object being imported and all the attributes to be assigned to the object. The attribute rules for
-     * each attribute for “Initially set by” and “When implicitly set” SHALL NOT be enforced as all attributes MUST be
+     * each attribute for "Initially set by" and "When implicitly set" SHALL NOT be enforced as all attributes MUST be
      * set to the supplied values rather than any server generated values. The response contains the Unique Identifier
      * provided in the request or assigned by the server. The server SHALL copy the Unique Identifier returned by this
      * operations into the ID Placeholder variable.
@@ -282,9 +282,9 @@ public class Kmip {
      * the Linked Object Identifier value is specified without the Link Type value, then matching candidate objects have
      * the Linked Object Identifier as specified, irrespective of their Link Type. When the Object Group attribute and
      * the Object Group Member flag are specified in the request, and the value specified for Object Group Member is
-     * ‘Group Member Fresh’, matching candidate objects SHALL be fresh objects from the object group. If there are no
+     * 'Group Member Fresh', matching candidate objects SHALL be fresh objects from the object group. If there are no
      * more fresh objects in the group, the server MAY choose to generate a new object on-the-fly, based on server
-     * policy. If the value specified for Object Group Member is ‘Group Member Default’, the server locates the default
+     * policy. If the value specified for Object Group Member is 'Group Member Default', the server locates the default
      * object as defined by server policy. The Storage Status Mask field is used to indicate whether on-line objects
      * (not archived or destroyed), archived objects, destroyed objects or any combination of the above are to be
      * searched.The server SHALL NOT return unique identifiers for objects that are destroyed unless the Storage Status
@@ -344,12 +344,12 @@ public class Kmip {
 
     /**
      * This operation requests the server to revoke a Managed Cryptographic Object or an Opaque Object. The request
-     * contains a reason for the revocation (e.g., “key compromise”, “cessation of operation”, etc.). The operation has
-     * one of two effects. If the revocation reason is “key compromise” or “CA compromise”, then the object is placed
-     * into the “compromised” state; the Date is set to the current date and time; and the Compromise Occurrence Date is
+     * contains a reason for the revocation (e.g., "key compromise", "cessation of operation", etc.). The operation has
+     * one of two effects. If the revocation reason is "key compromise" or "CA compromise", then the object is placed
+     * into the "compromised" state; the Date is set to the current date and time; and the Compromise Occurrence Date is
      * set to the value (if provided) in the Revoke request and if a value is not provided in the Revoke request then
      * Compromise Occurrence Date SHOULD be set to the Initial Date for the object. If the revocation reason is neither
-     * “key compromise” nor “CA compromise”, the object is placed into the “deactivated” state, and the Deactivation
+     * "key compromise" nor "CA compromise", the object is placed into the "deactivated" state, and the Deactivation
      * Date is set to the current date and time.
      *
      * @param request The Revoke request

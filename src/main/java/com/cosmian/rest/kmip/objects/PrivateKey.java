@@ -65,7 +65,7 @@ public class PrivateKey extends KmipObject {
 
     /**
      * The low level cryptographic content of the Private Key
-     * 
+     *
      * @return the byte array
      * @throws CloudproofException if the key is wrapped and bytes cannot be extracted
      */
@@ -75,7 +75,7 @@ public class PrivateKey extends KmipObject {
 
     /**
      * Deserialize an instance from its Json representation obtained using toJson()
-     * 
+     *
      * @param json the JSON string
      * @return the {@link PrivateKey}
      * @throws CloudproofException if the parsing fails
@@ -86,7 +86,7 @@ public class PrivateKey extends KmipObject {
 
     /**
      * Return the {@link Attributes} or a set of empty
-     * 
+     *
      * @return the {@link Attributes}
      */
     public Attributes attributes() {

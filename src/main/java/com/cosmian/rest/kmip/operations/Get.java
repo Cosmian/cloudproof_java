@@ -24,9 +24,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  * supported by the server. If Key Format Type is specified to be PKCS#12 then the response payload shall be a PKCS#12
  * container as specified by [RFC7292]. The Unique Identifier shall be either that of a private key or certificate to be
  * included in the response. The container shall be protected using the Secret Data object specified via the private key
- * or certificate’s PKCS#12 Password Link. The current certificate chain shall also be included as determined by using
- * the private key’s Public Key link to get the corresponding public key (where relevant), and then using that public
- * key’s PKCS#12 Certificate Link to get the base certificate, and then using each certificate’s Certificate Link to
+ * or certificate's PKCS#12 Password Link. The current certificate chain shall also be included as determined by using
+ * the private key's Public Key link to get the corresponding public key (where relevant), and then using that public
+ * key's PKCS#12 Certificate Link to get the base certificate, and then using each certificate's Certificate Link to
  * build the certificate chain. It is an error if there is more than one valid certificate chain.
  */
 @JsonSerialize(using = KmipStructSerializer.class)

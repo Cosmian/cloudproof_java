@@ -13,7 +13,7 @@ public class FFiUtils {
 
     /**
      * Serialize a map to a memory location specified by the Pointer; set its actual size in the pointed int.
-     * 
+     *
      * @param <K> the map key type. Must be {@link Leb128Serializable}
      * @param <V> the map value type. Must be {@link Leb128Serializable}
      * @param map the map to serialize and export

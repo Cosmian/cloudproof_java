@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 /**
  * This operation requests the server to Import a Managed Object specified by its Unique Identifier. The request
  * specifies the object being imported and all the attributes to be assigned to the object. The attribute rules for each
- * attribute for “Initially set by” and “When implicitly set” SHALL NOT be enforced as all attributes MUST be set to the
+ * attribute for "Initially set by" and "When implicitly set" SHALL NOT be enforced as all attributes MUST be set to the
  * supplied values rather than any server generated values. The response contains the Unique Identifier provided in the
  * request or assigned by the server. The server SHALL copy the Unique Identifier returned by this operations into the
  * ID Placeholder variable. https://docs.oasis-open.org/kmip/kmip-spec/v2.1/os/kmip-spec-v2.1-os.html#_Toc57115657

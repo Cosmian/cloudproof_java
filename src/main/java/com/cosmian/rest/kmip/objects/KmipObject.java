@@ -20,7 +20,7 @@ public abstract class KmipObject implements KmipStruct {
 
     /**
      * This method is mostly used for local tests and serialization.
-     * 
+     *
      * @return the JSON string
      * @throws CloudproofException if the serialization fails
      */
@@ -54,7 +54,7 @@ public abstract class KmipObject implements KmipStruct {
 
     /**
      * Helper function to retrieve the KMIP Object class from its {@link ObjectType}
-     * 
+     *
      * @param objectType the {@link ObjectType}
      * @param <C> the {@link KmipObject}
      * @return the Class of the object

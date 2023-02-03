@@ -42,7 +42,7 @@ public class EncryptResponse implements KmipStruct {
 
     /// Specifies the tag that will be needed to
     /// authenticate the decrypted data (and
-    /// any “additional data”). Only returned on
+    /// any "additional data"). Only returned on
     /// completion of the encryption of the last
     /// of the plaintext by an authenticated
     /// encryption cipher.

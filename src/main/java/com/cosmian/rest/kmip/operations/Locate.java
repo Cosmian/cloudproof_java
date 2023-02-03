@@ -51,10 +51,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  * structure fields are not REQUIRED to be specified. For instance, for the Link attribute, if the Linked Object
  * Identifier value is specified without the Link Type value, then matching candidate objects have the Linked Object
  * Identifier as specified, irrespective of their Link Type. When the Object Group attribute and the Object Group Member
- * flag are specified in the request, and the value specified for Object Group Member is ‘Group Member Fresh’, matching
+ * flag are specified in the request, and the value specified for Object Group Member is 'Group Member Fresh', matching
  * candidate objects SHALL be fresh objects from the object group. If there are no more fresh objects in the group, the
  * server MAY choose to generate a new object on-the-fly, based on server policy. If the value specified for Object
- * Group Member is ‘Group Member Default’, the server locates the default object as defined by server policy. The
+ * Group Member is 'Group Member Default', the server locates the default object as defined by server policy. The
  * Storage Status Mask field is used to indicate whether on-line objects (not archived or destroyed), archived objects,
  * destroyed objects or any combination of the above are to be searched.The server SHALL NOT return unique identifiers
  * for objects that are destroyed unless the Storage Status Mask field includes the Destroyed Storage indicator. The

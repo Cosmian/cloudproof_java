@@ -60,7 +60,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Internal constructor instantiating from an existing pool and loading the Conditional Upsert Lua script
-     * 
+     *
      * @param pool the existing {@link JedisPool}
      * @param redisPassword the password to use to authenticate
      */
@@ -74,7 +74,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Instantiate a Redis instance from a URI
-     * 
+     *
      * @param uri the URI to the Redis server
      */
     public Redis(String uri) {
@@ -101,7 +101,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Get a Jedis connection from the pool, authenticating it if needed
-     * 
+     *
      * @return the {@link Jedis} connection
      */
     protected Jedis getJedis() {
@@ -114,7 +114,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * The Redis server hostname from the REDIS_HOSTNAME environment variable. Defaults to localhost if not found.
-     * 
+     *
      * @return the hostname
      */
     static String redisHostname() {
@@ -127,7 +127,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * The Redis server port from the REDIS_PORT environment variable. Defaults to 6379 if not found.
-     * 
+     *
      * @return the port
      */
     static int redisPort() {
@@ -140,7 +140,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * The Redis server password from the REDIS_PASSWORD environment variable. Defaults to null if not found.
-     * 
+     *
      * @return the password
      */
     public static String redisPassword() {
@@ -166,7 +166,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Convert a Redis key back to an {@link Uid32}
-     * 
+     *
      * @param key the Redis key
      * @return the {@link Uid32}
      */
@@ -176,7 +176,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Retrieve multiple raw values from a list of Uids in a particular "table"
-     * 
+     *
      * @param uids the {@link Uid32} to retrieve
      * @param redisPrefix the "table"prefix
      * @return the list of raw values
@@ -208,7 +208,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Delete all entries in the given "table"
-     * 
+     *
      * @param redisTableIndex the "table" index
      * @throws CloudproofException
      */
@@ -221,7 +221,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Insert all the users in the data "table"
-     * 
+     *
      * @param testFindexDataset the dataset containing the user records
      * @throws CloudproofException
      */
@@ -238,7 +238,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Delete a user from the data "table"
-     * 
+     *
      * @param userId the id of the user to delete
      * @return
      * @throws CloudproofException

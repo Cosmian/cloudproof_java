@@ -135,6 +135,13 @@ jobs:
           python-version: 3.7
       - run: python scripts/get_native_libraries.py
 
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
+          gpg_private_key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
       - name: Maven deploy
         if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         run: |
@@ -143,7 +150,6 @@ jobs:
           mkdir -p ~/.m2 ~/.gpg
           echo "$M2_SETTINGS" > ~/.m2/settings.xml
           echo "$MAVEN_GPG_PRIVATE_KEY" > ~/.gpg/maven_gpg_private_key.asc
-          gpg --import ~/.gpg/maven_gpg_private_key.asc
           mvn clean deploy -Dmaven.test.skip
         env:
           M2_SETTINGS: ${{ secrets.M2_SETTINGS }}

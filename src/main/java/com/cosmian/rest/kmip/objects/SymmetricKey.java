@@ -61,7 +61,7 @@ public class SymmetricKey extends KmipObject {
 
     /**
      * Return the {@link Attributes} or a set of empty
-     * 
+     *
      * @return the {@link Attributes}
      */
     public Attributes attributes() {
@@ -70,7 +70,7 @@ public class SymmetricKey extends KmipObject {
 
     /**
      * Deserialize an instance from its Json representation obtained using toJson()
-     * 
+     *
      * @param json key in JSON form
      * @return the {@link SymmetricKey}
      * @throws CloudproofException if the key cannot be recovered

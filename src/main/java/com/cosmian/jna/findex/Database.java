@@ -42,7 +42,7 @@ public abstract class Database {
      * Fetch all Uids of the Entry Table
      * <p>
      * Implementation of this method is only required to compact the index
-     * 
+     *
      * @return the {@link Set} of all {@link Uid32}
      * @throws CloudproofException if anything goes wrong
      */
@@ -53,7 +53,7 @@ public abstract class Database {
      * entry in the returned map.
      * <p>
      * Implementation of this method is always required (to search, update or compact the index)
-     * 
+     *
      * @param uids the unique {@link Uid32}s used as line id
      * @return a {@link Map} of {@link Uid32} to {@link EntryTableValue}
      * @throws CloudproofException if anything goes wrong
@@ -65,7 +65,7 @@ public abstract class Database {
      * entry in the returned map.
      * <p>
      * Implementation of this method is only required to search or compact the index
-     * 
+     *
      * @param uids the unique {@link Uid32}s used as line id
      * @return a {@link Map} of {@link Uid32} to {@link ChainTableValue}
      * @throws CloudproofException if anything goes wrong
@@ -84,7 +84,7 @@ public abstract class Database {
      * <p>
      * See the Redis and Sqlite implementations for implementation examples
      * <p>
-     * 
+     *
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link EntryTableValues}
      * @return a map of the {@link Uid32} that could not be updated and the current database value for the entry.
      * @throws CloudproofException if anything goes wrong
@@ -96,7 +96,7 @@ public abstract class Database {
      * Upsert the given lines into the Chain Table *
      * <p>
      * Implementation of this method is only required to update or compact the index
-     * 
+     *
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link ChainTableValue}
      * @throws CloudproofException if anything goes wrong
      */
@@ -139,7 +139,7 @@ public abstract class Database {
      * *
      * <p>
      * Implementation of this method is only required to compact the index
-     * 
+     *
      * @param removedChains a list of lines to remove from the Chain Table
      * @param newEntries a list of lines to add to the Entry Table (after it has been dropped)
      * @param newChains a list of lines to add to the Chain Table
@@ -154,7 +154,7 @@ public abstract class Database {
      * Determine which of the passed {@link Location} no longer exist in the main database/storage and return them. *
      * <p>
      * Implementation of this method is only required to compact the index
-     * 
+     *
      * @param locations the list to check for existence
      * @return the list of locations that no longer exist in the main database/storage
      * @throws CloudproofException if anything goes wrong
@@ -168,7 +168,7 @@ public abstract class Database {
      * graph. *
      * <p>
      * Implementation of this method is only required to search the index
-     * 
+     *
      * @param indexedValues A list of {@link IndexedValue} already found by the search
      * @return false to stop the graph from progressing
      * @throws CloudproofException if anything goes wrong

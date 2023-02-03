@@ -78,8 +78,8 @@ public class Attributes implements KmipStruct {
     /**
      * 4.26 The Key Format Type attribute is a required attribute of a Cryptographic Object. It is set by the server,
      * but a particular Key Format Type MAY be requested by the client if the cryptographic material is produced by the
-     * server (i.e., Create, Create Key Pair, Create Split Key, Re-key, Re-key Key Pair, Derive Key) on the client’s
-     * behalf. The server SHALL comply with the client’s requested format or SHALL fail the request. When the server
+     * server (i.e., Create, Create Key Pair, Create Split Key, Re-key, Re-key Key Pair, Derive Key) on the client's
+     * behalf. The server SHALL comply with the client's requested format or SHALL fail the request. When the server
      * calculates a Digest for the object, it SHALL compute the digest on the data in the assigned Key Format Type, as
      * well as a digest in the default KMIP Key Format Type for that type of key and the algorithm requested (if a
      * non-default value is specified).
@@ -118,10 +118,10 @@ public class Attributes implements KmipStruct {
      * A vendor specific Attribute is a structure used for sending and receiving a Managed Object attribute. The Vendor
      * Identification and Attribute Name are text-strings that are used to identify the attribute. The Attribute Value
      * is either a primitive data type or structured object, depending on the attribute. Vendor identification values
-     * “x” and “y” are reserved for KMIP v2.0 and later implementations referencing KMIP v1.x Custom Attributes. Vendor
-     * Attributes created by the client with Vendor Identification “x” are not created (provided during object
+     * "x" and "y" are reserved for KMIP v2.0 and later implementations referencing KMIP v1.x Custom Attributes. Vendor
+     * Attributes created by the client with Vendor Identification "x" are not created (provided during object
      * creation), set, added, adjusted, modified or deleted by the server. Vendor Attributes created by the server with
-     * Vendor Identification “y” are not created (provided during object creation), set, added, adjusted, modified or
+     * Vendor Identification "y" are not created (provided during object creation), set, added, adjusted, modified or
      * deleted by the client.
      */
     @JsonProperty(value = "VendorAttributes")

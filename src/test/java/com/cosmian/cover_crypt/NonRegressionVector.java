@@ -1,11 +1,12 @@
 package com.cosmian.cover_crypt;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import com.cosmian.jna.covercrypt.CoverCrypt;
 import com.cosmian.jna.covercrypt.structs.MasterKeys;
-import com.cosmian.rest.abe.policy.Policy;
+import com.cosmian.jna.covercrypt.structs.Policy;
+import com.cosmian.jna.covercrypt.structs.PolicyAxis;
+import com.cosmian.jna.covercrypt.structs.PolicyAxisAttribute;
 import com.cosmian.utils.CloudproofException;
 import com.cosmian.utils.Resources;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,8 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class NonRegressionVector {
-    static final CoverCrypt coverCrypt = new CoverCrypt();
-
     @JsonProperty("public_key")
     private byte[] publicKey;
 
@@ -79,35 +78,31 @@ public class NonRegressionVector {
     }
 
     public static NonRegressionVector generate() throws JsonProcessingException, CloudproofException {
-        Policy policy = new Policy(100)
-            .addAxis("Security Level",
-                new String[] {
-                    "Protected",
-                    "Low Secret",
-                    "Medium Secret",
-                    "High Secret",
-                    "Top Secret",
-                },
-                true)
-            .addAxis("Department", new String[] {
-                "R&D",
-                "HR",
-                "MKG",
-                "FIN"
-            }, false);
+        Policy policy = new Policy(100);
+        policy.addAxis(new PolicyAxis("Security Level", new PolicyAxisAttribute[] {
+            new PolicyAxisAttribute("Protected", false),
+            new PolicyAxisAttribute("Low Secret", false),
+            new PolicyAxisAttribute("Medium Secret", false),
+            new PolicyAxisAttribute("High Secret", true),
+            new PolicyAxisAttribute("Top Secret", true)}, true));
+        policy.addAxis(new PolicyAxis("Department", new PolicyAxisAttribute[] {
+            new PolicyAxisAttribute("R&D", false),
+            new PolicyAxisAttribute("HR", false),
+            new PolicyAxisAttribute("MKG", false),
+            new PolicyAxisAttribute("FIN", false)}, false));
 
         // Generate the master keys
-        MasterKeys masterKeys = coverCrypt.generateMasterKeys(policy);
+        MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
 
         // Generate user decryption keys
         NonRegressionVector nrv = new NonRegressionVector();
         nrv.masterSecretKey = masterKeys.getPrivateKey();
         nrv.publicKey = masterKeys.getPublicKey();
-        nrv.policy = new ObjectMapper().writeValueAsString(policy).getBytes(StandardCharsets.UTF_8);
+        nrv.policy = policy.getBytes();
 
         nrv.topSecretMkgFinKey =
             UserSecretKeyTestVector.generate(masterKeys.getPrivateKey(), policy,
-                "(Department::MKG || Department:: FIN) && Security Level::Top Secret");
+                "(Department::MKG || Department::FIN) && Security Level::Top Secret");
         nrv.mediumSecretMkgKey = UserSecretKeyTestVector
             .generate(masterKeys.getPrivateKey(), policy,
                 "Security Level::Medium Secret && Department::MKG");

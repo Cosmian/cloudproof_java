@@ -79,7 +79,7 @@ public class SecretData extends KmipObject {
 
     /**
      * Deserialize an instance from its Json representation obtained using toJson()
-     * 
+     *
      * @param json secret data in JSON form
      * @return the {@link SecretData}
      * @throws CloudproofException if the the JSON cannot be parsed

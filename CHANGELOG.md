@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0] - 2023-01-31
+
+### Documentation
+
+- Update how to build native libraries
+
+### Features
+
+- Use CoverCrypt v9
+- `Findex.search` core function only returns `Location`s
+
+---
+
 ## [3.0.3] - 2023-01-16
 
 ### Deleted

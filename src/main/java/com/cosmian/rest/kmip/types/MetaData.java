@@ -23,7 +23,7 @@ public class MetaData {
 
     /**
      * Parse meta data from bytes
-     * 
+     *
      * @param bytes the meta data obtained using the {@link #toBytes()} method
      * @return the parsed {@link MetaData}
      * @throws CloudproofException if the data cannot be parsed
@@ -65,7 +65,7 @@ public class MetaData {
     /**
      * Converts the meta data to a byte array which can parsed back using the {@link #fromBytes(byte[])} method The
      * first 4 bytes is the u32 size of the uid in big endian format.
-     * 
+     *
      * @return the meta data as a byte array
      * @throws CloudproofException if the {@link MetaData} cannot be serialized
      */

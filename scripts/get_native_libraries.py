@@ -51,10 +51,10 @@ def download_native_libraries(name: str, version: str, destination: str) -> bool
 
 
 if __name__ == '__main__':
-    ret = download_native_libraries('findex', 'v2.0.0', 'src/main/resources')
+    ret = download_native_libraries('findex', 'v2.0.1', 'src/main/resources')
     if ret is False and getenv('GITHUB_ACTIONS'):
         download_native_libraries('findex', 'last_build', 'src/main/resources')
 
-    ret = download_native_libraries('cover_crypt', 'v8.0.2', 'src/main/resources')
+    ret = download_native_libraries('cover_crypt', 'v10.0.0', 'src/main/resources')
     if ret is False and getenv('GITHUB_ACTIONS'):
         download_native_libraries('cover_crypt', 'last_build', 'src/main/resources')

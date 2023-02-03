@@ -4,12 +4,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-import com.cosmian.jna.covercrypt.CoverCrypt;
-import com.cosmian.rest.abe.access_policy.AccessPolicy;
-import com.cosmian.rest.abe.access_policy.Attr;
+import com.cosmian.jna.covercrypt.structs.AccessPolicy;
+import com.cosmian.jna.covercrypt.structs.Attribute;
+import com.cosmian.jna.covercrypt.structs.Policy;
 import com.cosmian.rest.abe.data.DataToEncrypt;
 import com.cosmian.rest.abe.data.DecryptedData;
-import com.cosmian.rest.abe.policy.Policy;
 import com.cosmian.rest.kmip.Kmip;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
@@ -53,10 +52,11 @@ public class KmsClient {
     private final Kmip kmip;
 
     /**
-     * Instantiate a new KmipClient with DEFAULT_CONNECT_TIMEOUT and DEFAULT_READ_TIMEOUT
+     * Instantiate a new KmipClient with DEFAULT_CONNECT_TIMEOUT and
+     * DEFAULT_READ_TIMEOUT
      *
      * @param server_url the REST Server URL e.g. http://localhost:9000
-     * @param api_key he optional API Key to use to authenticate
+     * @param api_key    he optional API Key to use to authenticate
      */
     public KmsClient(String server_url, Optional<String> api_key) {
         this(new RestClient(server_url, api_key));
@@ -64,7 +64,7 @@ public class KmsClient {
 
     /**
      * Instantiate a new Kmip client using a {@link RestClient}
-     * 
+     *
      * @param rest_client the {@link RestClient}
      */
     public KmsClient(RestClient rest_client) {
@@ -72,31 +72,34 @@ public class KmsClient {
     }
 
     /**
-     * Generate inside the KMS, a master private and public key pair for the {@link Policy}
+     * Generate inside the KMS, a master private and public key pair for the
+     * {@link Policy}
      *
      * @param policy the Key Policy
-     * @return a tuple containing the master private key UID and the master public key UID
+     * @return a tuple containing the master private key UID and the master public
+     *         key UID
      * @throws CloudproofException if the creation fails
      */
     public String[] createCoverCryptMasterKeyPair(Policy policy) throws CloudproofException {
         try {
             Attributes commonAttributes = new Attributes(ObjectType.Private_Key,
-                Optional.of(CryptographicAlgorithm.CoverCrypt));
+                    Optional.of(CryptographicAlgorithm.CoverCrypt));
             commonAttributes.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
 
             // convert the Policy to attributes and attach it to the common attributes
             VendorAttribute policy_attribute = policy.toVendorAttribute();
 
-            commonAttributes.setVendorAttributes(Optional.of(new VendorAttribute[] {policy_attribute}));
+            commonAttributes.setVendorAttributes(Optional.of(new VendorAttribute[] { policy_attribute }));
 
             CreateKeyPair request = new CreateKeyPair(Optional.of(commonAttributes), Optional.empty());
             CreateKeyPairResponse response = this.kmip.createKeyPair(request);
-            return new String[] {response.getPrivateKeyUniqueIdentifier(), response.getPublicKeyUniqueIdentifier()};
+            return new String[] { response.getPrivateKeyUniqueIdentifier(),
+                    response.getPublicKeyUniqueIdentifier() };
         } catch (CloudproofException e) {
             throw e;
         } catch (Exception e) {
             String err = "CoverCrypt" + ": Master Key generation failed: " + e.getMessage() + "  "
-                + e.getClass();
+                    + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);
         }
@@ -110,7 +113,7 @@ public class KmsClient {
      * @throws CloudproofException if the retrieval fails
      */
     public PrivateKey retrieveCoverCryptPrivateMasterKey(String privateMasterKeyUniqueIdentifier)
-        throws CloudproofException {
+            throws CloudproofException {
         try {
             Get request = new Get(privateMasterKeyUniqueIdentifier);
             request.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
@@ -118,20 +121,22 @@ public class KmsClient {
             GetResponse response = this.kmip.get(request);
             Object object = response.getObject();
             if (!(object instanceof PrivateKey)) {
-                throw new CloudproofException("No " + "CoverCrypt" + " Private Master Key at identifier "
-                    + privateMasterKeyUniqueIdentifier);
+                throw new CloudproofException(
+                        "No " + "CoverCrypt" + " Private Master Key at identifier "
+                                + privateMasterKeyUniqueIdentifier);
             }
             PrivateKey sk = (PrivateKey) object;
             if (!sk.getKeyBlock().getKeyFormatType().equals(KeyFormatType.CoverCryptSecretKey)) {
-                throw new CloudproofException("No " + "CoverCrypt" + " Private Master Key at identifier "
-                    + privateMasterKeyUniqueIdentifier);
+                throw new CloudproofException(
+                        "No " + "CoverCrypt" + " Private Master Key at identifier "
+                                + privateMasterKeyUniqueIdentifier);
             }
             return sk;
         } catch (CloudproofException e) {
             throw e;
         } catch (Exception e) {
             String err = "CoverCrypt" + ": Private Master Key could not be retrieved: " + e.getMessage()
-                + "  " + e.getClass();
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);
         }
@@ -142,24 +147,25 @@ public class KmsClient {
      *
      * @param uniqueIdentifier the UID of the key
      * @param privateMasterKey the key
-     * @param replaceExisting if a key exists under this UID, replace it
+     * @param replaceExisting  if a key exists under this UID, replace it
      * @return the UID of the imported key
      * @throws CloudproofException if the import fails
      */
     public String importCoverCryptPrivateMasterKey(String uniqueIdentifier,
-                                                   PrivateKey privateMasterKey,
-                                                   boolean replaceExisting)
-        throws CloudproofException {
+            PrivateKey privateMasterKey,
+            boolean replaceExisting)
+            throws CloudproofException {
         try {
-            Import request = new Import(uniqueIdentifier, ObjectType.Private_Key, Optional.of(replaceExisting),
-                Optional.empty(), privateMasterKey.attributes(), privateMasterKey);
+            Import request = new Import(uniqueIdentifier, ObjectType.Private_Key,
+                    Optional.of(replaceExisting),
+                    Optional.empty(), privateMasterKey.attributes(), privateMasterKey);
             ImportResponse response = this.kmip.importObject(request);
             return response.getUniqueIdentifier();
         } catch (CloudproofException e) {
             throw e;
         } catch (Exception e) {
             String err = "CoverCrypt" + ": Private Master Key could not be imported: " + e.getMessage()
-                + "  " + e.getClass();
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);
         }
@@ -173,7 +179,7 @@ public class KmsClient {
      * @throws CloudproofException if the retrieval fails
      */
     public PublicKey retrieveCoverCryptPublicMasterKey(String publicMasterKeyUniqueIdentifier)
-        throws CloudproofException {
+            throws CloudproofException {
         try {
             Get request = new Get(publicMasterKeyUniqueIdentifier);
             request.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptPublicKey));
@@ -182,19 +188,19 @@ public class KmsClient {
             Object object = response.getObject();
             if (!(object instanceof PublicKey)) {
                 throw new CloudproofException("No " + "CoverCrypt" + " Public Master Key at identifier "
-                    + publicMasterKeyUniqueIdentifier);
+                        + publicMasterKeyUniqueIdentifier);
             }
             PublicKey sk = (PublicKey) object;
             if (!sk.getKeyBlock().getKeyFormatType().equals(KeyFormatType.CoverCryptPublicKey)) {
                 throw new CloudproofException("No " + "CoverCrypt" + " Public Master Key at identifier "
-                    + publicMasterKeyUniqueIdentifier);
+                        + publicMasterKeyUniqueIdentifier);
             }
             return sk;
         } catch (CloudproofException e) {
             throw e;
         } catch (Exception e) {
             String err = "CoverCrypt" + ": Public Master Key could not be retrieved: " + e.getMessage()
-                + "  " + e.getClass();
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);
         }
@@ -204,56 +210,50 @@ public class KmsClient {
      * Import a Public Master Key in the KMS
      *
      * @param uniqueIdentifier the UID of the key
-     * @param publicMasterKey the key
-     * @param replaceExisting if a key exists under this UID, replace it
+     * @param publicMasterKey  the key
+     * @param replaceExisting  if a key exists under this UID, replace it
      * @return the UID of the imported key
      * @throws CloudproofException if the import fails
      */
     public String importCoverCryptPublicMasterKey(String uniqueIdentifier,
-                                                  PublicKey publicMasterKey,
-                                                  boolean replaceExisting)
-        throws CloudproofException {
+            PublicKey publicMasterKey,
+            boolean replaceExisting)
+            throws CloudproofException {
         try {
-            Import request = new Import(uniqueIdentifier, ObjectType.Public_Key, Optional.of(replaceExisting),
-                Optional.empty(), publicMasterKey.attributes(), publicMasterKey);
+            Import request = new Import(uniqueIdentifier, ObjectType.Public_Key,
+                    Optional.of(replaceExisting),
+                    Optional.empty(), publicMasterKey.attributes(), publicMasterKey);
             ImportResponse response = this.kmip.importObject(request);
             return response.getUniqueIdentifier();
         } catch (CloudproofException e) {
             throw e;
         } catch (Exception e) {
             String err = "CoverCrypt" + ": Public Master Key could not be imported: " + e.getMessage()
-                + "  " + e.getClass();
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);
         }
     }
 
     /**
-     * Create a User Decryption Key for the given {@link AccessPolicy} expressed as a boolean expression
+     * Create a User Decryption Key for the given {@link AccessPolicy} expressed as
+     * a boolean expression
      *
-     * @param accessPolicy the {@link AccessPolicy} as a string
+     * @param accessPolicy                     the {@link AccessPolicy} as a string
      * @param privateMasterKeyUniqueIdentifier the UID of the Master Private Key
      * @return the UID of the newly created key
      * @throws CloudproofException if the creation fails
      */
     public String createCoverCryptUserDecryptionKey(String accessPolicy,
-                                                    String privateMasterKeyUniqueIdentifier)
-        throws CloudproofException {
+            String privateMasterKeyUniqueIdentifier)
+            throws CloudproofException {
 
-        // not qt the class level, so the rest of the methods can be used without a
+        // not at the class level, so the rest of the methods can be used without a
         // native library
-        final CoverCrypt ffi = new CoverCrypt();
-        String json;
-        try {
-            json = ffi.booleanAccessPolicyToJson(accessPolicy);
-        } catch (CloudproofException e) {
-            throw new CloudproofException("Failed converting the boolean access policy to a JSON: " + e.getMessage(),
-                e);
-        }
         VendorAttribute accessPolicyAttribute = new VendorAttribute(
-            VendorAttribute.VENDOR_ID_COSMIAN,
-            VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ACCESS_POLICY,
-            json.getBytes(StandardCharsets.UTF_8));
+                VendorAttribute.VENDOR_ID_COSMIAN,
+                VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ACCESS_POLICY,
+                accessPolicy.getBytes(StandardCharsets.UTF_8));
 
         return createCoverCryptUserDecryptionKey(accessPolicyAttribute, privateMasterKeyUniqueIdentifier);
     }
@@ -261,18 +261,18 @@ public class KmsClient {
     /**
      * Create a User Decryption Key for the given {@link AccessPolicy} in the KMS
      *
-     * @param accessPolicy the {@link AccessPolicy}
+     * @param accessPolicy                     the {@link AccessPolicy}
      * @param privateMasterKeyUniqueIdentifier the UID of the Master Private Key
      * @return the UID of the newly created key
      * @throws CloudproofException if the creation fails
      */
     public String createCoverCryptUserDecryptionKey(AccessPolicy accessPolicy,
-                                                    String privateMasterKeyUniqueIdentifier)
-        throws CloudproofException {
+            String privateMasterKeyUniqueIdentifier)
+            throws CloudproofException {
         // convert the Access Policy to attributes and attach it to the common
         // attributes
         VendorAttribute accessPolicyAttribute = accessPolicy
-            .toVendorAttribute();
+                .toVendorAttribute();
 
         return createCoverCryptUserDecryptionKey(accessPolicyAttribute, privateMasterKeyUniqueIdentifier);
     }
@@ -280,28 +280,30 @@ public class KmsClient {
     /**
      * Create a User Decryption Key for the given {@link AccessPolicy} in the KMS
      *
-     * @param accessPolicyAttribute the {@link AccessPolicy} as a {@link VendorAttribute}
+     * @param accessPolicyAttribute            the {@link AccessPolicy} as a
+     *                                         {@link VendorAttribute}
      * @param privateMasterKeyUniqueIdentifier the UID of the Master Private Key
      * @return the UID of the newly created key
      * @throws CloudproofException if the creation fails
      */
     String createCoverCryptUserDecryptionKey(VendorAttribute accessPolicyAttribute,
-                                             String privateMasterKeyUniqueIdentifier)
-        throws CloudproofException {
+            String privateMasterKeyUniqueIdentifier)
+            throws CloudproofException {
         try {
             Attributes commonAttributes = new Attributes(
-                ObjectType.Private_Key,
-                Optional.of(CryptographicAlgorithm.CoverCrypt));
+                    ObjectType.Private_Key,
+                    Optional.of(CryptographicAlgorithm.CoverCrypt));
             commonAttributes.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
 
             // convert the Access Policy to attributes and attach it to the common
             // attributes
-            commonAttributes.setVendorAttributes(Optional.of(new VendorAttribute[] {accessPolicyAttribute}));
+            commonAttributes.setVendorAttributes(
+                    Optional.of(new VendorAttribute[] { accessPolicyAttribute }));
             // link to the master private key
             commonAttributes.setLink(Optional.of(new Link[] {
-                new Link(
-                    LinkType.Parent_Link,
-                    new LinkedObjectIdentifier(privateMasterKeyUniqueIdentifier))
+                    new Link(
+                            LinkType.Parent_Link,
+                            new LinkedObjectIdentifier(privateMasterKeyUniqueIdentifier))
             }));
 
             Create request = new Create(ObjectType.Private_Key, commonAttributes, Optional.empty());
@@ -311,7 +313,7 @@ public class KmsClient {
             throw e;
         } catch (Exception e) {
             String err = "CoverCrypt" + ": Master Key generation failed: " + e.getMessage() + " "
-                + e.getClass();
+                    + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);
         }
@@ -325,7 +327,7 @@ public class KmsClient {
      * @throws CloudproofException if the retrieval fails
      */
     public PrivateKey retrieveCoverCryptUserDecryptionKey(String userDecryptionKeyUniqueIdentifier)
-        throws CloudproofException {
+            throws CloudproofException {
         try {
             Get request = new Get(userDecryptionKeyUniqueIdentifier);
             request.setKeyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
@@ -333,20 +335,22 @@ public class KmsClient {
             GetResponse response = this.kmip.get(request);
             Object object = response.getObject();
             if (!(object instanceof PrivateKey)) {
-                throw new CloudproofException("No " + "CoverCrypt" + " User Decryption Key at identifier "
-                    + userDecryptionKeyUniqueIdentifier);
+                throw new CloudproofException(
+                        "No " + "CoverCrypt" + " User Decryption Key at identifier "
+                                + userDecryptionKeyUniqueIdentifier);
             }
             PrivateKey sk = (PrivateKey) object;
             if (!sk.getKeyBlock().getKeyFormatType().equals(KeyFormatType.CoverCryptSecretKey)) {
-                throw new CloudproofException("No " + "CoverCrypt" + " User Decryption Key at identifier "
-                    + userDecryptionKeyUniqueIdentifier);
+                throw new CloudproofException(
+                        "No " + "CoverCrypt" + " User Decryption Key at identifier "
+                                + userDecryptionKeyUniqueIdentifier);
             }
             return sk;
         } catch (CloudproofException e) {
             throw e;
         } catch (Exception e) {
             String err = "CoverCrypt" + ": User Decryption Key could not be retrieved: " + e.getMessage()
-                + "  " + e.getClass();
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);
         }
@@ -355,121 +359,139 @@ public class KmsClient {
     /**
      * Import a User Decryption Key in the KMS
      *
-     * @param uniqueIdentifier the UID of the key
+     * @param uniqueIdentifier  the UID of the key
      * @param userDecryptionKey the key
-     * @param replaceExisting if a key exists under this UID, replace it
+     * @param replaceExisting   if a key exists under this UID, replace it
      * @return the UID of the imported key
      * @throws CloudproofException if the import fails
      */
     public String importCoverCryptUserDecryptionKey(String uniqueIdentifier,
-                                                    PrivateKey userDecryptionKey,
-                                                    boolean replaceExisting)
-        throws CloudproofException {
+            PrivateKey userDecryptionKey,
+            boolean replaceExisting)
+            throws CloudproofException {
         try {
-            Import request = new Import(uniqueIdentifier, ObjectType.Private_Key, Optional.of(replaceExisting),
-                Optional.empty(), userDecryptionKey.attributes(), userDecryptionKey);
+            Import request = new Import(uniqueIdentifier, ObjectType.Private_Key,
+                    Optional.of(replaceExisting),
+                    Optional.empty(), userDecryptionKey.attributes(), userDecryptionKey);
             ImportResponse response = this.kmip.importObject(request);
             return response.getUniqueIdentifier();
         } catch (CloudproofException e) {
             throw e;
         } catch (Exception e) {
             String err = "CoverCrypt" + ": User Decryption Key could not be imported: " + e.getMessage()
-                + "  " + e.getClass();
+                    + "  " + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);
         }
     }
 
     /**
-     * Encrypt data in the KMS using the given encryption policy and Public Master Key. The generated cipher text is
-     * made of 2 parts: a header containing the encapsulation of the ephemeral symmetric key and the symmetrically
+     * Encrypt data in the KMS using the given encryption policy and Public Master
+     * Key. The generated cipher text is
+     * made of 2 parts: a header containing the encapsulation of the ephemeral
+     * symmetric key and the symmetrically
      * encrypted content under that key.
      *
      * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
-     * @param plaintext the data to encrypt
-     * @param encryptionPolicy the encryption policy as a boolean expression
+     * @param plaintext                       the data to encrypt
+     * @param encryptionPolicy                the encryption policy as a boolean
+     *                                        expression
      * @return the encrypted data
      * @throws CloudproofException if the encryption fails
      */
     public byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier,
-                                    byte[] plaintext,
-                                    String encryptionPolicy)
-        throws CloudproofException {
+            byte[] plaintext,
+            String encryptionPolicy)
+            throws CloudproofException {
         return coverCryptEncrypt(publicMasterKeyUniqueIdentifier, plaintext, encryptionPolicy, Optional.empty(),
-            Optional.empty());
+                Optional.empty());
     }
 
     /**
-     * Encrypt data in the KMS using the given encryption policy and Public Master Key. The generated cipher text is
-     * made of 2 parts: a header containing the encapsulation of the ephemeral symmetric key and the symmetrically
+     * Encrypt data in the KMS using the given encryption policy and Public Master
+     * Key. The generated cipher text is
+     * made of 2 parts: a header containing the encapsulation of the ephemeral
+     * symmetric key and the symmetrically
      * encrypted content under that key.
      *
      * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
-     * @param plaintext the data to encrypt
-     * @param encryptionPolicy the encryption policy as a boolean expression
-     * @param authenticationData the authentication data used in the AEAD of the symmetric scheme
+     * @param plaintext                       the data to encrypt
+     * @param encryptionPolicy                the encryption policy as a boolean
+     *                                        expression
+     * @param authenticationData              the authentication data used in the
+     *                                        AEAD of the symmetric scheme
      * @return the encrypted data
      * @throws CloudproofException if the encryption fails
      */
     public byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier,
-                                    byte[] plaintext,
-                                    String encryptionPolicy,
-                                    byte[] authenticationData)
-        throws CloudproofException {
+            byte[] plaintext,
+            String encryptionPolicy,
+            byte[] authenticationData)
+            throws CloudproofException {
         return coverCryptEncrypt(publicMasterKeyUniqueIdentifier, plaintext, encryptionPolicy,
-            Optional.of(authenticationData), Optional.empty());
+                Optional.of(authenticationData), Optional.empty());
     }
 
     /**
-     * Encrypt data in the KMS using the given encryption policy and Public Master Key. The generated cipher text is
-     * made of 2 parts: a header containing the encapsulation of the ephemeral symmetric key and the symmetrically
+     * Encrypt data in the KMS using the given encryption policy and Public Master
+     * Key. The generated cipher text is
+     * made of 2 parts: a header containing the encapsulation of the ephemeral
+     * symmetric key and the symmetrically
      * encrypted content under that key.
-     * 
+     *
      * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
-     * @param plaintext the data to encrypt
-     * @param encryptionPolicy the encryption policy as a boolean expression
-     * @param authenticationData the authentication data used in the AEAD of the symmetric scheme
-     * @param headerMetaData Metadata to encrypt within the header
+     * @param plaintext                       the data to encrypt
+     * @param encryptionPolicy                the encryption policy as a boolean
+     *                                        expression
+     * @param authenticationData              the authentication data used in the
+     *                                        AEAD of the symmetric scheme
+     * @param headerMetaData                  Metadata to encrypt within the header
      * @return the encrypted data
      * @throws CloudproofException if the encryption fails
      */
     public byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier,
-                                    byte[] plaintext,
-                                    String encryptionPolicy,
-                                    byte[] authenticationData,
-                                    byte[] headerMetaData)
-        throws CloudproofException {
+            byte[] plaintext,
+            String encryptionPolicy,
+            byte[] authenticationData,
+            byte[] headerMetaData)
+            throws CloudproofException {
 
         return coverCryptEncrypt(publicMasterKeyUniqueIdentifier, plaintext, encryptionPolicy,
-            Optional.of(authenticationData), Optional.of(headerMetaData));
+                Optional.of(authenticationData), Optional.of(headerMetaData));
     }
 
     /**
-     * Encrypt data in the KMS using the given encryption policy and Public Master Key. The generated cipher text is
-     * made of 2 parts: a header containing the encapsulation of the ephemeral symmetric key and the symmetrically
+     * Encrypt data in the KMS using the given encryption policy and Public Master
+     * Key. The generated cipher text is
+     * made of 2 parts: a header containing the encapsulation of the ephemeral
+     * symmetric key and the symmetrically
      * encrypted content under that key.
-     * 
+     *
      * @param publicMasterKeyUniqueIdentifier the UID of the Public Key
-     * @param plaintext the data to encrypt
-     * @param encryptionPolicy the encryption policy as a boolean expression
-     * @param authenticationData the authentication data used in the AEAD of the symmetric scheme
-     * @param headerMetaData Optional metadata to encrypt within the header
+     * @param plaintext                       the data to encrypt
+     * @param encryptionPolicy                the encryption policy as a boolean
+     *                                        expression
+     * @param authenticationData              the authentication data used in the
+     *                                        AEAD of the symmetric scheme
+     * @param headerMetaData                  Optional metadata to encrypt within
+     *                                        the header
      * @return the encrypted data
      * @throws CloudproofException if the encryption fails
      */
     byte[] coverCryptEncrypt(String publicMasterKeyUniqueIdentifier,
-                             byte[] plaintext,
-                             String encryptionPolicy,
-                             Optional<byte[]> authenticationData,
-                             Optional<byte[]> headerMetaData)
-        throws CloudproofException {
+            byte[] plaintext,
+            String encryptionPolicy,
+            Optional<byte[]> authenticationData,
+            Optional<byte[]> headerMetaData)
+            throws CloudproofException {
         try {
             DataToEncrypt dataToEncrypt = new DataToEncrypt(encryptionPolicy, plaintext, headerMetaData);
             Encrypt request = new Encrypt(
-                publicMasterKeyUniqueIdentifier,
-                dataToEncrypt.toBytes(),
-                Optional.empty(),
-                authenticationData.isPresent() ? Optional.of(authenticationData.get()) : Optional.empty());
+                    publicMasterKeyUniqueIdentifier,
+                    dataToEncrypt.toBytes(),
+                    Optional.empty(),
+                    authenticationData.isPresent() ? Optional.of(authenticationData.get())
+                            : Optional.empty());
             EncryptResponse response = this.kmip.encrypt(request);
             if (response.getData().isPresent()) {
                 return response.getData().get();
@@ -485,56 +507,69 @@ public class KmsClient {
     }
 
     /**
-     * Decrypt the data in the KMS using the given User Decryption Key The encryptedData should be made of 3 parts: -
-     * the length of the encrypted header as a u32 in big endian format (4 bytes) - the header - the AES GCM encrypted
+     * Decrypt the data in the KMS using the given User Decryption Key The
+     * encryptedData should be made of 3 parts: -
+     * the length of the encrypted header as a u32 in big endian format (4 bytes) -
+     * the header - the AES GCM encrypted
      * content
      *
      * @param userDecryptionKeyUniqueIdentifier the key UID
-     * @param encryptedData the cipher text
+     * @param encryptedData                     the cipher text
      * @return the clear text data
      * @throws CloudproofException if the decryption fails
      */
     public DecryptedData coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier,
-                                           byte[] encryptedData)
-        throws CloudproofException {
+            byte[] encryptedData)
+            throws CloudproofException {
         return this.coverCryptDecrypt(userDecryptionKeyUniqueIdentifier, encryptedData, Optional.empty());
     }
 
     /**
-     * Decrypt the data in the KMS using the given User Decryption Key The encryptedData should be made of 3 parts: -
-     * the length of the encrypted header as a u32 in big endian format (4 bytes) - the header - the AES GCM encrypted
+     * Decrypt the data in the KMS using the given User Decryption Key The
+     * encryptedData should be made of 3 parts: -
+     * the length of the encrypted header as a u32 in big endian format (4 bytes) -
+     * the header - the AES GCM encrypted
      * content
      *
      * @param userDecryptionKeyUniqueIdentifier the key UID
-     * @param encryptedData the cipher text
-     * @param authenticationData the data to use in the authentication of the symmetric scheme
+     * @param encryptedData                     the cipher text
+     * @param authenticationData                the data to use in the
+     *                                          authentication of the symmetric
+     *                                          scheme
      * @return the clear text data
      * @throws CloudproofException if the decryption fails
      */
     public DecryptedData coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier,
-                                           byte[] encryptedData,
-                                           byte[] authenticationData)
-        throws CloudproofException {
-        return coverCryptDecrypt(userDecryptionKeyUniqueIdentifier, encryptedData, Optional.of(authenticationData));
+            byte[] encryptedData,
+            byte[] authenticationData)
+            throws CloudproofException {
+        return coverCryptDecrypt(userDecryptionKeyUniqueIdentifier, encryptedData,
+                Optional.of(authenticationData));
     }
 
     /**
-     * Decrypt the data in the KMS using the given User Decryption Key The encryptedData should be made of 3 parts: -
-     * the length of the encrypted header as a u32 in big endian format (4 bytes) - the header - the AES GCM encrypted
+     * Decrypt the data in the KMS using the given User Decryption Key The
+     * encryptedData should be made of 3 parts: -
+     * the length of the encrypted header as a u32 in big endian format (4 bytes) -
+     * the header - the AES GCM encrypted
      * content
      *
      * @param userDecryptionKeyUniqueIdentifier the key UID
-     * @param encryptedData the cipher text
-     * @param authenticationData the data to use in the authentication of the symmetric scheme
+     * @param encryptedData                     the cipher text
+     * @param authenticationData                the data to use in the
+     *                                          authentication of the symmetric
+     *                                          scheme
      * @return the clear text data
      * @throws CloudproofException if the decryption fails
      */
     DecryptedData coverCryptDecrypt(String userDecryptionKeyUniqueIdentifier,
-                                    byte[] encryptedData,
-                                    Optional<byte[]> authenticationData)
-        throws CloudproofException {
+            byte[] encryptedData,
+            Optional<byte[]> authenticationData)
+            throws CloudproofException {
         try {
-            Decrypt request = new Decrypt(userDecryptionKeyUniqueIdentifier, encryptedData, authenticationData);
+            Decrypt request = new Decrypt(userDecryptionKeyUniqueIdentifier, encryptedData,
+                    authenticationData);
+            System.out.println(request);
             DecryptResponse response = this.kmip.decrypt(request);
             if (response.getData().isPresent()) {
                 return DecryptedData.fromBytes(response.getData().get());
@@ -553,52 +588,63 @@ public class KmsClient {
      * Rotate the given policy attributes. This will rekey in the KMS:
      * <ul>
      * <li>the Master Keys</li>
-     * <li>all User Decryption Keys that contain one of these attributes in their policy and are not rotated.</li>
+     * <li>all User Decryption Keys that contain one of these attributes in their
+     * policy and are not rotated.</li>
      * </ul>
-     * Non Rekeyed User Decryption Keys cannot decrypt ata encrypted with the rekeyed Master Public Key and the given
+     * Non Rekeyed User Decryption Keys cannot decrypt ata encrypted with the
+     * rekeyed Master Public Key and the given
      * attributes. <br>
-     * Rekeyed User Decryption Keys however will be able to decrypt data encrypted by the previous Master Public Key and
+     * Rekeyed User Decryption Keys however will be able to decrypt data encrypted
+     * by the previous Master Public Key and
      * the rekeyed one. <br>
-     * Note: there is a limit on the number of revocations that can be performed which is set in the {@link Policy} when
+     * Note: there is a limit on the number of revocations that can be performed
+     * which is set in the {@link Policy} when
      * Master Keys are created
      *
      * @param privateMasterKeyUniqueIdentifier the UID of the private master key
-     * @param policyAttributes the array of {@link Attr}
+     * @param policyAttributes                 the array of CoverCrypt attributes
      * @return the Master Public Key UID
      * @throws CloudproofException if the revocation fails
      */
     public String rotateCoverCryptAttributes(String privateMasterKeyUniqueIdentifier,
-                                             Attr[] policyAttributes)
-        throws CloudproofException {
+            String[] policyAttributes)
+            throws CloudproofException {
         try {
+
             Attributes attributes = new Attributes(ObjectType.Private_Key,
-                Optional.of(CryptographicAlgorithm.CoverCrypt));
+                    Optional.of(CryptographicAlgorithm.CoverCrypt));
             attributes.keyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
-            attributes.vendorAttributes(Optional.of(new VendorAttribute[] {
-                Attr.toVendorAttribute(policyAttributes, VendorAttribute.VENDOR_ATTR_COVER_CRYPT_ATTR)}));
-            ReKeyKeyPair request = new ReKeyKeyPair(Optional.of(privateMasterKeyUniqueIdentifier), Optional.empty(),
-                Optional.empty(),
-                Optional.of(attributes), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+            attributes.vendorAttributes(Optional
+                    .of(new VendorAttribute[] { Attribute.toVendorAttribute(policyAttributes) }));
+            ReKeyKeyPair request = new ReKeyKeyPair(Optional.of(privateMasterKeyUniqueIdentifier),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of(attributes), Optional.empty(), Optional.empty(), Optional.empty(),
+                    Optional.empty());
             ReKeyKeyPairResponse response = this.kmip.reKeyKeyPair(request);
             return response.getPublicKeyUniqueIdentifier();
         } catch (CloudproofException e) {
             throw e;
         } catch (Exception e) {
             String err = "Revocation of CoverCrypt policy attributes failed: "
-                + e.getMessage() + "  " + e.getClass();
+                    + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);
         }
     }
 
     /**
-     * Revoke a key in the KMS which makes it unavailable to use in the KMS to perform
-     * {@link #coverCryptEncrypt(String, byte[], String)} or {@link #coverCryptDecrypt(String, byte[], Optional)}
+     * Revoke a key in the KMS which makes it unavailable to use in the KMS to
+     * perform
+     * {@link #coverCryptEncrypt(String, byte[], String)} or
+     * {@link #coverCryptDecrypt(String, byte[], Optional)}
      * operations. <br>
      * <br>
-     * If this key is a User Decryption Key, it will not be rekeyed in case of attribute revocation. <br>
+     * If this key is a User Decryption Key, it will not be rekeyed in case of
+     * attribute revocation. <br>
      * <br>
-     * Note: this revokes the key **inside** the KMS: it does not prevent an user who has a local copy of a User
+     * Note: this revokes the key **inside** the KMS: it does not prevent an user
+     * who has a local copy of a User
      * Decryption Key to perform decryption operations.
      *
      * @param keyUniqueIdentifier the UID of the key to revoke
@@ -608,7 +654,7 @@ public class KmsClient {
     public String revokeKey(String keyUniqueIdentifier) throws CloudproofException {
         try {
             Revoke request = new Revoke(Optional.of(keyUniqueIdentifier), new RevocationReason("Revoked"),
-                Optional.empty());
+                    Optional.empty());
             RevokeResponse response = this.kmip.revoke(request);
             return response.getUniqueIdentifier();
         } catch (CloudproofException e) {
@@ -621,11 +667,14 @@ public class KmsClient {
     }
 
     /**
-     * Destroy a key in the KMS which makes it unavailable to use in the KMS to perform
-     * {@link #coverCryptEncrypt(String, byte[], String)} or {@link #coverCryptDecrypt(String, byte[], Optional)}
+     * Destroy a key in the KMS which makes it unavailable to use in the KMS to
+     * perform
+     * {@link #coverCryptEncrypt(String, byte[], String)} or
+     * {@link #coverCryptDecrypt(String, byte[], Optional)}
      * operations. <br>
      * <br>
-     * Note: this destroy the key **inside** the KMS: it does not prevent an user who has a local copy of a User
+     * Note: this destroy the key **inside** the KMS: it does not prevent an user
+     * who has a local copy of a User
      * Decryption Key to perform decryption operations.
      *
      * @param uniqueIdentifier the UID of the key to revoke

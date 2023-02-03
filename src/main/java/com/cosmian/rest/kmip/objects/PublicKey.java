@@ -62,7 +62,7 @@ public class PublicKey extends KmipObject {
 
     /**
      * Return the {@link Attributes} or a set of empty {@link Attributes}
-     * 
+     *
      * @return the {@link Attributes} found in the {@link KeyBlock}
      */
     public Attributes attributes() {
@@ -71,7 +71,7 @@ public class PublicKey extends KmipObject {
 
     /**
      * The low level cryptographic content of the Public Key
-     * 
+     *
      * @return the byte array
      * @throws CloudproofException if the key is wrapped and bytes cannot be extracted
      */
@@ -81,7 +81,7 @@ public class PublicKey extends KmipObject {
 
     /**
      * Deserialize an instance from its Json representation obtained using oJson()
-     * 
+     *
      * @param json the public key in JSON form
      * @return the public key
      * @throws CloudproofException if the parsing fails

@@ -22,6 +22,7 @@ import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Location;
+import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
 
@@ -374,9 +375,9 @@ public class Redis extends Database implements Closeable {
     }
 
     @Override
-    protected boolean searchProgress(List<IndexedValue> indexedValues) throws CloudproofException {
+    protected boolean searchProgress(ProgressResults progressResults) throws CloudproofException {
         // let the search progress
-        logger.fine("progress called with " + indexedValues.size() + " values");
+        logger.fine("progress called");
         return true;
     }
 

@@ -25,6 +25,7 @@ import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertEntry;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.ffi.ListRemovedLocations;
 import com.cosmian.jna.findex.ffi.Progress;
+import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.ffi.UpdateLines;
 import com.cosmian.jna.findex.ffi.UpsertChain;
 import com.cosmian.jna.findex.ffi.UpsertEntry;
@@ -173,7 +174,7 @@ public abstract class Database {
      * @return false to stop the graph from progressing
      * @throws CloudproofException if anything goes wrong
      */
-    protected abstract boolean searchProgress(List<IndexedValue> indexedValues) throws CloudproofException;
+    protected abstract boolean searchProgress(ProgressResults indexedValues) throws CloudproofException;
 
     public FetchAllEntryTableUidsCallback fetchAllEntryTableUidsCallback() {
         return new FetchAllEntryTableUids(new DBFetchAllEntryTableUids() {
@@ -250,7 +251,7 @@ public abstract class Database {
     public ProgressCallback progressCallback() {
         return new Progress(new SearchProgress() {
             @Override
-            public boolean notify(List<IndexedValue> indexedValues) throws CloudproofException {
+            public boolean notify(ProgressResults indexedValues) throws CloudproofException {
                 return Database.this.searchProgress(indexedValues);
             }
         });

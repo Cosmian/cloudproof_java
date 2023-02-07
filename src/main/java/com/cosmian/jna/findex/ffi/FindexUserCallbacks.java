@@ -48,6 +48,6 @@ public interface FindexUserCallbacks {
     }
 
     interface SearchProgress {
-        public boolean notify(List<IndexedValue> indexedValues) throws CloudproofException;
+        public boolean notify(ProgressResults indexedValues) throws CloudproofException;
     }
 }

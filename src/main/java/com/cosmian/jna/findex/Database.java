@@ -162,20 +162,6 @@ public abstract class Database {
      */
     protected abstract List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException;
 
-    /**
-     * The Findex search mechanism will call this method as the search for keywords progresses through the search graph.
-     * <p>
-     * The user should return <i>false</i> to immediately have the search return and stop further progressing down the
-     * graph. *
-     * <p>
-     * Implementation of this method is only required to search the index
-     *
-     * @param indexedValues A list of {@link IndexedValue} already found by the search
-     * @return false to stop the graph from progressing
-     * @throws CloudproofException if anything goes wrong
-     */
-    protected abstract boolean searchProgress(ProgressResults indexedValues) throws CloudproofException;
-
     public FetchAllEntryTableUidsCallback fetchAllEntryTableUidsCallback() {
         return new FetchAllEntryTableUids(new DBFetchAllEntryTableUids() {
 
@@ -247,14 +233,4 @@ public abstract class Database {
             }
         });
     }
-
-    public ProgressCallback progressCallback() {
-        return new Progress(new SearchProgress() {
-            @Override
-            public boolean notify(ProgressResults indexedValues) throws CloudproofException {
-                return Database.this.searchProgress(indexedValues);
-            }
-        });
-    }
-
 }

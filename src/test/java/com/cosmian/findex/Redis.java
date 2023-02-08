@@ -373,12 +373,4 @@ public class Redis extends Database implements Closeable {
             return locations;
         }
     }
-
-    @Override
-    protected boolean searchProgress(ProgressResults progressResults) throws CloudproofException {
-        // let the search progress
-        logger.fine("progress called");
-        return true;
-    }
-
 }

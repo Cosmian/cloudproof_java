@@ -27,12 +27,12 @@ public class Progress implements ProgressCallback {
         //
         // Deserialize search results
         //
-        ProgressResults indexedValues = new Leb128Reader(serializedSearchResults).readObject(ProgressResults.class);
+        ProgressResults results = new Leb128Reader(serializedSearchResults).readObject(ProgressResults.class);
 
         //
         // Convert to Indexed Values list
         //
-        return this.progress.notify(indexedValues);
+        return this.progress.notify(results.getResults());
     }
 
 }

@@ -349,11 +349,4 @@ public class Sqlite extends Database implements Closeable {
             throw new CloudproofException("Failed list removed locations: " + e.toString());
         }
     }
-
-    @Override
-    protected boolean searchProgress(ProgressResults indexedValues) throws CloudproofException {
-        // let search progress
-        return true;
-    }
-
 }

@@ -35,7 +35,6 @@ public class ProgressResults implements Leb128Serializable {
                 int numResults = (int) Leb128.readU64(is);
                 Set<IndexedValue> indexedValues = new HashSet<>();
                 for (int j = 0; j < numResults; j++) {
-                    System.out.println("reading: " + j + "/" + numResults);
                     indexedValues.add(new IndexedValue(Leb128.readByteArray(is)));
                 }
                 results.put(keyword, indexedValues);

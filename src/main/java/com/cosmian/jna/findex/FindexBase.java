@@ -87,6 +87,25 @@ public class FindexBase {
         return indexedValuesAndWordsJson;
     }
 
+    protected static String keywordsToJson(Set<Keyword> keyWords) throws CloudproofException {
+        // For the JSON strings
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Findex words
+        Base64.Encoder encoder = Base64.getEncoder();
+        String[] wordsString = new String[keyWords.size()];
+        int i = 0;
+        for (Keyword keyword : keyWords) {
+            wordsString[i++] = encoder.encodeToString(keyword.getBytes());
+        }
+
+        try {
+            return mapper.writeValueAsString(wordsString);
+        } catch (JsonProcessingException e) {
+            throw new CloudproofException("Invalid words", e);
+        }
+    }
+
     /**
      * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
      * exception wrapping it.

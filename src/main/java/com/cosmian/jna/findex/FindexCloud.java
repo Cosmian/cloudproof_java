@@ -1,7 +1,6 @@
 package com.cosmian.jna.findex;
 
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,8 +10,6 @@ import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.CloudproofException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
 
@@ -67,29 +64,13 @@ public final class FindexCloud extends FindexBase {
         byte[] indexedValuesBuffer = new byte[131072];
         IntByReference indexedValuesBufferSize = new IntByReference(indexedValuesBuffer.length);
 
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
-
-        // Findex master keys
         if (token == null) {
             throw new CloudproofException("Token cannot be null");
         }
         try (final Memory labelPointer = new Memory(label.length)) {
             labelPointer.write(0, label, 0, label.length);
 
-            // Findex words
-            Base64.Encoder encoder = Base64.getEncoder();
-            String[] wordsString = new String[keyWords.size()];
-            int i = 0;
-            for (Keyword keyword : keyWords) {
-                wordsString[i++] = encoder.encodeToString(keyword.getBytes());
-            }
-            String wordsJson;
-            try {
-                wordsJson = mapper.writeValueAsString(wordsString);
-            } catch (JsonProcessingException e) {
-                throw new CloudproofException("Invalid words", e);
-            }
+            String wordsJson = keywordsToJson(keyWords);
 
             // Indexes creation + insertion/update
             int ffiCode = INSTANCE.h_search_cloud(

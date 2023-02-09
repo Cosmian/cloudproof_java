@@ -87,6 +87,7 @@ public class FindexBase {
         return indexedValuesAndWordsJson;
     }
 
+<<<<<<< HEAD
     protected static String keywordsToJson(Set<Keyword> keyWords) throws CloudproofException {
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -106,6 +107,8 @@ public class FindexBase {
         }
     }
 
+=======
+>>>>>>> 5dcc9e4 (WIP)
     /**
      * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
      * exception wrapping it.

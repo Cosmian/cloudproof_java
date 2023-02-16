@@ -65,13 +65,13 @@ public class TestDemo {
 
         // Master Keys can be exported from the KMS
         // export the private master key
-        // PrivateKey privateMasterKey =
-        // kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyUniqueIdentifier);
-        // byte[] _privateMasterKeyBytes = privateMasterKey.bytes();
+        PrivateKey privateMasterKey =
+            kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyUniqueIdentifier);
+        byte[] _privateMasterKeyBytes = privateMasterKey.bytes();
         // export the public key
-        // PublicKey publicKey =
-        // kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
-        // byte[] _publicKeyBytes = publicKey.bytes();
+        PublicKey publicKey =
+            kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
+        byte[] _publicKeyBytes = publicKey.bytes();
 
         byte[] protectedMkgData = "protectedMkgMessage".getBytes(StandardCharsets.UTF_8);
         String protectedMkgEncryptionPolicy = "Department::MKG && Security Level::Protected";
@@ -106,10 +106,10 @@ public class TestDemo {
 
         // as with the master keys, the user keys can be exported to be used with the
         // native library
-        // PrivateKey confidentialMkgUserKey_ =
-        // kmsClient.retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
-        // PrivateKey topSecretMkgFinUserKey =
-        // kmsClient.retrieveCoverCryptUserDecryptionKey(topSecretMkgFinUserKeyUid);
+        PrivateKey confidentialMkgUserKey_ =
+            kmsClient.retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
+        PrivateKey topSecretMkgFinUserKey =
+            kmsClient.retrieveCoverCryptUserDecryptionKey(topSecretMkgFinUserKeyUid);
 
         // The confidential marketing user can successfully decrypt a low-security
         // marketing message
@@ -180,7 +180,8 @@ public class TestDemo {
         assert !Arrays.equals(oldConfidentialMkgUserKey.bytes(), rekeyedConfidentialMkgUserKey.bytes());
 
         // Decrypting the "old" `protected marketing` message
-        DecryptedData protectedMkg__ = CoverCrypt.decrypt(rekeyedConfidentialMkgUserKey.bytes(), protectedMkgCT, Optional.empty());
+        DecryptedData protectedMkg__ =
+            CoverCrypt.decrypt(rekeyedConfidentialMkgUserKey.bytes(), protectedMkgCT, Optional.empty());
         assert Arrays.equals(protectedMkgData, protectedMkg__.getPlaintext());
 
         // Decrypting the "new" `confidential marketing` message

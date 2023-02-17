@@ -49,7 +49,7 @@ jobs:
   build_in_docker:
     services:
       kms:
-        image: cosmian/kms:4.2.0
+        image: cosmian/kms:4.3.3
         env:
           COSMIAN_SERVER_URL: http://localhost:9998
           KMS_PUBLIC_PATH: /tmp
@@ -94,7 +94,28 @@ jobs:
       - run: python3 scripts/get_native_libraries.py
 
       - name: Build with Maven
-        run: mvn package
+        run: mvn compile
+        env:
+          COSMIAN_SERVER_URL: http://kms:9998
+          REDIS_HOSTNAME: redis
+          REDIS_PORT: 6379
+          LANG: en_US.UTF-8
+          LANGUAGE: en_US:en
+          LC_ALL: en_US.UTF-8
+
+      - name: Test with Maven
+        run: mvn test
+        env:
+          COSMIAN_SERVER_URL: http://kms:9998
+          REDIS_HOSTNAME: redis
+          REDIS_PORT: 6379
+          LANG: en_US.UTF-8
+          LANGUAGE: en_US:en
+          LC_ALL: en_US.UTF-8
+
+      - name: Bench with Maven
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        run: mvn test -Dtest='TestBenchesCoverCrypt'
         env:
           COSMIAN_SERVER_URL: http://kms:9998
           REDIS_HOSTNAME: redis
@@ -119,7 +140,7 @@ jobs:
     with:
       branch: develop
       target: wasm32-unknown-unknown
-      kms-version: 4.2.0
+      kms-version: 4.3.3
       copy_fresh_build: false
       copy_regression_files: |
         cp ./cloudproof_java/non_regression_vector.json tests/data/cover_crypt/non_regression/java_non_regression_vector.json
@@ -131,7 +152,7 @@ jobs:
     with:
       branch: develop
       target: x86_64-unknown-linux-gnu
-      kms-version: 4.2.0
+      kms-version: 4.3.3
       copy_fresh_build: false
       copy_regression_files: |
         cp ./cloudproof_java/non_regression_vector.json tests/data/cover_crypt/non_regression/java_non_regression_vector.json

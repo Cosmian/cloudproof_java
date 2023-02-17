@@ -241,6 +241,7 @@ public class TestSqlite {
                 java.nio.file.LinkOption.NOFOLLOW_LINKS);
             System.out.println("Non-regression test file: " + newPath);
             verify(key, label, indexedValuesAndWords, newPath, expectedDbLocations);
+            System.out.println("... OK: Non-regression test file: " + fullPath);
         }
     }
 

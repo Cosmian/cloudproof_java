@@ -282,7 +282,7 @@ public class TestNativeCoverCrypt {
                         new PolicyAxisAttribute("FIN", false),
                         new PolicyAxisAttribute("MKG", false),
                         new PolicyAxisAttribute("HR", false)},
-                    false // this axis is hierarchical
+                    false // this axis is NOT hierarchical
                 )});
     }
 

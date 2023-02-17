@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.1] - 2023-02-17
+
+### Bug Fixes
+
+- Maven central publish
+
+### Documentation
+
+- Add comments on exposed code from public_doc
+
+---
+
 ## [4.0.0] - 2023-01-31
 
 ### Documentation

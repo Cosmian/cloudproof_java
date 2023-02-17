@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>4.0.0</version>
+    <version>4.0.1</version>
 
     <name>cloudproof_java</name>
     <description>The Cloudproof Java Lib secures data repositories in the cloud with attributes-based access control encryption and encrypted search</description>

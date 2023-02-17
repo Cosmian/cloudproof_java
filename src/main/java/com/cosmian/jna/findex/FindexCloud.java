@@ -8,7 +8,6 @@ import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
-import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
@@ -43,35 +42,35 @@ public final class FindexCloud extends FindexBase {
         upsert(token, label, indexedValuesAndWords, null);
     }
 
-    public static Map<Keyword, Set<Location>> search(SearchParams params)
+    public static SearchResults search(SearchParams params)
         throws CloudproofException {
         return search(params.token, params.label, params.keywords, params.maxResultsPerKeyword, params.maxDepth,
             params.maxDepth, params.baseUrl);
     }
 
-    public static Map<Keyword, Set<Location>> search(String token,
-                                                     byte[] label,
-                                                     Set<Keyword> keyWords)
+    public static SearchResults search(String token,
+                                       byte[] label,
+                                       Set<Keyword> keyWords)
         throws CloudproofException {
         return search(token, label, keyWords, 0, -1, 0, null);
     }
 
-    public static Map<Keyword, Set<Location>> search(String token,
-                                                     byte[] label,
-                                                     Set<Keyword> keyWords,
-                                                     int maxResultsPerKeyword,
-                                                     int maxDepth)
+    public static SearchResults search(String token,
+                                       byte[] label,
+                                       Set<Keyword> keyWords,
+                                       int maxResultsPerKeyword,
+                                       int maxDepth)
         throws CloudproofException {
         return search(token, label, keyWords, maxResultsPerKeyword, maxDepth, 0, null);
     }
 
-    public static Map<Keyword, Set<Location>> search(String token,
-                                                     byte[] label,
-                                                     Set<Keyword> keyWords,
-                                                     int maxResultsPerKeyword,
-                                                     int maxDepth,
-                                                     int insecureFetchChainsBatchSize,
-                                                     String baseUrl)
+    public static SearchResults search(String token,
+                                       byte[] label,
+                                       Set<Keyword> keyWords,
+                                       int maxResultsPerKeyword,
+                                       int maxDepth,
+                                       int insecureFetchChainsBatchSize,
+                                       String baseUrl)
         throws CloudproofException {
         //
         // Prepare outputs
@@ -118,8 +117,7 @@ public final class FindexCloud extends FindexBase {
 
             byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
 
-            SearchResults searchResults = new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
-            return searchResults.getResults();
+            return new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
         }
     }
 

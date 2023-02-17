@@ -34,6 +34,11 @@ public final class FindexCloud extends FindexBase {
         }
     }
 
+    public static void upsert(IndexRequest request)
+        throws CloudproofException {
+        upsert(request.token, request.label, request.indexedValuesAndWords, request.baseUrl);
+    }
+
     public static void upsert(
                               String token,
                               byte[] label,
@@ -42,10 +47,10 @@ public final class FindexCloud extends FindexBase {
         upsert(token, label, indexedValuesAndWords, null);
     }
 
-    public static SearchResults search(SearchParams params)
+    public static SearchResults search(SearchRequest request)
         throws CloudproofException {
-        return search(params.token, params.label, params.keywords, params.maxResultsPerKeyword, params.maxDepth,
-            params.maxDepth, params.baseUrl);
+        return search(request.token, request.label, request.keywords, request.maxResultsPerKeyword, request.maxDepth,
+            request.maxDepth, request.baseUrl);
     }
 
     public static SearchResults search(String token,
@@ -121,22 +126,43 @@ public final class FindexCloud extends FindexBase {
         }
     }
 
-    static public class SearchParams extends FindexBase.SearchParams<SearchParams> {
+    static public class SearchRequest extends FindexBase.SearchRequest<SearchRequest> {
         private String token;
 
         private String baseUrl;
 
         @Override
-        SearchParams self() {
+        SearchRequest self() {
             return this;
         }
 
-        public SearchParams token(String token) {
+        public SearchRequest token(String token) {
             this.token = token;
             return this;
         }
 
-        public SearchParams baseUrl(String baseUrl) {
+        public SearchRequest baseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+            return this;
+        }
+    }
+
+    static public class IndexRequest extends FindexBase.IndexRequest<IndexRequest> {
+        private String token;
+
+        private String baseUrl;
+
+        @Override
+        IndexRequest self() {
+            return this;
+        }
+
+        public IndexRequest token(String token) {
+            this.token = token;
+            return this;
+        }
+
+        public IndexRequest baseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
             return this;
         }

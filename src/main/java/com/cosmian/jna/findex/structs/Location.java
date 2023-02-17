@@ -7,7 +7,7 @@ import java.util.UUID;
 import com.cosmian.jna.findex.serde.Leb128ByteArray;
 import com.cosmian.utils.Leb128;
 
-public class Location extends Leb128ByteArray {
+public class Location extends Leb128ByteArray implements IndexedValue.ToIndexedValue {
 
     public Location() {
         super();

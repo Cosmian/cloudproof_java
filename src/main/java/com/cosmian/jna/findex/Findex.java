@@ -41,10 +41,15 @@ public final class Findex extends FindexBase {
         }
     }
 
-    public static SearchResults search(SearchParams params)
+    public static void upsert(IndexRequest request)
         throws CloudproofException {
-        return search(params.key, params.label, params.keywords, params.maxResultsPerKeyword, params.maxDepth,
-            params.maxDepth, params.database);
+        upsert(request.key, request.label, request.indexedValuesAndWords, request.database);
+    }
+
+    public static SearchResults search(SearchRequest request)
+        throws CloudproofException {
+        return search(request.key, request.label, request.keywords, request.maxResultsPerKeyword, request.maxDepth,
+            request.maxDepth, request.database);
     }
 
     public static SearchResults search(byte[] key,
@@ -187,25 +192,45 @@ public final class Findex extends FindexBase {
         }
     }
 
-    static public class SearchParams extends FindexBase.SearchParams<SearchParams> {
+    static public class SearchRequest extends FindexBase.SearchRequest<SearchRequest> {
         protected byte[] key;
 
         protected Database database;
 
         @Override
-        SearchParams self() {
+        SearchRequest self() {
             return this;
         }
 
-        public SearchParams key(byte[] key) {
+        public SearchRequest key(byte[] key) {
             this.key = key;
             return this;
         }
 
-        public SearchParams database(Database database) {
+        public SearchRequest database(Database database) {
             this.database = database;
             return this;
         }
+    }
 
+    static public class IndexRequest extends FindexBase.IndexRequest<IndexRequest> {
+        protected byte[] key;
+
+        protected Database database;
+
+        @Override
+        IndexRequest self() {
+            return this;
+        }
+
+        public IndexRequest key(byte[] key) {
+            this.key = key;
+            return this;
+        }
+
+        public IndexRequest database(Database database) {
+            this.database = database;
+            return this;
+        }
     }
 }

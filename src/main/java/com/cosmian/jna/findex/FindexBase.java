@@ -125,7 +125,7 @@ public class FindexBase {
         }
     }
 
-    static abstract public class SearchParams<SELF extends SearchParams<SELF>> {
+    static abstract public class SearchRequest<SELF extends SearchRequest<SELF>> {
         protected byte[] label;
 
         protected Set<Keyword> keywords;
@@ -171,6 +171,43 @@ public class FindexBase {
         public SELF insecureFetchChainsBatchSize(int insecureFetchChainsBatchSize) {
             this.insecureFetchChainsBatchSize = insecureFetchChainsBatchSize;
             return self();
+        }
+    }
+
+    static abstract public class IndexRequest<SELF extends IndexRequest<SELF>> {
+        protected byte[] label;
+
+        protected Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
+
+        abstract SELF self();
+
+        public SELF label(byte[] label) {
+            this.label = label;
+            return self();
+        }
+
+        public SELF label(String label) {
+            return this.label(label.getBytes(StandardCharsets.UTF_8));
+        }
+
+        public SELF add(IndexedValue indexedValue,
+                        Set<Keyword> keywords) {
+            Set<Keyword> existingKeywords = this.indexedValuesAndWords.get(indexedValue);
+            existingKeywords.addAll(keywords);
+            return self();
+        }
+
+        public SELF add(IndexedValue.ToIndexedValue toIndexedValue,
+                        Set<Keyword> keywords) {
+            return this.add(toIndexedValue.toIndexedValue(), keywords);
+        }
+
+        public SELF add(IndexedValue.ToIndexedValue toIndexedValue,
+                        String[] keywords) {
+            return this.add(
+                toIndexedValue.toIndexedValue(),
+                Stream.of(keywords).map(keyword -> new Keyword(keyword))
+                    .collect(Collectors.toCollection(HashSet::new)));
         }
     }
 

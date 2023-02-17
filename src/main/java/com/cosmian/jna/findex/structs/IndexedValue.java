@@ -68,4 +68,8 @@ public class IndexedValue extends Leb128ByteArray {
             + Hex.encodeHexString(Arrays.copyOfRange(this.bytes, 1, this.bytes.length));
     }
 
+    public interface ToIndexedValue {
+        public IndexedValue toIndexedValue();
+    }
+
 }

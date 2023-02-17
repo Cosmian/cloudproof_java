@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import com.cosmian.jna.findex.serde.Leb128ByteArray;
 
-public class NextKeyword extends Leb128ByteArray {
+public class NextKeyword extends Leb128ByteArray implements IndexedValue.ToIndexedValue {
 
     public NextKeyword() {
         super();
@@ -21,5 +21,4 @@ public class NextKeyword extends Leb128ByteArray {
     public IndexedValue toIndexedValue() {
         return new IndexedValue(this);
     }
-
 }

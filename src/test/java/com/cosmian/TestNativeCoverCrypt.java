@@ -267,13 +267,23 @@ public class TestNativeCoverCrypt {
     }
 
     public static Policy policy() throws CloudproofException {
-        return new Policy(20, new PolicyAxis[] {
-            new PolicyAxis("Security Level",
-                new PolicyAxisAttribute[] {new PolicyAxisAttribute("Protected", false),
-                    new PolicyAxisAttribute("Confidential", false), new PolicyAxisAttribute("Top Secret", true)},
-                true),
-            new PolicyAxis("Department", new PolicyAxisAttribute[] {new PolicyAxisAttribute("FIN", false),
-                new PolicyAxisAttribute("MKG", false), new PolicyAxisAttribute("HR", false)}, false)});
+        return new Policy(20, // maximum number of creation of partition values
+            new PolicyAxis[] {
+                new PolicyAxis("Security Level",
+                    new PolicyAxisAttribute[] {
+                        new PolicyAxisAttribute("Protected", false),
+                        new PolicyAxisAttribute("Confidential", false),
+                        // the following attribute is hybridized allowing post-quantum resistance
+                        new PolicyAxisAttribute("Top Secret", true)},
+                    true // this axis is hierarchical
+                ),
+                new PolicyAxis("Department",
+                    new PolicyAxisAttribute[] {
+                        new PolicyAxisAttribute("FIN", false),
+                        new PolicyAxisAttribute("MKG", false),
+                        new PolicyAxisAttribute("HR", false)},
+                    false // this axis is NOT hierarchical
+                )});
     }
 
     private String accessPolicyConfidential() throws CloudproofException {

@@ -18,7 +18,8 @@ public final class FindexCloud extends FindexBase {
     public static void upsert(
                               String token,
                               byte[] label,
-                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords)
+                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords,
+                              String baseUrl)
         throws CloudproofException {
 
         try (
@@ -29,15 +30,24 @@ public final class FindexCloud extends FindexBase {
             unwrap(INSTANCE.h_upsert_cloud(
                 token,
                 labelPointer, label.length,
-                indexedValuesToJson(indexedValuesAndWords)));
+                indexedValuesToJson(indexedValuesAndWords),
+                baseUrl));
         }
+    }
+
+    public static void upsert(
+                              String token,
+                              byte[] label,
+                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords)
+        throws CloudproofException {
+        upsert(token, label, indexedValuesAndWords, null);
     }
 
     public static Map<Keyword, Set<Location>> search(String token,
                                                      byte[] label,
                                                      Set<Keyword> keyWords)
         throws CloudproofException {
-        return search(token, label, keyWords, 0, -1, 0);
+        return search(token, label, keyWords, 0, -1, 0, null);
     }
 
     public static Map<Keyword, Set<Location>> search(String token,
@@ -46,7 +56,7 @@ public final class FindexCloud extends FindexBase {
                                                      int maxResultsPerKeyword,
                                                      int maxDepth)
         throws CloudproofException {
-        return search(token, label, keyWords, maxResultsPerKeyword, maxDepth, 0);
+        return search(token, label, keyWords, maxResultsPerKeyword, maxDepth, 0, null);
     }
 
     public static Map<Keyword, Set<Location>> search(String token,
@@ -54,7 +64,8 @@ public final class FindexCloud extends FindexBase {
                                                      Set<Keyword> keyWords,
                                                      int maxResultsPerKeyword,
                                                      int maxDepth,
-                                                     int insecureFetchChainsBatchSize)
+                                                     int insecureFetchChainsBatchSize,
+                                                     String baseUrl)
         throws CloudproofException {
         //
         // Prepare outputs
@@ -80,7 +91,8 @@ public final class FindexCloud extends FindexBase {
                 wordsJson,
                 maxResultsPerKeyword,
                 maxDepth,
-                insecureFetchChainsBatchSize);
+                insecureFetchChainsBatchSize,
+                baseUrl);
             if (ffiCode != 0) {
                 // Retry with correct allocated size
                 indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
@@ -91,7 +103,8 @@ public final class FindexCloud extends FindexBase {
                     wordsJson,
                     maxResultsPerKeyword,
                     maxDepth,
-                    insecureFetchChainsBatchSize);
+                    insecureFetchChainsBatchSize,
+                    baseUrl);
                 if (ffiCode != 0) {
                     throw new CloudproofException(get_last_error(4095));
                 }

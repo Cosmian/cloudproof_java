@@ -123,11 +123,13 @@ public interface FindexNativeWrapper extends Library {
                        String words,
                        int maxResultsPerKeyword,
                        int maxDepth,
-                       int insecureFetchChainsBatchSize);
+                       int insecureFetchChainsBatchSize,
+                       String baseUrl);
 
     int h_upsert_cloud(String token,
                        Pointer labelPointer,
                        int labelSize,
-                       String dbUidsAndWordsJson);
+                       String dbUidsAndWordsJson,
+                       String baseUrl);
 
 }

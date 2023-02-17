@@ -42,6 +42,12 @@ public final class Findex extends FindexBase {
         }
     }
 
+    public static Map<Keyword, Set<Location>> search(SearchParams params)
+        throws CloudproofException {
+        return search(params.key, params.label, params.keywords, params.maxResultsPerKeyword, params.maxDepth,
+            params.maxDepth, params.database);
+    }
+
     public static Map<Keyword, Set<Location>> search(byte[] key,
                                                      byte[] label,
                                                      Set<Keyword> keyWords,
@@ -181,5 +187,27 @@ public final class Findex extends FindexBase {
                 database.updateLinesCallback(),
                 database.listRemoveLocationsCallback()));
         }
+    }
+
+    static public class SearchParams extends FindexBase.SearchParams<SearchParams> {
+        protected byte[] key;
+
+        protected Database database;
+
+        @Override
+        SearchParams self() {
+            return this;
+        }
+
+        public SearchParams key(byte[] key) {
+            this.key = key;
+            return this;
+        }
+
+        public SearchParams database(Database database) {
+            this.database = database;
+            return this;
+        }
+
     }
 }

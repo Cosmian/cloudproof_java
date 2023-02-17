@@ -43,6 +43,12 @@ public final class FindexCloud extends FindexBase {
         upsert(token, label, indexedValuesAndWords, null);
     }
 
+    public static Map<Keyword, Set<Location>> search(SearchParams params)
+        throws CloudproofException {
+        return search(params.token, params.label, params.keywords, params.maxResultsPerKeyword, params.maxDepth,
+            params.maxDepth, params.baseUrl);
+    }
+
     public static Map<Keyword, Set<Location>> search(String token,
                                                      byte[] label,
                                                      Set<Keyword> keyWords)
@@ -114,6 +120,27 @@ public final class FindexCloud extends FindexBase {
 
             SearchResults searchResults = new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
             return searchResults.getResults();
+        }
+    }
+
+    static public class SearchParams extends FindexBase.SearchParams<SearchParams> {
+        private String token;
+
+        private String baseUrl;
+
+        @Override
+        SearchParams self() {
+            return this;
+        }
+
+        public SearchParams token(String token) {
+            this.token = token;
+            return this;
+        }
+
+        public SearchParams baseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+            return this;
         }
     }
 }

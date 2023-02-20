@@ -38,11 +38,23 @@ public class Location extends Leb128ByteArray implements ToIndexedValue {
     }
 
     public long toLong() {
-        return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getLong();
+        if (bytes.length == Integer.BYTES) {
+            return (long) ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getInt();
+        } else if (bytes.length == Long.BYTES) {
+            return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getLong();
+        } else {
+            throw new RuntimeException(
+                "The location is of length " + bytes.length + ", 4 or 8 bytes expected for a long.");
+        }
     }
 
     public int toInt() {
-        return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getInt();
+        if (bytes.length == Integer.BYTES) {
+            return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getInt();
+        } else {
+            throw new RuntimeException(
+                "The location is of length " + bytes.length + ", 4 bytes expected for an int.");
+        }
     }
 
     public UUID toUuid() {

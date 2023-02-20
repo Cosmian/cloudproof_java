@@ -1,15 +1,12 @@
 package com.cosmian.findex;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -18,6 +15,7 @@ import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
+import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.NextKeyword;
@@ -55,13 +53,12 @@ public class TestRedis {
         //
         // Recover test vectors
         //
-        int[] expectedDbLocations = IndexUtils.loadExpectedDBLocations();
+        Set<Integer> expectedDbLocations = IndexUtils.loadExpectedDBLocations();
 
         //
         // Build dataset with DB uids and words
         //
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
-        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
 
         //
         // Prepare Redis tables and users
@@ -78,7 +75,8 @@ public class TestRedis {
             //
             // Upsert
             //
-            Findex.upsert(key, label, indexedValuesAndWords, db);
+            Map<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+            Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
             System.out
                 .println("After insertion: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
             System.out
@@ -94,17 +92,13 @@ public class TestRedis {
             System.out.println("");
 
             {
-                Map<Keyword, Set<Location>> searchResults =
+                SearchResults searchResults =
                     Findex.search(
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         db);
-                System.out.println(
-                    "Search results: " + searchResults.size() + " " + searchResults.values().iterator().next().size());
-                int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
-                assertEquals(expectedDbLocations.length, dbLocations.length);
-                assertArrayEquals(expectedDbLocations, dbLocations);
+                assertEquals(expectedDbLocations, searchResults.getInts());
                 System.out.println("<== successfully found all original French locations");
             }
 
@@ -118,42 +112,39 @@ public class TestRedis {
 
             {
                 // Search with old label
-                Map<Keyword, Set<Location>> searchResults =
+                SearchResults searchResults =
                     Findex.search(
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         db);
-                int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
-                assertEquals(0, dbUids.length);
+                assertEquals(0, searchResults.size());
                 System.out.println("<== successfully compacted and changed the label");
             }
 
             {
                 // Search with new label and without user changes
-                Map<Keyword, Set<Location>> searchResults = Findex.search(
+                SearchResults searchResults = Findex.search(
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     db);
-                int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
-                assertArrayEquals(expectedDbLocations, dbUids);
+                assertEquals(expectedDbLocations, searchResults.getInts());
                 System.out.println("<== successfully found all French locations with the new label");
             }
 
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
-            int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbLocations, 17);
+            expectedDbLocations.remove(17);
             Findex.compact(1, key, key, "NewLabel".getBytes(), db);
             {
                 // Search should return everyone but n°17
-                Map<Keyword, Set<Location>> searchResults = Findex.search(
+                SearchResults searchResults = Findex.search(
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     db);
-                int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
-                assertArrayEquals(newExpectedDbUids, dbUids);
+                assertEquals(expectedDbLocations, searchResults.getInts());
                 System.out
                     .println("<== successfully found all French locations after removing one and compacting");
             }

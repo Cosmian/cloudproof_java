@@ -1,5 +1,6 @@
 package com.cosmian.jna.findex;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -131,6 +132,16 @@ public final class FindexCloud extends FindexBase {
 
         private String baseUrl;
 
+        public SearchRequest(String token, byte[] label) {
+            this.token = token;
+            this.label = label;
+        }
+
+        public SearchRequest(String token, String label) {
+            this.token = token;
+            this.label = label.getBytes(StandardCharsets.UTF_8);
+        }
+
         @Override
         SearchRequest self() {
             return this;
@@ -152,13 +163,18 @@ public final class FindexCloud extends FindexBase {
 
         private String baseUrl;
 
-        @Override
-        IndexRequest self() {
-            return this;
+        public IndexRequest(String token, byte[] label) {
+            this.token = token;
+            this.label = label;
         }
 
-        public IndexRequest token(String token) {
+        public IndexRequest(String token, String label) {
             this.token = token;
+            this.label = label.getBytes(StandardCharsets.UTF_8);
+        }
+
+        @Override
+        IndexRequest self() {
             return this;
         }
 

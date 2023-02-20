@@ -15,6 +15,7 @@ import java.util.Set;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.jna.findex.structs.ToIndexedValue;
 import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -125,7 +126,7 @@ public class FindexBase {
         }
     }
 
-    static abstract public class SearchRequest<SELF extends SearchRequest<SELF>> {
+    static abstract protected class SearchRequest<SELF extends SearchRequest<SELF>> {
         protected byte[] label;
 
         protected Set<Keyword> keywords;
@@ -137,15 +138,6 @@ public class FindexBase {
         protected int insecureFetchChainsBatchSize = 0;
 
         abstract SELF self();
-
-        public SELF label(byte[] label) {
-            this.label = label;
-            return self();
-        }
-
-        public SELF label(String label) {
-            return this.label(label.getBytes(StandardCharsets.UTF_8));
-        }
 
         public SELF keywords(Set<Keyword> keywords) {
             this.keywords = keywords;
@@ -174,37 +166,37 @@ public class FindexBase {
         }
     }
 
-    static abstract public class IndexRequest<SELF extends IndexRequest<SELF>> {
+    static abstract protected class IndexRequest<SELF extends IndexRequest<SELF>> {
         protected byte[] label;
 
         protected Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
 
         abstract SELF self();
 
-        public SELF label(byte[] label) {
-            this.label = label;
+        public SELF add(Map<? extends ToIndexedValue, Set<Keyword>> indexedValuesAndWords) {
+            for (Map.Entry<? extends ToIndexedValue, Set<Keyword>> entry : indexedValuesAndWords.entrySet()) {
+                add(entry.getKey(), entry.getValue());
+            }
             return self();
         }
 
-        public SELF label(String label) {
-            return this.label(label.getBytes(StandardCharsets.UTF_8));
-        }
-
-        public SELF add(IndexedValue indexedValue,
+        public SELF add(ToIndexedValue toIndexedValue,
                         Set<Keyword> keywords) {
-            Set<Keyword> existingKeywords = this.indexedValuesAndWords.get(indexedValue);
-            existingKeywords.addAll(keywords);
+            Set<Keyword> existingKeywords =
+                indexedValuesAndWords.get(toIndexedValue.toIndexedValue());
+
+            if (existingKeywords == null) {
+                indexedValuesAndWords.put(toIndexedValue.toIndexedValue(), keywords);
+            } else {
+                existingKeywords.addAll(keywords);
+            }
+
             return self();
         }
 
-        public SELF add(IndexedValue.ToIndexedValue toIndexedValue,
-                        Set<Keyword> keywords) {
-            return this.add(toIndexedValue.toIndexedValue(), keywords);
-        }
-
-        public SELF add(IndexedValue.ToIndexedValue toIndexedValue,
+        public SELF add(ToIndexedValue toIndexedValue,
                         String[] keywords) {
-            return this.add(
+            return add(
                 toIndexedValue.toIndexedValue(),
                 Stream.of(keywords).map(keyword -> new Keyword(keyword))
                     .collect(Collectors.toCollection(HashSet::new)));

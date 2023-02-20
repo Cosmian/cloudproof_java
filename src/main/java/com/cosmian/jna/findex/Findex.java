@@ -1,5 +1,6 @@
 package com.cosmian.jna.findex;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -197,18 +198,20 @@ public final class Findex extends FindexBase {
 
         protected Database database;
 
+        public SearchRequest(byte[] key, byte[] label, Database database) {
+            this.key = key;
+            this.label = label;
+            this.database = database;
+        }
+
+        public SearchRequest(byte[] key, String label, Database database) {
+            this.key = key;
+            this.label = label.getBytes(StandardCharsets.UTF_8);
+            this.database = database;
+        }
+
         @Override
         SearchRequest self() {
-            return this;
-        }
-
-        public SearchRequest key(byte[] key) {
-            this.key = key;
-            return this;
-        }
-
-        public SearchRequest database(Database database) {
-            this.database = database;
             return this;
         }
     }
@@ -218,18 +221,20 @@ public final class Findex extends FindexBase {
 
         protected Database database;
 
+        public IndexRequest(byte[] key, byte[] label, Database database) {
+            this.key = key;
+            this.label = label;
+            this.database = database;
+        }
+
+        public IndexRequest(byte[] key, String label, Database database) {
+            this.key = key;
+            this.label = label.getBytes(StandardCharsets.UTF_8);
+            this.database = database;
+        }
+
         @Override
         IndexRequest self() {
-            return this;
-        }
-
-        public IndexRequest key(byte[] key) {
-            this.key = key;
-            return this;
-        }
-
-        public IndexRequest database(Database database) {
-            this.database = database;
             return this;
         }
     }

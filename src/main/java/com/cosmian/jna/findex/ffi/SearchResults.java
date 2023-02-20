@@ -27,6 +27,10 @@ public class SearchResults implements Leb128Serializable {
         return results;
     }
 
+    public int size() {
+        return results.size();
+    }
+
     public Set<Location> get(Keyword keyword) {
         return results.get(keyword);
     }
@@ -42,6 +46,13 @@ public class SearchResults implements Leb128Serializable {
         return results.values()
             .stream()
             .flatMap(locations -> locations.stream().map(location -> location.toLong()))
+            .collect(Collectors.toSet());
+    }
+
+    public Set<Integer> getInts() {
+        return results.values()
+            .stream()
+            .flatMap(locations -> locations.stream().map(location -> location.toInt()))
             .collect(Collectors.toSet());
     }
 
@@ -66,6 +77,13 @@ public class SearchResults implements Leb128Serializable {
             .collect(Collectors.toSet());
     }
 
+    public Set<Integer> getInts(Keyword keyword) {
+        return results.get(keyword)
+            .stream()
+            .map(location -> location.toInt())
+            .collect(Collectors.toSet());
+    }
+
     public Set<UUID> getUuids(Keyword keyword) {
         return results.get(keyword)
             .stream()
@@ -79,6 +97,10 @@ public class SearchResults implements Leb128Serializable {
 
     public Set<Long> getLongs(String keyword) {
         return this.getLongs(new Keyword(keyword));
+    }
+
+    public Set<Integer> getInts(String keyword) {
+        return this.getInts(new Keyword(keyword));
     }
 
     public Set<UUID> getUuids(String keyword) {

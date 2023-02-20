@@ -1,13 +1,13 @@
 package com.cosmian.jna.findex.structs;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import com.cosmian.jna.findex.serde.Leb128ByteArray;
-import com.cosmian.utils.Leb128;
 
-public class Location extends Leb128ByteArray implements IndexedValue.ToIndexedValue {
+public class Location extends Leb128ByteArray implements ToIndexedValue {
 
     public Location() {
         super();
@@ -21,8 +21,12 @@ public class Location extends Leb128ByteArray implements IndexedValue.ToIndexedV
         this(location.getBytes(StandardCharsets.UTF_8));
     }
 
+    public Location(int location) {
+        this(ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.BIG_ENDIAN).putInt(location).array());
+    }
+
     public Location(long location) {
-        this(Leb128.encode(location));
+        this(ByteBuffer.allocate(Long.BYTES).order(ByteOrder.BIG_ENDIAN).putLong(location).array());
     }
 
     public Location(UUID location) {
@@ -34,7 +38,11 @@ public class Location extends Leb128ByteArray implements IndexedValue.ToIndexedV
     }
 
     public long toLong() {
-        return Leb128.decode(bytes);
+        return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getLong();
+    }
+
+    public int toInt() {
+        return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getInt();
     }
 
     public UUID toUuid() {
@@ -54,5 +62,4 @@ public class Location extends Leb128ByteArray implements IndexedValue.ToIndexedV
         bb.putLong(uuid.getLeastSignificantBits());
         return bb.array();
     }
-
 }

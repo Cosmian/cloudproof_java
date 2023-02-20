@@ -1,6 +1,5 @@
 package com.cosmian.findex;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
@@ -9,13 +8,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.Findex;
-import com.cosmian.jna.findex.structs.IndexedValue;
+import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.Resources;
@@ -45,13 +43,12 @@ public class TestSqlite {
         //
         // Recover test vectors
         //
-        int[] expectedDbLocations = IndexUtils.loadExpectedDBLocations();
+        Set<Integer> expectedDbLocations = IndexUtils.loadExpectedDBLocations();
 
         //
         // Build dataset with DB uids and words
         //
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
-        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
 
         //
         // Prepare Sqlite tables and users
@@ -62,7 +59,8 @@ public class TestSqlite {
             //
             // Upsert
             //
-            Findex.upsert(key, label, indexedValuesAndWords, db);
+            Map<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+            Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
             System.out
                 .println("After insertion: entry_table size: " + db.getAllKeyValueItems("entry_table").size());
             System.out
@@ -78,15 +76,13 @@ public class TestSqlite {
             System.out.println("");
 
             {
-                Map<Keyword, Set<Location>> searchResults =
+                SearchResults searchResults =
                     Findex.search(
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         db);
-                int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
-                assertEquals(expectedDbLocations.length, dbLocations.length);
-                assertArrayEquals(expectedDbLocations, dbLocations);
+                assertEquals(expectedDbLocations, searchResults.getInts());
                 System.out.println("<== successfully found all original French locations");
             }
 
@@ -95,42 +91,39 @@ public class TestSqlite {
             Findex.compact(1, key, key, "NewLabel".getBytes(), db);
             {
                 // Search with old label
-                Map<Keyword, Set<Location>> searchResults =
+                SearchResults searchResults =
                     Findex.search(
                         key,
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         db);
-                int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
-                assertEquals(0, dbUids.length);
+                assertEquals(0, searchResults.size());
                 System.out.println("<== successfully compacted and changed the label");
             }
 
             {
                 // Search with new label and without user changes
-                Map<Keyword, Set<Location>> searchResults = Findex.search(
+                SearchResults searchResults = Findex.search(
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     db);
-                int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
-                assertArrayEquals(expectedDbLocations, dbUids);
+                assertEquals(expectedDbLocations, searchResults.getInts());
                 System.out.println("<== successfully found all French locations with the new label");
             }
 
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
-            int[] newExpectedDbUids = ArrayUtils.removeElement(expectedDbLocations, 17);
+            expectedDbLocations.remove(17);
             Findex.compact(1, key, key, "NewLabel".getBytes(), db);
             {
                 // Search should return everyone but n°17
-                Map<Keyword, Set<Location>> searchResults = Findex.search(
+                SearchResults searchResults = Findex.search(
                     key,
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     db);
-                int[] dbUids = IndexUtils.searchResultsToDbUids(searchResults);
-                assertArrayEquals(newExpectedDbUids, dbUids);
+                assertEquals(expectedDbLocations, searchResults.getInts());
                 System.out
                     .println("<== successfully found all French locations after removing one and compacting");
             }
@@ -148,10 +141,10 @@ public class TestSqlite {
         byte[] key = IndexUtils.loadKey();
         byte[] label = IndexUtils.loadLabel();
         UsersDataset[] datasets = IndexUtils.loadDatasets();
-        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(datasets);
+        Map<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(datasets);
         try (Sqlite db = new Sqlite()) {
             for (int i = 0; i < 100; i++) {
-                Findex.upsert(key, label, indexedValuesAndWords, db);
+                Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
             }
         }
         System.out.println("<== successfully performed 100 upserts");
@@ -159,9 +152,9 @@ public class TestSqlite {
 
     void verify(byte[] key,
                 byte[] label,
-                HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords,
+                HashMap<Location, Set<Keyword>> indexedValuesAndWords,
                 String dbPath,
-                int[] expectedDbLocations)
+                Set<Integer> expectedDbLocations)
         throws Exception {
         Sqlite db = new Sqlite(dbPath);
         int initialEntryTableSize = db.getAllKeyValueItems("entry_table").size();
@@ -181,23 +174,27 @@ public class TestSqlite {
         System.out.println("");
 
         {
-            Map<Keyword, Set<Location>> searchResults =
+            SearchResults searchResults =
                 Findex.search(
                     key,
                     label,
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     -1, -1, db);
-            int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
-            assertEquals(expectedDbLocations.length, dbLocations.length);
+            assertEquals(expectedDbLocations, searchResults.getInts());
             System.out.println("<== successfully found all original French locations");
         }
 
         //
         // Upsert
         //
-        HashMap<IndexedValue, Set<Keyword>> singleUserIndexedValuesAndWords = IndexUtils.index(UsersDataset.fromJson(
-            Resources.load_resource("findex/single_user.json")));
-        Findex.upsert(key, label, singleUserIndexedValuesAndWords, db);
+        UsersDataset[] users = UsersDataset.fromJson(Resources.load_resource("findex/single_user.json"));
+        Map<Location, Set<Keyword>> singleUserIndexedValuesAndWords = IndexUtils.index(users);
+        Findex.upsert(new Findex.IndexRequest(key, label, db).add(singleUserIndexedValuesAndWords));
+
+        Set<Integer> newExpectedDbLocations = new HashSet<>(expectedDbLocations);
+        for (UsersDataset user : users) {
+            newExpectedDbLocations.add(user.id);
+        }
 
         int currentEntryTableSize = db.getAllKeyValueItems("entry_table").size();
         int currentChainTableSize = db.getAllKeyValueItems("chain_table").size();
@@ -218,14 +215,13 @@ public class TestSqlite {
         System.out.println("");
 
         {
-            Map<Keyword, Set<Location>> searchResults =
+            SearchResults searchResults =
                 Findex.search(
                     key,
                     label,
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     -1, -1, db);
-            int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
-            assertEquals(expectedDbLocations.length + 1, dbLocations.length);
+            assertEquals(newExpectedDbLocations, searchResults.getInts());
         }
     }
 
@@ -241,13 +237,13 @@ public class TestSqlite {
         //
         // Recover test vectors
         //
-        int[] expectedDbLocations = IndexUtils.loadExpectedDBLocations();
+        Set<Integer> expectedDbLocations = IndexUtils.loadExpectedDBLocations();
 
         //
         // Build dataset with DB uids and words
         //
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
-        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+        HashMap<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
 
         //
         // Browse all sqlite.db and check them
@@ -280,7 +276,7 @@ public class TestSqlite {
         // Build dataset with DB uids and words
         //
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
-        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+        Map<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
 
         //
         // Generate non regression sqlite - uncomment if needed
@@ -288,6 +284,6 @@ public class TestSqlite {
         //
         // Upsert
         //
-        Findex.upsert(key, label, indexedValuesAndWords, new Sqlite("./target/sqlite.db"));
+        Findex.upsert(new Findex.IndexRequest(key, label, new Sqlite("./target/sqlite.db")).add(indexedValuesAndWords));
     }
 }

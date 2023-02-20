@@ -10,7 +10,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper;
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.ffi.Progress;
+import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.structs.IndexedValue;
@@ -22,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.ptr.IntByReference;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 
 public final class Findex {
 
@@ -146,7 +147,7 @@ public final class Findex {
         throws CloudproofException {
             return search(key, label, keyWords, maxResultsPerKeyword, maxDepth, insecureFetchChainsBatchSize, db, new SearchProgress() {
                 @Override
-                public boolean notify(Map<Keyword, Set<IndexedValue>> results) throws CloudproofException {
+                public boolean notify(ProgressResults results) throws CloudproofException {
                     // default progress callback
                     return true;
                 }

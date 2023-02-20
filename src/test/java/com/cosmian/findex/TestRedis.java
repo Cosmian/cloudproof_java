@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
+import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
@@ -186,11 +187,6 @@ public class TestRedis {
         byte[] label = IndexUtils.loadLabel();
 
         //
-        // Recover test vectors
-        //
-        int[] expectedDbLocations = IndexUtils.loadExpectedDBLocations();
-
-        //
         // Build dataset with DB uids and words
         //
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
@@ -249,15 +245,16 @@ public class TestRedis {
                         db,
                         new SearchProgress() {
                             @Override
-                            public boolean notify(Map<Keyword, Set<IndexedValue>> results) throws CloudproofException {
+                            public boolean notify(ProgressResults results) throws CloudproofException {
+                                Map<Keyword, Set<IndexedValue>> indexedValuesByKeywords = results.getResults();
                                 Keyword key_marti = new Keyword("Marti");
                                 Keyword key_marte = new Keyword("Marte");
-                                if (results.containsKey(key_marti)) {
-                                    IndexedValue iv = results.get(key_marti).iterator().next();
+                                if (indexedValuesByKeywords.containsKey(key_marti)) {
+                                    IndexedValue iv = indexedValuesByKeywords.get(key_marti).iterator().next();
                                     assertEquals(new Keyword("Martin"), iv.getWord());
                                 }
-                                if (results.containsKey(key_marte)) {
-                                    IndexedValue iv = results.get(key_marte).iterator().next();
+                                if (indexedValuesByKeywords.containsKey(key_marte)) {
+                                    IndexedValue iv = indexedValuesByKeywords.get(key_marte).iterator().next();
                                     assertEquals(new Keyword("Marten"), iv.getWord());
                                 }
                                 return true;

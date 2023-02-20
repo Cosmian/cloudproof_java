@@ -7,8 +7,6 @@ import java.util.Set;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
-import com.cosmian.jna.findex.structs.IndexedValue;
-import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
@@ -49,6 +47,6 @@ public interface FindexUserCallbacks {
     }
 
     interface SearchProgress {
-        public boolean notify(Map<Keyword, Set<IndexedValue>> results) throws CloudproofException;
+        public boolean notify(ProgressResults results) throws CloudproofException;
     }
 }

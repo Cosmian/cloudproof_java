@@ -32,7 +32,7 @@ public class Progress implements ProgressCallback {
         //
         // Convert to Indexed Values list
         //
-        return this.progress.notify(results.getResults());
+        return this.progress.notify(results);
     }
 
 }

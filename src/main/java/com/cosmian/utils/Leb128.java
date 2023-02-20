@@ -1,7 +1,5 @@
 package com.cosmian.utils;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -11,25 +9,6 @@ public class Leb128 {
     final static Long MASK = 127L;
 
     final static Long HIGH_ORDER_BIT = 128L;
-
-    public static byte[] encode(long value) {
-        try {
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            Leb128.writeU64(output, value);
-
-            return output.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException("Cannot encode bytes", e);
-        }
-    }
-
-    public static long decode(byte[] bytes) {
-        try {
-            return readU64(new ByteArrayInputStream(bytes));
-        } catch (IOException e) {
-            throw new RuntimeException("Cannot decode bytes", e);
-        }
-    }
 
     /**
      * Write a u64 as an LEB128

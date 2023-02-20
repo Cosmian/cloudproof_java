@@ -23,7 +23,6 @@ import com.cosmian.jna.findex.serde.Leb128ByteArray;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
-import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
@@ -348,11 +347,4 @@ public class Sqlite extends Database implements Closeable {
             throw new CloudproofException("Failed list removed locations: " + e.toString());
         }
     }
-
-    @Override
-    protected boolean searchProgress(List<IndexedValue> indexedValues) throws CloudproofException {
-        // let search progress
-        return true;
-    }
-
 }

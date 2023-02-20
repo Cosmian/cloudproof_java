@@ -11,7 +11,6 @@ import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchAllEntryTableUidsCall
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.ListRemovedLocationsCallback;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.ProgressCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpdateLinesCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertEntryCallback;
@@ -22,16 +21,13 @@ import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBListRemovedLocations;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpdateLines;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertChain;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertEntry;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.ffi.ListRemovedLocations;
-import com.cosmian.jna.findex.ffi.Progress;
 import com.cosmian.jna.findex.ffi.UpdateLines;
 import com.cosmian.jna.findex.ffi.UpsertChain;
 import com.cosmian.jna.findex.ffi.UpsertEntry;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
-import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
@@ -161,20 +157,6 @@ public abstract class Database {
      */
     protected abstract List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException;
 
-    /**
-     * The Findex search mechanism will call this method as the search for keywords progresses through the search graph.
-     * <p>
-     * The user should return <i>false</i> to immediately have the search return and stop further progressing down the
-     * graph. *
-     * <p>
-     * Implementation of this method is only required to search the index
-     *
-     * @param indexedValues A list of {@link IndexedValue} already found by the search
-     * @return false to stop the graph from progressing
-     * @throws CloudproofException if anything goes wrong
-     */
-    protected abstract boolean searchProgress(List<IndexedValue> indexedValues) throws CloudproofException;
-
     public FetchAllEntryTableUidsCallback fetchAllEntryTableUidsCallback() {
         return new FetchAllEntryTableUids(new DBFetchAllEntryTableUids() {
 
@@ -246,14 +228,4 @@ public abstract class Database {
             }
         });
     }
-
-    public ProgressCallback progressCallback() {
-        return new Progress(new SearchProgress() {
-            @Override
-            public boolean notify(List<IndexedValue> indexedValues) throws CloudproofException {
-                return Database.this.searchProgress(indexedValues);
-            }
-        });
-    }
-
 }

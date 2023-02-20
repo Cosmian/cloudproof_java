@@ -10,6 +10,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper;
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
+import com.cosmian.jna.findex.ffi.Progress;
+import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.structs.IndexedValue;
@@ -142,6 +145,24 @@ public final class Findex {
                                                      int insecureFetchChainsBatchSize,
                                                      Database db)
         throws CloudproofException {
+            return search(key, label, keyWords, maxResultsPerKeyword, maxDepth, insecureFetchChainsBatchSize, db, new SearchProgress() {
+                @Override
+                public boolean notify(ProgressResults results) throws CloudproofException {
+                    // default progress callback
+                    return true;
+                }
+            });
+        }
+
+    public static Map<Keyword, Set<Location>> search(byte[] key,
+                                                     byte[] label,
+                                                     Set<Keyword> keyWords,
+                                                     int maxResultsPerKeyword,
+                                                     int maxDepth,
+                                                     int insecureFetchChainsBatchSize,
+                                                     Database db,
+                                                     SearchProgress progressCallback)
+        throws CloudproofException {
         //
         // Prepare outputs
         //
@@ -157,6 +178,10 @@ public final class Findex {
         if (key == null) {
             throw new CloudproofException("Key cannot be null");
         }
+
+        // wrap progress callback
+        Progress wrappedProgress = new Progress(progressCallback);
+
         try (final Memory keyPointer = new Memory(key.length);
             final Memory labelPointer = new Memory(label.length)) {
 
@@ -186,7 +211,7 @@ public final class Findex {
                 maxResultsPerKeyword,
                 maxDepth,
                 insecureFetchChainsBatchSize,
-                db.progressCallback(),
+                wrappedProgress,
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
             if (ffiCode != 0) {
@@ -200,7 +225,7 @@ public final class Findex {
                     maxResultsPerKeyword,
                     maxDepth,
                     insecureFetchChainsBatchSize,
-                    db.progressCallback(),
+                    wrappedProgress,
                     db.fetchEntryCallback(),
                     db.fetchChainCallback());
                 if (ffiCode != 0) {

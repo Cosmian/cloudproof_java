@@ -1,11 +1,9 @@
 package com.cosmian.jna.findex.ffi;
 
-import java.util.List;
 
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.ProgressCallback;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.serde.Leb128Reader;
-import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Pointer;
 
@@ -29,13 +27,12 @@ public class Progress implements ProgressCallback {
         //
         // Deserialize search results
         //
-        List<IndexedValue> indexedValues =
-            Leb128Reader.deserializeCollection(IndexedValue.class, serializedSearchResults);
+        ProgressResults results = new Leb128Reader(serializedSearchResults).readObject(ProgressResults.class);
 
         //
         // Convert to Indexed Values list
         //
-        return this.progress.notify(indexedValues);
+        return this.progress.notify(results);
     }
 
 }

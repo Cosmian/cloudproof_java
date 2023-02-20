@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.Database;
@@ -39,8 +38,6 @@ public class Redis extends Database implements Closeable {
             "  return {value} \n" +
             "end";
 
-    private static final Logger logger = Logger.getLogger(Redis.class.getName());
-
     public static final byte[] STORAGE_PREFIX = "cosmian".getBytes(StandardCharsets.UTF_8);
 
     public static final int DATA_TABLE_INDEX = 3;
@@ -59,7 +56,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Internal constructor instantiating from an existing pool and loading the Conditional Upsert Lua script
-     *
+     * 
      * @param pool the existing {@link JedisPool}
      * @param redisPassword the password to use to authenticate
      */
@@ -73,7 +70,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Instantiate a Redis instance from a URI
-     *
+     * 
      * @param uri the URI to the Redis server
      */
     public Redis(String uri) {
@@ -100,7 +97,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Get a Jedis connection from the pool, authenticating it if needed
-     *
+     * 
      * @return the {@link Jedis} connection
      */
     protected Jedis getJedis() {
@@ -113,7 +110,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * The Redis server hostname from the REDIS_HOSTNAME environment variable. Defaults to localhost if not found.
-     *
+     * 
      * @return the hostname
      */
     static String redisHostname() {
@@ -126,7 +123,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * The Redis server port from the REDIS_PORT environment variable. Defaults to 6379 if not found.
-     *
+     * 
      * @return the port
      */
     static int redisPort() {
@@ -139,7 +136,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * The Redis server password from the REDIS_PASSWORD environment variable. Defaults to null if not found.
-     *
+     * 
      * @return the password
      */
     public static String redisPassword() {
@@ -156,7 +153,7 @@ public class Redis extends Database implements Closeable {
      */
     public static byte[] key(int number,
                              byte[] uid) {
-        byte[] numberBytes = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(number).array();
+        byte[] numberBytes = ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.BIG_ENDIAN).putInt(number).array();
         byte[] result = Arrays.copyOf(STORAGE_PREFIX, STORAGE_PREFIX.length + numberBytes.length + uid.length);
         System.arraycopy(numberBytes, 0, result, STORAGE_PREFIX.length, numberBytes.length);
         System.arraycopy(uid, 0, result, STORAGE_PREFIX.length + numberBytes.length, uid.length);
@@ -165,7 +162,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Convert a Redis key back to an {@link Uid32}
-     *
+     * 
      * @param key the Redis key
      * @return the {@link Uid32}
      */
@@ -175,7 +172,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Retrieve multiple raw values from a list of Uids in a particular "table"
-     *
+     * 
      * @param uids the {@link Uid32} to retrieve
      * @param redisPrefix the "table"prefix
      * @return the list of raw values
@@ -207,7 +204,7 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Delete all entries in the given "table"
-     *
+     * 
      * @param redisTableIndex the "table" index
      * @throws CloudproofException
      */
@@ -220,14 +217,14 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Insert all the users in the data "table"
-     *
+     * 
      * @param testFindexDataset the dataset containing the user records
      * @throws CloudproofException
      */
     public void insertUsers(UsersDataset[] testFindexDataset) throws CloudproofException {
         try (Jedis jedis = getJedis()) {
             for (UsersDataset user : testFindexDataset) {
-                byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(user.id).array();
+                byte[] keySuffix = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.BIG_ENDIAN).putLong(user.id).array();
                 byte[] key = key(DATA_TABLE_INDEX, keySuffix);
                 byte[] value = user.toString().getBytes(StandardCharsets.UTF_8);
                 jedis.set(key, value);
@@ -237,13 +234,13 @@ public class Redis extends Database implements Closeable {
 
     /**
      * Delete a user from the data "table"
-     *
+     * 
      * @param userId the id of the user to delete
      * @return
      * @throws CloudproofException
      */
-    public long deleteUser(int userId) throws CloudproofException {
-        byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(userId).array();
+    public long deleteUser(long userId) throws CloudproofException {
+        byte[] keySuffix = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.BIG_ENDIAN).putLong(userId).array();
         byte[] key = key(DATA_TABLE_INDEX, keySuffix);
         try (Jedis jedis = getJedis()) {
             return jedis.del(key);
@@ -361,11 +358,11 @@ public class Redis extends Database implements Closeable {
             Iterator<Location> it = locations.iterator();
             while (it.hasNext()) {
                 Location location = it.next();
-                byte[] key = key(DATA_TABLE_INDEX, Arrays.copyOfRange(location.getBytes(), 0, 4));
+                byte[] key =
+                    key(DATA_TABLE_INDEX, Arrays.copyOfRange(location.getBytes(), 0, location.getBytes().length));
                 byte[] value = jedis.get(key);
                 if (value != null) {
                     it.remove();
-
                 }
             }
             return locations;

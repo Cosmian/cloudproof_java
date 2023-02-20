@@ -72,13 +72,10 @@ public class IndexUtils {
         return UsersDataset.fromJson(dataJson);
     }
 
-    public static Set<Integer> loadExpectedDBLocations() throws IOException {
+    public static Set<Long> loadExpectedDBLocations() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         String expectedSearchResultsInt = Resources.load_resource("findex/expected_db_uids.json");
-        Set<Integer> expectedDbLocations =
-            mapper.readValue(expectedSearchResultsInt, new TypeReference<Set<Integer>>() {
-            });
-
-        return expectedDbLocations;
+        return mapper.readValue(expectedSearchResultsInt, new TypeReference<Set<Long>>() {
+        });
     }
 }

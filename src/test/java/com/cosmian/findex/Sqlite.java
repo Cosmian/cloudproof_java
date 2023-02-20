@@ -336,7 +336,7 @@ public class Sqlite extends Database implements Closeable {
     @Override
     protected List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException {
         List<Integer> ids = locations.stream()
-            .map((Location location) -> location.toInt())
+            .map((Location location) -> (int) location.toNumber())
             .collect(Collectors.toList());
         try {
             List<Integer> removedIds = listRemovedIds("users", ids);

@@ -43,7 +43,7 @@ public class TestSqlite {
         //
         // Recover test vectors
         //
-        Set<Integer> expectedDbLocations = IndexUtils.loadExpectedDBLocations();
+        Set<Long> expectedDbLocations = IndexUtils.loadExpectedDBLocations();
 
         //
         // Build dataset with DB uids and words
@@ -82,7 +82,7 @@ public class TestSqlite {
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         db);
-                assertEquals(expectedDbLocations, searchResults.getInts());
+                assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out.println("<== successfully found all original French locations");
             }
 
@@ -108,13 +108,13 @@ public class TestSqlite {
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     db);
-                assertEquals(expectedDbLocations, searchResults.getInts());
+                assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out.println("<== successfully found all French locations with the new label");
             }
 
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
-            expectedDbLocations.remove(17);
+            expectedDbLocations.remove(new Long(17));
             Findex.compact(1, key, key, "NewLabel".getBytes(), db);
             {
                 // Search should return everyone but n°17
@@ -123,7 +123,7 @@ public class TestSqlite {
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     db);
-                assertEquals(expectedDbLocations, searchResults.getInts());
+                assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out
                     .println("<== successfully found all French locations after removing one and compacting");
             }
@@ -154,7 +154,7 @@ public class TestSqlite {
                 byte[] label,
                 HashMap<Location, Set<Keyword>> indexedValuesAndWords,
                 String dbPath,
-                Set<Integer> expectedDbLocations)
+                Set<Long> expectedDbLocations)
         throws Exception {
         Sqlite db = new Sqlite(dbPath);
         int initialEntryTableSize = db.getAllKeyValueItems("entry_table").size();
@@ -180,7 +180,7 @@ public class TestSqlite {
                     label,
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     -1, -1, db);
-            assertEquals(expectedDbLocations, searchResults.getInts());
+            assertEquals(expectedDbLocations, searchResults.getNumbers());
             System.out.println("<== successfully found all original French locations");
         }
 
@@ -191,7 +191,7 @@ public class TestSqlite {
         Map<Location, Set<Keyword>> singleUserIndexedValuesAndWords = IndexUtils.index(users);
         Findex.upsert(new Findex.IndexRequest(key, label, db).add(singleUserIndexedValuesAndWords));
 
-        Set<Integer> newExpectedDbLocations = new HashSet<>(expectedDbLocations);
+        Set<Long> newExpectedDbLocations = new HashSet<>(expectedDbLocations);
         for (UsersDataset user : users) {
             newExpectedDbLocations.add(user.id);
         }
@@ -221,7 +221,7 @@ public class TestSqlite {
                     label,
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     -1, -1, db);
-            assertEquals(newExpectedDbLocations, searchResults.getInts());
+            assertEquals(newExpectedDbLocations, searchResults.getNumbers());
         }
     }
 
@@ -237,7 +237,7 @@ public class TestSqlite {
         //
         // Recover test vectors
         //
-        Set<Integer> expectedDbLocations = IndexUtils.loadExpectedDBLocations();
+        Set<Long> expectedDbLocations = IndexUtils.loadExpectedDBLocations();
 
         //
         // Build dataset with DB uids and words

@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class UsersDataset {
     @JsonProperty("id")
-    public int id;
+    public long id;
 
     @JsonProperty("firstName")
     public String firstName;

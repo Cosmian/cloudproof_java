@@ -53,7 +53,7 @@ public class TestRedis {
         //
         // Recover test vectors
         //
-        Set<Integer> expectedDbLocations = IndexUtils.loadExpectedDBLocations();
+        Set<Long> expectedDbLocations = IndexUtils.loadExpectedDBLocations();
 
         //
         // Build dataset with DB uids and words
@@ -98,7 +98,7 @@ public class TestRedis {
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         db);
-                assertEquals(expectedDbLocations, searchResults.getInts());
+                assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out.println("<== successfully found all original French locations");
             }
 
@@ -129,13 +129,13 @@ public class TestRedis {
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     db);
-                assertEquals(expectedDbLocations, searchResults.getInts());
+                assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out.println("<== successfully found all French locations with the new label");
             }
 
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
-            expectedDbLocations.remove(17);
+            expectedDbLocations.remove(new Long(17));
             Findex.compact(1, key, key, "NewLabel".getBytes(), db);
             {
                 // Search should return everyone but n°17
@@ -144,7 +144,7 @@ public class TestRedis {
                     "NewLabel".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     db);
-                assertEquals(expectedDbLocations, searchResults.getInts());
+                assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out
                     .println("<== successfully found all French locations after removing one and compacting");
             }

@@ -21,10 +21,6 @@ public class Location extends Leb128ByteArray implements ToIndexedValue {
         this(location.getBytes(StandardCharsets.UTF_8));
     }
 
-    public Location(int location) {
-        this(ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.BIG_ENDIAN).putInt(location).array());
-    }
-
     public Location(long location) {
         this(ByteBuffer.allocate(Long.BYTES).order(ByteOrder.BIG_ENDIAN).putLong(location).array());
     }
@@ -37,27 +33,21 @@ public class Location extends Leb128ByteArray implements ToIndexedValue {
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
-    public long toLong() {
-        if (bytes.length == Integer.BYTES) {
-            return (long) ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getInt();
-        } else if (bytes.length == Long.BYTES) {
-            return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getLong();
-        } else {
+    public long toNumber() {
+        if (bytes.length != Long.BYTES) {
             throw new RuntimeException(
-                "The location is of length " + bytes.length + ", 4 or 8 bytes expected for a long.");
+                "The location is of length " + bytes.length + ", " + Long.BYTES + " bytes expected for a number.");
         }
-    }
 
-    public int toInt() {
-        if (bytes.length == Integer.BYTES) {
-            return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getInt();
-        } else {
-            throw new RuntimeException(
-                "The location is of length " + bytes.length + ", 4 bytes expected for an int.");
-        }
+        return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getLong();
     }
 
     public UUID toUuid() {
+        if (bytes.length != Long.BYTES * 2) {
+            throw new RuntimeException(
+                "The location is of length " + bytes.length + ", " + Long.BYTES * 2 + " bytes expected for a UUID.");
+        }
+
         ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
         long high = byteBuffer.getLong();
         long low = byteBuffer.getLong();

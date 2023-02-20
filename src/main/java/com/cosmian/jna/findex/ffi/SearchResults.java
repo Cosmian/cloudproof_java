@@ -32,7 +32,7 @@ public class SearchResults implements Leb128Serializable {
     }
 
     public Set<Location> get(Keyword keyword) {
-        return results.get(keyword);
+        return results.getOrDefault(keyword, new HashSet<>());
     }
 
     public Set<String> getStrings() {
@@ -64,28 +64,28 @@ public class SearchResults implements Leb128Serializable {
     }
 
     public Set<String> getStrings(Keyword keyword) {
-        return results.get(keyword)
+        return results.getOrDefault(keyword, new HashSet<>())
             .stream()
             .map(location -> location.toString())
             .collect(Collectors.toSet());
     }
 
     public Set<Long> getLongs(Keyword keyword) {
-        return results.get(keyword)
+        return results.getOrDefault(keyword, new HashSet<>())
             .stream()
             .map(location -> location.toLong())
             .collect(Collectors.toSet());
     }
 
     public Set<Integer> getInts(Keyword keyword) {
-        return results.get(keyword)
+        return results.getOrDefault(keyword, new HashSet<>())
             .stream()
             .map(location -> location.toInt())
             .collect(Collectors.toSet());
     }
 
     public Set<UUID> getUuids(Keyword keyword) {
-        return results.get(keyword)
+        return results.getOrDefault(keyword, new HashSet<>())
             .stream()
             .map(location -> location.toUuid())
             .collect(Collectors.toSet());

@@ -76,10 +76,8 @@ public class TestSqlite {
             System.out.println("");
 
             {
-                System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                 SearchResults searchResults =
                     Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] {"France"}));
-                System.out.println("yyyyyyyyyyyyyyy");
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out.println("<== successfully found all original French locations");
             }

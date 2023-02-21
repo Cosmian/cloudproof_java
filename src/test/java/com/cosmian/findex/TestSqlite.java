@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.ffi.SearchResults;
+import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
-import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.Resources;
 
 public class TestSqlite {
@@ -59,7 +59,7 @@ public class TestSqlite {
             //
             // Upsert
             //
-            Map<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+            Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
             Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
             System.out
                 .println("After insertion: entry_table size: " + db.getAllKeyValueItems("entry_table").size());
@@ -141,7 +141,7 @@ public class TestSqlite {
         byte[] key = IndexUtils.loadKey();
         byte[] label = IndexUtils.loadLabel();
         UsersDataset[] datasets = IndexUtils.loadDatasets();
-        Map<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(datasets);
+        Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(datasets);
         try (Sqlite db = new Sqlite()) {
             for (int i = 0; i < 100; i++) {
                 Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
@@ -152,7 +152,7 @@ public class TestSqlite {
 
     void verify(byte[] key,
                 byte[] label,
-                HashMap<Location, Set<Keyword>> indexedValuesAndWords,
+                HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords,
                 String dbPath,
                 Set<Long> expectedDbLocations)
         throws Exception {
@@ -188,7 +188,7 @@ public class TestSqlite {
         // Upsert
         //
         UsersDataset[] users = UsersDataset.fromJson(Resources.load_resource("findex/single_user.json"));
-        Map<Location, Set<Keyword>> singleUserIndexedValuesAndWords = IndexUtils.index(users);
+        Map<IndexedValue, Set<Keyword>> singleUserIndexedValuesAndWords = IndexUtils.index(users);
         Findex.upsert(new Findex.IndexRequest(key, label, db).add(singleUserIndexedValuesAndWords));
 
         Set<Long> newExpectedDbLocations = new HashSet<>(expectedDbLocations);
@@ -243,7 +243,7 @@ public class TestSqlite {
         // Build dataset with DB uids and words
         //
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
-        HashMap<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
 
         //
         // Browse all sqlite.db and check them
@@ -276,7 +276,7 @@ public class TestSqlite {
         // Build dataset with DB uids and words
         //
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
-        Map<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+        Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
 
         //
         // Generate non regression sqlite - uncomment if needed

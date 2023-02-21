@@ -89,14 +89,14 @@ public final class Findex extends FindexBase {
             });
     }
 
-    public static Map<Keyword, Set<Location>> search(byte[] key,
-                                                     byte[] label,
-                                                     Set<Keyword> keyWords,
-                                                     int maxResultsPerKeyword,
-                                                     int maxDepth,
-                                                     int insecureFetchChainsBatchSize,
-                                                     Database db,
-                                                     SearchProgress progressCallback)
+    public static SearchResults search(byte[] key,
+                                       byte[] label,
+                                       Set<Keyword> keyWords,
+                                       int maxResultsPerKeyword,
+                                       int maxDepth,
+                                       int insecureFetchChainsBatchSize,
+                                       Database db,
+                                       SearchProgress progressCallback)
         throws CloudproofException {
         //
         // Prepare outputs

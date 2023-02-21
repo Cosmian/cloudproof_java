@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.CloudproofException;
@@ -24,12 +25,12 @@ public class IndexUtils {
      * @param testFindexDataset the list of {@link UsersDataset}
      * @return the clear text index
      */
-    public static HashMap<Location, Set<Keyword>> index(UsersDataset[] testFindexDataset) {
+    public static HashMap<IndexedValue, Set<Keyword>> index(UsersDataset[] testFindexDataset) {
 
-        HashMap<Location, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
         Set<Keyword> keywords = new HashSet<>();
         for (UsersDataset user : testFindexDataset) {
-            indexedValuesAndWords.put(new Location(user.id), user.values());
+            indexedValuesAndWords.put(new Location(user.id).toIndexedValue(), user.values());
             keywords.addAll(user.values());
         }
 

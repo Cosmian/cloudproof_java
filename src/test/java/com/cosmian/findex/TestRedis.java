@@ -17,7 +17,6 @@ import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.structs.Keyword;
-import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.NextKeyword;
 import com.cosmian.utils.CloudproofException;
 
@@ -75,7 +74,7 @@ public class TestRedis {
             //
             // Upsert
             //
-            Map<Location, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+            Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
             Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
             System.out
                 .println("After insertion: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
@@ -181,7 +180,7 @@ public class TestRedis {
         // Build dataset with DB uids and words
         //
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
-        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+        Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
         // add auto-completion for keywords 'Martin', 'Martena'
         indexedValuesAndWords.put(new IndexedValue(new NextKeyword("Mart")), new HashSet<>(
             Arrays.asList(new Keyword("Mar"))));
@@ -227,7 +226,7 @@ public class TestRedis {
             System.out.println("");
 
             {
-                Map<Keyword, Set<Location>> searchResults =
+                SearchResults searchResults =
                     Findex.search(
                         key,
                         label,
@@ -251,10 +250,7 @@ public class TestRedis {
                                 return true;
                             }
                         });
-                System.out.println(
-                    "Search results: " + searchResults.size());
-                int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
-                assertEquals(3, dbLocations.length);
+                assertEquals(3, searchResults.size());
                 System.out.println("<== successfully found all original French locations");
             }
 

@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Findex Cloud beta
+- Add new API `Findex.SearchRequest`, `Findex.IndexRequest`, `FindexCloud.SearchRequest` and `FindexCloud.IndexRequest` to simplify management of `Findex.search` and `Findex.upsert` parameters
+
+### Refactor
+
+- Remove empty constructors from `Location`, `IndexedValue`, `NextKeyword` and `Keyword`
 
 ---
 

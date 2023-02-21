@@ -16,10 +16,6 @@ public class IndexedValue extends Leb128ByteArray implements ToIndexedValue {
 
     protected final byte WORD_BYTE = 'w';
 
-    public IndexedValue() {
-        super();
-    }
-
     public IndexedValue(byte[] bytes) {
         super(bytes);
     }

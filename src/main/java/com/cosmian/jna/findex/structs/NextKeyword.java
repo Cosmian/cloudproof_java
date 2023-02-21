@@ -6,10 +6,6 @@ import com.cosmian.jna.findex.serde.Leb128ByteArray;
 
 public class NextKeyword extends Leb128ByteArray implements ToIndexedValue {
 
-    public NextKeyword() {
-        super();
-    }
-
     public NextKeyword(byte[] keyword) {
         super(keyword);
     }

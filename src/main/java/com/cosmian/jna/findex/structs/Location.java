@@ -9,10 +9,6 @@ import com.cosmian.jna.findex.serde.Leb128ByteArray;
 
 public class Location extends Leb128ByteArray implements ToIndexedValue {
 
-    public Location() {
-        super();
-    }
-
     public Location(byte[] value) {
         super(value);
     }

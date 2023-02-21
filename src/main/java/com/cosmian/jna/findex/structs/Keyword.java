@@ -9,10 +9,6 @@ import com.cosmian.jna.findex.serde.Leb128ByteArray;
  */
 public class Keyword extends Leb128ByteArray {
 
-    public Keyword() {
-        super();
-    }
-
     public Keyword(byte[] bytes) {
         super(bytes);
     }
@@ -20,5 +16,4 @@ public class Keyword extends Leb128ByteArray {
     public Keyword(String string) {
         super(string.getBytes(StandardCharsets.UTF_8));
     }
-
 }

@@ -1,6 +1,7 @@
 package com.cosmian.findex;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -117,7 +118,7 @@ public class TestRedis {
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         db);
-                assertEquals(0, searchResults.size());
+                assertTrue(searchResults.isEmpty());
                 System.out.println("<== successfully compacted and changed the label");
             }
 
@@ -247,7 +248,7 @@ public class TestRedis {
                     });
 
                 SearchResults searchResults = Findex.search(request);
-                assertEquals(3, searchResults.size());
+                assertEquals(3, searchResults.numberOfUniqueLocations());
                 System.out.println("<== successfully found all original French locations");
             }
 

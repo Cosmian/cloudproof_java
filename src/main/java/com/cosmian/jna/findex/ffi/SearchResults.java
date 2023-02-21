@@ -27,12 +27,27 @@ public class SearchResults implements Leb128Serializable {
         return results;
     }
 
-    public int size() {
+    public boolean isEmpty() {
+        return results.isEmpty();
+    }
+
+    public int numberOfKeywords() {
         return results.size();
+    }
+
+    public int numberOfUniqueLocations() {
+        return getLocations().size();
     }
 
     public Set<Location> get(Keyword keyword) {
         return results.getOrDefault(keyword, new HashSet<>());
+    }
+
+    public Set<Location> getLocations() {
+        return results.values()
+            .stream()
+            .flatMap(locations -> locations.stream())
+            .collect(Collectors.toSet());
     }
 
     public Set<String> getStrings() {

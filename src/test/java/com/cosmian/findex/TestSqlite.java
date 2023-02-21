@@ -1,6 +1,7 @@
 package com.cosmian.findex;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -90,7 +91,7 @@ public class TestSqlite {
                 // Search with old label
                 SearchResults searchResults =
                     Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] {"France"}));
-                assertEquals(0, searchResults.size());
+                assertTrue(searchResults.isEmpty());
                 System.out.println("<== successfully compacted and changed the label");
             }
 

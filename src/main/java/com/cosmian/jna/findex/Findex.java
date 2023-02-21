@@ -50,43 +50,15 @@ public final class Findex extends FindexBase {
     public static SearchResults search(SearchRequest request)
         throws CloudproofException {
         return search(request.key, request.label, request.keywords, request.maxResultsPerKeyword, request.maxDepth,
-            request.maxDepth, request.database);
+            request.maxDepth, request.database, request.searchProgress);
     }
 
     public static SearchResults search(byte[] key,
                                        byte[] label,
-                                       Set<Keyword> keyWords,
+                                       Set<Keyword> keywords,
                                        Database db)
         throws CloudproofException {
-        return search(key, label, keyWords, 0, -1, 0, db);
-    }
-
-    public static SearchResults search(byte[] key,
-                                       byte[] label,
-                                       Set<Keyword> keyWords,
-                                       int maxResultsPerKeyword,
-                                       int maxDepth,
-                                       Database db)
-        throws CloudproofException {
-        return search(key, label, keyWords, maxResultsPerKeyword, maxDepth, 0, db);
-    }
-
-    public static SearchResults search(byte[] key,
-                                       byte[] label,
-                                       Set<Keyword> keyWords,
-                                       int maxResultsPerKeyword,
-                                       int maxDepth,
-                                       int insecureFetchChainsBatchSize,
-                                       Database db)
-        throws CloudproofException {
-        return search(key, label, keyWords, maxResultsPerKeyword, maxDepth, insecureFetchChainsBatchSize, db,
-            new SearchProgress() {
-                @Override
-                public boolean notify(ProgressResults results) throws CloudproofException {
-                    // default progress callback
-                    return true;
-                }
-            });
+        return search(new SearchRequest(key, label, db).keywords(keywords));
     }
 
     public static SearchResults search(byte[] key,
@@ -198,6 +170,13 @@ public final class Findex extends FindexBase {
 
         protected Database database;
 
+        protected SearchProgress searchProgress = new SearchProgress() {
+            @Override
+            public boolean notify(ProgressResults results) throws CloudproofException {
+                return true;
+            }
+        };
+
         public SearchRequest(byte[] key, byte[] label, Database database) {
             this.key = key;
             this.label = label;
@@ -212,6 +191,11 @@ public final class Findex extends FindexBase {
 
         @Override
         SearchRequest self() {
+            return this;
+        }
+
+        SearchRequest searchProgress(SearchProgress searchProgress) {
+            this.searchProgress = searchProgress;
             return this;
         }
     }

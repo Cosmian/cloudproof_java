@@ -76,12 +76,10 @@ public class TestSqlite {
             System.out.println("");
 
             {
+                System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                 SearchResults searchResults =
-                    Findex.search(
-                        key,
-                        label,
-                        new HashSet<>(Arrays.asList(new Keyword("France"))),
-                        db);
+                    Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] {"France"}));
+                System.out.println("yyyyyyyyyyyyyyy");
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out.println("<== successfully found all original French locations");
             }
@@ -92,22 +90,17 @@ public class TestSqlite {
             {
                 // Search with old label
                 SearchResults searchResults =
-                    Findex.search(
-                        key,
-                        label,
-                        new HashSet<>(Arrays.asList(new Keyword("France"))),
-                        db);
+                    Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] {"France"}));
                 assertEquals(0, searchResults.size());
                 System.out.println("<== successfully compacted and changed the label");
             }
 
             {
+
                 // Search with new label and without user changes
-                SearchResults searchResults = Findex.search(
-                    key,
-                    "NewLabel".getBytes(),
-                    new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    db);
+                SearchResults searchResults =
+                    Findex.search(
+                        new Findex.SearchRequest(key, "NewLabel".getBytes(), db).keywords(new String[] {"France"}));
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out.println("<== successfully found all French locations with the new label");
             }
@@ -118,11 +111,9 @@ public class TestSqlite {
             Findex.compact(1, key, key, "NewLabel".getBytes(), db);
             {
                 // Search should return everyone but n°17
-                SearchResults searchResults = Findex.search(
-                    key,
-                    "NewLabel".getBytes(),
-                    new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    db);
+                SearchResults searchResults =
+                    Findex.search(
+                        new Findex.SearchRequest(key, "NewLabel".getBytes(), db).keywords(new String[] {"France"}));
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out
                     .println("<== successfully found all French locations after removing one and compacting");
@@ -169,17 +160,13 @@ public class TestSqlite {
         //
         System.out.println("");
         System.out.println("---------------------------------------");
-        System.out.println("Findex Search Sqlite in " + dbPath);
+        System.out.println("Verify: Findex Search Sqlite in " + dbPath);
         System.out.println("---------------------------------------");
         System.out.println("");
 
         {
             SearchResults searchResults =
-                Findex.search(
-                    key,
-                    label,
-                    new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    -1, -1, db);
+                Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] {"France"}));
             assertEquals(expectedDbLocations, searchResults.getNumbers());
             System.out.println("<== successfully found all original French locations");
         }
@@ -210,17 +197,13 @@ public class TestSqlite {
         //
         System.out.println("");
         System.out.println("---------------------------------------");
-        System.out.println("Findex Search Sqlite");
+        System.out.println("Verify: Findex Search Sqlite");
         System.out.println("---------------------------------------");
         System.out.println("");
 
         {
             SearchResults searchResults =
-                Findex.search(
-                    key,
-                    label,
-                    new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    -1, -1, db);
+                Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] {"France"}));
             assertEquals(newExpectedDbLocations, searchResults.getNumbers());
         }
     }

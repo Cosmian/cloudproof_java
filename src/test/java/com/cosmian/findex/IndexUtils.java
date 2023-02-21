@@ -1,16 +1,12 @@
 package com.cosmian.findex;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import com.cosmian.jna.findex.structs.IndexedValue;
@@ -18,6 +14,7 @@ import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.CloudproofException;
 import com.cosmian.utils.Resources;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class IndexUtils {
@@ -33,30 +30,13 @@ public class IndexUtils {
         HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
         Set<Keyword> keywords = new HashSet<>();
         for (UsersDataset user : testFindexDataset) {
-            indexedValuesAndWords.put(userIdToLocation(user.id).toIndexedValue(), user.values());
+            indexedValuesAndWords.put(new Location(user.id).toIndexedValue(), user.values());
             keywords.addAll(user.values());
         }
 
         // stats
         System.out.println("Num keywords: " + keywords.size() + ", indexed Values: " + indexedValuesAndWords.size());
         return indexedValuesAndWords;
-    }
-
-    /**
-     * Transform the user id, which is the database unique key for the users, to a location which is the object used to
-     * hold it in the index
-     */
-    public static Location userIdToLocation(int userId) {
-        return new Location(ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(userId).array());
-    }
-
-    /**
-     * Extract the user Id from the location returned by the index
-     *
-     * @param location
-     */
-    public static int locationToUserId(Location location) {
-        return ByteBuffer.wrap(location.getBytes()).order(ByteOrder.BIG_ENDIAN).getInt();
     }
 
     /**
@@ -93,30 +73,10 @@ public class IndexUtils {
         return UsersDataset.fromJson(dataJson);
     }
 
-    public static int[] loadExpectedDBLocations() throws IOException {
+    public static Set<Long> loadExpectedDBLocations() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         String expectedSearchResultsInt = Resources.load_resource("findex/expected_db_uids.json");
-        int[] expectedDbLocations = mapper.readValue(expectedSearchResultsInt, int[].class);
-        Arrays.sort(expectedDbLocations);
-
-        return expectedDbLocations;
+        return mapper.readValue(expectedSearchResultsInt, new TypeReference<Set<Long>>() {
+        });
     }
-
-    /*
-     * Helper function to transform the results returned by the FFI to a sorted array of int (representing the DB id of
-     * users).
-     */
-    public static int[] searchResultsToDbUids(Map<Keyword, Set<Location>> searchResults) throws Exception {
-        HashSet<Integer> dbLocations = new HashSet<>();
-        for (Set<Location> locations : searchResults.values()) {
-            for (Location location : locations) {
-                int dbLocation = locationToUserId(location);
-                dbLocations.add(dbLocation);
-            }
-        }
-        int[] dbUids = dbLocations.stream().mapToInt(Integer::intValue).toArray();
-        Arrays.sort(dbUids);
-        return dbUids;
-    }
-
 }

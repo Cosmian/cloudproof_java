@@ -1,5 +1,6 @@
 package com.cosmian.jna.findex;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -11,7 +12,6 @@ import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
-import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
@@ -42,50 +42,33 @@ public final class Findex extends FindexBase {
         }
     }
 
-    public static Map<Keyword, Set<Location>> search(byte[] key,
-                                                     byte[] label,
-                                                     Set<Keyword> keyWords,
-                                                     Database db)
+    public static void upsert(IndexRequest request)
         throws CloudproofException {
-        return search(key, label, keyWords, 0, -1, 0, db);
+        upsert(request.key, request.label, request.indexedValuesAndWords, request.database);
     }
 
-    public static Map<Keyword, Set<Location>> search(byte[] key,
-                                                     byte[] label,
-                                                     Set<Keyword> keyWords,
-                                                     int maxResultsPerKeyword,
-                                                     int maxDepth,
-                                                     Database db)
+    public static SearchResults search(SearchRequest request)
         throws CloudproofException {
-        return search(key, label, keyWords, maxResultsPerKeyword, maxDepth, 0, db);
+        return search(request.key, request.label, request.keywords, request.maxResultsPerKeyword, request.maxDepth,
+            request.maxDepth, request.database, request.searchProgress);
     }
 
-    public static Map<Keyword, Set<Location>> search(byte[] key,
-                                                     byte[] label,
-                                                     Set<Keyword> keyWords,
-                                                     int maxResultsPerKeyword,
-                                                     int maxDepth,
-                                                     int insecureFetchChainsBatchSize,
-                                                     Database db)
+    public static SearchResults search(byte[] key,
+                                       byte[] label,
+                                       Set<Keyword> keywords,
+                                       Database db)
         throws CloudproofException {
-        return search(key, label, keyWords, maxResultsPerKeyword, maxDepth, insecureFetchChainsBatchSize, db,
-            new SearchProgress() {
-                @Override
-                public boolean notify(ProgressResults results) throws CloudproofException {
-                    // default progress callback
-                    return true;
-                }
-            });
+        return search(new SearchRequest(key, label, db).keywords(keywords));
     }
 
-    public static Map<Keyword, Set<Location>> search(byte[] key,
-                                                     byte[] label,
-                                                     Set<Keyword> keyWords,
-                                                     int maxResultsPerKeyword,
-                                                     int maxDepth,
-                                                     int insecureFetchChainsBatchSize,
-                                                     Database db,
-                                                     SearchProgress progressCallback)
+    public static SearchResults search(byte[] key,
+                                       byte[] label,
+                                       Set<Keyword> keyWords,
+                                       int maxResultsPerKeyword,
+                                       int maxDepth,
+                                       int insecureFetchChainsBatchSize,
+                                       Database db,
+                                       SearchProgress progressCallback)
         throws CloudproofException {
         //
         // Prepare outputs
@@ -144,8 +127,7 @@ public final class Findex extends FindexBase {
 
             byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
 
-            SearchResults searchResults = new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
-            return searchResults.getResults();
+            return new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
         }
     }
 
@@ -180,6 +162,64 @@ public final class Findex extends FindexBase {
                 database.fetchChainCallback(),
                 database.updateLinesCallback(),
                 database.listRemoveLocationsCallback()));
+        }
+    }
+
+    static public class SearchRequest extends FindexBase.SearchRequest<SearchRequest> {
+        protected byte[] key;
+
+        protected Database database;
+
+        protected SearchProgress searchProgress = new SearchProgress() {
+            @Override
+            public boolean notify(ProgressResults results) throws CloudproofException {
+                return true;
+            }
+        };
+
+        public SearchRequest(byte[] key, byte[] label, Database database) {
+            this.key = key;
+            this.label = label;
+            this.database = database;
+        }
+
+        public SearchRequest(byte[] key, String label, Database database) {
+            this.key = key;
+            this.label = label.getBytes(StandardCharsets.UTF_8);
+            this.database = database;
+        }
+
+        @Override
+        SearchRequest self() {
+            return this;
+        }
+
+        public SearchRequest searchProgress(SearchProgress searchProgress) {
+            this.searchProgress = searchProgress;
+            return this;
+        }
+    }
+
+    static public class IndexRequest extends FindexBase.IndexRequest<IndexRequest> {
+        protected byte[] key;
+
+        protected Database database;
+
+        public IndexRequest(byte[] key, byte[] label, Database database) {
+            this.key = key;
+            this.label = label;
+            this.database = database;
+        }
+
+        public IndexRequest(byte[] key, String label, Database database) {
+            this.key = key;
+            this.label = label.getBytes(StandardCharsets.UTF_8);
+            this.database = database;
+        }
+
+        @Override
+        IndexRequest self() {
+            return this;
         }
     }
 }

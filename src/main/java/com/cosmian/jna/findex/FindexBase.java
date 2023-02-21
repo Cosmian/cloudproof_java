@@ -5,13 +5,17 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.Set;
 
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.jna.findex.structs.ToIndexedValue;
 import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -116,6 +120,83 @@ public class FindexBase {
     protected static void unwrap(int result) throws CloudproofException {
         if (result == 1) {
             throw new CloudproofException(get_last_error(4095));
+        }
+    }
+
+    static abstract protected class SearchRequest<SELF extends SearchRequest<SELF>> {
+        protected byte[] label;
+
+        protected Set<Keyword> keywords;
+
+        protected int maxResultsPerKeyword = 0;
+
+        protected int maxDepth = -1;
+
+        protected int insecureFetchChainsBatchSize = 0;
+
+        abstract SELF self();
+
+        public SELF keywords(Set<Keyword> keywords) {
+            this.keywords = keywords;
+            return self();
+        }
+
+        public SELF keywords(String[] keywords) {
+            this.keywords =
+                Stream.of(keywords).map(keyword -> new Keyword(keyword)).collect(Collectors.toCollection(HashSet::new));
+            return self();
+        }
+
+        public SELF maxResultsPerKeyword(int maxResultsPerKeyword) {
+            this.maxResultsPerKeyword = maxResultsPerKeyword;
+            return self();
+        }
+
+        public SELF maxDepth(int maxDepth) {
+            this.maxDepth = maxDepth;
+            return self();
+        }
+
+        public SELF insecureFetchChainsBatchSize(int insecureFetchChainsBatchSize) {
+            this.insecureFetchChainsBatchSize = insecureFetchChainsBatchSize;
+            return self();
+        }
+    }
+
+    static abstract protected class IndexRequest<SELF extends IndexRequest<SELF>> {
+        protected byte[] label;
+
+        protected Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
+
+        abstract SELF self();
+
+        public SELF add(Map<? extends ToIndexedValue, Set<Keyword>> indexedValuesAndWords) {
+            for (Map.Entry<? extends ToIndexedValue, Set<Keyword>> entry : indexedValuesAndWords.entrySet()) {
+                add(entry.getKey(), entry.getValue());
+            }
+            return self();
+        }
+
+        public SELF add(ToIndexedValue toIndexedValue,
+                        Set<Keyword> keywords) {
+            Set<Keyword> existingKeywords =
+                indexedValuesAndWords.get(toIndexedValue.toIndexedValue());
+
+            if (existingKeywords == null) {
+                indexedValuesAndWords.put(toIndexedValue.toIndexedValue(), keywords);
+            } else {
+                existingKeywords.addAll(keywords);
+            }
+
+            return self();
+        }
+
+        public SELF add(ToIndexedValue toIndexedValue,
+                        String[] keywords) {
+            return add(
+                toIndexedValue.toIndexedValue(),
+                Stream.of(keywords).map(keyword -> new Keyword(keyword))
+                    .collect(Collectors.toCollection(HashSet::new)));
         }
     }
 

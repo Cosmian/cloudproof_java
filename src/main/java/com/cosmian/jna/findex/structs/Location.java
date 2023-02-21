@@ -21,12 +21,22 @@ public class Location extends Leb128ByteArray implements ToIndexedValue {
         this(location.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Numbers are encoded in big-endian 8 bytes.
+     * 
+     * @param location
+     */
     public Location(long location) {
         this(ByteBuffer.allocate(Long.BYTES).order(ByteOrder.BIG_ENDIAN).putLong(location).array());
     }
 
-    public Location(UUID location) {
-        this(uuidToBytes(location));
+    /**
+     * Convert UUIDv4 only because they are more common.
+     * 
+     * @param location
+     */
+    public Location(UUID uuidV4) {
+        this(uuidToBytes(uuidV4));
     }
 
     public String toString() {

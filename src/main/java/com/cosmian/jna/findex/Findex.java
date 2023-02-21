@@ -194,7 +194,7 @@ public final class Findex extends FindexBase {
             return this;
         }
 
-        SearchRequest searchProgress(SearchProgress searchProgress) {
+        public SearchRequest searchProgress(SearchProgress searchProgress) {
             this.searchProgress = searchProgress;
             return this;
         }

@@ -226,30 +226,27 @@ public class TestRedis {
             System.out.println("");
 
             {
-                SearchResults searchResults =
-                    Findex.search(
-                        key,
-                        label,
-                        new HashSet<>(Arrays.asList(new Keyword("Mar"))),
-                        0, -1, 0,
-                        db,
-                        new SearchProgress() {
-                            @Override
-                            public boolean notify(ProgressResults results) throws CloudproofException {
-                                Map<Keyword, Set<IndexedValue>> indexedValuesByKeywords = results.getResults();
-                                Keyword key_marti = new Keyword("Marti");
-                                Keyword key_marte = new Keyword("Marte");
-                                if (indexedValuesByKeywords.containsKey(key_marti)) {
-                                    IndexedValue iv = indexedValuesByKeywords.get(key_marti).iterator().next();
-                                    assertEquals(new Keyword("Martin"), iv.getWord());
-                                }
-                                if (indexedValuesByKeywords.containsKey(key_marte)) {
-                                    IndexedValue iv = indexedValuesByKeywords.get(key_marte).iterator().next();
-                                    assertEquals(new Keyword("Marten"), iv.getWord());
-                                }
-                                return true;
+                Findex.SearchRequest request = new Findex.SearchRequest(key, label, db)
+                    .keywords(new String[] {"Mar"})
+                    .searchProgress(new SearchProgress() {
+                        @Override
+                        public boolean notify(ProgressResults results) throws CloudproofException {
+                            Map<Keyword, Set<IndexedValue>> indexedValuesByKeywords = results.getResults();
+                            Keyword key_marti = new Keyword("Marti");
+                            Keyword key_marte = new Keyword("Marte");
+                            if (indexedValuesByKeywords.containsKey(key_marti)) {
+                                IndexedValue iv = indexedValuesByKeywords.get(key_marti).iterator().next();
+                                assertEquals(new Keyword("Martin"), iv.getWord());
                             }
-                        });
+                            if (indexedValuesByKeywords.containsKey(key_marte)) {
+                                IndexedValue iv = indexedValuesByKeywords.get(key_marte).iterator().next();
+                                assertEquals(new Keyword("Marten"), iv.getWord());
+                            }
+                            return true;
+                        }
+                    });
+
+                SearchResults searchResults = Findex.search(request);
                 assertEquals(3, searchResults.size());
                 System.out.println("<== successfully found all original French locations");
             }

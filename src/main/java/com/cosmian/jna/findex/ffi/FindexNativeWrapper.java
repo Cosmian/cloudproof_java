@@ -114,4 +114,22 @@ public interface FindexNativeWrapper extends Library {
                  ProgressCallback progress,
                  FetchEntryCallback fetchEntry,
                  FetchChainCallback fetchChain);
+
+    int h_search_cloud(byte[] dbUidsPtr,
+                       IntByReference dbUidsSize,
+                       String token,
+                       Pointer labelPointer,
+                       int labelSize,
+                       String words,
+                       int maxResultsPerKeyword,
+                       int maxDepth,
+                       int insecureFetchChainsBatchSize,
+                       String baseUrl);
+
+    int h_upsert_cloud(String token,
+                       Pointer labelPointer,
+                       int labelSize,
+                       String dbUidsAndWordsJson,
+                       String baseUrl);
+
 }

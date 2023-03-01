@@ -103,10 +103,58 @@ jobs:
           LANGUAGE: en_US:en
           LC_ALL: en_US.UTF-8
 
+      - name: Upload non-regression test vectors
+        uses: actions/upload-artifact@v3
+        with:
+          name: cloudproof_java
+          path: |
+            ./target/non_regression_vector.json
+            ./target/sqlite.db
+          retention-days: 1
+          if-no-files-found: error
+
+  cloudproof_js:
+    needs: build_in_docker
+    uses: Cosmian/reusable_workflows/.github/workflows/cloudproof_js.yml@develop
+    with:
+      branch: develop
+      target: wasm32-unknown-unknown
+      kms-version: 4.2.0
+      copy_fresh_build: false
+      copy_regression_files: |
+        cp ./cloudproof_java/non_regression_vector.json tests/data/cover_crypt/non_regression/java_non_regression_vector.json
+        cp ./cloudproof_java/sqlite.db                  tests/data/findex/non_regression/java_sqlite.db
+
+  cloudproof_python:
+    needs: build_in_docker
+    uses: Cosmian/reusable_workflows/.github/workflows/cloudproof_python.yml@develop
+    with:
+      branch: develop
+      target: x86_64-unknown-linux-gnu
+      kms-version: 4.2.0
+      copy_fresh_build: false
+      copy_regression_files: |
+        cp ./cloudproof_java/non_regression_vector.json tests/data/cover_crypt/non_regression/java_non_regression_vector.json
+        cp ./cloudproof_java/sqlite.db                  tests/data/findex/non_regression/java_sqlite.db
+
+  cloudproof_flutter:
+    needs: build_in_docker
+    uses: Cosmian/reusable_workflows/.github/workflows/cloudproof_flutter.yml@develop
+    with:
+      branch: develop
+      target: x86_64-unknown-linux-gnu
+      extension: so
+      copy_fresh_build: false
+      copy_regression_files: |
+        cp ./cloudproof_java/non_regression_vector.json test/resources/cover_crypt/non_regression/java_non_regression_vector.json
+        cp ./cloudproof_java/sqlite.db                  test/resources/findex/non_regression/java_sqlite.db
+
   maven_deploy:
     needs:
       - build
-      - build_in_docker
+      - cloudproof_js
+      - cloudproof_flutter
+      - cloudproof_python
     runs-on: ubuntu-20.04
 
     steps:
@@ -170,5 +218,4 @@ jobs:
     needs:
       - release
     uses: Cosmian/reusable_workflows/.github/workflows/cleanup_cache.yml@main
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     secrets: inherit

@@ -23,7 +23,6 @@ import com.cosmian.jna.findex.serde.Leb128ByteArray;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
-import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
@@ -337,22 +336,15 @@ public class Sqlite extends Database implements Closeable {
     @Override
     protected List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException {
         List<Integer> ids = locations.stream()
-            .map((Location location) -> IndexUtils.locationToUserId(location))
+            .map((Location location) -> (int) location.toNumber())
             .collect(Collectors.toList());
         try {
             List<Integer> removedIds = listRemovedIds("users", ids);
             return removedIds.stream()
-                .map((Integer id) -> IndexUtils.userIdToLocation(id))
+                .map((Integer id) -> new Location(id))
                 .collect(Collectors.toList());
         } catch (SQLException e) {
             throw new CloudproofException("Failed list removed locations: " + e.toString());
         }
     }
-
-    @Override
-    protected boolean searchProgress(List<IndexedValue> indexedValues) throws CloudproofException {
-        // let search progress
-        return true;
-    }
-
 }

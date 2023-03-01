@@ -13,14 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.Database;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
-import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
@@ -39,8 +37,6 @@ public class Redis extends Database implements Closeable {
             "else \n" +
             "  return {value} \n" +
             "end";
-
-    private static final Logger logger = Logger.getLogger(Redis.class.getName());
 
     public static final byte[] STORAGE_PREFIX = "cosmian".getBytes(StandardCharsets.UTF_8);
 
@@ -228,7 +224,7 @@ public class Redis extends Database implements Closeable {
     public void insertUsers(UsersDataset[] testFindexDataset) throws CloudproofException {
         try (Jedis jedis = getJedis()) {
             for (UsersDataset user : testFindexDataset) {
-                byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(user.id).array();
+                byte[] keySuffix = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.BIG_ENDIAN).putLong(user.id).array();
                 byte[] key = key(DATA_TABLE_INDEX, keySuffix);
                 byte[] value = user.toString().getBytes(StandardCharsets.UTF_8);
                 jedis.set(key, value);
@@ -243,8 +239,8 @@ public class Redis extends Database implements Closeable {
      * @return
      * @throws CloudproofException
      */
-    public long deleteUser(int userId) throws CloudproofException {
-        byte[] keySuffix = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(userId).array();
+    public long deleteUser(long userId) throws CloudproofException {
+        byte[] keySuffix = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.BIG_ENDIAN).putLong(userId).array();
         byte[] key = key(DATA_TABLE_INDEX, keySuffix);
         try (Jedis jedis = getJedis()) {
             return jedis.del(key);
@@ -362,7 +358,8 @@ public class Redis extends Database implements Closeable {
             Iterator<Location> it = locations.iterator();
             while (it.hasNext()) {
                 Location location = it.next();
-                byte[] key = key(DATA_TABLE_INDEX, Arrays.copyOfRange(location.getBytes(), 0, 4));
+                byte[] key =
+                    key(DATA_TABLE_INDEX, Arrays.copyOfRange(location.getBytes(), 0, location.getBytes().length));
                 byte[] value = jedis.get(key);
                 if (value != null) {
                     it.remove();
@@ -372,12 +369,4 @@ public class Redis extends Database implements Closeable {
             return locations;
         }
     }
-
-    @Override
-    protected boolean searchProgress(List<IndexedValue> indexedValues) throws CloudproofException {
-        // let the search progress
-        logger.fine("progress called with " + indexedValues.size() + " values");
-        return true;
-    }
-
 }

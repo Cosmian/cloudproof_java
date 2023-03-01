@@ -10,7 +10,7 @@ import com.cosmian.utils.CloudproofException;
 /**
  * An Indexed Value is either a Location or a (next) word It is the plaintext entry of the Chain table
  */
-public class IndexedValue extends Leb128ByteArray {
+public class IndexedValue extends Leb128ByteArray implements ToIndexedValue {
 
     protected final byte LOCATION_BYTE = 'l';
 
@@ -68,4 +68,8 @@ public class IndexedValue extends Leb128ByteArray {
             + Hex.encodeHexString(Arrays.copyOfRange(this.bytes, 1, this.bytes.length));
     }
 
+    @Override
+    public IndexedValue toIndexedValue() {
+        return this;
+    }
 }

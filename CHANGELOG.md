@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.0] - 2023-03-01
+
+### Ci
+
+- Add cross tests
+- Fix github cleaning cache for every PR
+
+### Features
+
+- Findex Cloud beta
+- Add new API `Findex.SearchRequest`, `Findex.IndexRequest`, `FindexCloud.SearchRequest` and `FindexCloud.IndexRequest` to simplify management of `Findex.search` and `Findex.upsert` parameters
+
+---
+
 ## [4.0.1] - 2023-02-17
 
 ### Bug Fixes

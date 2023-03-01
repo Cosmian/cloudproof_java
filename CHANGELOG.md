@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [4.1.0] - 2023-03-01
+
+### Ci
+
+- Add cross tests
+- Fix github cleaning cache for every PR
 
 ### Features
 

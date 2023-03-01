@@ -96,6 +96,7 @@ This table shows the compatible versions of the various components
 | 3.0.3    | 4.0.1      | 8.0.2      | 2.0.0  |
 | 4.0.0    | 4.2.0      | 10.0.0     | 2.0.1  |
 | 4.0.1    | 4.2.0      | 10.0.0     | 2.0.1  |
+| 4.1.0    | 4.2.0      | 10.0.0     | 2.1.0  |
 
 ## Using in Java projects
 
@@ -105,7 +106,7 @@ This library is open-source software and is available on Maven Central.
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>4.0.1</version>
+    <version>4.1.0</version>
 </dependency>
 ```
 

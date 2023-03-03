@@ -7,7 +7,7 @@ from os import getenv, path, remove
 CLOUDPROOF_RUST_VERSION = 'v0.1.0'
 
 
-def files_to_be_copied(name: str) -> dict[str, str]:
+def files_to_be_copied(name: str):
     destination = 'src/main/resources'
     return {
         f'tmp/x86_64-apple-darwin/x86_64-apple-darwin/release/libcloudproof_{name}.dylib': f'{destination}/darwin-x86-64/libcloudproof_{name}.dylib',

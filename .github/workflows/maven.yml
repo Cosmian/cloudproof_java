@@ -138,7 +138,7 @@ jobs:
     needs: build_in_docker
     uses: Cosmian/reusable_workflows/.github/workflows/cloudproof_js.yml@develop
     with:
-      branch: develop
+      branch: feature/cloudproof_rust
       target: wasm32-unknown-unknown
       kms-version: 4.3.3
       copy_fresh_build: false
@@ -150,7 +150,7 @@ jobs:
     needs: build_in_docker
     uses: Cosmian/reusable_workflows/.github/workflows/cloudproof_python.yml@develop
     with:
-      branch: develop
+      branch: feature/cloudproof_rust
       target: x86_64-unknown-linux-gnu
       kms-version: 4.3.3
       copy_fresh_build: false
@@ -162,7 +162,7 @@ jobs:
     needs: build_in_docker
     uses: Cosmian/reusable_workflows/.github/workflows/cloudproof_flutter.yml@develop
     with:
-      branch: develop
+      branch: feature/cloudproof_rust
       target: x86_64-unknown-linux-gnu
       extension: so
       copy_fresh_build: false

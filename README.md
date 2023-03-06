@@ -98,7 +98,7 @@ This table shows the compatible versions of the various components
 | 4.0.1    | 4.2.0      | 10.0.0     | 2.0.1  |
 | 4.1.0    | 4.2.0      | 10.0.0     | 2.1.0  |
 
-From the version 5.0.0, `cloudproof_java` depends on `cloudproof_rust` which wraps the FFI interfaces of `CoverCrypt` and `Findex`.
+From the version 5.0.0, `cloudproof_java` depends on [cloudproof_rust](https://github.com/Cosmian/cloudproof_rust) which wraps the interfaces of `CoverCrypt` and `Findex`.
 
 | This lib | KMS Server | Cloudproof Rust lib |
 |----------|------------|---------------------|

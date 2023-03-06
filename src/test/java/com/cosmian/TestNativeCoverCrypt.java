@@ -670,7 +670,6 @@ public class TestNativeCoverCrypt {
         for (String file : TestUtils.listFiles(testFolder)) {
             System.out.println("Non-regression test file: " + file);
             NonRegressionVector.verify(testFolder + file);
-            System.out.println("... OK: Non-regression test file: " + testFolder + file);
         }
     }
 

@@ -261,7 +261,7 @@ public class TestSqlite {
         Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
 
         //
-        // Generate non regression sqlite - uncomment if needed
+        // Generate non regression sqlite
         //
         //
         // Upsert

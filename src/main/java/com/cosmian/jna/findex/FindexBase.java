@@ -24,7 +24,7 @@ import com.sun.jna.ptr.IntByReference;
 
 public class FindexBase {
     static final FindexNativeWrapper INSTANCE =
-        (FindexNativeWrapper) Native.load("cosmian_findex", FindexNativeWrapper.class);
+        (FindexNativeWrapper) Native.load("cloudproof_findex", FindexNativeWrapper.class);
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes

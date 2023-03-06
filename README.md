@@ -98,6 +98,12 @@ This table shows the compatible versions of the various components
 | 4.0.1    | 4.2.0      | 10.0.0     | 2.0.1  |
 | 4.1.0    | 4.2.0      | 10.0.0     | 2.1.0  |
 
+From the version 5.0.0, `cloudproof_java` depends on [cloudproof_rust](https://github.com/Cosmian/cloudproof_rust) which wraps the interfaces of `CoverCrypt` and `Findex`.
+
+| This lib | KMS Server | Cloudproof Rust lib |
+|----------|------------|---------------------|
+| 5.0.0    | 4.3.3      | 1.0.0               |
+
 ## Using in Java projects
 
 This library is open-source software and is available on Maven Central.
@@ -106,7 +112,7 @@ This library is open-source software and is available on Maven Central.
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>4.1.0</version>
+    <version>5.0.0</version>
 </dependency>
 ```
 

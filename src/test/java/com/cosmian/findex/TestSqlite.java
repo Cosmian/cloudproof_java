@@ -241,6 +241,7 @@ public class TestSqlite {
                 java.nio.file.LinkOption.NOFOLLOW_LINKS);
             System.out.println("Non-regression test file: " + newPath);
             verify(key, label, indexedValuesAndWords, newPath, expectedDbLocations);
+            System.out.println("... OK: Non-regression test file: " + fullPath);
         }
     }
 
@@ -260,7 +261,7 @@ public class TestSqlite {
         Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
 
         //
-        // Generate non regression sqlite - uncomment if needed
+        // Generate non regression sqlite
         //
         //
         // Upsert

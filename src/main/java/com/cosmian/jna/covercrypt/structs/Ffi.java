@@ -9,7 +9,7 @@ import com.sun.jna.Native;
 
 public class Ffi {
 
-    protected static final CoverCryptWrapper instance = (CoverCryptWrapper) Native.load("cosmian_cover_crypt",
+    protected static final CoverCryptWrapper instance = (CoverCryptWrapper) Native.load("cloudproof_cover_crypt",
         CoverCryptWrapper.class);
 
     /**
@@ -52,7 +52,8 @@ public class Ffi {
         IntByReference outputSize = new IntByReference(output.length);
         int err = instance.h_get_error(output, outputSize);
         if (err == 0) {
-            return new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
+            return "FFI error: "
+                + new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
         }
         throw new CloudproofException(
             "Failed retrieving the last error with error code '" + err + "'; check the debug logs");

@@ -201,7 +201,7 @@ public class TestBenchesCoverCrypt {
         }
 
         System.out.println("");
-        System.out.println("Hrybridized encryption");
+        System.out.println("Hybridized encryption");
         System.out.println("======================");
         System.out.println("");
 

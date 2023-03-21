@@ -11,6 +11,7 @@ import com.cosmian.jna.findex.FindexCloud;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.RestClient;
+import com.cosmian.utils.RestException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,26 +21,36 @@ public class TestFindexCloud {
     public void testFindexCloud() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        String baseUrl = "http://localhost:8080";
+        String baseUrl = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
+        if (baseUrl == null) {
+            System.out.println("No COSMIAN_FINDEX_CLOUD_BASE_URL: ignoring");
+            return;
+        }
+
         String label = "Hello World!";
 
-        RestClient client = new RestClient(baseUrl, Optional.empty());
-        String response = client.json_post("/indexes", "{ \"name\": \"Test\" }");
+        String response = "";
+        try {
+            RestClient client = new RestClient(baseUrl, Optional.empty());
+            response = client.json_post("/indexes", "{ \"name\": \"Test\" }");
+        } catch (RestException e) {
+            if (! e.getMessage().contains("404") && ! e.getMessage().contains("401")) {
+                System.out.println("No Findex Cloud Server: ignoring");
+                return;
+            }
+        }
 
         Index index =  mapper.readValue(response, Index.class);
 
         String token = FindexCloud.generateNewToken(index.publicId, index.fetchEntriesKey, index.fetchChainsKey, index.upsertEntriesKey, index.insertChainsKey);
 
-
         FindexCloud.IndexRequest indexRequest = new FindexCloud.IndexRequest(token, label)
-            .baseUrl(baseUrl)
             .add(new Location(1337), new String[] { "John", "Doe" })
             .add(new Location(42), new String[] { "Jane", "Doe" });
 
         FindexCloud.upsert(indexRequest);
 
         FindexCloud.SearchRequest searchRequest = new FindexCloud.SearchRequest(token, label)
-            .baseUrl(baseUrl)
             .keywords(new String[] { "Doe" });
 
         SearchResults searchResults = FindexCloud.search(searchRequest);

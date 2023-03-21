@@ -29,16 +29,8 @@ public class TestFindexCloud {
 
         String label = "Hello World!";
 
-        String response = "";
-        try {
-            RestClient client = new RestClient(baseUrl, Optional.empty());
-            response = client.json_post("/indexes", "{ \"name\": \"Test\" }");
-        } catch (RestException e) {
-            if (! e.getMessage().contains("404") && ! e.getMessage().contains("401")) {
-                System.out.println("No Findex Cloud Server: ignoring");
-                return;
-            }
-        }
+        RestClient client = new RestClient(baseUrl, Optional.empty());
+        String response = client.json_post("/indexes", "{ \"name\": \"Test\" }");
 
         Index index =  mapper.readValue(response, Index.class);
 

@@ -2,6 +2,7 @@ package com.cosmian.jna.findex.ffi;
 
 import java.util.Map;
 
+import com.cosmian.jna.findex.FindexCallbackException;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertChainCallback;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertChain;
 import com.cosmian.jna.findex.serde.Leb128Reader;
@@ -22,23 +23,27 @@ public class UpsertChain implements UpsertChainCallback {
     public int apply(Pointer items,
                      int itemsLength)
         throws CloudproofException {
-        //
-        // Read `items` until `itemsLength`
-        //
-        byte[] itemsBytes = new byte[itemsLength];
-        items.read(0, itemsBytes, 0, itemsLength);
-
-        //
-        // Deserialize the chain table items
-        //
-        Map<Uid32, ChainTableValue> uidsAndValues =
-            Leb128Reader.deserializeMap(Uid32.class, ChainTableValue.class, itemsBytes);
-
-        //
-        // Insert in database
-        //
-        this.upsert.upsert(uidsAndValues);
-
-        return 0;
+        try {
+            //
+            // Read `items` until `itemsLength`
+            //
+            byte[] itemsBytes = new byte[itemsLength];
+            items.read(0, itemsBytes, 0, itemsLength);
+    
+            //
+            // Deserialize the chain table items
+            //
+            Map<Uid32, ChainTableValue> uidsAndValues =
+                Leb128Reader.deserializeMap(Uid32.class, ChainTableValue.class, itemsBytes);
+    
+            //
+            // Insert in database
+            //
+            this.upsert.upsert(uidsAndValues);
+    
+            return 0;
+        } catch (CloudproofException e) {
+            return FindexCallbackException.record(e);
+        }
     }
 }

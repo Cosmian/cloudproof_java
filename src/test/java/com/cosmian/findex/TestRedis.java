@@ -18,6 +18,7 @@ import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
+import com.cosmian.utils.CloudproofException;
 
 import redis.clients.jedis.Jedis;
 
@@ -159,6 +160,61 @@ public class TestRedis {
                 jedis.flushAll();
             }
 
+        }
+    }
+
+    @Test
+    public void testExceptions() throws Exception {
+        if (TestUtils.portAvailable(6379)) {
+            System.out.println("Ignore test since Redis is down");
+            return;
+        }
+
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Exceptions in Redis");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        //
+        // Recover key and label
+        //
+        byte[] key = IndexUtils.generateKey();
+        assertEquals(16, key.length);
+        byte[] label = IndexUtils.loadLabel();
+
+        //
+        // Build dataset with DB uids and words
+        //
+        UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
+
+        //
+        // Prepare Redis tables and users
+        //
+        try (Redis db = new Redis()) {
+            // delete all items
+            try (Jedis jedis = db.getJedis()) {
+                jedis.flushAll();
+            }
+            db.insertUsers(testFindexDataset);
+
+            Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+            Findex.upsert(key, label, indexedValuesAndWords, db);
+
+            db.shouldThrowInsideFetchEntries = true;
+
+            try {
+                Findex.search(
+                    key,
+                    "NewLabel".getBytes(),
+                    new HashSet<>(Arrays.asList(new Keyword("France"))),
+                    db);
+            } catch (CloudproofException e) {
+                assertEquals("Should throw inside fetch entries", e.getMessage());
+                return;
+            }
+
+            throw new Exception("Should have throw");
         }
     }
 

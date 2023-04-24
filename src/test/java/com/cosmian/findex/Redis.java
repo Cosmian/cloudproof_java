@@ -56,6 +56,8 @@ public class Redis extends Database implements Closeable {
 
     private final String redisPassword;
 
+    public boolean shouldThrowInsideFetchEntries = false;
+
     // public final Jedis jedis;
 
     /**
@@ -268,6 +270,10 @@ public class Redis extends Database implements Closeable {
 
     @Override
     protected Map<Uid32, EntryTableValue> fetchEntries(List<Uid32> uids) throws CloudproofException {
+        if (shouldThrowInsideFetchEntries) {
+            throw new CloudproofException("Should throw inside fetch entries");
+        }
+
         List<byte[]> values = getEntries(uids, ENTRY_TABLE_INDEX);
         // post process
         HashMap<Uid32, EntryTableValue> keysAndValues = new HashMap<>();

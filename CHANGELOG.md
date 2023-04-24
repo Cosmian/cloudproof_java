@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.4] - 2023-04-25
+
+### Features
+
+- Add exception handling for Findex callbacks
+
+### Ci
+
+- Test on docker too
+
 ## [3.0.3] - 2023-01-16
 
 ### Deleted

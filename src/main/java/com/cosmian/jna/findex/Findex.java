@@ -80,13 +80,14 @@ public final class Findex {
             labelPointer.write(0, label, 0, label.length);
 
             // Indexes creation + insertion/update
+            long start = System.currentTimeMillis();
             unwrap(Findex.INSTANCE.h_upsert(
                 keyPointer, key.length,
                 labelPointer, label.length,
                 indexedValuesToJson(indexedValuesAndWords),
                 db.fetchEntryCallback(),
                 db.upsertEntryCallback(),
-                db.upsertChainCallback()));
+                db.upsertChainCallback()), start);
         }
     }
 
@@ -178,6 +179,7 @@ public final class Findex {
             }
 
             // Indexes creation + insertion/update
+            long start = System.currentTimeMillis();
             int ffiCode = Findex.INSTANCE.h_search(
                 indexedValuesBuffer, indexedValuesBufferSize,
                 keyPointer, key.length,
@@ -189,10 +191,13 @@ public final class Findex {
                 db.progressCallback(),
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
+            FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
+
             if (ffiCode != 0) {
                 // Retry with correct allocated size
                 indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
-                ffiCode = Findex.INSTANCE.h_search(
+                long startRetry = System.currentTimeMillis();
+                unwrap(Findex.INSTANCE.h_search(
                     indexedValuesBuffer, indexedValuesBufferSize,
                     keyPointer, key.length,
                     labelPointer, label.length,
@@ -202,10 +207,7 @@ public final class Findex {
                     insecureFetchChainsBatchSize,
                     db.progressCallback(),
                     db.fetchEntryCallback(),
-                    db.fetchChainCallback());
-                if (ffiCode != 0) {
-                    throw new CloudproofException(get_last_error(4095));
-                }
+                    db.fetchChainCallback()), startRetry);
             }
 
             byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
@@ -236,6 +238,7 @@ public final class Findex {
             labelPointer.write(0, label, 0, label.length);
 
             // Indexes creation + insertion/update
+            long start = System.currentTimeMillis();
             unwrap(Findex.INSTANCE.h_compact(
                 numberOfReindexingPhasesBeforeFullSet,
                 existingKeyPointer, existingKey.length,
@@ -245,7 +248,7 @@ public final class Findex {
                 database.fetchEntryCallback(),
                 database.fetchChainCallback(),
                 database.updateLinesCallback(),
-                database.listRemoveLocationsCallback()));
+                database.listRemoveLocationsCallback()), start);
         }
     }
 
@@ -253,13 +256,26 @@ public final class Findex {
      * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
      * exception wrapping it.
      *
-     * @param result the result of the FFI call
+     * @param errorCode the errorCode of the FFI call
      * @throws CloudproofException in case of native library error
      */
-    public static void unwrap(int result) throws CloudproofException {
-        if (result == 1) {
+    public static void unwrap(int errorCode) throws CloudproofException {
+        if (errorCode != 0) {
             throw new CloudproofException(get_last_error(4095));
         }
+    }
+
+    /**
+     * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
+     * exception wrapping it.
+     *
+     * @param errorCode the errorCode of the FFI call
+     * @throws CloudproofException in case of native library error
+     */
+    public static void unwrap(int errorCode, long start) throws CloudproofException {
+        FindexCallbackException.rethrowOnErrorCode(errorCode, start, System.currentTimeMillis());
+
+        unwrap(errorCode);
     }
 
 }

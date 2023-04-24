@@ -45,3 +45,137 @@ jobs:
 
       - name: Build with Maven
         run: mvn -B package --file pom.xml
+
+  build_in_docker:
+    services:
+      kms:
+        image: cosmian/kms:4.0.1
+        env:
+          COSMIAN_SERVER_URL: http://localhost:9998
+          KMS_PUBLIC_PATH: /tmp
+          KMS_PRIVATE_PATH: /tmp
+          KMS_SHARED_PATH: /tmp
+        ports:
+          - 9998:9998
+
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    runs-on: ${{ matrix.os }}
+    container: centos:centos7.4.1708
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache build
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.m2/repository
+            target
+          key: ${{ runner.os }}-maven-docker-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-docker-${{ hashFiles('**/pom.xml') }}
+      - run: yum -y install java-1.8.0-openjdk maven python3 python3-pip
+      - run: python3 scripts/get_native_libraries.py
+
+      - name: Build with Maven
+        run: mvn compile
+        env:
+          COSMIAN_SERVER_URL: http://kms:9998
+          REDIS_HOSTNAME: redis
+          REDIS_PORT: 6379
+          LANG: en_US.UTF-8
+          LANGUAGE: en_US:en
+          LC_ALL: en_US.UTF-8
+
+      - name: Test with Maven
+        run: mvn test
+        env:
+          COSMIAN_SERVER_URL: http://kms:9998
+          REDIS_HOSTNAME: redis
+          REDIS_PORT: 6379
+          LANG: en_US.UTF-8
+          LANGUAGE: en_US:en
+          LC_ALL: en_US.UTF-8
+
+  maven_deploy:
+    needs:
+      - build
+      - build_in_docker
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache build
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.m2/repository
+            target
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: 8
+          distribution: temurin
+          cache: maven
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.7
+      - run: python scripts/get_native_libraries.py
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
+          gpg_private_key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Maven deploy
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg2
+          mkdir -p ~/.m2 ~/.gpg
+          echo "$M2_SETTINGS" > ~/.m2/settings.xml
+          echo "$MAVEN_GPG_PRIVATE_KEY" > ~/.gpg/maven_gpg_private_key.asc
+          mvn clean deploy -Dmaven.test.skip
+        env:
+          M2_SETTINGS: ${{ secrets.M2_SETTINGS }}
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+
+  release:
+    needs:
+      - maven_deploy
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+
+  cleanup:
+    needs:
+      - release
+    uses: Cosmian/reusable_workflows/.github/workflows/cleanup_cache.yml@findex_2.0_cover_crypt_8.0
+    secrets: inherit

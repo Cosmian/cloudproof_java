@@ -40,7 +40,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <jna.version>5.12.1</jna.version>
-        <jackson.version>2.14.1</jackson.version>
+        <jackson.version>2.14.2</jackson.version>
     </properties>
     <dependencies>
         <dependency>
@@ -74,11 +74,6 @@
             <artifactId>jna</artifactId>
             <version>${jna.version}</version>
         </dependency>
-        <!-- <dependency>
-            <groupId>com.rover12421.android</groupId>
-        <artifactId>dx</artifactId>
-            <version>1.16</version>
-        </dependency> -->
         <!-- Scope test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -9,12 +9,13 @@ Cloudproof Encryption secures data repositories and applications in the cloud wi
 <!-- toc -->
 
 - [Licensing](#licensing)
+- [Cryptographic primitives](#cryptographic-primitives)
 - [Getting started](#getting-started)
 - [Benchmarks](#benchmarks)
 - [Versions Correspondence](#versions-correspondence)
 - [Using in Java projects](#using-in-java-projects)
-  - [Download required native libraries](#download-required-native-libraries)
-  - [Building the native libraries on your own](#building-the-native-libraries-on-your-own)
+  * [Download required native libraries](#download-required-native-libraries)
+  * [Building the native libraries on your own](#building-the-native-libraries-on-your-own)
 
 <!-- tocstop -->
 

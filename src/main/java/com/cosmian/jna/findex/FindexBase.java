@@ -132,7 +132,7 @@ public class FindexBase {
      * @throws CloudproofException in case of native library error
      */
     protected static void unwrap(int errorCode) throws CloudproofException {
-        if (errorCode == 1) {
+        if (errorCode != 0) {
             throw new CloudproofException(get_last_error(4095));
         }
     }

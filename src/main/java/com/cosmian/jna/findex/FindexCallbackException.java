@@ -36,9 +36,11 @@ public class FindexCallbackException {
         }
 
         for (FindexCallbackException e : exceptions) {
-            if (e.timestamp > start && e.timestamp < end) {
+            if (e.timestamp >= start && e.timestamp <= end) {
                 throw e.e;
             }
         }
+
+        throw new CloudproofException("Findex returned an error code " + errorCode + " reserved for exceptions but no exception was recorded during the callbacks.");
     }
 }

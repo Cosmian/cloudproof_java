@@ -202,7 +202,10 @@ public class TestRedis {
                 Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] { "John" }));
             } catch (CloudproofException e) {
                 assertEquals("Should throw inside fetch entries", e.getMessage());
+                return;
             }
+
+            throw new Exception("Should have throw");
         }
     }
 

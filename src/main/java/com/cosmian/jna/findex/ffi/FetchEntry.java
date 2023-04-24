@@ -52,7 +52,6 @@ public class FetchEntry implements FetchEntryCallback {
             //
             return FFiUtils.mapToOutputPointer(uidsAndValues, output, outputSize);
         } catch (CloudproofException e) {
-            System.out.println("Exception inside fetch entry " + e.getMessage());
             return FindexCallbackException.record(e);
         }
     }

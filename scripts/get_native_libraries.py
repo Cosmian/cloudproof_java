@@ -63,6 +63,6 @@ def download_native_libraries(version: str) -> bool:
 
 
 if __name__ == '__main__':
-    ret = download_native_libraries('v1.1.0')
+    ret = download_native_libraries('v1.2.0')
     if ret is False and getenv('GITHUB_ACTIONS'):
         download_native_libraries('last_build/improve_ffi_errors')

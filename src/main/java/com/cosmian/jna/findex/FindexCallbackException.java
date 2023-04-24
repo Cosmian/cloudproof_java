@@ -8,6 +8,8 @@ import com.cosmian.utils.CloudproofException;
 public class FindexCallbackException {
 
     private final static int CALLBACK_ERROR_CODE_WHEN_THROWING = 42;
+    public static int purgeExceptionsWhenCountIsGreaterThan = 50;
+    public static int purgeExceptionsAfterMillis = 1000 * 60 * 5; // 5 minutes
 
     public static List<FindexCallbackException> exceptions = new ArrayList<>();
 
@@ -19,6 +21,10 @@ public class FindexCallbackException {
     }
 
     public static int record(CloudproofException e) {
+        if (exceptions.size() > purgeExceptionsWhenCountIsGreaterThan) {
+            exceptions.removeIf(exception -> exception.timestamp < System.currentTimeMillis() - purgeExceptionsAfterMillis);
+        }
+
         exceptions.add(new FindexCallbackException(e));
 
         return CALLBACK_ERROR_CODE_WHEN_THROWING;

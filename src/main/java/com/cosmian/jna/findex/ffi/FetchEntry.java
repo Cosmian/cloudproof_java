@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.cosmian.jna.findex.FindexCallbackException;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchEntry;
 import com.cosmian.jna.findex.serde.Leb128Reader;
@@ -29,26 +30,31 @@ public class FetchEntry implements FetchEntryCallback {
                      Pointer uidsPointer,
                      int uidsLength)
         throws CloudproofException {
+        try {
+            //
+            // Read `uidsPointer` until `uidsLength`
+            //
+            byte[] uids = new byte[uidsLength];
+            uidsPointer.read(0, uids, 0, uidsLength);
+            //
+            // Deserialize Entry Table uids
+            //
+            List<Uid32> entryTableUids = Leb128Reader.deserializeCollection(Uid32.class, uids);
 
-        //
-        // Read `uidsPointer` until `uidsLength`
-        //
-        byte[] uids = new byte[uidsLength];
-        uidsPointer.read(0, uids, 0, uidsLength);
-        //
-        // Deserialize Entry Table uids
-        //
-        List<Uid32> entryTableUids = Leb128Reader.deserializeCollection(Uid32.class, uids);
+            //
+            // Select uids and values in EntryTable
+            //
 
-        //
-        // Select uids and values in EntryTable
-        //
-        Map<Uid32, EntryTableValue> uidsAndValues = this.fetch.fetch(entryTableUids);
+            Map<Uid32, EntryTableValue> uidsAndValues = this.fetch.fetch(entryTableUids);
 
-        //
-        // Serialize results
-        //
-        return FFiUtils.mapToOutputPointer(uidsAndValues, output, outputSize);
+            //
+            // Serialize results
+            //
+            return FFiUtils.mapToOutputPointer(uidsAndValues, output, outputSize);
+        } catch (CloudproofException e) {
+            System.out.println("Exception inside fetch entry " + e.getMessage());
+            return FindexCallbackException.record(e);
+        }
     }
 
 }

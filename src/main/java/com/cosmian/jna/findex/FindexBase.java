@@ -114,11 +114,25 @@ public class FindexBase {
      * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
      * exception wrapping it.
      *
-     * @param result the result of the FFI call
+     * @param errorCode the result of the FFI call
+     * @param start the start timestamp of the FFI call (used for callback exception handling)
      * @throws CloudproofException in case of native library error
      */
-    protected static void unwrap(int result) throws CloudproofException {
-        if (result == 1) {
+    protected static void unwrap(int errorCode, long start) throws CloudproofException {
+        FindexCallbackException.rethrowOnErrorCode(errorCode, start, System.currentTimeMillis());
+
+        unwrap(errorCode);
+    }
+
+    /**
+     * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
+     * exception wrapping it.
+     *
+     * @param errorCode the result of the FFI call
+     * @throws CloudproofException in case of native library error
+     */
+    protected static void unwrap(int errorCode) throws CloudproofException {
+        if (errorCode == 1) {
             throw new CloudproofException(get_last_error(4095));
         }
     }

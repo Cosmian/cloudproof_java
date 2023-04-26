@@ -157,6 +157,58 @@ public class TestRedis {
         }
     }
 
+
+    @Test
+    public void testExceptions() throws Exception {
+        if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
+            System.out.println("Ignore test since Redis is down");
+            return;
+        }
+
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Exceptions in Redis");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        //
+        // Recover key and label
+        //
+        byte[] key = IndexUtils.generateKey();
+        assertEquals(16, key.length);
+        byte[] label = IndexUtils.loadLabel();
+
+        //
+        // Build dataset with DB uids and words
+        //
+        UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
+
+        //
+        // Prepare Redis tables and users
+        //
+        try (Redis db = new Redis()) {
+            // delete all items
+            try (Jedis jedis = db.getJedis()) {
+                jedis.flushAll();
+            }
+            db.insertUsers(testFindexDataset);
+
+            Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+            Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+
+            db.shouldThrowInsideFetchEntries = true;
+
+            try {
+                Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] { "John" }));
+            } catch (CloudproofException e) {
+                assertEquals("Should throw inside fetch entries", e.getMessage());
+                return;
+            }
+
+            throw new Exception("Should have throw");
+        }
+    }
+
     @Test
     public void testGraphUpsertAndSearchRedis() throws Exception {
         if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {

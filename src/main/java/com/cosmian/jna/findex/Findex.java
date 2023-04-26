@@ -31,6 +31,7 @@ public final class Findex extends FindexBase {
             keyPointer.write(0, key, 0, key.length);
             labelPointer.write(0, label, 0, label.length);
 
+            long start = System.currentTimeMillis();
             // Indexes creation + insertion/update
             unwrap(INSTANCE.h_upsert(
                 keyPointer, key.length,
@@ -38,7 +39,7 @@ public final class Findex extends FindexBase {
                 indexedValuesToJson(indexedValuesAndWords),
                 db.fetchEntryCallback(),
                 db.upsertEntryCallback(),
-                db.upsertChainCallback()));
+                db.upsertChainCallback()), start);
         }
     }
 
@@ -95,6 +96,7 @@ public final class Findex extends FindexBase {
             String wordsJson = keywordsToJson(keyWords);
 
             // Indexes creation + insertion/update
+            long start = System.currentTimeMillis();
             int ffiCode = INSTANCE.h_search(
                 indexedValuesBuffer, indexedValuesBufferSize,
                 keyPointer, key.length,
@@ -106,10 +108,14 @@ public final class Findex extends FindexBase {
                 wrappedProgress,
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
+
+            FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
+
             if (ffiCode != 0) {
                 // Retry with correct allocated size
                 indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
-                ffiCode = INSTANCE.h_search(
+                long startRetry = System.currentTimeMillis();
+                unwrap(INSTANCE.h_search(
                     indexedValuesBuffer, indexedValuesBufferSize,
                     keyPointer, key.length,
                     labelPointer, label.length,
@@ -119,10 +125,7 @@ public final class Findex extends FindexBase {
                     insecureFetchChainsBatchSize,
                     wrappedProgress,
                     db.fetchEntryCallback(),
-                    db.fetchChainCallback());
-                if (ffiCode != 0) {
-                    throw new CloudproofException(get_last_error(4095));
-                }
+                    db.fetchChainCallback()), startRetry);
             }
 
             byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
@@ -151,6 +154,7 @@ public final class Findex extends FindexBase {
             newKeyPointer.write(0, newKey, 0, newKey.length);
             labelPointer.write(0, label, 0, label.length);
 
+            long start = System.currentTimeMillis();
             // Indexes creation + insertion/update
             unwrap(INSTANCE.h_compact(
                 numberOfReindexingPhasesBeforeFullSet,
@@ -161,7 +165,7 @@ public final class Findex extends FindexBase {
                 database.fetchEntryCallback(),
                 database.fetchChainCallback(),
                 database.updateLinesCallback(),
-                database.listRemoveLocationsCallback()));
+                database.listRemoveLocationsCallback()), start);
         }
     }
 

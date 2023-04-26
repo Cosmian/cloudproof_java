@@ -57,6 +57,10 @@ jobs:
           KMS_SHARED_PATH: /tmp
         ports:
           - 9998:9998
+      findex_cloud:
+        image: ghcr.io/cosmian/findex_cloud:0.1.0
+        ports:
+          - 8080:8080
 
       redis:
         image: redis
@@ -97,6 +101,7 @@ jobs:
         run: mvn compile
         env:
           COSMIAN_SERVER_URL: http://kms:9998
+          COSMIAN_FINDEX_CLOUD_BASE_URL: http://findex_cloud:8080
           REDIS_HOSTNAME: redis
           REDIS_PORT: 6379
           LANG: en_US.UTF-8
@@ -107,6 +112,7 @@ jobs:
         run: mvn test
         env:
           COSMIAN_SERVER_URL: http://kms:9998
+          COSMIAN_FINDEX_CLOUD_BASE_URL: http://findex_cloud:8080
           REDIS_HOSTNAME: redis
           REDIS_PORT: 6379
           LANG: en_US.UTF-8
@@ -118,6 +124,7 @@ jobs:
         run: mvn test -Dtest='TestBenchesCoverCrypt'
         env:
           COSMIAN_SERVER_URL: http://kms:9998
+          COSMIAN_FINDEX_CLOUD_BASE_URL: http://findex_cloud:8080
           REDIS_HOSTNAME: redis
           REDIS_PORT: 6379
           LANG: en_US.UTF-8

@@ -132,4 +132,17 @@ public interface FindexNativeWrapper extends Library {
                        String dbUidsAndWordsJson,
                        String baseUrl);
 
+
+    int h_generate_new_token(byte[] tokenPtr,
+        IntByReference tokenSize,
+        String indexIdPtr,
+        Pointer fetchEntriesSeedPointer,
+        int fetchEntriesSeedSize,
+        Pointer fetchChainsSeedPointer,
+        int fetchChainsSeedSize,
+        Pointer upsertEntriesSeedPointer,
+        int upsertEntriesSeedSize,
+        Pointer insertChainsSeedPointer,
+        int insertChainsSeedSize);
+
 }

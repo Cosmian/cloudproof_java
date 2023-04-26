@@ -15,6 +15,42 @@ import com.sun.jna.ptr.IntByReference;
 
 public final class FindexCloud extends FindexBase {
 
+    public static String generateNewToken(
+                              String indexId,
+                              byte[] fetchEntriesSeed,
+                              byte[] fetchChainsSeed,
+                              byte[] upsertEntriesSeed,
+                              byte[] insertChainsSeed)
+        throws CloudproofException {
+
+        try (
+            final Memory fetchEntriesSeedPointer = new Memory(fetchEntriesSeed.length);
+            final Memory fetchChainsSeedPointer = new Memory(fetchChainsSeed.length);
+            final Memory upsertEntriesSeedPointer = new Memory(upsertEntriesSeed.length);
+            final Memory insertChainsSeedPointer = new Memory(insertChainsSeed.length);) {
+            fetchEntriesSeedPointer.write(0, fetchEntriesSeed, 0, fetchEntriesSeed.length);
+            fetchChainsSeedPointer.write(0, fetchChainsSeed, 0, fetchChainsSeed.length);
+            upsertEntriesSeedPointer.write(0, upsertEntriesSeed, 0, upsertEntriesSeed.length);
+            insertChainsSeedPointer.write(0, insertChainsSeed, 0, insertChainsSeed.length);
+
+            byte[] tokenBuffer = new byte[200];
+            IntByReference tokenBufferSize = new IntByReference(tokenBuffer.length);
+
+            unwrap(INSTANCE.h_generate_new_token(
+                tokenBuffer,
+                tokenBufferSize,
+                indexId,
+                fetchEntriesSeedPointer, fetchEntriesSeed.length,
+                fetchChainsSeedPointer, fetchChainsSeed.length,
+                upsertEntriesSeedPointer, upsertEntriesSeed.length,
+                insertChainsSeedPointer, insertChainsSeed.length));
+
+            byte[] tokenBytes = Arrays.copyOfRange(tokenBuffer, 0, tokenBufferSize.getValue());
+
+            return new String(tokenBytes, StandardCharsets.UTF_8);
+        }
+    }
+
     public static void upsert(
                               String token,
                               byte[] label,
@@ -130,7 +166,7 @@ public final class FindexCloud extends FindexBase {
     static public class SearchRequest extends FindexBase.SearchRequest<SearchRequest> {
         private String token;
 
-        private String baseUrl;
+        private String baseUrl = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
 
         public SearchRequest(String token, byte[] label) {
             this.token = token;
@@ -161,7 +197,7 @@ public final class FindexCloud extends FindexBase {
     static public class IndexRequest extends FindexBase.IndexRequest<IndexRequest> {
         private String token;
 
-        private String baseUrl;
+        private String baseUrl = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
 
         public IndexRequest(String token, byte[] label) {
             this.token = token;

@@ -67,6 +67,7 @@ public final class FindexCloud extends FindexBase {
                 token,
                 labelPointer, label.length,
                 indexedValuesToJson(indexedValuesAndWords),
+                "{}",
                 baseUrl));
         }
     }
@@ -137,8 +138,6 @@ public final class FindexCloud extends FindexBase {
                 labelPointer, label.length,
                 wordsJson,
                 maxResultsPerKeyword,
-                maxDepth,
-                insecureFetchChainsBatchSize,
                 baseUrl);
             if (ffiCode != 0) {
                 // Retry with correct allocated size
@@ -149,8 +148,6 @@ public final class FindexCloud extends FindexBase {
                     labelPointer, label.length,
                     wordsJson,
                     maxResultsPerKeyword,
-                    maxDepth,
-                    insecureFetchChainsBatchSize,
                     baseUrl);
                 if (ffiCode != 0) {
                     throw new CloudproofException(get_last_error(4095));

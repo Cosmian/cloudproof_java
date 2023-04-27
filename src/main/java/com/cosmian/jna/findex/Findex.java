@@ -37,6 +37,7 @@ public final class Findex extends FindexBase {
                 keyPointer, key.length,
                 labelPointer, label.length,
                 indexedValuesToJson(indexedValuesAndWords),
+                "{}",
                 db.fetchEntryCallback(),
                 db.upsertEntryCallback(),
                 db.upsertChainCallback()), start);
@@ -103,8 +104,6 @@ public final class Findex extends FindexBase {
                 labelPointer, label.length,
                 wordsJson,
                 maxResultsPerKeyword,
-                maxDepth,
-                insecureFetchChainsBatchSize,
                 wrappedProgress,
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
@@ -121,8 +120,6 @@ public final class Findex extends FindexBase {
                     labelPointer, label.length,
                     wordsJson,
                     maxResultsPerKeyword,
-                    maxDepth,
-                    insecureFetchChainsBatchSize,
                     wrappedProgress,
                     db.fetchEntryCallback(),
                     db.fetchChainCallback()), startRetry);
@@ -134,33 +131,32 @@ public final class Findex extends FindexBase {
         }
     }
 
-    /// `number_of_reindexing_phases_before_full_set`: if you compact the indexes
-    /// every night
+    /// `numReindexingBeforeFullSet`: if you compact the indexes every night
     /// this is the number of days to wait before be sure that a big portion of the
-    /// indexes were checked
+    /// indexes were checked.
     /// (see the coupon problem to understand why it's not 100% sure)
-    public static void compact(int numberOfReindexingPhasesBeforeFullSet,
-                               byte[] existingKey,
-                               byte[] newKey,
+    public static void compact(int numReindexingBeforeFullSet,
+                               byte[] oldMasterKey,
+                               byte[] newMasterKey,
                                byte[] label,
                                Database database)
         throws CloudproofException {
 
-        try (final Memory existingKeyPointer = new Memory(existingKey.length);
-            final Memory newKeyPointer = new Memory(newKey.length);
-            final Memory labelPointer = new Memory(label.length)) {
+        try (final Memory oldMasterKeyPtr = new Memory(oldMasterKey.length);
+            final Memory newMasterKeyPtr = new Memory(newMasterKey.length);
+            final Memory labelPtr = new Memory(label.length)) {
 
-            existingKeyPointer.write(0, existingKey, 0, existingKey.length);
-            newKeyPointer.write(0, newKey, 0, newKey.length);
-            labelPointer.write(0, label, 0, label.length);
+            oldMasterKeyPtr.write(0, oldMasterKey, 0, oldMasterKey.length);
+            newMasterKeyPtr.write(0, newMasterKey, 0, newMasterKey.length);
+            labelPtr.write(0, label, 0, label.length);
 
             long start = System.currentTimeMillis();
             // Indexes creation + insertion/update
             unwrap(INSTANCE.h_compact(
-                numberOfReindexingPhasesBeforeFullSet,
-                existingKeyPointer, existingKey.length,
-                newKeyPointer, newKey.length,
-                labelPointer, label.length,
+                oldMasterKeyPtr, oldMasterKey.length,
+                newMasterKeyPtr, newMasterKey.length,
+                labelPtr, label.length,
+                numReindexingBeforeFullSet,
                 database.fetchAllEntryTableUidsCallback(),
                 database.fetchEntryCallback(),
                 database.fetchChainCallback(),

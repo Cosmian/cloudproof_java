@@ -118,7 +118,7 @@ public class TestRedis {
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         db);
-                assertTrue(searchResults.isEmpty());
+                assertTrue(searchResults.get(new Keyword("France")).isEmpty());
                 System.out.println("<== successfully compacted and changed the label");
             }
 

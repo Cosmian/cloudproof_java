@@ -84,7 +84,7 @@ public class TestSqlite {
 
             // This compact should do nothing except changing the label since the users
             // table didn't change.
-            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
             {
                 // Search with old label
                 SearchResults searchResults =
@@ -106,7 +106,7 @@ public class TestSqlite {
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
             expectedDbLocations.remove(new Long(17));
-            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
             {
                 // Search should return everyone but n°17
                 SearchResults searchResults =

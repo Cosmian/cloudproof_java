@@ -159,12 +159,14 @@ public class FindexBase {
     static abstract protected class IndexRequest<SELF extends IndexRequest<SELF>> {
         protected byte[] label;
 
-        protected Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
+        protected Map<IndexedValue, Set<Keyword>> additions = new HashMap<>();
+
+        protected Map<IndexedValue, Set<Keyword>> deletions = new HashMap<>();
 
         abstract SELF self();
 
-        public SELF add(Map<? extends ToIndexedValue, Set<Keyword>> indexedValuesAndWords) {
-            for (Map.Entry<? extends ToIndexedValue, Set<Keyword>> entry : indexedValuesAndWords.entrySet()) {
+        public SELF add(Map<? extends ToIndexedValue, Set<Keyword>> additions) {
+            for (Map.Entry<? extends ToIndexedValue, Set<Keyword>> entry : additions.entrySet()) {
                 add(entry.getKey(), entry.getValue());
             }
             return self();
@@ -173,10 +175,10 @@ public class FindexBase {
         public SELF add(ToIndexedValue toIndexedValue,
                         Set<Keyword> keywords) {
             Set<Keyword> existingKeywords =
-                indexedValuesAndWords.get(toIndexedValue.toIndexedValue());
+                additions.get(toIndexedValue.toIndexedValue());
 
             if (existingKeywords == null) {
-                indexedValuesAndWords.put(toIndexedValue.toIndexedValue(), keywords);
+                additions.put(toIndexedValue.toIndexedValue(), keywords);
             } else {
                 existingKeywords.addAll(keywords);
             }

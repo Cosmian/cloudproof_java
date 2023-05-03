@@ -21,7 +21,8 @@ public final class Findex extends FindexBase {
     public static void upsert(
                               byte[] key,
                               byte[] label,
-                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords,
+                              Map<IndexedValue, Set<Keyword>> additions,
+                              Map<IndexedValue, Set<Keyword>> deletions,
                               Database db)
         throws CloudproofException {
 
@@ -36,8 +37,8 @@ public final class Findex extends FindexBase {
             unwrap(INSTANCE.h_upsert(
                 keyPointer, key.length,
                 labelPointer, label.length,
-                indexedValuesToJson(indexedValuesAndWords),
-                "{}",
+                indexedValuesToJson(additions),
+                indexedValuesToJson(deletions),
                 db.fetchEntryCallback(),
                 db.upsertEntryCallback(),
                 db.upsertChainCallback()), start);
@@ -46,7 +47,7 @@ public final class Findex extends FindexBase {
 
     public static void upsert(IndexRequest request)
         throws CloudproofException {
-        upsert(request.key, request.label, request.indexedValuesAndWords, request.database);
+        upsert(request.key, request.label, request.additions, request.deletions, request.database);
     }
 
     public static SearchResults search(SearchRequest request)
@@ -129,27 +130,27 @@ public final class Findex extends FindexBase {
     /// this is the number of days to wait before be sure that a big portion of the
     /// indexes were checked.
     /// (see the coupon problem to understand why it's not 100% sure)
-    public static void compact(int numReindexingBeforeFullSet,
-                               byte[] oldMasterKey,
+    public static void compact(byte[] oldMasterKey,
                                byte[] newMasterKey,
-                               byte[] label,
+                               byte[] newLabel,
+                               int numReindexingBeforeFullSet,
                                Database database)
         throws CloudproofException {
 
         try (final Memory oldMasterKeyPtr = new Memory(oldMasterKey.length);
             final Memory newMasterKeyPtr = new Memory(newMasterKey.length);
-            final Memory labelPtr = new Memory(label.length)) {
+            final Memory newLabelPtr = new Memory(newLabel.length)) {
 
             oldMasterKeyPtr.write(0, oldMasterKey, 0, oldMasterKey.length);
             newMasterKeyPtr.write(0, newMasterKey, 0, newMasterKey.length);
-            labelPtr.write(0, label, 0, label.length);
+            newLabelPtr.write(0, newLabel, 0, newLabel.length);
 
             long start = System.currentTimeMillis();
             // Indexes creation + insertion/update
             unwrap(INSTANCE.h_compact(
                 oldMasterKeyPtr, oldMasterKey.length,
                 newMasterKeyPtr, newMasterKey.length,
-                labelPtr, label.length,
+                newLabelPtr, newLabel.length,
                 numReindexingBeforeFullSet,
                 database.fetchAllEntryTableUidsCallback(),
                 database.fetchEntryCallback(),

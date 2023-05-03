@@ -54,7 +54,8 @@ public final class FindexCloud extends FindexBase {
     public static void upsert(
                               String token,
                               byte[] label,
-                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords,
+                              Map<IndexedValue, Set<Keyword>> additions,
+                              Map<IndexedValue, Set<Keyword>> deletions,
                               String baseUrl)
         throws CloudproofException {
 
@@ -66,23 +67,24 @@ public final class FindexCloud extends FindexBase {
             unwrap(INSTANCE.h_upsert_cloud(
                 token,
                 labelPointer, label.length,
-                indexedValuesToJson(indexedValuesAndWords),
-                "{}",
+                indexedValuesToJson(additions),
+                indexedValuesToJson(deletions),
                 baseUrl));
         }
     }
 
     public static void upsert(IndexRequest request)
         throws CloudproofException {
-        upsert(request.token, request.label, request.indexedValuesAndWords, request.baseUrl);
+        upsert(request.token, request.label, request.additions, request.deletions, request.baseUrl);
     }
 
     public static void upsert(
                               String token,
                               byte[] label,
-                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords)
+                              Map<IndexedValue, Set<Keyword>> additions,
+                              Map<IndexedValue, Set<Keyword>> deletions)
         throws CloudproofException {
-        upsert(token, label, indexedValuesAndWords, null);
+        upsert(token, label, additions, deletions, null);
     }
 
     public static SearchResults search(SearchRequest request)

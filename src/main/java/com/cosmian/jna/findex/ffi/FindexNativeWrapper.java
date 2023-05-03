@@ -109,7 +109,6 @@ public interface FindexNativeWrapper extends Library {
                  Pointer labelPtr,
                  int labelLen,
                  String keywords,
-                 int maxResultsPerChain,
                  ProgressCallback progress,
                  FetchEntryCallback fetchEntry,
                  FetchChainCallback fetchChain);
@@ -120,7 +119,6 @@ public interface FindexNativeWrapper extends Library {
                        Pointer labelPtr,
                        int labelLen,
                        String keywords,
-                       int maxResultsPerChain,
                        String baseUrl);
 
     int h_upsert_cloud(String token,

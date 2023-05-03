@@ -51,8 +51,7 @@ public final class Findex extends FindexBase {
 
     public static SearchResults search(SearchRequest request)
         throws CloudproofException {
-        return search(request.key, request.label, request.keywords, request.maxResultsPerKeyword, request.maxDepth,
-            request.maxDepth, request.database, request.searchProgress);
+        return search(request.key, request.label, request.keywords, request.database, request.searchProgress);
     }
 
     public static SearchResults search(byte[] key,
@@ -66,9 +65,6 @@ public final class Findex extends FindexBase {
     public static SearchResults search(byte[] key,
                                        byte[] label,
                                        Set<Keyword> keyWords,
-                                       int maxResultsPerKeyword,
-                                       int maxDepth,
-                                       int insecureFetchChainsBatchSize,
                                        Database db,
                                        SearchProgress progressCallback)
         throws CloudproofException {
@@ -103,7 +99,6 @@ public final class Findex extends FindexBase {
                 keyPointer, key.length,
                 labelPointer, label.length,
                 wordsJson,
-                maxResultsPerKeyword,
                 wrappedProgress,
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
@@ -119,7 +114,6 @@ public final class Findex extends FindexBase {
                     keyPointer, key.length,
                     labelPointer, label.length,
                     wordsJson,
-                    maxResultsPerKeyword,
                     wrappedProgress,
                     db.fetchEntryCallback(),
                     db.fetchChainCallback()), startRetry);

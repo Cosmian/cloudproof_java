@@ -87,32 +87,19 @@ public final class FindexCloud extends FindexBase {
 
     public static SearchResults search(SearchRequest request)
         throws CloudproofException {
-        return search(request.token, request.label, request.keywords, request.maxResultsPerKeyword, request.maxDepth,
-            request.maxDepth, request.baseUrl);
+        return search(request.token, request.label, request.keywords, request.baseUrl);
     }
 
     public static SearchResults search(String token,
                                        byte[] label,
                                        Set<Keyword> keyWords)
         throws CloudproofException {
-        return search(token, label, keyWords, 0, -1, 0, null);
+        return search(token, label, keyWords, null);
     }
 
     public static SearchResults search(String token,
                                        byte[] label,
                                        Set<Keyword> keyWords,
-                                       int maxResultsPerKeyword,
-                                       int maxDepth)
-        throws CloudproofException {
-        return search(token, label, keyWords, maxResultsPerKeyword, maxDepth, 0, null);
-    }
-
-    public static SearchResults search(String token,
-                                       byte[] label,
-                                       Set<Keyword> keyWords,
-                                       int maxResultsPerKeyword,
-                                       int maxDepth,
-                                       int insecureFetchChainsBatchSize,
                                        String baseUrl)
         throws CloudproofException {
         //
@@ -137,7 +124,6 @@ public final class FindexCloud extends FindexBase {
                 token,
                 labelPointer, label.length,
                 wordsJson,
-                maxResultsPerKeyword,
                 baseUrl);
             if (ffiCode != 0) {
                 // Retry with correct allocated size
@@ -147,7 +133,6 @@ public final class FindexCloud extends FindexBase {
                     token,
                     labelPointer, label.length,
                     wordsJson,
-                    maxResultsPerKeyword,
                     baseUrl);
                 if (ffiCode != 0) {
                     throw new CloudproofException(get_last_error(4095));

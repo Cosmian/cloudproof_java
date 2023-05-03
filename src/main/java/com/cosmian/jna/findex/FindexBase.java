@@ -142,12 +142,6 @@ public class FindexBase {
 
         protected Set<Keyword> keywords;
 
-        protected int maxResultsPerKeyword = 0;
-
-        protected int maxDepth = -1;
-
-        protected int insecureFetchChainsBatchSize = 0;
-
         abstract SELF self();
 
         public SELF keywords(Set<Keyword> keywords) {
@@ -158,21 +152,6 @@ public class FindexBase {
         public SELF keywords(String[] keywords) {
             this.keywords =
                 Stream.of(keywords).map(keyword -> new Keyword(keyword)).collect(Collectors.toCollection(HashSet::new));
-            return self();
-        }
-
-        public SELF maxResultsPerKeyword(int maxResultsPerKeyword) {
-            this.maxResultsPerKeyword = maxResultsPerKeyword;
-            return self();
-        }
-
-        public SELF maxDepth(int maxDepth) {
-            this.maxDepth = maxDepth;
-            return self();
-        }
-
-        public SELF insecureFetchChainsBatchSize(int insecureFetchChainsBatchSize) {
-            this.insecureFetchChainsBatchSize = insecureFetchChainsBatchSize;
             return self();
         }
     }

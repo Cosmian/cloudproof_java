@@ -54,7 +54,8 @@ public final class FindexCloud extends FindexBase {
     public static void upsert(
                               String token,
                               byte[] label,
-                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords,
+                              Map<IndexedValue, Set<Keyword>> additions,
+                              Map<IndexedValue, Set<Keyword>> deletions,
                               String baseUrl)
         throws CloudproofException {
 
@@ -66,52 +67,41 @@ public final class FindexCloud extends FindexBase {
             unwrap(INSTANCE.h_upsert_cloud(
                 token,
                 labelPointer, label.length,
-                indexedValuesToJson(indexedValuesAndWords),
+                indexedValuesToJson(additions),
+                indexedValuesToJson(deletions),
                 baseUrl));
         }
     }
 
     public static void upsert(IndexRequest request)
         throws CloudproofException {
-        upsert(request.token, request.label, request.indexedValuesAndWords, request.baseUrl);
+        upsert(request.token, request.label, request.additions, request.deletions, request.baseUrl);
     }
 
     public static void upsert(
                               String token,
                               byte[] label,
-                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords)
+                              Map<IndexedValue, Set<Keyword>> additions,
+                              Map<IndexedValue, Set<Keyword>> deletions)
         throws CloudproofException {
-        upsert(token, label, indexedValuesAndWords, null);
+        upsert(token, label, additions, deletions, null);
     }
 
     public static SearchResults search(SearchRequest request)
         throws CloudproofException {
-        return search(request.token, request.label, request.keywords, request.maxResultsPerKeyword, request.maxDepth,
-            request.maxDepth, request.baseUrl);
+        return search(request.token, request.label, request.keywords, request.baseUrl);
     }
 
     public static SearchResults search(String token,
                                        byte[] label,
                                        Set<Keyword> keyWords)
         throws CloudproofException {
-        return search(token, label, keyWords, 0, -1, 0, null);
+        return search(token, label, keyWords, null);
     }
 
     public static SearchResults search(String token,
                                        byte[] label,
                                        Set<Keyword> keyWords,
-                                       int maxResultsPerKeyword,
-                                       int maxDepth)
-        throws CloudproofException {
-        return search(token, label, keyWords, maxResultsPerKeyword, maxDepth, 0, null);
-    }
-
-    public static SearchResults search(String token,
-                                       byte[] label,
-                                       Set<Keyword> keyWords,
-                                       int maxResultsPerKeyword,
-                                       int maxDepth,
-                                       int insecureFetchChainsBatchSize,
                                        String baseUrl)
         throws CloudproofException {
         //
@@ -136,9 +126,6 @@ public final class FindexCloud extends FindexBase {
                 token,
                 labelPointer, label.length,
                 wordsJson,
-                maxResultsPerKeyword,
-                maxDepth,
-                insecureFetchChainsBatchSize,
                 baseUrl);
             if (ffiCode != 0) {
                 // Retry with correct allocated size
@@ -148,9 +135,6 @@ public final class FindexCloud extends FindexBase {
                     token,
                     labelPointer, label.length,
                     wordsJson,
-                    maxResultsPerKeyword,
-                    maxDepth,
-                    insecureFetchChainsBatchSize,
                     baseUrl);
                 if (ffiCode != 0) {
                     throw new CloudproofException(get_last_error(4095));

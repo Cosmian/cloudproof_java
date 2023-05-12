@@ -84,12 +84,12 @@ public class TestSqlite {
 
             // This compact should do nothing except changing the label since the users
             // table didn't change.
-            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
             {
                 // Search with old label
                 SearchResults searchResults =
                     Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] {"France"}));
-                assertTrue(searchResults.isEmpty());
+                assertTrue(searchResults.get(new Keyword("France")).isEmpty());
                 System.out.println("<== successfully compacted and changed the label");
             }
 
@@ -106,7 +106,7 @@ public class TestSqlite {
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
             expectedDbLocations.remove(new Long(17));
-            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
             {
                 // Search should return everyone but n°17
                 SearchResults searchResults =
@@ -247,6 +247,8 @@ public class TestSqlite {
 
     @Test
     public void test_generate_non_regression_vectors() throws Exception {
+        new java.io.File("./target/sqlite.db").delete();
+
         //
         // Recover key and label
         //

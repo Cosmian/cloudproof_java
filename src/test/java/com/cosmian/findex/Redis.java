@@ -181,6 +181,9 @@ public class Redis extends Database implements Closeable {
      */
     protected List<byte[]> getEntries(List<Uid32> uids,
                                       int redisPrefix) {
+        if (uids.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         try (Jedis jedis = getJedis()) {
             List<byte[]> keys = new ArrayList<>();

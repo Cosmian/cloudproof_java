@@ -11,7 +11,6 @@ import com.cosmian.jna.findex.FindexCloud;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.RestClient;
-import com.cosmian.utils.RestException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

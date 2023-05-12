@@ -20,22 +20,22 @@ public interface FindexNativeWrapper extends Library {
     interface FetchEntryCallback extends Callback {
         int apply(
                   Pointer output,
-                  IntByReference outputSize,
-                  Pointer uidsPointer,
+                  IntByReference outputLen,
+                  Pointer uidsPtr,
                   int uidsLength)
             throws CloudproofException;
     }
 
     interface FetchAllEntryTableUidsCallback extends Callback {
-        int apply(Pointer uidsPointer,
+        int apply(Pointer uidsPtr,
                   IntByReference uidsSize)
             throws CloudproofException;
     }
 
     interface FetchChainCallback extends Callback {
         int apply(Pointer output,
-                  IntByReference outputSize,
-                  Pointer uidsPointer,
+                  IntByReference outputLen,
+                  Pointer uidsPtr,
                   int uidsLength)
             throws CloudproofException;
     }
@@ -66,7 +66,7 @@ public interface FindexNativeWrapper extends Library {
 
     interface ListRemovedLocationsCallback extends Callback {
         int apply(Pointer output,
-                  IntByReference outputSize,
+                  IntByReference outputLen,
                   Pointer locations,
                   int locationsLength)
             throws CloudproofException;
@@ -79,70 +79,66 @@ public interface FindexNativeWrapper extends Library {
     }
 
     int h_upsert(
-                 Pointer masterKeyPointer,
-                 int masterKeySize,
-                 Pointer labelPointer,
-                 int labelSize,
-                 String dbUidsAndWordsJson,
+                 Pointer masterKeyPtr,
+                 int masterKeyLen,
+                 Pointer labelPtr,
+                 int labelLen,
+                 String additions,
+                 String deletions,
                  FetchEntryCallback fetchEntry,
                  UpsertEntryCallback upsertEntry,
                  UpsertChainCallback upsertChain);
 
-    int h_compact(int numberOfReindexingPhasesBeforeFullSet,
-                  Pointer existingKeyPointer,
-                  int existingKeySize,
-                  Pointer newKeyPointer,
-                  int newKeySize,
-                  Pointer labelPointer,
-                  int labelSize,
+    int h_compact(Pointer oldMasterKeyPtr,
+                  int oldMasterKeyLen,
+                  Pointer newMasterKeyPtr,
+                  int newMasterKeyLen,
+                  Pointer newLabelPtr,
+                  int newLabelLen,
+                  int numReindexingBeforeFullSet,
                   FetchAllEntryTableUidsCallback fetchAllEntryTableUids,
                   FetchEntryCallback fetchEntry,
                   FetchChainCallback fetchChain,
                   UpdateLinesCallback updateLines,
                   ListRemovedLocationsCallback listRemovedLocations);
 
-    int h_search(byte[] dbUidsPtr,
-                 IntByReference dbUidsSize,
-                 Pointer keyKPointer,
-                 int keyKLength,
-                 Pointer labelPointer,
-                 int labelSize,
-                 String words,
-                 int maxResultsPerKeyword,
-                 int maxDepth,
-                 int insecureFetchChainsBatchSize,
+    int h_search(byte[] searchresultsPtr,
+                 IntByReference searchresultsLen,
+                 Pointer masterKeyPtr,
+                 int masterKeyLength,
+                 Pointer labelPtr,
+                 int labelLen,
+                 String keywords,
                  ProgressCallback progress,
                  FetchEntryCallback fetchEntry,
                  FetchChainCallback fetchChain);
 
     int h_search_cloud(byte[] dbUidsPtr,
-                       IntByReference dbUidsSize,
+                       IntByReference dbUidsLen,
                        String token,
-                       Pointer labelPointer,
-                       int labelSize,
-                       String words,
-                       int maxResultsPerKeyword,
-                       int maxDepth,
-                       int insecureFetchChainsBatchSize,
+                       Pointer labelPtr,
+                       int labelLen,
+                       String keywords,
                        String baseUrl);
 
     int h_upsert_cloud(String token,
-                       Pointer labelPointer,
-                       int labelSize,
-                       String dbUidsAndWordsJson,
+                       Pointer labelPtr,
+                       int labelLen,
+                       String additions,
+                       String deletions,
                        String baseUrl);
 
 
     int h_generate_new_token(byte[] tokenPtr,
-        IntByReference tokenSize,
+        IntByReference tokenLen,
         String indexIdPtr,
-        Pointer fetchEntriesSeedPointer,
-        int fetchEntriesSeedSize,
-        Pointer fetchChainsSeedPointer,
-        int fetchChainsSeedSize,
-        Pointer upsertEntriesSeedPointer,
-        int upsertEntriesSeedSize,
-        Pointer insertChainsSeedPointer,
+        Pointer fetchEntriesSeedPtr,
+        int fetchEntriesSeedLen,
+        Pointer fetchChainsSeedPtr,
+        int fetchChainsSeedLen,
+        Pointer upsertEntriesSeedPtr,
+        int upsertEntriesSeedLen,
+        Pointer insertChainsSeedPtr,
         int insertChainsSeedSize);
 
 }

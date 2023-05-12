@@ -23,7 +23,7 @@ def download_native_libraries(version: str) -> bool:
     cover_crypt_files = files_to_be_copied('cover_crypt')
     to_be_copied.update(cover_crypt_files)
 
-    missing_files = False
+    missing_files = True
     for key, value in to_be_copied.items():
         if not path.exists(value):
             missing_files = True
@@ -63,6 +63,6 @@ def download_native_libraries(version: str) -> bool:
 
 
 if __name__ == '__main__':
-    ret = download_native_libraries('v1.2.1')
+    ret = download_native_libraries('v2.0.0')
     if ret is False and getenv('GITHUB_ACTIONS'):
-        download_native_libraries('last_build/improve_ffi_errors')
+        download_native_libraries('last_build/fix/update_findex')

@@ -56,7 +56,7 @@ def download_native_libraries(name: str, version: str, destination: str):
 
 
 if __name__ == '__main__':
-    download_native_libraries('findex', 'v2.0.2', 'src/main/resources')
+    download_native_libraries('findex', 'v2.0.3', 'src/main/resources')
     download_native_libraries('findex', 'last_build', 'src/main/resources')
     download_native_libraries('cover_crypt', 'v8.0.2', 'src/main/resources')
     download_native_libraries('cover_crypt', 'last_build', 'src/main/resources')

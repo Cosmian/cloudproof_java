@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.Database;
 import com.cosmian.jna.findex.serde.Leb128ByteArray;
+import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
@@ -71,7 +72,7 @@ public class Sqlite extends Database implements Closeable {
         this.connection.createStatement().execute("DELETE FROM users WHERE id = " + userId);
     }
 
-    public Map<Uid32, ChainTableValue> fetchChainTableItems(List<Uid32> uids) throws SQLException {
+    public List<Tuple<Uid32, ChainTableValue>> fetchChainTableItems(List<Uid32> uids) throws SQLException {
         PreparedStatement pstmt = this.connection
             .prepareStatement(
                 "SELECT uid, value FROM chain_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
@@ -86,11 +87,12 @@ public class Sqlite extends Database implements Closeable {
         //
         // Recover all results
         //
-        HashMap<Uid32, ChainTableValue> uidsAndValues = new HashMap<>();
+        ArrayList<Tuple<Uid32, ChainTableValue>> uidsAndValues = new ArrayList<>();
         while (rs.next()) {
-            uidsAndValues.put(
-                new Uid32(rs.getBytes("uid")),
-                new ChainTableValue(rs.getBytes("value")));
+            uidsAndValues.add(
+                new Tuple<>(
+                    new Uid32(rs.getBytes("uid")),
+                    new ChainTableValue(rs.getBytes("value"))));
         }
         return uidsAndValues;
     }
@@ -109,7 +111,7 @@ public class Sqlite extends Database implements Closeable {
         return uids;
     }
 
-    public Map<Uid32, EntryTableValue> fetchEntryTableItems(List<Uid32> uids) throws SQLException {
+    public List<Tuple<Uid32, EntryTableValue>> fetchEntryTableItems(List<Uid32> uids) throws SQLException {
         PreparedStatement pstmt = this.connection
             .prepareStatement(
                 "SELECT uid, value FROM entry_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
@@ -124,11 +126,12 @@ public class Sqlite extends Database implements Closeable {
         //
         // Recover all results
         //
-        HashMap<Uid32, EntryTableValue> uidsAndValues = new HashMap<>(uids.size(), 1);
+        ArrayList<Tuple<Uid32, EntryTableValue>> uidsAndValues = new ArrayList<>(uids.size());
         while (rs.next()) {
-            uidsAndValues.put(
-                new Uid32(rs.getBytes("uid")),
-                new EntryTableValue(rs.getBytes("value")));
+            uidsAndValues.add(
+                new Tuple<>(
+                    new Uid32(rs.getBytes("uid")),
+                    new EntryTableValue(rs.getBytes("value"))));
         }
         return uidsAndValues;
     }
@@ -282,7 +285,7 @@ public class Sqlite extends Database implements Closeable {
     }
 
     @Override
-    protected Map<Uid32, EntryTableValue> fetchEntries(List<Uid32> uids) throws CloudproofException {
+    protected List<Tuple<Uid32, EntryTableValue>> fetchEntries(List<Uid32> uids) throws CloudproofException {
         try {
             return fetchEntryTableItems(uids);
         } catch (SQLException e) {
@@ -291,7 +294,7 @@ public class Sqlite extends Database implements Closeable {
     }
 
     @Override
-    protected Map<Uid32, ChainTableValue> fetchChains(List<Uid32> uids) throws CloudproofException {
+    protected List<Tuple<Uid32, ChainTableValue>> fetchChains(List<Uid32> uids) throws CloudproofException {
         try {
             return fetchChainTableItems(uids);
         } catch (SQLException e) {

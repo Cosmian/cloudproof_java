@@ -270,6 +270,7 @@ public final class Findex {
      * exception wrapping it.
      *
      * @param errorCode the errorCode of the FFI call
+     * @param start start time
      * @throws CloudproofException in case of native library error
      */
     public static void unwrap(int errorCode, long start) throws CloudproofException {

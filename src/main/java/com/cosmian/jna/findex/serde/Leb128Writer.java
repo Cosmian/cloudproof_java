@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -49,6 +50,18 @@ public class Leb128Writer {
         this.writeEntryCollection(map.entrySet());
     }
 
+    public <LEFT extends Leb128Serializable, RIGHT extends Leb128Serializable> void writeListOfTuples(List<Tuple<LEFT, RIGHT>> list)
+        throws CloudproofException {
+        try {
+            Leb128.writeU64(this.os, list.size());
+        } catch (IOException e) {
+            throw new CloudproofException("failed writing the list of tuples to the output: " + e.getMessage(), e);
+        }
+        for (Tuple<LEFT, RIGHT> value : list) {
+            this.writeEntry(value);
+        }
+    }
+
     public <K extends Leb128Serializable, V extends Leb128Serializable> void writeEntryCollection(Collection<Entry<K, V>> entryCollection)
         throws CloudproofException {
         try {
@@ -76,6 +89,13 @@ public class Leb128Writer {
         throws CloudproofException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         new Leb128Writer(bos).writeMap(map);
+        return bos.toByteArray();
+    }
+
+    public static <LEFT extends Leb128Serializable, RIGHT extends Leb128Serializable> byte[] serializeListOfTuples(List<Tuple<LEFT, RIGHT>> list)
+        throws CloudproofException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new Leb128Writer(bos).writeListOfTuples(list);
         return bos.toByteArray();
     }
 

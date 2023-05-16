@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
@@ -20,11 +21,11 @@ public interface FindexUserCallbacks {
     }
 
     interface DBFetchEntry {
-        public Map<Uid32, EntryTableValue> fetch(List<Uid32> uids) throws CloudproofException;
+        public List<Tuple<Uid32, EntryTableValue>> fetch(List<Uid32> uids) throws CloudproofException;
     }
 
     interface DBFetchChain {
-        public Map<Uid32, ChainTableValue> fetch(List<Uid32> uids) throws CloudproofException;
+        public List<Tuple<Uid32, ChainTableValue>> fetch(List<Uid32> uids) throws CloudproofException;
     }
 
     interface DBUpsertEntry {

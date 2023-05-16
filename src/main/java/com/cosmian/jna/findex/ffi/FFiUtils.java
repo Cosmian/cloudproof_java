@@ -44,7 +44,7 @@ public class FFiUtils {
      *
      * @param <L> the tuple key type. Must be {@link Leb128Serializable}
      * @param <R> the tuple value type. Must be {@link Leb128Serializable}
-     * @param list the map to serialize and export
+     * @param list the list to serialize and export
      * @param output the output Pointer
      * @param outputSize the output byte size
      * @return 0 on success, 1 if the pre-allocated memory is too small. The outputSized contains the required size to

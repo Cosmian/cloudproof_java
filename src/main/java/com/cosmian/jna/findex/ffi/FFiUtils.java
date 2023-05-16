@@ -15,7 +15,7 @@ public class FFiUtils {
 
     /**
      * Serialize a map to a memory location specified by the Pointer; set its actual size in the pointed int.
-     * 
+     *
      * @param <K> the map key type. Must be {@link Leb128Serializable}
      * @param <V> the map value type. Must be {@link Leb128Serializable}
      * @param map the map to serialize and export
@@ -40,15 +40,15 @@ public class FFiUtils {
     }
 
     /**
-     * Serialize a map to a memory location specified by the Pointer; set its actual size in the pointed int.
-     * 
-     * @param <K> the map key type. Must be {@link Leb128Serializable}
-     * @param <V> the map value type. Must be {@link Leb128Serializable}
-     * @param map the map to serialize and export
+     * Serialize a list of tuple to a memory location specified by the Pointer; set its actual size in the pointed int.
+     *
+     * @param <L> the tuple key type. Must be {@link Leb128Serializable}
+     * @param <R> the tuple value type. Must be {@link Leb128Serializable}
+     * @param list the map to serialize and export
      * @param output the output Pointer
      * @param outputSize the output byte size
      * @return 0 on success, 1 if the pre-allocated memory is too small. The outputSized contains the required size to
-     *         hold the map.
+     *         hold the list of tuples.
      * @throws CloudproofException if the pointer cannot be constructed
      */
     public static <L extends Leb128Serializable, R extends Leb128Serializable> int listOfTuplesToOutputPointer(List<Tuple<L, R>> list,

@@ -84,6 +84,7 @@ public interface FindexNativeWrapper extends Library {
                  Pointer labelPointer,
                  int labelSize,
                  String dbUidsAndWordsJson,
+                 int entryTableNumber,
                  FetchEntryCallback fetchEntry,
                  UpsertEntryCallback upsertEntry,
                  UpsertChainCallback upsertChain);
@@ -95,6 +96,7 @@ public interface FindexNativeWrapper extends Library {
                   int newKeySize,
                   Pointer labelPointer,
                   int labelSize,
+                  int entryTableNumber,
                   FetchAllEntryTableUidsCallback fetchAllEntryTableUids,
                   FetchEntryCallback fetchEntry,
                   FetchChainCallback fetchChain,
@@ -111,6 +113,7 @@ public interface FindexNativeWrapper extends Library {
                  int maxResultsPerKeyword,
                  int maxDepth,
                  int insecureFetchChainsBatchSize,
+                 int entryTableNumber,
                  ProgressCallback progress,
                  FetchEntryCallback fetchEntry,
                  FetchChainCallback fetchChain);

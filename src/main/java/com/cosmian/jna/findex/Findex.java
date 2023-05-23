@@ -72,6 +72,16 @@ public final class Findex {
                               Map<IndexedValue, Set<Keyword>> indexedValuesAndWords,
                               Database db)
         throws CloudproofException {
+        upsert(key, label, indexedValuesAndWords, 1, db);
+    }
+
+    public static void upsert(
+                              byte[] key,
+                              byte[] label,
+                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords,
+                              int entryTableNumber,
+                              Database db)
+        throws CloudproofException {
 
         try (
             final Memory keyPointer = new Memory(key.length);
@@ -85,6 +95,7 @@ public final class Findex {
                 keyPointer, key.length,
                 labelPointer, label.length,
                 indexedValuesToJson(indexedValuesAndWords),
+                entryTableNumber,
                 db.fetchEntryCallback(),
                 db.upsertEntryCallback(),
                 db.upsertChainCallback()), start);
@@ -122,7 +133,7 @@ public final class Findex {
                                                      Set<Keyword> keyWords,
                                                      Database db)
         throws CloudproofException {
-        return search(key, label, keyWords, 0, -1, 0, db);
+        return search(key, label, keyWords, 0, -1, 0, 1, db);
     }
 
     public static Map<Keyword, Set<Location>> search(byte[] key,
@@ -130,9 +141,10 @@ public final class Findex {
                                                      Set<Keyword> keyWords,
                                                      int maxResultsPerKeyword,
                                                      int maxDepth,
+                                                     int entryTableNumber,
                                                      Database db)
         throws CloudproofException {
-        return search(key, label, keyWords, maxResultsPerKeyword, maxDepth, 0, db);
+        return search(key, label, keyWords, maxResultsPerKeyword, maxDepth, 0, entryTableNumber, db);
     }
 
     public static Map<Keyword, Set<Location>> search(byte[] key,
@@ -141,6 +153,7 @@ public final class Findex {
                                                      int maxResultsPerKeyword,
                                                      int maxDepth,
                                                      int insecureFetchChainsBatchSize,
+                                                     int entryTableNumber,
                                                      Database db)
         throws CloudproofException {
         //
@@ -188,6 +201,7 @@ public final class Findex {
                 maxResultsPerKeyword,
                 maxDepth,
                 insecureFetchChainsBatchSize,
+                entryTableNumber,
                 db.progressCallback(),
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
@@ -205,6 +219,7 @@ public final class Findex {
                     maxResultsPerKeyword,
                     maxDepth,
                     insecureFetchChainsBatchSize,
+                    entryTableNumber,
                     db.progressCallback(),
                     db.fetchEntryCallback(),
                     db.fetchChainCallback()), startRetry);
@@ -228,6 +243,20 @@ public final class Findex {
                                byte[] label,
                                Database database)
         throws CloudproofException {
+            compact(numberOfReindexingPhasesBeforeFullSet, existingKey, newKey, label, 1, database);
+    }
+    /// `number_of_reindexing_phases_before_full_set`: if you compact the indexes
+    /// every night
+    /// this is the number of days to wait before be sure that a big portion of the
+    /// indexes were checked
+    /// (see the coupon problem to understand why it's not 100% sure)
+    public static void compact(int numberOfReindexingPhasesBeforeFullSet,
+                               byte[] existingKey,
+                               byte[] newKey,
+                               byte[] label,
+                               int entryTableNumber,
+                               Database database)
+        throws CloudproofException {
 
         try (final Memory existingKeyPointer = new Memory(existingKey.length);
             final Memory newKeyPointer = new Memory(newKey.length);
@@ -244,6 +273,7 @@ public final class Findex {
                 existingKeyPointer, existingKey.length,
                 newKeyPointer, newKey.length,
                 labelPointer, label.length,
+                entryTableNumber,
                 database.fetchAllEntryTableUidsCallback(),
                 database.fetchEntryCallback(),
                 database.fetchChainCallback(),
@@ -273,7 +303,9 @@ public final class Findex {
      * @param start start time
      * @throws CloudproofException in case of native library error
      */
-    public static void unwrap(int errorCode, long start) throws CloudproofException {
+    public static void unwrap(int errorCode,
+                              long start)
+        throws CloudproofException {
         FindexCallbackException.rethrowOnErrorCode(errorCode, start, System.currentTimeMillis());
 
         unwrap(errorCode);

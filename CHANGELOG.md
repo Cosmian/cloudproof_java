@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.1] - 2023-05-23
+
+### Testing
+
+- Add test with multi entry tables
+
 ## [3.1.0] - 2023-05-16
 
 ### Features

@@ -27,6 +27,81 @@ public class TestSqlite {
         TestUtils.initLogging();
     }
 
+    public static HashMap<IndexedValue, Set<Keyword>> mapToIndex(String word,
+                                                                 int userId) {
+        Set<Keyword> keywords = new HashSet<>(
+            Arrays.asList(new Keyword(word)));
+
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
+        indexedValuesAndWords.put(IndexUtils.userIdToLocation(userId).toIndexedValue(), keywords);
+        return indexedValuesAndWords;
+    }
+
+    @Test
+    public void testMultiFetchEntryValues() throws Exception {
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Multi Fetch Entries");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        //
+        // Generate key and label
+        //
+        byte[] key = IndexUtils.loadKey();
+        byte[] label = IndexUtils.loadLabel();
+
+        Sqlite db1 = new Sqlite();
+        Sqlite db2 = new Sqlite();
+
+        Findex.upsert(key, label, mapToIndex("John", 1), db1);
+        Findex.upsert(key, label, mapToIndex("John", 2), db2);
+
+        System.out
+            .println("After insertion: entry_table size: " + db1.getAllKeyValueItems("entry_table").size());
+        System.out
+            .println("After insertion: chain_table size: " + db1.getAllKeyValueItems("chain_table").size());
+        System.out
+            .println("After insertion: entry_table size: " + db2.getAllKeyValueItems("entry_table").size());
+        System.out
+            .println("After insertion: chain_table size: " + db2.getAllKeyValueItems("chain_table").size());
+
+        System.out.println("Searching with multiple entries values");
+        MultiSqlite db = new MultiSqlite(Arrays.asList(db1, db2));
+        Set<Keyword> keywords = new HashSet<>(
+            Arrays.asList(
+                new Keyword("John")));
+
+        // Searching keywords without the correct entry tables number. The `fetchEntries` callback fails in the rust
+        // part
+        // but the callback returns the correct amount of memory and then the rust part retries with this amount (and
+        // finally succeeds).
+        Map<Keyword, Set<Location>> searchResults =
+            Findex.search(
+                key,
+                label,
+                keywords,
+                0,
+                -1,
+                100,
+                1,
+                db);
+        // This time, the given number of entry tables is correct, only one call to `fetchEntries`
+        searchResults =
+            Findex.search(
+                key,
+                label,
+                keywords,
+                0,
+                -1,
+                100,
+                2,
+                db);
+
+        int[] locations = IndexUtils.searchResultsToDbUids(searchResults);
+        assertArrayEquals(locations, new int[] {1, 2});
+    }
+
     @Test
     public void testUpsertAndSearchSqlite() throws Exception {
         System.out.println("");
@@ -186,7 +261,7 @@ public class TestSqlite {
                     key,
                     label,
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    -1, -1, db);
+                    -1, -1, 1, db);
             int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
             assertEquals(expectedDbLocations.length, dbLocations.length);
             System.out.println("<== successfully found all original French locations");
@@ -223,7 +298,7 @@ public class TestSqlite {
                     key,
                     label,
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    -1, -1, db);
+                    -1, -1, 1, db);
             int[] dbLocations = IndexUtils.searchResultsToDbUids(searchResults);
             assertEquals(expectedDbLocations.length + 1, dbLocations.length);
         }

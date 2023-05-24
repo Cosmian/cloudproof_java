@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [3.1.1] - 2023-05-23
 
+### Bug Fixes
+
+- Update Findex 2.0.3 to 2.0.4 to fix the allocation size of the output buffer used in `fetchEntries` callback
+
 ### Testing
 
 - Add test with multi entry tables

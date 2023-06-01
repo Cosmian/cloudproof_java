@@ -104,6 +104,7 @@ From the version 5.0.0, `cloudproof_java` depends on [cloudproof_rust](https://g
 | This lib | KMS Server | Cloudproof Rust lib |
 |----------|------------|---------------------|
 | 5.0.0    | 4.3.3      | 1.0.0               |
+| 6.0.0    | 4.3.3      | 2.0.1               |
 
 ## Using in Java projects
 
@@ -113,7 +114,7 @@ This library is open-source software and is available on Maven Central.
 <dependency>
     <groupId>com.cosmian</groupId>
     <artifactId>cloudproof_java</artifactId>
-    <version>5.0.0</version>
+    <version>6.0.0</version>
 </dependency>
 ```
 

@@ -1,13 +1,13 @@
 package com.cosmian.jna.findex.ffi;
 
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import com.cosmian.jna.findex.FindexCallbackException;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchEntryCallback;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchEntry;
 import com.cosmian.jna.findex.serde.Leb128Reader;
+import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
@@ -44,13 +44,12 @@ public class FetchEntry implements FetchEntryCallback {
             //
             // Select uids and values in EntryTable
             //
-
-            Map<Uid32, EntryTableValue> uidsAndValues = this.fetch.fetch(entryTableUids);
+            List<Tuple<Uid32, EntryTableValue>> uidsAndValues = this.fetch.fetch(entryTableUids);
 
             //
             // Serialize results
             //
-            return FFiUtils.mapToOutputPointer(uidsAndValues, output, outputSize);
+            return FFiUtils.listOfTuplesToOutputPointer(uidsAndValues, output, outputSize);
         } catch (CloudproofException e) {
             return FindexCallbackException.record(e);
         }

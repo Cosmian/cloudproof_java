@@ -25,6 +25,7 @@ import com.cosmian.jna.findex.ffi.ListRemovedLocations;
 import com.cosmian.jna.findex.ffi.UpdateLines;
 import com.cosmian.jna.findex.ffi.UpsertChain;
 import com.cosmian.jna.findex.ffi.UpsertEntry;
+import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
@@ -54,7 +55,7 @@ public abstract class Database {
      * @return a {@link Map} of {@link Uid32} to {@link EntryTableValue}
      * @throws CloudproofException if anything goes wrong
      */
-    protected abstract Map<Uid32, EntryTableValue> fetchEntries(List<Uid32> uids) throws CloudproofException;
+    protected abstract List<Tuple<Uid32, EntryTableValue>> fetchEntries(List<Uid32> uids) throws CloudproofException;
 
     /**
      * Fetch the Chain Table lines for the list of given {@link Uid32}. If a line does not exist, there should be not
@@ -171,7 +172,7 @@ public abstract class Database {
         return new FetchEntry(new DBFetchEntry() {
 
             @Override
-            public Map<Uid32, EntryTableValue> fetch(List<Uid32> uids) throws CloudproofException {
+            public List<Tuple<Uid32, EntryTableValue>> fetch(List<Uid32> uids) throws CloudproofException {
                 return Database.this.fetchEntries(uids);
             }
 

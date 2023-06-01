@@ -85,6 +85,7 @@ public interface FindexNativeWrapper extends Library {
                  int labelLen,
                  String additions,
                  String deletions,
+                 int entryTableNumber,
                  FetchEntryCallback fetchEntry,
                  UpsertEntryCallback upsertEntry,
                  UpsertChainCallback upsertChain);
@@ -96,6 +97,7 @@ public interface FindexNativeWrapper extends Library {
                   Pointer newLabelPtr,
                   int newLabelLen,
                   int numReindexingBeforeFullSet,
+                  int entryTableNumber,
                   FetchAllEntryTableUidsCallback fetchAllEntryTableUids,
                   FetchEntryCallback fetchEntry,
                   FetchChainCallback fetchChain,
@@ -109,6 +111,7 @@ public interface FindexNativeWrapper extends Library {
                  Pointer labelPtr,
                  int labelLen,
                  String keywords,
+                 int entryTableNumber,
                  ProgressCallback progress,
                  FetchEntryCallback fetchEntry,
                  FetchChainCallback fetchChain);

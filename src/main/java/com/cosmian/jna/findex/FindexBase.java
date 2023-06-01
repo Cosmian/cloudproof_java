@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.Set;
 
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper;
 import com.cosmian.jna.findex.structs.IndexedValue;
@@ -24,7 +24,7 @@ import com.sun.jna.ptr.IntByReference;
 
 public class FindexBase {
     static final FindexNativeWrapper INSTANCE =
-        (FindexNativeWrapper) Native.load("cloudproof_findex", FindexNativeWrapper.class);
+        (FindexNativeWrapper) Native.load("cloudproof", FindexNativeWrapper.class);
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes
@@ -142,6 +142,8 @@ public class FindexBase {
 
         protected Set<Keyword> keywords;
 
+        protected int entryTableNumber = 1;
+
         abstract SELF self();
 
         public SELF keywords(Set<Keyword> keywords) {
@@ -154,6 +156,11 @@ public class FindexBase {
                 Stream.of(keywords).map(keyword -> new Keyword(keyword)).collect(Collectors.toCollection(HashSet::new));
             return self();
         }
+
+        public SELF setEntryTableNumber(int entryTableNumber) {
+            this.entryTableNumber = entryTableNumber;
+            return self();
+        }
     }
 
     static abstract protected class IndexRequest<SELF extends IndexRequest<SELF>> {
@@ -162,6 +169,8 @@ public class FindexBase {
         protected Map<IndexedValue, Set<Keyword>> additions = new HashMap<>();
 
         protected Map<IndexedValue, Set<Keyword>> deletions = new HashMap<>();
+
+        protected int entryTableNumber = 1;
 
         abstract SELF self();
 

@@ -5,25 +5,23 @@ import zipfile
 from os import getenv, path, remove
 
 
-def files_to_be_copied(name: str):
+def files_to_be_copied():
     """
     Returns the list of files to be copied
     """
     destination = 'src/main/resources'
     return {
-        f'tmp/x86_64-apple-darwin/x86_64-apple-darwin/release/libcloudproof_{name}.dylib': f'{destination}/darwin-x86-64/libcloudproof_{name}.dylib',
-        f'tmp/x86_64-unknown-linux-gnu/x86_64-unknown-linux-gnu/release/libcloudproof_{name}.so': f'{destination}/linux-x86-64/libcloudproof_{name}.so',
-        f'tmp/x86_64-pc-windows-gnu/x86_64-pc-windows-gnu/release/cloudproof_{name}.dll': f'{destination}/win32-x86-64/cloudproof_{name}.dll',
+        'tmp/x86_64-apple-darwin/x86_64-apple-darwin/release/libcloudproof.dylib': f'{destination}/darwin-x86-64/libcloudproof.dylib',
+        'tmp/x86_64-unknown-linux-gnu/x86_64-unknown-linux-gnu/release/libcloudproof.so': f'{destination}/linux-x86-64/libcloudproof.so',
+        'tmp/x86_64-pc-windows-gnu/x86_64-pc-windows-gnu/release/cloudproof.dll': f'{destination}/win32-x86-64/cloudproof.dll',
     }
 
 
 def download_native_libraries(version: str) -> bool:
     """Download and extract native libraries"""
-    to_be_copied = files_to_be_copied('findex')
-    cover_crypt_files = files_to_be_copied('cover_crypt')
-    to_be_copied.update(cover_crypt_files)
+    to_be_copied = files_to_be_copied()
 
-    missing_files = True
+    missing_files = False
     for key, value in to_be_copied.items():
         if not path.exists(value):
             missing_files = True
@@ -39,6 +37,7 @@ def download_native_libraries(version: str) -> bool:
                             (status code: {request.getcode()})'
                     )
                 else:
+                    print(f'Copying new files from cloudproof_rust {version}')
                     if path.exists('tmp'):
                         shutil.rmtree('tmp')
                     if path.exists('all.zip'):
@@ -63,6 +62,6 @@ def download_native_libraries(version: str) -> bool:
 
 
 if __name__ == '__main__':
-    ret = download_native_libraries('v2.0.0')
+    ret = download_native_libraries('v2.0.1')
     if ret is False and getenv('GITHUB_ACTIONS'):
-        download_native_libraries('last_build/fix/update_findex')
+        download_native_libraries('last_build/release/v2.0.1')

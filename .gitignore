@@ -7,3 +7,5 @@ project/
 .settings/org.*
 .project
 cloudproof_java.code-workspace
+.classpath
+.settings/*.prefs

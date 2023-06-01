@@ -2,14 +2,15 @@ package com.cosmian.jna.covercrypt.structs;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import com.sun.jna.ptr.IntByReference;
+
 import com.cosmian.jna.covercrypt.ffi.CoverCryptWrapper;
 import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Native;
+import com.sun.jna.ptr.IntByReference;
 
 public class Ffi {
 
-    protected static final CoverCryptWrapper instance = (CoverCryptWrapper) Native.load("cloudproof_cover_crypt",
+    protected static final CoverCryptWrapper instance = (CoverCryptWrapper) Native.load("cloudproof",
         CoverCryptWrapper.class);
 
     /**

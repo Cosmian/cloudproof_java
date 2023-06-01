@@ -108,8 +108,10 @@ jobs:
           LANGUAGE: en_US:en
           LC_ALL: en_US.UTF-8
 
-      - name: Test with Maven
-        run: mvn test
+      - name: Package and test with Maven
+        run: |
+          mvn package
+          mvn dependency:copy-dependencies
         env:
           COSMIAN_SERVER_URL: http://kms:9998
           COSMIAN_FINDEX_CLOUD_BASE_URL: http://findex_cloud:8080
@@ -118,6 +120,18 @@ jobs:
           LANG: en_US.UTF-8
           LANGUAGE: en_US:en
           LC_ALL: en_US.UTF-8
+
+      - name: Upload dependencies and source
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v3
+        with:
+          name: cloudproof_java_${{ github.ref_name }}
+          path: |
+            .
+            !.git
+            !.mypy_cache
+          retention-days: 1
+          if-no-files-found: error
 
       - name: Bench with Maven
         if: startsWith(github.ref, 'refs/tags/')
@@ -169,7 +183,7 @@ jobs:
     needs: build_in_docker
     uses: Cosmian/reusable_workflows/.github/workflows/cloudproof_flutter.yml@develop
     with:
-      branch: develop
+      branch: v7.0.0
       target: x86_64-unknown-linux-gnu
       extension: so
       copy_fresh_build: false

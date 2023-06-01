@@ -23,6 +23,7 @@ public final class Findex extends FindexBase {
                               byte[] label,
                               Map<IndexedValue, Set<Keyword>> additions,
                               Map<IndexedValue, Set<Keyword>> deletions,
+                              int entryTableNumber,
                               Database db)
         throws CloudproofException {
 
@@ -39,25 +40,40 @@ public final class Findex extends FindexBase {
                 labelPointer, label.length,
                 indexedValuesToJson(additions),
                 indexedValuesToJson(deletions),
+                entryTableNumber,
                 db.fetchEntryCallback(),
                 db.upsertEntryCallback(),
                 db.upsertChainCallback()), start);
         }
     }
 
+    public static void upsert(
+                              byte[] key,
+                              byte[] label,
+                              Map<IndexedValue, Set<Keyword>> additions,
+                              Map<IndexedValue, Set<Keyword>> deletions,
+                              Database db)
+        throws CloudproofException {
+        // Make entryTableNumber equals to 1 by default
+        upsert(key, label, additions, deletions, 1, db);
+    }
+
     public static void upsert(IndexRequest request)
         throws CloudproofException {
-        upsert(request.key, request.label, request.additions, request.deletions, request.database);
+        upsert(request.key, request.label, request.additions, request.deletions, request.entryTableNumber,
+            request.database);
     }
 
     public static SearchResults search(SearchRequest request)
         throws CloudproofException {
-        return search(request.key, request.label, request.keywords, request.database, request.searchProgress);
+        return search(request.key, request.label, request.keywords, request.entryTableNumber, request.database,
+            request.searchProgress);
     }
 
     public static SearchResults search(byte[] key,
                                        byte[] label,
                                        Set<Keyword> keywords,
+                                       int entryTableNumber,
                                        Database db)
         throws CloudproofException {
         return search(new SearchRequest(key, label, db).keywords(keywords));
@@ -65,7 +81,17 @@ public final class Findex extends FindexBase {
 
     public static SearchResults search(byte[] key,
                                        byte[] label,
+                                       Set<Keyword> keywords,
+                                       Database db)
+        throws CloudproofException {
+        // Make entryTableNumber equals to 1 by default
+        return search(new SearchRequest(key, label, db).keywords(keywords).setEntryTableNumber(1));
+    }
+
+    public static SearchResults search(byte[] key,
+                                       byte[] label,
                                        Set<Keyword> keyWords,
+                                       int entryTableNumber,
                                        Database db,
                                        SearchProgress progressCallback)
         throws CloudproofException {
@@ -100,6 +126,7 @@ public final class Findex extends FindexBase {
                 keyPointer, key.length,
                 labelPointer, label.length,
                 wordsJson,
+                entryTableNumber,
                 wrappedProgress,
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
@@ -115,6 +142,7 @@ public final class Findex extends FindexBase {
                     keyPointer, key.length,
                     labelPointer, label.length,
                     wordsJson,
+                    entryTableNumber,
                     wrappedProgress,
                     db.fetchEntryCallback(),
                     db.fetchChainCallback()), startRetry);
@@ -134,6 +162,7 @@ public final class Findex extends FindexBase {
                                byte[] newMasterKey,
                                byte[] newLabel,
                                int numReindexingBeforeFullSet,
+                               int entryTableNumber,
                                Database database)
         throws CloudproofException {
 
@@ -152,12 +181,23 @@ public final class Findex extends FindexBase {
                 newMasterKeyPtr, newMasterKey.length,
                 newLabelPtr, newLabel.length,
                 numReindexingBeforeFullSet,
+                entryTableNumber,
                 database.fetchAllEntryTableUidsCallback(),
                 database.fetchEntryCallback(),
                 database.fetchChainCallback(),
                 database.updateLinesCallback(),
                 database.listRemoveLocationsCallback()), start);
         }
+    }
+
+    public static void compact(byte[] oldMasterKey,
+                               byte[] newMasterKey,
+                               byte[] newLabel,
+                               int numReindexingBeforeFullSet,
+                               Database database)
+        throws CloudproofException {
+        // Make entryTableNumber equals to 1 by default
+        compact(oldMasterKey, newMasterKey, newLabel, numReindexingBeforeFullSet, 1, database);
     }
 
     static public class SearchRequest extends FindexBase.SearchRequest<SearchRequest> {

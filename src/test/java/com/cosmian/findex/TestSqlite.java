@@ -3,6 +3,7 @@ package com.cosmian.findex;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -16,6 +17,7 @@ import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.Resources;
 
 public class TestSqlite {
@@ -23,6 +25,75 @@ public class TestSqlite {
     @BeforeAll
     public static void before_all() {
         TestUtils.initLogging();
+    }
+
+    public static HashMap<IndexedValue, Set<Keyword>> mapToIndex(String word,
+                                                                 int userId) {
+        Set<Keyword> keywords = new HashSet<>(
+            Arrays.asList(new Keyword(word)));
+
+        HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
+        indexedValuesAndWords.put(new Location(userId).toIndexedValue(), keywords);
+        return indexedValuesAndWords;
+    }
+
+    @Test
+    public void testMultiFetchEntryValues() throws Exception {
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Multi Fetch Entries");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        //
+        // Generate key and label
+        //
+        byte[] key = IndexUtils.loadKey();
+        byte[] label = IndexUtils.loadLabel();
+
+        Sqlite db1 = new Sqlite();
+        Sqlite db2 = new Sqlite();
+
+        Findex.upsert(new Findex.IndexRequest(key, label, db1).add(mapToIndex("John", 1)));
+        Findex.upsert(new Findex.IndexRequest(key, label, db2).add(mapToIndex("John", 2)));
+
+        System.out
+            .println("After insertion: entry_table size: " + db1.getAllKeyValueItems("entry_table").size());
+        System.out
+            .println("After insertion: chain_table size: " + db1.getAllKeyValueItems("chain_table").size());
+        System.out
+            .println("After insertion: entry_table size: " + db2.getAllKeyValueItems("entry_table").size());
+        System.out
+            .println("After insertion: chain_table size: " + db2.getAllKeyValueItems("chain_table").size());
+
+        System.out.println("Searching with multiple entries values");
+        MultiSqlite db = new MultiSqlite(Arrays.asList(db1, db2));
+        Set<Keyword> keywords = new HashSet<>(
+            Arrays.asList(
+                new Keyword("John")));
+
+        // Searching keywords without the correct entry tables number. The `fetchEntries` callback fails in the rust
+        // part
+        // but the callback returns the correct amount of memory and then the rust part retries with this amount (and
+        // finally succeeds).
+        SearchResults searchResults =
+            Findex.search(
+                key,
+                label,
+                keywords,
+                db);
+        assertEquals(searchResults.getNumbers(), new HashSet<>(Arrays.asList(1L, 2L)));
+
+        // This time, the given number of entry tables is correct, only one call to `fetchEntries`
+        searchResults =
+            Findex.search(
+                key,
+                label,
+                keywords,
+                2,
+                db);
+
+        assertEquals(searchResults.getNumbers(), new HashSet<>(Arrays.asList(1L, 2L)));
     }
 
     @Test
@@ -84,12 +155,12 @@ public class TestSqlite {
 
             // This compact should do nothing except changing the label since the users
             // table didn't change.
-            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
             {
                 // Search with old label
                 SearchResults searchResults =
                     Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] {"France"}));
-                assertTrue(searchResults.isEmpty());
+                assertTrue(searchResults.get(new Keyword("France")).isEmpty());
                 System.out.println("<== successfully compacted and changed the label");
             }
 
@@ -106,7 +177,7 @@ public class TestSqlite {
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
             expectedDbLocations.remove(new Long(17));
-            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
             {
                 // Search should return everyone but n°17
                 SearchResults searchResults =
@@ -247,6 +318,8 @@ public class TestSqlite {
 
     @Test
     public void test_generate_non_regression_vectors() throws Exception {
+        new java.io.File("./target/sqlite.db").delete();
+
         //
         // Recover key and label
         //

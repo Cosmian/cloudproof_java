@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -104,7 +105,7 @@ public class TestRedis {
 
             // This compact should do nothing except changing the label since the users
             // table didn't change.
-            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
             System.out
                 .println("After first compact: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
             System.out
@@ -118,7 +119,7 @@ public class TestRedis {
                         label,
                         new HashSet<>(Arrays.asList(new Keyword("France"))),
                         db);
-                assertTrue(searchResults.isEmpty());
+                assertTrue(searchResults.get(new Keyword("France")).isEmpty());
                 System.out.println("<== successfully compacted and changed the label");
             }
 
@@ -136,7 +137,7 @@ public class TestRedis {
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
             expectedDbLocations.remove(new Long(17));
-            Findex.compact(1, key, key, "NewLabel".getBytes(), db);
+            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
             {
                 // Search should return everyone but n°17
                 SearchResults searchResults = Findex.search(
@@ -154,6 +155,58 @@ public class TestRedis {
                 jedis.flushAll();
             }
 
+        }
+    }
+
+
+    @Test
+    public void testExceptions() throws Exception {
+        if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
+            System.out.println("Ignore test since Redis is down");
+            return;
+        }
+
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Exceptions in Redis");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        //
+        // Recover key and label
+        //
+        byte[] key = IndexUtils.generateKey();
+        assertEquals(16, key.length);
+        byte[] label = IndexUtils.loadLabel();
+
+        //
+        // Build dataset with DB uids and words
+        //
+        UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
+
+        //
+        // Prepare Redis tables and users
+        //
+        try (Redis db = new Redis()) {
+            // delete all items
+            try (Jedis jedis = db.getJedis()) {
+                jedis.flushAll();
+            }
+            db.insertUsers(testFindexDataset);
+
+            Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+            Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+
+            db.shouldThrowInsideFetchEntries = true;
+
+            try {
+                Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] { "John" }));
+            } catch (CloudproofException e) {
+                assertEquals("Should throw inside fetch entries", e.getMessage());
+                return;
+            }
+
+            throw new Exception("Should have throw");
         }
     }
 
@@ -181,19 +234,19 @@ public class TestRedis {
         // Build dataset with DB uids and words
         //
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
-        Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+        Map<IndexedValue, Set<Keyword>> additions = IndexUtils.index(testFindexDataset);
         // add auto-completion for keywords 'Martin', 'Martena'
-        indexedValuesAndWords.put(new IndexedValue(new NextKeyword("Mart")), new HashSet<>(
+        additions.put(new IndexedValue(new NextKeyword("Mart")), new HashSet<>(
             Arrays.asList(new Keyword("Mar"))));
-        indexedValuesAndWords.put(new IndexedValue(new NextKeyword("Marti")), new HashSet<>(
+        additions.put(new IndexedValue(new NextKeyword("Marti")), new HashSet<>(
             Arrays.asList(new Keyword("Mart"))));
-        indexedValuesAndWords.put(new IndexedValue(new NextKeyword("Marte")), new HashSet<>(
+        additions.put(new IndexedValue(new NextKeyword("Marte")), new HashSet<>(
             Arrays.asList(new Keyword("Mart"))));
-        indexedValuesAndWords.put(new IndexedValue(new NextKeyword("Martin")), new HashSet<>(
+        additions.put(new IndexedValue(new NextKeyword("Martin")), new HashSet<>(
             Arrays.asList(new Keyword("Marti"))));
-        indexedValuesAndWords.put(new IndexedValue(new NextKeyword("Marten")), new HashSet<>(
+        additions.put(new IndexedValue(new NextKeyword("Marten")), new HashSet<>(
             Arrays.asList(new Keyword("Marte"))));
-        indexedValuesAndWords.put(new IndexedValue(new NextKeyword("Martena")), new HashSet<>(
+        additions.put(new IndexedValue(new NextKeyword("Martena")), new HashSet<>(
             Arrays.asList(new Keyword("Marten"))));
 
         //
@@ -211,7 +264,7 @@ public class TestRedis {
             //
             // Upsert
             //
-            Findex.upsert(key, label, indexedValuesAndWords, db);
+            Findex.upsert(key, label, additions, new HashMap<>(), db);
             System.out
                 .println("After insertion: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
             System.out

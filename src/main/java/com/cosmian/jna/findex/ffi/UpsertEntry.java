@@ -2,6 +2,7 @@ package com.cosmian.jna.findex.ffi;
 
 import java.util.Map;
 
+import com.cosmian.jna.findex.FindexCallbackException;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertEntryCallback;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertEntry;
 import com.cosmian.jna.findex.serde.Leb128Reader;
@@ -27,18 +28,21 @@ public class UpsertEntry implements UpsertEntryCallback {
                      Pointer entries,
                      int entriesLength)
         throws CloudproofException {
-        //
-        // Read `entries` until `itemsLength`
-        //
-        byte[] entriesBytes = new byte[entriesLength];
-        entries.read(0, entriesBytes, 0, entriesLength);
+        try {
+            //
+            // Read `entries` until `itemsLength`
+            //
+            byte[] entriesBytes = new byte[entriesLength];
+            entries.read(0, entriesBytes, 0, entriesLength);
 
-        Map<Uid32, EntryTableValues> map =
-            Leb128Reader.deserializeMap(Uid32.class, EntryTableValues.class, entriesBytes);
+            Map<Uid32, EntryTableValues> map =
+                Leb128Reader.deserializeMap(Uid32.class, EntryTableValues.class, entriesBytes);
 
-        Map<Uid32, EntryTableValue> failedEntries = upsert.upsert(map);
-        return FFiUtils.mapToOutputPointer(failedEntries, outputs, outputsLength);
-
+            Map<Uid32, EntryTableValue> failedEntries = upsert.upsert(map);
+            return FFiUtils.mapToOutputPointer(failedEntries, outputs, outputsLength);
+        } catch (CloudproofException e) {
+            return FindexCallbackException.record(e);
+        }
     }
 
 }

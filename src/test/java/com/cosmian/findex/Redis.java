@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.Database;
+import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
@@ -51,6 +52,8 @@ public class Redis extends Database implements Closeable {
     private final byte[] conditionalUpsertSha;
 
     private final String redisPassword;
+
+    public boolean shouldThrowInsideFetchEntries = false;
 
     // public final Jedis jedis;
 
@@ -179,6 +182,9 @@ public class Redis extends Database implements Closeable {
      */
     protected List<byte[]> getEntries(List<Uid32> uids,
                                       int redisPrefix) {
+        if (uids.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         try (Jedis jedis = getJedis()) {
             List<byte[]> keys = new ArrayList<>();
@@ -263,15 +269,20 @@ public class Redis extends Database implements Closeable {
     }
 
     @Override
-    protected Map<Uid32, EntryTableValue> fetchEntries(List<Uid32> uids) throws CloudproofException {
+    protected List<Tuple<Uid32, EntryTableValue>> fetchEntries(List<Uid32> uids) throws CloudproofException {
         List<byte[]> values = getEntries(uids, ENTRY_TABLE_INDEX);
+
+        if (shouldThrowInsideFetchEntries) {
+            throw new CloudproofException("Should throw inside fetch entries");
+        }
+
         // post process
-        HashMap<Uid32, EntryTableValue> keysAndValues = new HashMap<>();
+        ArrayList<Tuple<Uid32, EntryTableValue>> keysAndValues = new ArrayList<>();
         for (int i = 0; i < values.size(); i++) {
             Uid32 key = uids.get(i);
             byte[] value = values.get(i);
             if (value != null) {
-                keysAndValues.put(key, new EntryTableValue(value));
+                keysAndValues.add(new Tuple<>(key, new EntryTableValue(value)));
             }
         }
         return keysAndValues;

@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.Set;
 
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper;
 import com.cosmian.jna.findex.structs.IndexedValue;
@@ -24,7 +24,7 @@ import com.sun.jna.ptr.IntByReference;
 
 public class FindexBase {
     static final FindexNativeWrapper INSTANCE =
-        (FindexNativeWrapper) Native.load("cloudproof_findex", FindexNativeWrapper.class);
+        (FindexNativeWrapper) Native.load("cloudproof", FindexNativeWrapper.class);
 
     /**
      * Return the last error in a String that does not exceed 1023 bytes
@@ -114,11 +114,25 @@ public class FindexBase {
      * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
      * exception wrapping it.
      *
-     * @param result the result of the FFI call
+     * @param errorCode the result of the FFI call
+     * @param start the start timestamp of the FFI call (used for callback exception handling)
      * @throws CloudproofException in case of native library error
      */
-    protected static void unwrap(int result) throws CloudproofException {
-        if (result == 1) {
+    protected static void unwrap(int errorCode, long start) throws CloudproofException {
+        FindexCallbackException.rethrowOnErrorCode(errorCode, start, System.currentTimeMillis());
+
+        unwrap(errorCode);
+    }
+
+    /**
+     * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
+     * exception wrapping it.
+     *
+     * @param errorCode the result of the FFI call
+     * @throws CloudproofException in case of native library error
+     */
+    protected static void unwrap(int errorCode) throws CloudproofException {
+        if (errorCode != 0) {
             throw new CloudproofException(get_last_error(4095));
         }
     }
@@ -128,11 +142,7 @@ public class FindexBase {
 
         protected Set<Keyword> keywords;
 
-        protected int maxResultsPerKeyword = 0;
-
-        protected int maxDepth = -1;
-
-        protected int insecureFetchChainsBatchSize = 0;
+        protected int entryTableNumber = 1;
 
         abstract SELF self();
 
@@ -147,18 +157,8 @@ public class FindexBase {
             return self();
         }
 
-        public SELF maxResultsPerKeyword(int maxResultsPerKeyword) {
-            this.maxResultsPerKeyword = maxResultsPerKeyword;
-            return self();
-        }
-
-        public SELF maxDepth(int maxDepth) {
-            this.maxDepth = maxDepth;
-            return self();
-        }
-
-        public SELF insecureFetchChainsBatchSize(int insecureFetchChainsBatchSize) {
-            this.insecureFetchChainsBatchSize = insecureFetchChainsBatchSize;
+        public SELF setEntryTableNumber(int entryTableNumber) {
+            this.entryTableNumber = entryTableNumber;
             return self();
         }
     }
@@ -166,12 +166,16 @@ public class FindexBase {
     static abstract protected class IndexRequest<SELF extends IndexRequest<SELF>> {
         protected byte[] label;
 
-        protected Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
+        protected Map<IndexedValue, Set<Keyword>> additions = new HashMap<>();
+
+        protected Map<IndexedValue, Set<Keyword>> deletions = new HashMap<>();
+
+        protected int entryTableNumber = 1;
 
         abstract SELF self();
 
-        public SELF add(Map<? extends ToIndexedValue, Set<Keyword>> indexedValuesAndWords) {
-            for (Map.Entry<? extends ToIndexedValue, Set<Keyword>> entry : indexedValuesAndWords.entrySet()) {
+        public SELF add(Map<? extends ToIndexedValue, Set<Keyword>> additions) {
+            for (Map.Entry<? extends ToIndexedValue, Set<Keyword>> entry : additions.entrySet()) {
                 add(entry.getKey(), entry.getValue());
             }
             return self();
@@ -180,10 +184,10 @@ public class FindexBase {
         public SELF add(ToIndexedValue toIndexedValue,
                         Set<Keyword> keywords) {
             Set<Keyword> existingKeywords =
-                indexedValuesAndWords.get(toIndexedValue.toIndexedValue());
+                additions.get(toIndexedValue.toIndexedValue());
 
             if (existingKeywords == null) {
-                indexedValuesAndWords.put(toIndexedValue.toIndexedValue(), keywords);
+                additions.put(toIndexedValue.toIndexedValue(), keywords);
             } else {
                 existingKeywords.addAll(keywords);
             }

@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.0.0] - 2023-06-01
+
+### Features
+
+- upgrade Findex (v3.0.0 -> v4.0.0):
+  - change indexed values size (require a reset of the index database)
+  - change search interface
+    - remove `maxResultsPerKeyword`
+    - remove `maxDepth`
+    - remove `insecureFetchChainsBatchSize`
+    - searching for a non indexed keyword leads to an empty `Set` for this
+      keyword in the search results instead of this keyword being missing from
+      the results.
+  - change upsert interface:
+    - add deletions parameter
+  - change compact interface:
+    - change parameter order
+
 ---
 
 ## [5.0.0] - 2023-03-08

@@ -21,7 +21,9 @@ public final class Findex extends FindexBase {
     public static void upsert(
                               byte[] key,
                               byte[] label,
-                              Map<IndexedValue, Set<Keyword>> indexedValuesAndWords,
+                              Map<IndexedValue, Set<Keyword>> additions,
+                              Map<IndexedValue, Set<Keyword>> deletions,
+                              int entryTableNumber,
                               Database db)
         throws CloudproofException {
 
@@ -31,31 +33,47 @@ public final class Findex extends FindexBase {
             keyPointer.write(0, key, 0, key.length);
             labelPointer.write(0, label, 0, label.length);
 
+            long start = System.currentTimeMillis();
             // Indexes creation + insertion/update
             unwrap(INSTANCE.h_upsert(
                 keyPointer, key.length,
                 labelPointer, label.length,
-                indexedValuesToJson(indexedValuesAndWords),
+                indexedValuesToJson(additions),
+                indexedValuesToJson(deletions),
+                entryTableNumber,
                 db.fetchEntryCallback(),
                 db.upsertEntryCallback(),
-                db.upsertChainCallback()));
+                db.upsertChainCallback()), start);
         }
+    }
+
+    public static void upsert(
+                              byte[] key,
+                              byte[] label,
+                              Map<IndexedValue, Set<Keyword>> additions,
+                              Map<IndexedValue, Set<Keyword>> deletions,
+                              Database db)
+        throws CloudproofException {
+        // Make entryTableNumber equals to 1 by default
+        upsert(key, label, additions, deletions, 1, db);
     }
 
     public static void upsert(IndexRequest request)
         throws CloudproofException {
-        upsert(request.key, request.label, request.indexedValuesAndWords, request.database);
+        upsert(request.key, request.label, request.additions, request.deletions, request.entryTableNumber,
+            request.database);
     }
 
     public static SearchResults search(SearchRequest request)
         throws CloudproofException {
-        return search(request.key, request.label, request.keywords, request.maxResultsPerKeyword, request.maxDepth,
-            request.maxDepth, request.database, request.searchProgress);
+        return search(request.key, request.label, request.keywords, request.entryTableNumber, request.database,
+            request.searchProgress);
     }
 
     public static SearchResults search(byte[] key,
                                        byte[] label,
                                        Set<Keyword> keywords,
+                                       int entryTableNumber,
                                        Database db)
         throws CloudproofException {
         return search(new SearchRequest(key, label, db).keywords(keywords));
@@ -63,10 +81,17 @@ public final class Findex extends FindexBase {
 
     public static SearchResults search(byte[] key,
                                        byte[] label,
+                                       Set<Keyword> keywords,
+                                       Database db)
+        throws CloudproofException {
+        // Make entryTableNumber equals to 1 by default
+        return search(new SearchRequest(key, label, db).keywords(keywords).setEntryTableNumber(1));
+    }
+
+    public static SearchResults search(byte[] key,
+                                       byte[] label,
                                        Set<Keyword> keyWords,
-                                       int maxResultsPerKeyword,
-                                       int maxDepth,
-                                       int insecureFetchChainsBatchSize,
+                                       int entryTableNumber,
                                        Database db,
                                        SearchProgress progressCallback)
         throws CloudproofException {
@@ -95,34 +120,32 @@ public final class Findex extends FindexBase {
             String wordsJson = keywordsToJson(keyWords);
 
             // Indexes creation + insertion/update
+            long start = System.currentTimeMillis();
             int ffiCode = INSTANCE.h_search(
                 indexedValuesBuffer, indexedValuesBufferSize,
                 keyPointer, key.length,
                 labelPointer, label.length,
                 wordsJson,
-                maxResultsPerKeyword,
-                maxDepth,
-                insecureFetchChainsBatchSize,
+                entryTableNumber,
                 wrappedProgress,
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
+
+            FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
+
             if (ffiCode != 0) {
                 // Retry with correct allocated size
                 indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
-                ffiCode = INSTANCE.h_search(
+                long startRetry = System.currentTimeMillis();
+                unwrap(INSTANCE.h_search(
                     indexedValuesBuffer, indexedValuesBufferSize,
                     keyPointer, key.length,
                     labelPointer, label.length,
                     wordsJson,
-                    maxResultsPerKeyword,
-                    maxDepth,
-                    insecureFetchChainsBatchSize,
+                    entryTableNumber,
                     wrappedProgress,
                     db.fetchEntryCallback(),
-                    db.fetchChainCallback());
-                if (ffiCode != 0) {
-                    throw new CloudproofException(get_last_error(4095));
-                }
+                    db.fetchChainCallback()), startRetry);
             }
 
             byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
@@ -131,38 +154,50 @@ public final class Findex extends FindexBase {
         }
     }
 
-    /// `number_of_reindexing_phases_before_full_set`: if you compact the indexes
-    /// every night
+    /// `numReindexingBeforeFullSet`: if you compact the indexes every night
     /// this is the number of days to wait before be sure that a big portion of the
-    /// indexes were checked
+    /// indexes were checked.
     /// (see the coupon problem to understand why it's not 100% sure)
-    public static void compact(int numberOfReindexingPhasesBeforeFullSet,
-                               byte[] existingKey,
-                               byte[] newKey,
-                               byte[] label,
+    public static void compact(byte[] oldMasterKey,
+                               byte[] newMasterKey,
+                               byte[] newLabel,
+                               int numReindexingBeforeFullSet,
+                               int entryTableNumber,
                                Database database)
         throws CloudproofException {
 
-        try (final Memory existingKeyPointer = new Memory(existingKey.length);
-            final Memory newKeyPointer = new Memory(newKey.length);
-            final Memory labelPointer = new Memory(label.length)) {
+        try (final Memory oldMasterKeyPtr = new Memory(oldMasterKey.length);
+            final Memory newMasterKeyPtr = new Memory(newMasterKey.length);
+            final Memory newLabelPtr = new Memory(newLabel.length)) {
 
-            existingKeyPointer.write(0, existingKey, 0, existingKey.length);
-            newKeyPointer.write(0, newKey, 0, newKey.length);
-            labelPointer.write(0, label, 0, label.length);
+            oldMasterKeyPtr.write(0, oldMasterKey, 0, oldMasterKey.length);
+            newMasterKeyPtr.write(0, newMasterKey, 0, newMasterKey.length);
+            newLabelPtr.write(0, newLabel, 0, newLabel.length);
 
+            long start = System.currentTimeMillis();
             // Indexes creation + insertion/update
             unwrap(INSTANCE.h_compact(
-                numberOfReindexingPhasesBeforeFullSet,
-                existingKeyPointer, existingKey.length,
-                newKeyPointer, newKey.length,
-                labelPointer, label.length,
+                oldMasterKeyPtr, oldMasterKey.length,
+                newMasterKeyPtr, newMasterKey.length,
+                newLabelPtr, newLabel.length,
+                numReindexingBeforeFullSet,
+                entryTableNumber,
                 database.fetchAllEntryTableUidsCallback(),
                 database.fetchEntryCallback(),
                 database.fetchChainCallback(),
                 database.updateLinesCallback(),
-                database.listRemoveLocationsCallback()));
+                database.listRemoveLocationsCallback()), start);
         }
+    }
+
+    public static void compact(byte[] oldMasterKey,
+                               byte[] newMasterKey,
+                               byte[] newLabel,
+                               int numReindexingBeforeFullSet,
+                               Database database)
+        throws CloudproofException {
+        // Make entryTableNumber equals to 1 by default
+        compact(oldMasterKey, newMasterKey, newLabel, numReindexingBeforeFullSet, 1, database);
     }
 
     static public class SearchRequest extends FindexBase.SearchRequest<SearchRequest> {

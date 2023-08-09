@@ -162,6 +162,7 @@ jobs:
       branch: develop
       target: wasm32-unknown-unknown
       kms-version: 4.3.3
+      findex-cloud-version: 0.1.0
       copy_fresh_build: false
       copy_regression_files: |
         cp ./cloudproof_java/non_regression_vector.json tests/data/cover_crypt/non_regression/java_non_regression_vector.json

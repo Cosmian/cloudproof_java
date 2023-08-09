@@ -9,6 +9,7 @@ import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.ffi.Progress;
 import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.ffi.SearchResults;
+import com.cosmian.jna.findex.ffi.UpsertResults;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
@@ -18,13 +19,12 @@ import com.sun.jna.ptr.IntByReference;
 
 public final class Findex extends FindexBase {
 
-    public static void upsert(
-                              byte[] key,
-                              byte[] label,
-                              Map<IndexedValue, Set<Keyword>> additions,
-                              Map<IndexedValue, Set<Keyword>> deletions,
-                              int entryTableNumber,
-                              Database db)
+    public static UpsertResults upsert(byte[] key,
+                                       byte[] label,
+                                       Map<IndexedValue, Set<Keyword>> additions,
+                                       Map<IndexedValue, Set<Keyword>> deletions,
+                                       int entryTableNumber,
+                                       Database db)
         throws CloudproofException {
 
         try (
@@ -34,8 +34,17 @@ public final class Findex extends FindexBase {
             labelPointer.write(0, label, 0, label.length);
 
             long start = System.currentTimeMillis();
-            // Indexes creation + insertion/update
-            unwrap(INSTANCE.h_upsert(
+
+            //
+            // Prepare outputs
+            //
+            // start with an arbitration buffer allocation size of 131072 (around 4096
+            // indexedValues)
+            byte[] newKeywordsBuffer = new byte[1024];
+            IntByReference newKeywordsBufferSize = new IntByReference(newKeywordsBuffer.length);
+
+            int ffiCode = INSTANCE.h_upsert(
+                newKeywordsBuffer, newKeywordsBufferSize,
                 keyPointer, key.length,
                 labelPointer, label.length,
                 indexedValuesToJson(additions),
@@ -43,25 +52,46 @@ public final class Findex extends FindexBase {
                 entryTableNumber,
                 db.fetchEntryCallback(),
                 db.upsertEntryCallback(),
-                db.upsertChainCallback()), start);
+                db.upsertChainCallback());
+
+            FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
+
+            if (ffiCode != 0) {
+                // Retry with correct allocated size
+                newKeywordsBuffer = new byte[newKeywordsBufferSize.getValue()];
+                long startRetry = System.currentTimeMillis();
+                unwrap(INSTANCE.h_upsert(
+                       newKeywordsBuffer, newKeywordsBufferSize,
+                       keyPointer, key.length,
+                       labelPointer, label.length,
+                       indexedValuesToJson(additions),
+                       indexedValuesToJson(deletions),
+                       entryTableNumber,
+                       db.fetchEntryCallback(),
+                       db.upsertEntryCallback(),
+                       db.upsertChainCallback()), startRetry);
+            }
+
+            byte[] newKeywordsBytes = Arrays.copyOfRange(newKeywordsBuffer, 0, newKeywordsBufferSize.getValue());
+
+            return  new Leb128Reader(newKeywordsBytes).readObject(UpsertResults.class);
         }
     }
 
-    public static void upsert(
-                              byte[] key,
-                              byte[] label,
-                              Map<IndexedValue, Set<Keyword>> additions,
-                              Map<IndexedValue, Set<Keyword>> deletions,
-                              Database db)
+    public static UpsertResults upsert(byte[] key,
+                                       byte[] label,
+                                       Map<IndexedValue, Set<Keyword>> additions,
+                                       Map<IndexedValue, Set<Keyword>> deletions,
+                                       Database db)
         throws CloudproofException {
         // Make entryTableNumber equals to 1 by default
-        upsert(key, label, additions, deletions, 1, db);
+        return upsert(key, label, additions, deletions, 1, db);
     }
 
-    public static void upsert(IndexRequest request)
+    public static UpsertResults upsert(IndexRequest request)
         throws CloudproofException {
-        upsert(request.key, request.label, request.additions, request.deletions, request.entryTableNumber,
-            request.database);
+        return upsert(request.key, request.label, request.additions, request.deletions, request.entryTableNumber,
+                      request.database);
     }
 
     public static SearchResults search(SearchRequest request)

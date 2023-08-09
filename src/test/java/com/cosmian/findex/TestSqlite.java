@@ -138,6 +138,20 @@ public class TestSqlite {
                 .println("After insertion: chain_table size: " + db.getAllKeyValueItems("chain_table").size());
 
             //
+            // Upsert a new keyword
+            //
+            HashMap<IndexedValue, Set<Keyword>> newIndexedKeyword = new HashMap<>();
+            Set<Keyword> expectdeKeywords = new HashSet<>();
+            expectdeKeywords.add(new Keyword("test"));
+            newIndexedKeyword.put(new IndexedValue(new Location(new Long(1))), expectdeKeywords);
+            // It is returned the first time it is added.
+            Set<Keyword> newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
+            assertEquals(expectdeKeywords, newKeywords, "new keyword is not returned");
+            // It is *not* returned the second time it is added.
+            newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
+            assert(newKeywords.isEmpty());
+
+            //
             // Search
             //
             System.out.println("");

@@ -78,7 +78,8 @@ public interface FindexNativeWrapper extends Library {
             throws CloudproofException;
     }
 
-    int h_upsert(
+    int h_upsert(byte[] newKeywordsBufferPtr,
+                 IntByReference newKeywordsBufferLen,
                  Pointer masterKeyPtr,
                  int masterKeyLen,
                  Pointer labelPtr,

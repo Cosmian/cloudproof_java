@@ -19,6 +19,7 @@ import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.NextKeyword;
 import com.cosmian.utils.CloudproofException;
 
@@ -82,6 +83,20 @@ public class TestRedis {
                 .println("After insertion: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
             System.out
                 .println("After insertion: chain_table size: " + db.getAllKeys(Redis.CHAIN_TABLE_INDEX).size());
+
+            //
+            // Upsert a new keyword
+            //
+            HashMap<IndexedValue, Set<Keyword>> newIndexedKeyword = new HashMap<>();
+            Set<Keyword> expectdeKeywords = new HashSet<>();
+            expectdeKeywords.add(new Keyword("test"));
+            newIndexedKeyword.put(new IndexedValue(new Location("ici")), expectdeKeywords);
+            // It is returned the first time it is added.
+            Set<Keyword> newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
+            assertEquals(expectdeKeywords, newKeywords, "new keyword is not returned");
+            // It is *not* returned the second time it is added.
+            newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
+            assert(newKeywords.isEmpty());
 
             //
             // Search

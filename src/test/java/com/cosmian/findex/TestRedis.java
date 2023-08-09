@@ -18,6 +18,7 @@ import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.ffi.SearchResults;
+import com.cosmian.jna.findex.ffi.UpsertResults;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.NextKeyword;
@@ -78,7 +79,8 @@ public class TestRedis {
             // Upsert
             //
             Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
-            Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+            UpsertResults res = Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+            assertEquals(583, res.getResults().size(), "wrong number of new upserted keywords");
             System.out
                 .println("After insertion: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
             System.out

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.ffi.SearchResults;
+import com.cosmian.jna.findex.ffi.UpsertResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
@@ -131,7 +132,9 @@ public class TestSqlite {
             // Upsert
             //
             Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
-            Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+            UpsertResults res = Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+            assertEquals(583, res.getResults().size(), "wrong number of new upserted keywords");
+            System.out.println("Upserted " + res.getResults().size() + " new keywords.");
             System.out
                 .println("After insertion: entry_table size: " + db.getAllKeyValueItems("entry_table").size());
             System.out

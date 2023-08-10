@@ -78,7 +78,7 @@ public interface FindexNativeWrapper extends Library {
             throws CloudproofException;
     }
 
-    int h_upsert(byte[] newKeywordsBufferPtr,
+    int h_upsert(Pointer newKeywordsBufferPtr,
                  IntByReference newKeywordsBufferLen,
                  Pointer masterKeyPtr,
                  int masterKeyLen,
@@ -125,7 +125,7 @@ public interface FindexNativeWrapper extends Library {
                        String keywords,
                        String baseUrl);
 
-    int h_upsert_cloud(byte[] newKeywordsBufferPtr,
+    int h_upsert_cloud(Pointer newKeywordsBufferPtr,
                        IntByReference newKeywordsBufferLen,
                        String token,
                        Pointer labelPtr,

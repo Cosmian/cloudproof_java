@@ -12,6 +12,8 @@ import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Memory;
+import com.sun.jna.Pointer;
+import com.sun.jna.Native;
 import com.sun.jna.ptr.IntByReference;
 
 public final class FindexCloud extends FindexBase {
@@ -63,34 +65,21 @@ public final class FindexCloud extends FindexBase {
             final Memory labelPointer = new Memory(label.length)) {
             labelPointer.write(0, label, 0, label.length);
 
-            // Do not allocate memory. The Rust FFI function will directly
-            // return after setting newKeywordsBufferSize to an upper bound on
-            // the amount of memory to allocate.
-            byte[] newKeywordsBuffer = new byte[0];
-            IntByReference newKeywordsBufferSize = new IntByReference();
+            // Allocate the amount of memory needed to store a pointer.
+            Memory newKeywordsBuffer = new Memory(8);
+            IntByReference newKeywordsBufferSize = new IntByReference(0);
 
             long start = System.currentTimeMillis();
-            int ffiCode = INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
-                                                  token,
-                                                  labelPointer, label.length,
-                                                  indexedValuesToJson(additions),
-                                                  indexedValuesToJson(deletions),
-                                                  baseUrl);
-            FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
+            unwrap(INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
+                                           token,
+                                           labelPointer, label.length,
+                                           indexedValuesToJson(additions),
+                                           indexedValuesToJson(deletions),
+                                           baseUrl),
+                    start);
 
-            if (ffiCode == 1) {
-                newKeywordsBuffer = new byte[newKeywordsBufferSize.getValue()];
-                unwrap(INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
-                                               token,
-                                               labelPointer, label.length,
-                                               indexedValuesToJson(additions),
-                                               indexedValuesToJson(deletions),
-                                               baseUrl));
-            } else if (ffiCode != 0) {
-                unwrap(ffiCode);
-            }
-
-            byte[] newKeywordsBytes = Arrays.copyOfRange(newKeywordsBuffer, 0, newKeywordsBufferSize.getValue());
+            byte[] newKeywordsBytes = newKeywordsBuffer.getPointer(0).getByteArray(0, newKeywordsBufferSize.getValue());
+            Native.free(Pointer.nativeValue(newKeywordsBuffer.getPointer(0)));
             return  new Leb128Reader(newKeywordsBytes).readObject(UpsertResults.class);
         }
     }

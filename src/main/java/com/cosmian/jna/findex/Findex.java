@@ -33,28 +33,27 @@ public final class Findex extends FindexBase {
             keyPointer.write(0, key, 0, key.length);
             labelPointer.write(0, label, 0, label.length);
 
-            //
-            // Prepare outputs
-            //
-            // Allocate the amount of memory needed to store all upserted keywords.
+            // Do not allocate memory. The Rust FFI function will directly
+            // return after setting newKeywordsBufferSize to an upper bound on
+            // the amount of memory to allocate.
             byte[] newKeywordsBuffer = new byte[0];
-            IntByReference newKeywordsBufferSize = new IntByReference(newKeywordsBuffer.length);
+            IntByReference newKeywordsBufferSize = new IntByReference();
+
             long start = System.currentTimeMillis();
             int ffiCode = INSTANCE.h_upsert(newKeywordsBuffer, newKeywordsBufferSize,
-                                     keyPointer, key.length,
-                                     labelPointer, label.length,
-                                     indexedValuesToJson(additions),
-                                     indexedValuesToJson(deletions),
-                                     entryTableNumber,
-                                     db.fetchEntryCallback(),
-                                     db.upsertEntryCallback(),
-                                     db.upsertChainCallback());
+                                            keyPointer, key.length,
+                                            labelPointer, label.length,
+                                            indexedValuesToJson(additions),
+                                            indexedValuesToJson(deletions),
+                                            entryTableNumber,
+                                            db.fetchEntryCallback(),
+                                            db.upsertEntryCallback(),
+                                            db.upsertChainCallback());
+
             FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
 
             if (ffiCode == 1) {
-                // Retry with correct allocated size
                 newKeywordsBuffer = new byte[newKeywordsBufferSize.getValue()];
-                long startRetry = System.currentTimeMillis();
                 unwrap(INSTANCE.h_upsert(newKeywordsBuffer, newKeywordsBufferSize,
                                          keyPointer, key.length,
                                          labelPointer, label.length,
@@ -63,8 +62,9 @@ public final class Findex extends FindexBase {
                                          entryTableNumber,
                                          db.fetchEntryCallback(),
                                          db.upsertEntryCallback(),
-                                         db.upsertChainCallback())
-                        , startRetry);
+                                         db.upsertChainCallback()));
+            } else if (ffiCode != 0) {
+                unwrap(ffiCode);
             }
 
             byte[] newKeywordsBytes = Arrays.copyOfRange(newKeywordsBuffer, 0, newKeywordsBufferSize.getValue());

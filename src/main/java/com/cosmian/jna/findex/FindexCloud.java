@@ -63,9 +63,12 @@ public final class FindexCloud extends FindexBase {
             final Memory labelPointer = new Memory(label.length)) {
             labelPointer.write(0, label, 0, label.length);
 
-            // Indexes creation + insertion/update
+            // Do not allocate memory. The Rust FFI function will directly
+            // return after setting newKeywordsBufferSize to an upper bound on
+            // the amount of memory to allocate.
             byte[] newKeywordsBuffer = new byte[0];
-            IntByReference newKeywordsBufferSize = new IntByReference(newKeywordsBuffer.length);
+            IntByReference newKeywordsBufferSize = new IntByReference();
+
             long start = System.currentTimeMillis();
             int ffiCode = INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
                                                   token,
@@ -75,17 +78,16 @@ public final class FindexCloud extends FindexBase {
                                                   baseUrl);
             FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
 
-            if (ffiCode != 0) {
-                // Retry with correct allocated size
+            if (ffiCode == 1) {
                 newKeywordsBuffer = new byte[newKeywordsBufferSize.getValue()];
-                long startRetry = System.currentTimeMillis();
                 unwrap(INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
                                                token,
                                                labelPointer, label.length,
                                                indexedValuesToJson(additions),
                                                indexedValuesToJson(deletions),
-                                               baseUrl),
-                        startRetry);
+                                               baseUrl));
+            } else if (ffiCode != 0) {
+                unwrap(ffiCode);
             }
 
             byte[] newKeywordsBytes = Arrays.copyOfRange(newKeywordsBuffer, 0, newKeywordsBufferSize.getValue());

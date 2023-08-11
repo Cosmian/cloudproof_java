@@ -105,7 +105,7 @@ public interface FindexNativeWrapper extends Library {
                   UpdateLinesCallback updateLines,
                   ListRemovedLocationsCallback listRemovedLocations);
 
-    int h_search(byte[] searchresultsPtr,
+    int h_search(Pointer searchresultsPtr,
                  IntByReference searchresultsLen,
                  Pointer masterKeyPtr,
                  int masterKeyLength,
@@ -117,7 +117,7 @@ public interface FindexNativeWrapper extends Library {
                  FetchEntryCallback fetchEntry,
                  FetchChainCallback fetchChain);
 
-    int h_search_cloud(byte[] dbUidsPtr,
+    int h_search_cloud(Pointer dbUidsPtr,
                        IntByReference dbUidsLen,
                        String token,
                        Pointer labelPtr,
@@ -135,7 +135,7 @@ public interface FindexNativeWrapper extends Library {
                        String baseUrl);
 
 
-    int h_generate_new_token(byte[] tokenPtr,
+    int h_generate_new_token(Pointer tokenPtr,
         IntByReference tokenLen,
         String indexIdPtr,
         Pointer fetchEntriesSeedPtr,

@@ -1,7 +1,6 @@
 package com.cosmian.jna.findex;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,20 +35,20 @@ public final class FindexCloud extends FindexBase {
             upsertEntriesSeedPointer.write(0, upsertEntriesSeed, 0, upsertEntriesSeed.length);
             insertChainsSeedPointer.write(0, insertChainsSeed, 0, insertChainsSeed.length);
 
-            byte[] tokenBuffer = new byte[200];
-            IntByReference tokenBufferSize = new IntByReference(tokenBuffer.length);
+            // Allocate the amount of memory needed to store a pointer.
+            Memory tokenBuffer = new Memory(8);
+            IntByReference tokenBufferSize = new IntByReference(0);
 
-            unwrap(INSTANCE.h_generate_new_token(
-                tokenBuffer,
-                tokenBufferSize,
-                indexId,
-                fetchEntriesSeedPointer, fetchEntriesSeed.length,
-                fetchChainsSeedPointer, fetchChainsSeed.length,
-                upsertEntriesSeedPointer, upsertEntriesSeed.length,
-                insertChainsSeedPointer, insertChainsSeed.length));
+            unwrap(INSTANCE.h_generate_new_token(tokenBuffer,
+                                                 tokenBufferSize,
+                                                 indexId,
+                                                 fetchEntriesSeedPointer, fetchEntriesSeed.length,
+                                                 fetchChainsSeedPointer, fetchChainsSeed.length,
+                                                 upsertEntriesSeedPointer, upsertEntriesSeed.length,
+                                                 insertChainsSeedPointer, insertChainsSeed.length));
 
-            byte[] tokenBytes = Arrays.copyOfRange(tokenBuffer, 0, tokenBufferSize.getValue());
-
+            byte[] tokenBytes = tokenBuffer.getPointer(0).getByteArray(0, tokenBufferSize.getValue());
+            Native.free(Pointer.nativeValue(tokenBuffer.getPointer(0)));
             return new String(tokenBytes, StandardCharsets.UTF_8);
         }
     }
@@ -69,14 +68,12 @@ public final class FindexCloud extends FindexBase {
             Memory newKeywordsBuffer = new Memory(8);
             IntByReference newKeywordsBufferSize = new IntByReference(0);
 
-            long start = System.currentTimeMillis();
             unwrap(INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
                                            token,
                                            labelPointer, label.length,
                                            indexedValuesToJson(additions),
                                            indexedValuesToJson(deletions),
-                                           baseUrl),
-                    start);
+                                           baseUrl));
 
             byte[] newKeywordsBytes = newKeywordsBuffer.getPointer(0).getByteArray(0, newKeywordsBufferSize.getValue());
             Native.free(Pointer.nativeValue(newKeywordsBuffer.getPointer(0)));
@@ -114,45 +111,26 @@ public final class FindexCloud extends FindexBase {
                                        Set<Keyword> keyWords,
                                        String baseUrl)
         throws CloudproofException {
-        //
-        // Prepare outputs
-        //
-        // start with an arbitration buffer allocation size of 131072 (around 4096
-        // indexedValues)
-        byte[] indexedValuesBuffer = new byte[131072];
-        IntByReference indexedValuesBufferSize = new IntByReference(indexedValuesBuffer.length);
 
         if (token == null) {
             throw new CloudproofException("Token cannot be null");
         }
+
         try (final Memory labelPointer = new Memory(label.length)) {
             labelPointer.write(0, label, 0, label.length);
-
             String wordsJson = keywordsToJson(keyWords);
 
-            // Indexes creation + insertion/update
-            int ffiCode = INSTANCE.h_search_cloud(
-                indexedValuesBuffer, indexedValuesBufferSize,
-                token,
-                labelPointer, label.length,
-                wordsJson,
-                baseUrl);
-            if (ffiCode != 0) {
-                // Retry with correct allocated size
-                indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
-                ffiCode = INSTANCE.h_search_cloud(
-                    indexedValuesBuffer, indexedValuesBufferSize,
-                    token,
-                    labelPointer, label.length,
-                    wordsJson,
-                    baseUrl);
-                if (ffiCode != 0) {
-                    throw new CloudproofException(get_last_error(4095));
-                }
-            }
+            Memory indexedValuesBuffer = new Memory(8);
+            IntByReference indexedValuesBufferSize = new IntByReference(0);
 
-            byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
+            unwrap(INSTANCE.h_search_cloud(indexedValuesBuffer, indexedValuesBufferSize,
+                                           token,
+                                           labelPointer, label.length,
+                                           wordsJson,
+                                           baseUrl));
 
+            byte[] indexedValuesBytes = indexedValuesBuffer.getPointer(0).getByteArray(0, indexedValuesBufferSize.getValue());
+            Native.free(Pointer.nativeValue(indexedValuesBuffer.getPointer(0)));
             return new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
         }
     }

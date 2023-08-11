@@ -104,13 +104,6 @@ public final class Findex extends FindexBase {
                                        Database db,
                                        SearchProgress progressCallback)
         throws CloudproofException {
-        //
-        // Prepare outputs
-        //
-        // start with an arbitration buffer allocation size of 131072 (around 4096
-        // indexedValues)
-        byte[] indexedValuesBuffer = new byte[131072];
-        IntByReference indexedValuesBufferSize = new IntByReference(indexedValuesBuffer.length);
 
         // Findex master keys
         if (key == null) {
@@ -128,37 +121,22 @@ public final class Findex extends FindexBase {
 
             String wordsJson = keywordsToJson(keyWords);
 
-            // Indexes creation + insertion/update
+            Memory indexedValuesBuffer = new Memory(8);
+            IntByReference indexedValuesBufferSize = new IntByReference(0);
+
             long start = System.currentTimeMillis();
-            int ffiCode = INSTANCE.h_search(
-                indexedValuesBuffer, indexedValuesBufferSize,
-                keyPointer, key.length,
-                labelPointer, label.length,
-                wordsJson,
-                entryTableNumber,
-                wrappedProgress,
-                db.fetchEntryCallback(),
-                db.fetchChainCallback());
+            unwrap(INSTANCE.h_search(indexedValuesBuffer, indexedValuesBufferSize,
+                                     keyPointer, key.length,
+                                     labelPointer, label.length,
+                                     wordsJson,
+                                     entryTableNumber,
+                                     wrappedProgress,
+                                     db.fetchEntryCallback(),
+                                     db.fetchChainCallback()),
+                    start);
 
-            FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
-
-            if (ffiCode != 0) {
-                // Retry with correct allocated size
-                indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
-                long startRetry = System.currentTimeMillis();
-                unwrap(INSTANCE.h_search(
-                    indexedValuesBuffer, indexedValuesBufferSize,
-                    keyPointer, key.length,
-                    labelPointer, label.length,
-                    wordsJson,
-                    entryTableNumber,
-                    wrappedProgress,
-                    db.fetchEntryCallback(),
-                    db.fetchChainCallback()), startRetry);
-            }
-
-            byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
-
+            byte[] indexedValuesBytes = indexedValuesBuffer.getPointer(0).getByteArray(0, indexedValuesBufferSize.getValue());
+            Native.free(Pointer.nativeValue(indexedValuesBuffer.getPointer(0)));
             return new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
         }
     }

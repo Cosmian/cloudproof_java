@@ -44,7 +44,7 @@ jobs:
       - run: python scripts/get_native_libraries.py
 
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
+        run: mvn -B package --file pom.xml -Dtest=\!TestFindexCloud,\!TestRedis,\!TestConditionalUpsert,\!TestDemo,\!TestNativeCoverCrypt,\!TestKmsCoverCrypt
 
   build_in_docker:
     services:

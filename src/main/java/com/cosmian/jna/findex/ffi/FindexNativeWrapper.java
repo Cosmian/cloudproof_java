@@ -125,7 +125,9 @@ public interface FindexNativeWrapper extends Library {
                        String keywords,
                        String baseUrl);
 
-    int h_upsert_cloud(String token,
+    int h_upsert_cloud(byte[] newKeywordsBufferPtr,
+                       IntByReference newKeywordsBufferLen,
+                       String token,
                        Pointer labelPtr,
                        int labelLen,
                        String additions,

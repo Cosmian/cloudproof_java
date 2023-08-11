@@ -68,7 +68,6 @@ public final class Findex extends FindexBase {
             }
 
             byte[] newKeywordsBytes = Arrays.copyOfRange(newKeywordsBuffer, 0, newKeywordsBufferSize.getValue());
-
             return  new Leb128Reader(newKeywordsBytes).readObject(UpsertResults.class);
         }
     }

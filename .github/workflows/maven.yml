@@ -92,6 +92,11 @@ jobs:
       - run: yum -y install java-1.8.0-openjdk maven python3 python3-pip
       - run: python3 scripts/get_native_libraries.py
 
+      - name: Display ldd version
+        run: |
+          ldd --version
+          ldd src/main/resources/linux-x86-64/libcloudproof.so
+
       - name: Build with Maven
         run: mvn compile
         env:

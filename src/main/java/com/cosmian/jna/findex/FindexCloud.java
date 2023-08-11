@@ -171,7 +171,7 @@ public final class FindexCloud extends FindexBase {
     static public class SearchRequest extends FindexBase.SearchRequest<SearchRequest> {
         private String token;
 
-        private String baseUrl = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
+        private String baseUrl = findexCloudUrl();
 
         public SearchRequest(String token, byte[] label) {
             this.token = token;
@@ -202,7 +202,7 @@ public final class FindexCloud extends FindexBase {
     static public class IndexRequest extends FindexBase.IndexRequest<IndexRequest> {
         private String token;
 
-        private String baseUrl = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
+        private String baseUrl = findexCloudUrl();
 
         public IndexRequest(String token, byte[] label) {
             this.token = token;

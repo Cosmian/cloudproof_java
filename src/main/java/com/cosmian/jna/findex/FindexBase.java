@@ -56,6 +56,20 @@ public class FindexBase {
     }
 
     /**
+     * The Findex cloud server hostname from the COSMIAN_FINDEX_CLOUD_BASE_URL environment variable. Defaults to
+     * localhost if not found.
+     *
+     * @return the hostname
+     */
+    public static String findexCloudUrl() {
+        String v = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
+        if (v == null) {
+            return "http://localhost:8080";
+        }
+        return v;
+    }
+
+    /**
      * Set the last error on the native lib
      *
      * @param error_msg the last error to set on the native lib

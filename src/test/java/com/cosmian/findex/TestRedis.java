@@ -16,9 +16,9 @@ import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.ffi.ProgressResults;
-import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.ffi.UpsertResults;
+import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.NextKeyword;
@@ -36,8 +36,7 @@ public class TestRedis {
     @Test
     public void testUpsertAndSearchRedis() throws Exception {
         if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
-            System.out.println("Ignore test since Redis is down");
-            return;
+            throw new RuntimeException("Redis is down");
         }
 
         System.out.println("");
@@ -179,8 +178,7 @@ public class TestRedis {
     @Test
     public void testExceptions() throws Exception {
         if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
-            System.out.println("Ignore test since Redis is down");
-            return;
+            throw new RuntimeException("Redis is down");
         }
 
         System.out.println("");
@@ -230,8 +228,7 @@ public class TestRedis {
     @Test
     public void testGraphUpsertAndSearchRedis() throws Exception {
         if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
-            System.out.println("Ignore test since Redis is down");
-            return;
+            throw new RuntimeException("Redis is down");
         }
 
         System.out.println("");

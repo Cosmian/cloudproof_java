@@ -51,7 +51,7 @@ public final class Findex extends FindexBase {
                                      db.upsertChainCallback());
             FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
 
-            if (ffiCode != 0) {
+            if (ffiCode == 1) {
                 // Retry with correct allocated size
                 newKeywordsBuffer = new byte[newKeywordsBufferSize.getValue()];
                 long startRetry = System.currentTimeMillis();

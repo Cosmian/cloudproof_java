@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.ffi.Progress;
@@ -34,19 +33,14 @@ public final class Findex extends FindexBase {
             keyPointer.write(0, key, 0, key.length);
             labelPointer.write(0, label, 0, label.length);
 
-            long start = System.currentTimeMillis();
-
             //
             // Prepare outputs
             //
             // Allocate the amount of memory needed to store all upserted keywords.
-            Set<Keyword> upsertedKeywords = additions.values().stream().flatMap(set -> set.stream()).collect(Collectors.toSet());
-            upsertedKeywords.addAll(deletions.values().stream().flatMap(set -> set.stream()).collect(Collectors.toSet()));
-            Integer memoryToAllocate = upsertedKeywords.stream().map(keyword -> keyword.getBytes().length + 8).reduce(Integer::sum).get();
-            byte[] newKeywordsBuffer = new byte[memoryToAllocate];
+            byte[] newKeywordsBuffer = new byte[0];
             IntByReference newKeywordsBufferSize = new IntByReference(newKeywordsBuffer.length);
-
-            unwrap(INSTANCE.h_upsert(newKeywordsBuffer, newKeywordsBufferSize,
+            long start = System.currentTimeMillis();
+            int ffiCode = INSTANCE.h_upsert(newKeywordsBuffer, newKeywordsBufferSize,
                                      keyPointer, key.length,
                                      labelPointer, label.length,
                                      indexedValuesToJson(additions),
@@ -54,8 +48,24 @@ public final class Findex extends FindexBase {
                                      entryTableNumber,
                                      db.fetchEntryCallback(),
                                      db.upsertEntryCallback(),
-                                     db.upsertChainCallback()),
-                    start);
+                                     db.upsertChainCallback());
+            FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
+
+            if (ffiCode != 0) {
+                // Retry with correct allocated size
+                newKeywordsBuffer = new byte[newKeywordsBufferSize.getValue()];
+                long startRetry = System.currentTimeMillis();
+                unwrap(INSTANCE.h_upsert(newKeywordsBuffer, newKeywordsBufferSize,
+                                         keyPointer, key.length,
+                                         labelPointer, label.length,
+                                         indexedValuesToJson(additions),
+                                         indexedValuesToJson(deletions),
+                                         entryTableNumber,
+                                         db.fetchEntryCallback(),
+                                         db.upsertEntryCallback(),
+                                         db.upsertChainCallback())
+                        , startRetry);
+            }
 
             byte[] newKeywordsBytes = Arrays.copyOfRange(newKeywordsBuffer, 0, newKeywordsBufferSize.getValue());
 

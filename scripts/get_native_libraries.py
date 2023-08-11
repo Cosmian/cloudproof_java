@@ -64,4 +64,4 @@ def download_native_libraries(version: str) -> bool:
 if __name__ == '__main__':
     ret = download_native_libraries('v2.2.0')
     if ret is False and getenv('GITHUB_ACTIONS'):
-        download_native_libraries('last_build/feature/findex_5_0_0')
+        download_native_libraries('last_build/feature/ffi_allocate_from_rust')

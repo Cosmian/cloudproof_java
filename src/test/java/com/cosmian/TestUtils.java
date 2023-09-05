@@ -54,7 +54,6 @@ public final class TestUtils {
     public static boolean serverAvailable(String kmsServerUrl) {
         try {
             new RestClient(kmsServerUrl, Optional.empty()).json_get("/");
-
             return true;
         } catch (RestException e) {
             if (e.getMessage().contains("404")) {
@@ -76,10 +75,10 @@ public final class TestUtils {
             s = new Socket(hostname, port);
             // If the code makes it this far without an exception it means
             // something is using the port and has responded.
-            logger.fine("--------------Redis likely running: port " + port + " is not available");
+            logger.fine("--------------Server likely running: port " + port + " is not available");
             return false;
         } catch (IOException e) {
-            logger.fine("--------------Redis not running: port " + port + " is available");
+            logger.fine("--------------Server not running: port " + port + " is available");
             return true;
         } finally {
             if (s != null) {

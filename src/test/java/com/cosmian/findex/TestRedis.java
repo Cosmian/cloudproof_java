@@ -16,9 +16,11 @@ import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
 import com.cosmian.jna.findex.ffi.ProgressResults;
-import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.ffi.SearchResults;
+import com.cosmian.jna.findex.ffi.UpsertResults;
+import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
+import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.NextKeyword;
 import com.cosmian.utils.CloudproofException;
 
@@ -34,8 +36,7 @@ public class TestRedis {
     @Test
     public void testUpsertAndSearchRedis() throws Exception {
         if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
-            System.out.println("Ignore test since Redis is down");
-            return;
+            throw new RuntimeException("Redis is down");
         }
 
         System.out.println("");
@@ -77,11 +78,26 @@ public class TestRedis {
             // Upsert
             //
             Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
-            Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+            UpsertResults res = Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+            assertEquals(583, res.getResults().size(), "wrong number of new upserted keywords");
             System.out
                 .println("After insertion: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
             System.out
                 .println("After insertion: chain_table size: " + db.getAllKeys(Redis.CHAIN_TABLE_INDEX).size());
+
+            //
+            // Upsert a new keyword
+            //
+            HashMap<IndexedValue, Set<Keyword>> newIndexedKeyword = new HashMap<>();
+            Set<Keyword> expectdeKeywords = new HashSet<>();
+            expectdeKeywords.add(new Keyword("test"));
+            newIndexedKeyword.put(new IndexedValue(new Location("ici")), expectdeKeywords);
+            // It is returned the first time it is added.
+            Set<Keyword> newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
+            assertEquals(expectdeKeywords, newKeywords, "new keyword is not returned");
+            // It is *not* returned the second time it is added.
+            newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
+            assert(newKeywords.isEmpty());
 
             //
             // Search
@@ -162,8 +178,7 @@ public class TestRedis {
     @Test
     public void testExceptions() throws Exception {
         if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
-            System.out.println("Ignore test since Redis is down");
-            return;
+            throw new RuntimeException("Redis is down");
         }
 
         System.out.println("");
@@ -213,8 +228,7 @@ public class TestRedis {
     @Test
     public void testGraphUpsertAndSearchRedis() throws Exception {
         if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
-            System.out.println("Ignore test since Redis is down");
-            return;
+            throw new RuntimeException("Redis is down");
         }
 
         System.out.println("");

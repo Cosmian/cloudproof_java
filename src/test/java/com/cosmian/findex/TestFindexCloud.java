@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 
+import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.FindexCloud;
 import com.cosmian.jna.findex.ffi.SearchResults;
+import com.cosmian.jna.findex.ffi.UpsertResults;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.RestClient;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,29 +23,29 @@ public class TestFindexCloud {
     public void testFindexCloud() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        String baseUrl = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
-        if (baseUrl == null) {
-            System.out.println("No COSMIAN_FINDEX_CLOUD_BASE_URL: ignoring");
-            return;
+        if (!TestUtils.serverAvailable(FindexCloud.findexCloudUrl())) {
+            throw new RuntimeException("Findex cloud is down");
         }
 
         String label = "Hello World!";
 
-        RestClient client = new RestClient(baseUrl, Optional.empty());
+        RestClient client = new RestClient(FindexCloud.findexCloudUrl(), Optional.empty());
         String response = client.json_post("/indexes", "{ \"name\": \"Test\" }");
 
-        Index index =  mapper.readValue(response, Index.class);
+        Index index = mapper.readValue(response, Index.class);
 
-        String token = FindexCloud.generateNewToken(index.publicId, index.fetchEntriesKey, index.fetchChainsKey, index.upsertEntriesKey, index.insertChainsKey);
+        String token = FindexCloud.generateNewToken(index.publicId, index.fetchEntriesKey, index.fetchChainsKey,
+            index.upsertEntriesKey, index.insertChainsKey);
 
         FindexCloud.IndexRequest indexRequest = new FindexCloud.IndexRequest(token, label)
-            .add(new Location(1337), new String[] { "John", "Doe" })
-            .add(new Location(42), new String[] { "Jane", "Doe" });
+            .add(new Location(1337), new String[] {"John", "Doe"})
+            .add(new Location(42), new String[] {"Jane", "Doe"});
 
-        FindexCloud.upsert(indexRequest);
+        UpsertResults res = FindexCloud.upsert(indexRequest);
+        assertEquals(3, res.getResults().size(), "wrong number of new keywords returned");
 
         FindexCloud.SearchRequest searchRequest = new FindexCloud.SearchRequest(token, label)
-            .keywords(new String[] { "Doe" });
+            .keywords(new String[] {"Doe"});
 
         SearchResults searchResults = FindexCloud.search(searchRequest);
 
@@ -52,15 +55,20 @@ public class TestFindexCloud {
     public static class Index {
         @JsonProperty(value = "public_id")
         String publicId;
+
         @JsonProperty(value = "fetch_entries_key")
         byte[] fetchEntriesKey;
+
         @JsonProperty(value = "fetch_chains_key")
         byte[] fetchChainsKey;
+
         @JsonProperty(value = "upsert_entries_key")
         byte[] upsertEntriesKey;
+
         @JsonProperty(value = "insert_chains_key")
         byte[] insertChainsKey;
 
-        Index() {}
+        Index() {
+        }
     }
 }

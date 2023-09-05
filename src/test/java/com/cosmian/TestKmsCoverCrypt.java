@@ -10,9 +10,9 @@ import java.util.logging.Logger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.cosmian.jna.covercrypt.structs.Policy;
 import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.abe.data.DecryptedData;
-import com.cosmian.jna.covercrypt.structs.Policy;
 import com.cosmian.rest.kmip.data_structures.KeyValue;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
@@ -43,8 +43,7 @@ public class TestKmsCoverCrypt {
     public void testKeysImportExport() throws Exception {
 
         if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
-            return;
+            throw new RuntimeException("No KMS Server available");
         }
 
         Policy pg = TestNativeCoverCrypt.policy();
@@ -112,8 +111,7 @@ public class TestKmsCoverCrypt {
     public void testKmsEncryptDecrypt() throws Exception {
 
         if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
-            return;
+            throw new RuntimeException("No KMS Server available");
         }
 
         Policy pg = TestNativeCoverCrypt.policy();
@@ -203,8 +201,7 @@ public class TestKmsCoverCrypt {
     public void testKmsEncryptDecryptMetaData() throws Exception {
 
         if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
-            return;
+            throw new RuntimeException("No KMS Server available");
         }
 
         Policy pg = TestNativeCoverCrypt.policy();

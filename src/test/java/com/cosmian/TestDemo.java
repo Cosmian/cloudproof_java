@@ -48,8 +48,7 @@ public class TestDemo {
     public void testDocDemoKMS() throws CloudproofException {
 
         if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("Demo: No KMS Server available : ignoring");
-            return;
+            throw new RuntimeException("Demo: No KMS Server available");
         }
 
         // Access to the KMS server.

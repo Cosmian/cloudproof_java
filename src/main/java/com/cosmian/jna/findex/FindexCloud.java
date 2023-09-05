@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.cosmian.jna.findex.ffi.SearchResults;
+import com.cosmian.jna.findex.ffi.UpsertResults;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
@@ -51,40 +52,60 @@ public final class FindexCloud extends FindexBase {
         }
     }
 
-    public static void upsert(
-                              String token,
-                              byte[] label,
-                              Map<IndexedValue, Set<Keyword>> additions,
-                              Map<IndexedValue, Set<Keyword>> deletions,
-                              String baseUrl)
+    public static UpsertResults upsert(String token,
+                                       byte[] label,
+                                       Map<IndexedValue, Set<Keyword>> additions,
+                                       Map<IndexedValue, Set<Keyword>> deletions,
+                                       String baseUrl)
         throws CloudproofException {
 
         try (
             final Memory labelPointer = new Memory(label.length)) {
             labelPointer.write(0, label, 0, label.length);
 
-            // Indexes creation + insertion/update
-            unwrap(INSTANCE.h_upsert_cloud(
-                token,
-                labelPointer, label.length,
-                indexedValuesToJson(additions),
-                indexedValuesToJson(deletions),
-                baseUrl));
+            // Do not allocate memory. The Rust FFI function will directly
+            // return after setting newKeywordsBufferSize to an upper bound on
+            // the amount of memory to allocate.
+            byte[] newKeywordsBuffer = new byte[0];
+            IntByReference newKeywordsBufferSize = new IntByReference();
+
+            long start = System.currentTimeMillis();
+            int ffiCode = INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
+                                                  token,
+                                                  labelPointer, label.length,
+                                                  indexedValuesToJson(additions),
+                                                  indexedValuesToJson(deletions),
+                                                  baseUrl);
+            FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
+
+            if (ffiCode == 1) {
+                newKeywordsBuffer = new byte[newKeywordsBufferSize.getValue()];
+                unwrap(INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
+                                               token,
+                                               labelPointer, label.length,
+                                               indexedValuesToJson(additions),
+                                               indexedValuesToJson(deletions),
+                                               baseUrl));
+            } else if (ffiCode != 0) {
+                unwrap(ffiCode);
+            }
+
+            byte[] newKeywordsBytes = Arrays.copyOfRange(newKeywordsBuffer, 0, newKeywordsBufferSize.getValue());
+            return  new Leb128Reader(newKeywordsBytes).readObject(UpsertResults.class);
         }
     }
 
-    public static void upsert(IndexRequest request)
+    public static UpsertResults upsert(IndexRequest request)
         throws CloudproofException {
-        upsert(request.token, request.label, request.additions, request.deletions, request.baseUrl);
+        return upsert(request.token, request.label, request.additions, request.deletions, request.baseUrl);
     }
 
-    public static void upsert(
-                              String token,
-                              byte[] label,
-                              Map<IndexedValue, Set<Keyword>> additions,
-                              Map<IndexedValue, Set<Keyword>> deletions)
+    public static UpsertResults upsert(String token,
+                                       byte[] label,
+                                       Map<IndexedValue, Set<Keyword>> additions,
+                                       Map<IndexedValue, Set<Keyword>> deletions)
         throws CloudproofException {
-        upsert(token, label, additions, deletions, null);
+        return upsert(token, label, additions, deletions, null);
     }
 
     public static SearchResults search(SearchRequest request)
@@ -150,7 +171,7 @@ public final class FindexCloud extends FindexBase {
     static public class SearchRequest extends FindexBase.SearchRequest<SearchRequest> {
         private String token;
 
-        private String baseUrl = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
+        private String baseUrl = findexCloudUrl();
 
         public SearchRequest(String token, byte[] label) {
             this.token = token;
@@ -181,7 +202,7 @@ public final class FindexCloud extends FindexBase {
     static public class IndexRequest extends FindexBase.IndexRequest<IndexRequest> {
         private String token;
 
-        private String baseUrl = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
+        private String baseUrl = findexCloudUrl();
 
         public IndexRequest(String token, byte[] label) {
             this.token = token;

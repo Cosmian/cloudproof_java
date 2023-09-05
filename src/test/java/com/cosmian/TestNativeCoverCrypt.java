@@ -300,8 +300,7 @@ public class TestNativeCoverCrypt {
         System.out.println("");
 
         if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
-            return;
+            throw new RuntimeException("No KMS Server available");
         }
 
         // The data we want to encrypt/decrypt
@@ -370,8 +369,7 @@ public class TestNativeCoverCrypt {
         System.out.println("");
 
         if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
-            System.out.println("No KMS Server: ignoring");
-            return;
+            throw new RuntimeException("No KMS Server available");
         }
 
         // The data we want to encrypt/decrypt

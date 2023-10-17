@@ -4,26 +4,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.cosmian.jna.findex.ffi.FetchAllEntryTableUids;
+import com.cosmian.jna.findex.ffi.DeleteChain;
+import com.cosmian.jna.findex.ffi.DeleteEntry;
+import com.cosmian.jna.findex.ffi.DumpTokens;
 import com.cosmian.jna.findex.ffi.FetchChain;
 import com.cosmian.jna.findex.ffi.FetchEntry;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchAllEntryTableUidsCallback;
+import com.cosmian.jna.findex.ffi.FilterObsoleteLocations;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.DeleteChainCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.DeleteEntryCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchChainCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchEntryCallback;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.ListRemovedLocationsCallback;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpdateLinesCallback;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertChainCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FilterObsoleteLocationsCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.InsertChainCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertEntryCallback;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchAllEntryTableUids;
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBDeleteChain;
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBDeleteEntry;
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBDumpTokens;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchChain;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFetchEntry;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBListRemovedLocations;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpdateLines;
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBFilterObsoleteLocations;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertChain;
 import com.cosmian.jna.findex.ffi.FindexUserCallbacks.DBUpsertEntry;
-import com.cosmian.jna.findex.ffi.ListRemovedLocations;
-import com.cosmian.jna.findex.ffi.UpdateLines;
-import com.cosmian.jna.findex.ffi.UpsertChain;
+import com.cosmian.jna.findex.ffi.InsertChain;
 import com.cosmian.jna.findex.ffi.UpsertEntry;
 import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.ChainTableValue;
@@ -89,6 +91,12 @@ public abstract class Database {
     protected abstract Map<Uid32, EntryTableValue> upsertEntries(Map<Uid32, EntryTableValues> uidsAndValues)
         throws CloudproofException;
 
+    protected abstract void deleteEntries(List<Uid32> uids)
+        throws CloudproofException;
+
+    protected abstract void deleteChains(List<Uid32> uids)
+        throws CloudproofException;
+
     /**
      * Upsert the given lines into the Chain Table *
      * <p>
@@ -97,7 +105,7 @@ public abstract class Database {
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link ChainTableValue}
      * @throws CloudproofException if anything goes wrong
      */
-    protected abstract void upsertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException;
+    protected abstract void insertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException;
 
     /**
      * Update the database tables with the new values. This function should:
@@ -156,17 +164,7 @@ public abstract class Database {
      * @return the list of locations that no longer exist in the main database/storage
      * @throws CloudproofException if anything goes wrong
      */
-    protected abstract List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException;
-
-    public FetchAllEntryTableUidsCallback fetchAllEntryTableUidsCallback() {
-        return new FetchAllEntryTableUids(new DBFetchAllEntryTableUids() {
-
-            @Override
-            public Set<Uid32> fetchAll() throws CloudproofException {
-                return Database.this.fetchAllEntryTableUids();
-            }
-        });
-    }
+    protected abstract List<Location> filterObsoleteLocations(List<Location> locations) throws CloudproofException;
 
     public FetchEntryCallback fetchEntryCallback() {
         return new FetchEntry(new DBFetchEntry() {
@@ -198,34 +196,50 @@ public abstract class Database {
         });
     }
 
-    public UpsertChainCallback upsertChainCallback() {
-        return new UpsertChain(new DBUpsertChain() {
+    public DeleteEntryCallback deleteEntryCallback() {
+        return new DeleteEntry(new DBDeleteEntry() {
+            @Override
+            public void delete(List<Uid32> uids)
+                throws CloudproofException {
+                Database.this.deleteEntries(uids);
+            }
+        });
+    }
+
+    public DeleteChainCallback deleteChainCallback() {
+        return new DeleteChain(new DBDeleteChain() {
+            @Override
+            public void delete(List<Uid32> uids)
+                throws CloudproofException {
+                Database.this.deleteChains(uids);
+            }
+        });
+    }
+
+    public DumpTokens dumpTokensCallback() {
+        return new DumpTokens(new DBDumpTokens() {
+            @Override
+            public Set<Uid32> fetchAll()
+                throws CloudproofException {
+                return Database.this.fetchAllEntryTableUids();
+            }
+        });
+    }
+
+    public InsertChainCallback insertChainCallback() {
+        return new InsertChain(new DBUpsertChain() {
             @Override
             public void upsert(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
-                Database.this.upsertChains(uidsAndValues);
+                Database.this.insertChains(uidsAndValues);
             }
         });
     }
 
-    public UpdateLinesCallback updateLinesCallback() {
-        return new UpdateLines(new DBUpdateLines() {
-
-            @Override
-            public void update(List<Uid32> removedChains,
-                               Map<Uid32, EntryTableValue> newEntries,
-                               Map<Uid32, ChainTableValue> newChains)
-                throws CloudproofException {
-                Database.this.updateTables(removedChains, newEntries, newChains);
-            }
-
-        });
-    }
-
-    public ListRemovedLocationsCallback listRemoveLocationsCallback() {
-        return new ListRemovedLocations(new DBListRemovedLocations() {
+    public FilterObsoleteLocationsCallback filterObsoleteLocationsCallback() {
+        return new FilterObsoleteLocations(new DBFilterObsoleteLocations() {
             @Override
             public List<Location> list(List<Location> locations) throws CloudproofException {
-                return Database.this.listRemovedLocations(locations);
+                return Database.this.filterObsoleteLocations(locations);
             }
         });
     }

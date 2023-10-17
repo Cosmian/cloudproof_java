@@ -79,7 +79,7 @@ public class FindexBase {
         unwrap(FindexBase.INSTANCE.set_error(error_msg));
     }
 
-    protected static String indexedValuesToJson(Map<IndexedValue, Set<Keyword>> indexedValuesAndWords)
+    protected static String indexedValuesToJson(Map<IndexedValue, Set<Keyword>> indexedValuesAndWords) // TODO: to delete
         throws CloudproofException {
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
@@ -105,7 +105,7 @@ public class FindexBase {
         return indexedValuesAndWordsJson;
     }
 
-    protected static String keywordsToJson(Set<Keyword> keyWords) throws CloudproofException {
+    protected static String keywordsToJson(Set<Keyword> keyWords) throws CloudproofException {// TODO: to delete
         // For the JSON strings
         ObjectMapper mapper = new ObjectMapper();
 

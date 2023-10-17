@@ -15,8 +15,8 @@ import com.cosmian.utils.CloudproofException;
 public interface FindexUserCallbacks {
     /* Customer high-level callbacks */
 
-    interface DBFetchAllEntryTableUids {
-        public Set<Uid32> fetchAll() throws CloudproofException;
+    interface DBDumpTokens {
+    public Set<Uid32> fetchAll() throws CloudproofException;
     }
 
     interface DBFetchEntry {
@@ -36,18 +36,19 @@ public interface FindexUserCallbacks {
         public void upsert(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException;
     }
 
-    interface DBUpdateLines {
-        public void update(List<Uid32> removedChains,
-                           Map<Uid32, EntryTableValue> newEntries,
-                           Map<Uid32, ChainTableValue> newChains)
-            throws CloudproofException;
+    interface DBDeleteEntry {
+        public void delete(List<Uid32> uids) throws CloudproofException;
     }
 
-    interface DBListRemovedLocations {
+    interface DBDeleteChain {
+        public void delete(List<Uid32> uids) throws CloudproofException;
+    }
+
+    interface DBFilterObsoleteLocations {
         public List<Location> list(List<Location> locations) throws CloudproofException;
     }
 
-    interface SearchProgress {
+    interface SearchInterrupt {
         public boolean notify(ProgressResults results) throws CloudproofException;
     }
 }

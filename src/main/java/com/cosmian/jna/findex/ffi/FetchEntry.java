@@ -36,6 +36,7 @@ public class FetchEntry implements FetchEntryCallback {
             //
             byte[] uids = new byte[uidsLength];
             uidsPointer.read(0, uids, 0, uidsLength);
+
             //
             // Deserialize Entry Table uids
             //

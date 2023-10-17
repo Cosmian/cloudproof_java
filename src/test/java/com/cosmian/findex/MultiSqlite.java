@@ -28,7 +28,8 @@ public class MultiSqlite extends Database {
     protected List<Tuple<Uid32, EntryTableValue>> fetchEntries(List<Uid32> uids) throws CloudproofException {
         List<Tuple<Uid32, EntryTableValue>> output = new ArrayList<Tuple<Uid32, EntryTableValue>>();
         for (Sqlite sqlite : this.dbList) {
-            output.addAll(sqlite.fetchEntries(uids));
+            List<Tuple<Uid32, EntryTableValue>> entries = sqlite.fetchEntries(uids);
+            output.addAll(entries);
         }
 
         return output;
@@ -38,13 +39,14 @@ public class MultiSqlite extends Database {
     protected Map<Uid32, ChainTableValue> fetchChains(List<Uid32> uids) throws CloudproofException {
         HashMap<Uid32, ChainTableValue> output = new HashMap<>();
         for (Sqlite sqlite : this.dbList) {
-            output.putAll(sqlite.fetchChains(uids));
+            Map<Uid32, ChainTableValue> chains = sqlite.fetchChains(uids);
+            output.putAll(chains);
         }
         return output;
     }
 
     @Override
-    protected List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException {
+    protected List<Location> filterObsoleteLocations(List<Location> locations) throws CloudproofException {
         throw new CloudproofException("not implemented");
     }
 
@@ -59,7 +61,7 @@ public class MultiSqlite extends Database {
     }
 
     @Override
-    protected void upsertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
+    protected void insertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
         throw new CloudproofException("not implemented");
     }
 
@@ -68,6 +70,16 @@ public class MultiSqlite extends Database {
                                 Map<Uid32, EntryTableValue> newEntries,
                                 Map<Uid32, ChainTableValue> newChains)
         throws CloudproofException {
+        throw new CloudproofException("not implemented");
+    }
+
+    @Override
+    protected void deleteEntries(List<Uid32> uids) throws CloudproofException {
+        throw new CloudproofException("not implemented");
+    }
+
+    @Override
+    protected void deleteChains(List<Uid32> uids) throws CloudproofException {
         throw new CloudproofException("not implemented");
     }
 

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.Findex;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchInterrupt;
 import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.ffi.UpsertResults;
@@ -89,15 +89,16 @@ public class TestRedis {
             // Upsert a new keyword
             //
             HashMap<IndexedValue, Set<Keyword>> newIndexedKeyword = new HashMap<>();
-            Set<Keyword> expectdeKeywords = new HashSet<>();
-            expectdeKeywords.add(new Keyword("test"));
-            newIndexedKeyword.put(new IndexedValue(new Location("ici")), expectdeKeywords);
+            Set<Keyword> expectedKeywords = new HashSet<>();
+            expectedKeywords.add(new Keyword("test"));
+            newIndexedKeyword.put(new IndexedValue(new Location("ici")), expectedKeywords);
             // It is returned the first time it is added.
-            Set<Keyword> newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
-            assertEquals(expectdeKeywords, newKeywords, "new keyword is not returned");
+            Set<Keyword> newKeywords =
+                Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
+            assertEquals(expectedKeywords, newKeywords, "new keyword is not returned");
             // It is *not* returned the second time it is added.
             newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
-            assert(newKeywords.isEmpty());
+            assert (newKeywords.isEmpty());
 
             //
             // Search
@@ -121,7 +122,7 @@ public class TestRedis {
 
             // This compact should do nothing except changing the label since the users
             // table didn't change.
-            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
+            Findex.compact(key, key, label, "NewLabel".getBytes(), 1, db);
             System.out
                 .println("After first compact: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
             System.out
@@ -150,15 +151,24 @@ public class TestRedis {
                 System.out.println("<== successfully found all French locations with the new label");
             }
 
+            //
+            // Compact
+            //
+            System.out.println("");
+            System.out.println("---------------------------------------");
+            System.out.println("Findex Re-Compact Sqlite");
+            System.out.println("---------------------------------------");
+            System.out.println("");
+
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
             expectedDbLocations.remove(new Long(17));
-            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
+            Findex.compact(key, key, "NewLabel".getBytes(), "NewLabel2".getBytes(), 1, db);
             {
                 // Search should return everyone but n°17
                 SearchResults searchResults = Findex.search(
                     key,
-                    "NewLabel".getBytes(),
+                    "NewLabel2".getBytes(),
                     new HashSet<>(Arrays.asList(new Keyword("France"))),
                     db);
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
@@ -170,10 +180,8 @@ public class TestRedis {
             try (Jedis jedis = db.getJedis()) {
                 jedis.flushAll();
             }
-
         }
     }
-
 
     @Test
     public void testExceptions() throws Exception {
@@ -215,9 +223,9 @@ public class TestRedis {
             db.shouldThrowInsideFetchEntries = true;
 
             try {
-                Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] { "John" }));
+                Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] {"John"}));
             } catch (CloudproofException e) {
-                assertEquals("Should throw inside fetch entries", e.getMessage());
+                assertEquals("'fetch' other error: 42: 42", e.getMessage());
                 return;
             }
 
@@ -296,7 +304,7 @@ public class TestRedis {
             {
                 Findex.SearchRequest request = new Findex.SearchRequest(key, label, db)
                     .keywords(new String[] {"Mar"})
-                    .searchProgress(new SearchProgress() {
+                    .searchProgress(new SearchInterrupt() {
                         @Override
                         public boolean notify(ProgressResults results) throws CloudproofException {
                             Map<Keyword, Set<IndexedValue>> indexedValuesByKeywords = results.getResults();

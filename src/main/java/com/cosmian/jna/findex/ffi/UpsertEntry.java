@@ -1,5 +1,6 @@
 package com.cosmian.jna.findex.ffi;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.cosmian.jna.findex.FindexCallbackException;
@@ -22,21 +23,48 @@ public class UpsertEntry implements UpsertEntryCallback {
     }
 
     @Override
-    public int apply(
-                     Pointer outputs,
+    public int apply(Pointer outputs,
                      IntByReference outputsLength,
-                     Pointer entries,
-                     int entriesLength)
+                     Pointer oldValues,
+                     int oldValuesLength,
+                     Pointer newValues,
+                     int newValuesLength)
         throws CloudproofException {
         try {
             //
-            // Read `entries` until `itemsLength`
+            // Read `oldValues` until `oldValuesLength`
             //
-            byte[] entriesBytes = new byte[entriesLength];
-            entries.read(0, entriesBytes, 0, entriesLength);
+            byte[] oldValuesBytes = new byte[oldValuesLength];
+            oldValues.read(0, oldValuesBytes, 0, oldValuesLength);
+            Map<Uid32, EntryTableValue> oldValuesMap =
+                Leb128Reader.deserializeMap(Uid32.class, EntryTableValue.class, oldValuesBytes);
 
-            Map<Uid32, EntryTableValues> map =
-                Leb128Reader.deserializeMap(Uid32.class, EntryTableValues.class, entriesBytes);
+            //
+            // Read `newValues` until `newValuesLength`
+            //
+            byte[] newValuesBytes = new byte[newValuesLength];
+            newValues.read(0, newValuesBytes, 0, newValuesLength);
+            Map<Uid32, EntryTableValue> newValuesMap =
+                Leb128Reader.deserializeMap(Uid32.class, EntryTableValue.class, newValuesBytes);
+
+            //
+            // merge both table values
+            //
+            Map<Uid32, EntryTableValues> map = new HashMap<Uid32, EntryTableValues>();
+            for (Map.Entry<Uid32, EntryTableValue> newValuesIter : newValuesMap.entrySet()) {
+                boolean optionalValueFound = false;
+                for (Map.Entry<Uid32, EntryTableValue> oldValuesIter : oldValuesMap.entrySet()) {
+                    if (newValuesIter.getKey().equals( oldValuesIter.getKey())) {
+                        EntryTableValues e = new EntryTableValues(oldValuesIter.getValue(), newValuesIter.getValue());
+                        map.put(newValuesIter.getKey(), e);
+                        optionalValueFound = true;
+                    }
+                }
+                if (!optionalValueFound) {
+                    EntryTableValues e = new EntryTableValues(new EntryTableValue(), newValuesIter.getValue());
+                    map.put(newValuesIter.getKey(), e);
+                }
+            }
 
             Map<Uid32, EntryTableValue> failedEntries = upsert.upsert(map);
             return FFiUtils.mapToOutputPointer(failedEntries, outputs, outputsLength);

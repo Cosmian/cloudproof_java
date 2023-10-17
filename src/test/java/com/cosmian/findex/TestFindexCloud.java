@@ -37,18 +37,27 @@ public class TestFindexCloud {
         String token = FindexCloud.generateNewToken(index.publicId, index.fetchEntriesKey, index.fetchChainsKey,
             index.upsertEntriesKey, index.insertChainsKey);
 
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Rest upsert");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
         FindexCloud.IndexRequest indexRequest = new FindexCloud.IndexRequest(token, label)
             .add(new Location(1337), new String[] {"John", "Doe"})
             .add(new Location(42), new String[] {"Jane", "Doe"});
-
         UpsertResults res = FindexCloud.upsert(indexRequest);
         assertEquals(3, res.getResults().size(), "wrong number of new keywords returned");
 
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Rest search");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
         FindexCloud.SearchRequest searchRequest = new FindexCloud.SearchRequest(token, label)
             .keywords(new String[] {"Doe"});
-
         SearchResults searchResults = FindexCloud.search(searchRequest);
-
         assertEquals(new HashSet<>(Arrays.asList(new Long(1337), new Long(42))), searchResults.getNumbers());
     }
 

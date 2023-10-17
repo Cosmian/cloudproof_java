@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.cosmian.utils.CloudproofException;
 import com.cosmian.utils.Leb128;
@@ -45,9 +46,33 @@ public class Leb128Writer {
         }
     }
 
+    public <T extends Leb128Serializable> void writeSet(Set<T> elements) throws CloudproofException {
+        try {
+            Leb128.writeU64(this.os, elements.size());
+        } catch (IOException e) {
+            throw new CloudproofException("failed writing the collection to the output: " + e.getMessage(), e);
+        }
+        for (T value : elements) {
+            this.writeObject(value);
+        }
+    }
+
     public <K extends Leb128Serializable, V extends Leb128Serializable> void writeMap(Map<K, V> map)
         throws CloudproofException {
         this.writeEntryCollection(map.entrySet());
+    }
+
+    public <K extends Leb128Serializable, V extends Leb128Serializable> void writeMapOfSet(Map<K, Set<V>> map)
+        throws CloudproofException {
+        try {
+            Leb128.writeU64(this.os, map.size());
+        } catch (IOException e) {
+            throw new CloudproofException("failed writing the size of the map to the output: " + e.getMessage(), e);
+        }
+        for (Map.Entry<K, Set<V>> entry : map.entrySet()) {
+            this.writeObject(entry.getKey());
+            this.writeSet(entry.getValue());
+        }
     }
 
     public <LEFT extends Leb128Serializable, RIGHT extends Leb128Serializable> void writeListOfTuples(List<Tuple<LEFT, RIGHT>> list)
@@ -89,6 +114,13 @@ public class Leb128Writer {
         throws CloudproofException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         new Leb128Writer(bos).writeMap(map);
+        return bos.toByteArray();
+    }
+
+    public static <K extends Leb128Serializable, V extends Leb128Serializable> byte[] serializeMapOfSet(Map<K, Set<V>> map)
+        throws CloudproofException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new Leb128Writer(bos).writeMapOfSet(map);
         return bos.toByteArray();
     }
 

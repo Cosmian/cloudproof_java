@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import com.cosmian.jna.findex.Database;
 import com.cosmian.jna.findex.serde.Leb128ByteArray;
 import com.cosmian.jna.findex.serde.Tuple;
+
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
@@ -232,11 +233,11 @@ public class Sqlite extends Database implements Closeable {
         return uidsAndValues;
     }
 
-    public List<Integer> listRemovedIds(String string,
+    public List<Integer> fetchUsersById(String tableName,
                                         List<Integer> ids)
         throws SQLException {
         PreparedStatement pstmt = this.connection
-            .prepareStatement("SELECT id FROM users WHERE id IN (" + questionMarks(ids.size()) + ")");
+            .prepareStatement("SELECT id FROM "+ tableName + " WHERE id IN (" + questionMarks(ids.size()) + ")");
         int count = 1;
         for (Integer bs : ids) {
             pstmt.setInt(count, bs);
@@ -244,11 +245,10 @@ public class Sqlite extends Database implements Closeable {
         }
         ResultSet rs = pstmt.executeQuery();
 
-        HashSet<Integer> removedIds = new HashSet<>(ids);
+        HashSet<Integer> removedIds = new HashSet<>();
         while (rs.next()) {
-            removedIds.remove(rs.getInt("id"));
+            removedIds.add(rs.getInt("id"));
         }
-
         return new LinkedList<>(removedIds);
     }
 
@@ -310,7 +310,7 @@ public class Sqlite extends Database implements Closeable {
     }
 
     @Override
-    protected void upsertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
+    protected void insertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
         try {
             Sqlite.this.upsert(uidsAndValues, "chain_table");
         } catch (SQLException e) {
@@ -335,17 +335,50 @@ public class Sqlite extends Database implements Closeable {
     }
 
     @Override
-    protected List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException {
+    protected List<Location> filterObsoleteLocations(List<Location> locations) throws CloudproofException {
+        System.out.println("filterObsoleteLocations: " + locations.size());
         List<Integer> ids = locations.stream()
             .map((Location location) -> (int) location.toNumber())
             .collect(Collectors.toList());
         try {
-            List<Integer> removedIds = listRemovedIds("users", ids);
+            List<Integer> removedIds = fetchUsersById("users", ids);
             return removedIds.stream()
                 .map((Integer id) -> new Location(id))
                 .collect(Collectors.toList());
         } catch (SQLException e) {
             throw new CloudproofException("Failed list removed locations: " + e.toString());
+        }
+    }
+
+    @Override
+    protected void deleteEntries(List<Uid32> uids) throws CloudproofException {
+        try {
+            PreparedStatement pstmt = this.connection
+                .prepareStatement("DELETE FROM entry_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
+            // this.connection.setAutoCommit(false);
+            for (Uid32 uid : uids) {
+                pstmt.setBytes(1, uid.getBytes());
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+        } catch (SQLException exception) {
+            throw new CloudproofException(exception);
+        }
+    }
+
+    @Override
+    protected void deleteChains(List<Uid32> uids) throws CloudproofException {
+        try {
+            PreparedStatement pstmt = this.connection
+                .prepareStatement("DELETE FROM chain_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
+            for (Uid32 uid : uids) {
+                pstmt.setBytes(1, uid.getBytes());
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+        } catch (SQLException exception) {
+            System.out.println("Exception : " + exception.getMessage());
+            throw new CloudproofException(exception);
         }
     }
 }

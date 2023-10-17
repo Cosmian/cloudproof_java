@@ -5,12 +5,13 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
-import com.cosmian.jna.findex.ffi.Progress;
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchInterrupt;
+import com.cosmian.jna.findex.ffi.Interrupt;
 import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.ffi.UpsertResults;
 import com.cosmian.jna.findex.serde.Leb128Reader;
+import com.cosmian.jna.findex.serde.Leb128Writer;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.utils.CloudproofException;
@@ -33,6 +34,17 @@ public final class Findex extends FindexBase {
             keyPointer.write(0, key, 0, key.length);
             labelPointer.write(0, label, 0, label.length);
 
+            byte[] additionsBytes = Leb128Writer.serializeMapOfSet(additions);
+            final Memory additionsPointer = new Memory(additionsBytes.length);
+            additionsPointer.write(0, additionsBytes, 0, additionsBytes.length);
+
+            byte[] deletionsBytes = Leb128Writer.serializeMapOfSet(deletions);
+            Memory deletionsPointer = null;
+            if (deletionsBytes.length > 0) {
+                deletionsPointer = new Memory(deletionsBytes.length);
+                deletionsPointer.write(0, deletionsBytes, 0, deletionsBytes.length);
+            }
+
             // Do not allocate memory. The Rust FFI function will directly
             // return after setting newKeywordsBufferSize to an upper bound on
             // the amount of memory to allocate.
@@ -41,34 +53,34 @@ public final class Findex extends FindexBase {
 
             long start = System.currentTimeMillis();
             int ffiCode = INSTANCE.h_upsert(newKeywordsBuffer, newKeywordsBufferSize,
-                                            keyPointer, key.length,
-                                            labelPointer, label.length,
-                                            indexedValuesToJson(additions),
-                                            indexedValuesToJson(deletions),
-                                            entryTableNumber,
-                                            db.fetchEntryCallback(),
-                                            db.upsertEntryCallback(),
-                                            db.upsertChainCallback());
+                keyPointer, key.length,
+                labelPointer, label.length,
+                additionsPointer, additionsBytes.length,
+                deletionsPointer, deletionsBytes.length,
+                entryTableNumber,
+                db.fetchEntryCallback(),
+                db.upsertEntryCallback(),
+                db.insertChainCallback());
 
             FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
 
             if (ffiCode == 1) {
                 newKeywordsBuffer = new byte[newKeywordsBufferSize.getValue()];
                 unwrap(INSTANCE.h_upsert(newKeywordsBuffer, newKeywordsBufferSize,
-                                         keyPointer, key.length,
-                                         labelPointer, label.length,
-                                         indexedValuesToJson(additions),
-                                         indexedValuesToJson(deletions),
-                                         entryTableNumber,
-                                         db.fetchEntryCallback(),
-                                         db.upsertEntryCallback(),
-                                         db.upsertChainCallback()));
+                    keyPointer, key.length,
+                    labelPointer, label.length,
+                    additionsPointer, additionsBytes.length,
+                    deletionsPointer, deletionsBytes.length,
+                    entryTableNumber,
+                    db.fetchEntryCallback(),
+                    db.upsertEntryCallback(),
+                    db.insertChainCallback()));
             } else if (ffiCode != 0) {
                 unwrap(ffiCode);
             }
 
             byte[] newKeywordsBytes = Arrays.copyOfRange(newKeywordsBuffer, 0, newKeywordsBufferSize.getValue());
-            return  new Leb128Reader(newKeywordsBytes).readObject(UpsertResults.class);
+            return new Leb128Reader(newKeywordsBytes).readObject(UpsertResults.class);
         }
     }
 
@@ -85,9 +97,12 @@ public final class Findex extends FindexBase {
     public static UpsertResults upsert(IndexRequest request)
         throws CloudproofException {
         return upsert(request.key, request.label, request.additions, request.deletions, request.entryTableNumber,
-                      request.database);
+            request.database);
     }
 
+    //----------
+    //--- Search
+    //----------
     public static SearchResults search(SearchRequest request)
         throws CloudproofException {
         return search(request.key, request.label, request.keywords, request.entryTableNumber, request.database,
@@ -100,7 +115,7 @@ public final class Findex extends FindexBase {
                                        int entryTableNumber,
                                        Database db)
         throws CloudproofException {
-        return search(new SearchRequest(key, label, db).keywords(keywords));
+        return search(new SearchRequest(key, label, db).keywords(keywords).setEntryTableNumber(entryTableNumber));
     }
 
     public static SearchResults search(byte[] key,
@@ -114,44 +129,46 @@ public final class Findex extends FindexBase {
 
     public static SearchResults search(byte[] key,
                                        byte[] label,
-                                       Set<Keyword> keyWords,
+                                       Set<Keyword> keywords,
                                        int entryTableNumber,
                                        Database db,
-                                       SearchProgress progressCallback)
+                                       SearchInterrupt interruptCallback)
         throws CloudproofException {
         //
         // Prepare outputs
         //
         // start with an arbitration buffer allocation size of 131072 (around 4096
         // indexedValues)
-        byte[] indexedValuesBuffer = new byte[131072];
-        IntByReference indexedValuesBufferSize = new IntByReference(indexedValuesBuffer.length);
+        byte[] searchResultsBuffer = new byte[131072];
+        IntByReference searchResultsBufferSize = new IntByReference(searchResultsBuffer.length);
 
         // Findex master keys
         if (key == null) {
             throw new CloudproofException("Key cannot be null");
         }
 
-        // wrap progress callback
-        Progress wrappedProgress = new Progress(progressCallback);
+        // wrap Interrupt callback
+        Interrupt wrappedInterrupt = new Interrupt(interruptCallback);
+
+        byte[] serializedKeywords = Leb128Writer.serializeCollection(keywords);
 
         try (final Memory keyPointer = new Memory(key.length);
-            final Memory labelPointer = new Memory(label.length)) {
+            final Memory labelPointer = new Memory(label.length);
+            final Memory keywordsPointer = new Memory(serializedKeywords.length)) {
 
             keyPointer.write(0, key, 0, key.length);
             labelPointer.write(0, label, 0, label.length);
-
-            String wordsJson = keywordsToJson(keyWords);
+            keywordsPointer.write(0, serializedKeywords, 0, serializedKeywords.length);
 
             // Indexes creation + insertion/update
             long start = System.currentTimeMillis();
             int ffiCode = INSTANCE.h_search(
-                indexedValuesBuffer, indexedValuesBufferSize,
+                searchResultsBuffer, searchResultsBufferSize,
                 keyPointer, key.length,
                 labelPointer, label.length,
-                wordsJson,
+                keywordsPointer, serializedKeywords.length,
                 entryTableNumber,
-                wrappedProgress,
+                wrappedInterrupt,
                 db.fetchEntryCallback(),
                 db.fetchChainCallback());
 
@@ -159,69 +176,77 @@ public final class Findex extends FindexBase {
 
             if (ffiCode != 0) {
                 // Retry with correct allocated size
-                indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
+                searchResultsBuffer = new byte[searchResultsBufferSize.getValue()];
                 long startRetry = System.currentTimeMillis();
                 unwrap(INSTANCE.h_search(
-                    indexedValuesBuffer, indexedValuesBufferSize,
+                    searchResultsBuffer, searchResultsBufferSize,
                     keyPointer, key.length,
                     labelPointer, label.length,
-                    wordsJson,
+                    keywordsPointer, serializedKeywords.length,
                     entryTableNumber,
-                    wrappedProgress,
+                    wrappedInterrupt,
                     db.fetchEntryCallback(),
                     db.fetchChainCallback()), startRetry);
             }
 
-            byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
+            byte[] indexedValuesBytes = Arrays.copyOfRange(searchResultsBuffer, 0, searchResultsBufferSize.getValue());
 
             return new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
         }
     }
 
-    /// `numReindexingBeforeFullSet`: if you compact the indexes every night
+    /// `nCompactToFull`: if you compact the indexes every night
     /// this is the number of days to wait before be sure that a big portion of the
     /// indexes were checked.
     /// (see the coupon problem to understand why it's not 100% sure)
-    public static void compact(byte[] oldMasterKey,
-                               byte[] newMasterKey,
+    public static void compact(byte[] oldKey,
+                               byte[] newKey,
+                               byte[] oldLabel,
                                byte[] newLabel,
-                               int numReindexingBeforeFullSet,
-                               int entryTableNumber,
+                               int nCompactToFull,
+                               int entryTableNumber, //TODO(ecse): remove param
                                Database database)
         throws CloudproofException {
 
-        try (final Memory oldMasterKeyPtr = new Memory(oldMasterKey.length);
-            final Memory newMasterKeyPtr = new Memory(newMasterKey.length);
-            final Memory newLabelPtr = new Memory(newLabel.length)) {
+        try (final Memory oldKeyPtr = new Memory(oldKey.length);
+            final Memory newKeyPtr = new Memory(newKey.length);
+            final Memory newLabelPtr = new Memory(newLabel.length);
+            final Memory oldLabelPtr = new Memory(oldLabel.length)) {
 
-            oldMasterKeyPtr.write(0, oldMasterKey, 0, oldMasterKey.length);
-            newMasterKeyPtr.write(0, newMasterKey, 0, newMasterKey.length);
+            oldKeyPtr.write(0, oldKey, 0, oldKey.length);
+            newKeyPtr.write(0, newKey, 0, newKey.length);
             newLabelPtr.write(0, newLabel, 0, newLabel.length);
 
             long start = System.currentTimeMillis();
             // Indexes creation + insertion/update
             unwrap(INSTANCE.h_compact(
-                oldMasterKeyPtr, oldMasterKey.length,
-                newMasterKeyPtr, newMasterKey.length,
+                oldKeyPtr, oldKey.length,
+                newKeyPtr, newKey.length,
+                oldLabelPtr, oldLabel.length,
                 newLabelPtr, newLabel.length,
-                numReindexingBeforeFullSet,
+                nCompactToFull,
                 entryTableNumber,
-                database.fetchAllEntryTableUidsCallback(),
                 database.fetchEntryCallback(),
                 database.fetchChainCallback(),
-                database.updateLinesCallback(),
-                database.listRemoveLocationsCallback()), start);
+                database.upsertEntryCallback(),
+                database.insertChainCallback(),
+                database.deleteEntryCallback(),
+                database.deleteChainCallback(),
+                database.dumpTokensCallback(),
+                database.filterObsoleteLocationsCallback()), // TODO(ecse)
+                start);
         }
     }
 
-    public static void compact(byte[] oldMasterKey,
-                               byte[] newMasterKey,
+    public static void compact(byte[] oldKey,
+                               byte[] newKey,
+                               byte[] oldLabel,
                                byte[] newLabel,
-                               int numReindexingBeforeFullSet,
+                               int nCompactToFull,
                                Database database)
         throws CloudproofException {
         // Make entryTableNumber equals to 1 by default
-        compact(oldMasterKey, newMasterKey, newLabel, numReindexingBeforeFullSet, 1, database);
+        compact(oldKey, newKey, oldLabel, newLabel, nCompactToFull, 1, database);
     }
 
     static public class SearchRequest extends FindexBase.SearchRequest<SearchRequest> {
@@ -229,10 +254,10 @@ public final class Findex extends FindexBase {
 
         protected Database database;
 
-        protected SearchProgress searchProgress = new SearchProgress() {
+        protected SearchInterrupt searchProgress = new SearchInterrupt() {
             @Override
             public boolean notify(ProgressResults results) throws CloudproofException {
-                return true;
+                return false;
             }
         };
 
@@ -253,7 +278,7 @@ public final class Findex extends FindexBase {
             return this;
         }
 
-        public SearchRequest searchProgress(SearchProgress searchProgress) {
+        public SearchRequest searchProgress(SearchInterrupt searchProgress) {
             this.searchProgress = searchProgress;
             return this;
         }

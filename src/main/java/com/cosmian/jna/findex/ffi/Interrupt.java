@@ -1,17 +1,16 @@
 package com.cosmian.jna.findex.ffi;
 
-
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.ProgressCallback;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.InterruptCallback;
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchInterrupt;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Pointer;
 
-public class Progress implements ProgressCallback {
-    private SearchProgress progress;
+public class Interrupt implements InterruptCallback {
+    private SearchInterrupt interrupt;
 
-    public Progress(SearchProgress progress) {
-        this.progress = progress;
+    public Interrupt(SearchInterrupt interrupt) {
+        this.interrupt = interrupt;
     }
 
     @Override
@@ -32,7 +31,7 @@ public class Progress implements ProgressCallback {
         //
         // Convert to Indexed Values list
         //
-        return this.progress.notify(results);
+        return this.interrupt.notify(results);
     }
 
 }

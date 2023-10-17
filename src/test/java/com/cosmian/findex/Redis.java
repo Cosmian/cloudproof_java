@@ -326,7 +326,7 @@ public class Redis extends Database implements Closeable {
     }
 
     @Override
-    protected void upsertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
+    protected void insertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
         try (Jedis jedis = getJedis(); Transaction tx = jedis.multi();) {
             for (Entry<Uid32, ChainTableValue> entry : uidsAndValues.entrySet()) {
                 byte[] key = key(CHAIN_TABLE_INDEX, entry.getKey().getBytes());
@@ -364,7 +364,7 @@ public class Redis extends Database implements Closeable {
     }
 
     @Override
-    protected List<Location> listRemovedLocations(List<Location> locations) throws CloudproofException {
+    protected List<Location> filterObsoleteLocations(List<Location> locations) throws CloudproofException {
         try (Jedis jedis = getJedis()) {
             Iterator<Location> it = locations.iterator();
             while (it.hasNext()) {
@@ -372,12 +372,31 @@ public class Redis extends Database implements Closeable {
                 byte[] key =
                     key(DATA_TABLE_INDEX, Arrays.copyOfRange(location.getBytes(), 0, location.getBytes().length));
                 byte[] value = jedis.get(key);
-                if (value != null) {
+                if (value == null) {
                     it.remove();
-
                 }
             }
             return locations;
+        }
+    }
+
+    @Override
+    protected void deleteEntries(List<Uid32> uids) throws CloudproofException {
+        try (Jedis jedis = getJedis()) {
+            for (Uid32 uid : uids) {
+                byte[] key = key(ENTRY_TABLE_INDEX, uid.getBytes());
+                jedis.del(key);
+            }
+        }
+    }
+
+    @Override
+    protected void deleteChains(List<Uid32> uids) throws CloudproofException {
+        try (Jedis jedis = getJedis()) {
+            for (Uid32 uid : uids) {
+                byte[] key = key(CHAIN_TABLE_INDEX, uid.getBytes());
+                jedis.del(key);
+            }
         }
     }
 }

@@ -18,17 +18,10 @@ public interface FindexNativeWrapper extends Library {
 
     /* Internal callbacks FFI */
     interface FetchEntryCallback extends Callback {
-        int apply(
-                  Pointer output,
+        int apply(Pointer output,
                   IntByReference outputLen,
                   Pointer uidsPtr,
                   int uidsLength)
-            throws CloudproofException;
-    }
-
-    interface FetchAllEntryTableUidsCallback extends Callback {
-        int apply(Pointer uidsPtr,
-                  IntByReference uidsSize)
             throws CloudproofException;
     }
 
@@ -43,108 +36,129 @@ public interface FindexNativeWrapper extends Library {
     interface UpsertEntryCallback extends Callback {
         int apply(Pointer outputs,
                   IntByReference outputsLength,
-                  Pointer entries,
-                  int entriesLength)
+                  Pointer oldValues,
+                  int oldValuesLength,
+                  Pointer newValues,
+                  int newValuesLength)
             throws CloudproofException;
     }
 
-    interface UpsertChainCallback extends Callback {
+    interface InsertChainCallback extends Callback {
         int apply(Pointer chains,
                   int chainsLength)
             throws CloudproofException;
     }
 
-    interface UpdateLinesCallback extends Callback {
-        int apply(Pointer removedChains,
-                  int removedChainsLength,
-                  Pointer newEntries,
-                  int newEntriesLength,
-                  Pointer newChains,
-                  int newChainsLength)
+    interface DeleteEntryCallback extends Callback {
+        int apply(Pointer entriesPtr,
+                  int entriesLen)
             throws CloudproofException;
     }
 
-    interface ListRemovedLocationsCallback extends Callback {
-        int apply(Pointer output,
-                  IntByReference outputLen,
-                  Pointer locations,
-                  int locationsLength)
+    interface DeleteChainCallback extends Callback {
+        int apply(Pointer chainsPtr,
+                  int chainsLen)
             throws CloudproofException;
     }
 
-    interface ProgressCallback extends Callback {
-        boolean apply(Pointer output,
-                      int outputSize)
+    interface DumpTokensCallback extends Callback {
+        int apply(Pointer outputPtr,
+                  IntByReference outputLen)
+            throws CloudproofException;
+    }
+
+    interface InterruptCallback extends Callback {
+        boolean apply(Pointer outputPtr,
+                      int outputLen)
+            throws CloudproofException;
+    }
+
+    interface FilterObsoleteLocationsCallback extends Callback {
+        int apply(Pointer outputLocationsPtr,
+                  IntByReference outputLocationsLen,
+                  Pointer locationsPtr,
+                  int locationsLen)
             throws CloudproofException;
     }
 
     int h_upsert(byte[] newKeywordsBufferPtr,
                  IntByReference newKeywordsBufferLen,
-                 Pointer masterKeyPtr,
-                 int masterKeyLen,
+                 Pointer KeyPtr,
+                 int KeyLen,
                  Pointer labelPtr,
                  int labelLen,
-                 String additions,
-                 String deletions,
+                 Pointer additionsPtr,
+                 int additionsLen,
+                 Pointer deletionsPtr,
+                 int deletionsLen,
                  int entryTableNumber,
                  FetchEntryCallback fetchEntry,
                  UpsertEntryCallback upsertEntry,
-                 UpsertChainCallback upsertChain);
+                 InsertChainCallback insertChain);
 
-    int h_compact(Pointer oldMasterKeyPtr,
-                  int oldMasterKeyLen,
-                  Pointer newMasterKeyPtr,
-                  int newMasterKeyLen,
+    int h_compact(Pointer oldKeyPtr,
+                  int oldKeyLen,
+                  Pointer newKeyPtr,
+                  int newKeyLen,
+                  Pointer oldLabelPtr,
+                  int oldLabelLen,
                   Pointer newLabelPtr,
                   int newLabelLen,
-                  int numReindexingBeforeFullSet,
+                  int nCompactToFull,
                   int entryTableNumber,
-                  FetchAllEntryTableUidsCallback fetchAllEntryTableUids,
                   FetchEntryCallback fetchEntry,
                   FetchChainCallback fetchChain,
-                  UpdateLinesCallback updateLines,
-                  ListRemovedLocationsCallback listRemovedLocations);
+                  UpsertEntryCallback upsertEntry,
+                  InsertChainCallback insertChain,
+                  DeleteEntryCallback deleteEntry,
+                  DeleteChainCallback deleteChain,
+                  DumpTokensCallback dumpTokens,
+                  FilterObsoleteLocationsCallback filterObsoleteData);
 
-    int h_search(byte[] searchresultsPtr,
-                 IntByReference searchresultsLen,
-                 Pointer masterKeyPtr,
-                 int masterKeyLength,
+    int h_search(byte[] searchResultsPtr,
+                 IntByReference searchResultsLen,
+                 Pointer keyPtr,
+                 int keyLength,
                  Pointer labelPtr,
                  int labelLen,
-                 String keywords,
+                 Pointer keywordsPtr,
+                 int keywordsLen,
                  int entryTableNumber,
-                 ProgressCallback progress,
+                 InterruptCallback interrupt,
                  FetchEntryCallback fetchEntry,
                  FetchChainCallback fetchChain);
 
-    int h_search_cloud(byte[] dbUidsPtr,
-                       IntByReference dbUidsLen,
+    int h_search_cloud(byte[] searchResultsPtr,
+                       IntByReference searchResultsLen,
                        String token,
                        Pointer labelPtr,
                        int labelLen,
-                       String keywords,
-                       String baseUrl);
+                       Pointer keywordsPtr,
+                       int keywordsLen,
+                       String baseUrl,
+                       InterruptCallback interrupt);
 
     int h_upsert_cloud(byte[] newKeywordsBufferPtr,
                        IntByReference newKeywordsBufferLen,
                        String token,
                        Pointer labelPtr,
                        int labelLen,
-                       String additions,
-                       String deletions,
+                       Pointer additionsPtr,
+                       int additionsLen,
+                       Pointer deletionsPtr,
+                       int deletionsLen,
                        String baseUrl);
 
-
     int h_generate_new_token(byte[] tokenPtr,
-        IntByReference tokenLen,
-        String indexIdPtr,
-        Pointer fetchEntriesSeedPtr,
-        int fetchEntriesSeedLen,
-        Pointer fetchChainsSeedPtr,
-        int fetchChainsSeedLen,
-        Pointer upsertEntriesSeedPtr,
-        int upsertEntriesSeedLen,
-        Pointer insertChainsSeedPtr,
-        int insertChainsSeedSize);
+                             IntByReference tokenLen,
+                             String indexIdPtr,
+                             Pointer fetchEntriesSeedPtr,
+                             int fetchEntriesSeedLen,
+                             Pointer fetchChainsSeedPtr,
+                             int fetchChainsSeedLen,
+                             Pointer upsertEntriesSeedPtr,
+                             int upsertEntriesSeedLen,
+                             Pointer insertChainsSeedPtr,
+                             int insertChainsSeedSize);
 
 }

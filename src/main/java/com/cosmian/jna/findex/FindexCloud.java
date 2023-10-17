@@ -5,9 +5,13 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
+import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchInterrupt;
+import com.cosmian.jna.findex.ffi.Interrupt;
+import com.cosmian.jna.findex.ffi.ProgressResults;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.ffi.UpsertResults;
 import com.cosmian.jna.findex.serde.Leb128Reader;
+import com.cosmian.jna.findex.serde.Leb128Writer;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.utils.CloudproofException;
@@ -16,12 +20,11 @@ import com.sun.jna.ptr.IntByReference;
 
 public final class FindexCloud extends FindexBase {
 
-    public static String generateNewToken(
-                              String indexId,
-                              byte[] fetchEntriesSeed,
-                              byte[] fetchChainsSeed,
-                              byte[] upsertEntriesSeed,
-                              byte[] insertChainsSeed)
+    public static String generateNewToken(String indexId,
+                                          byte[] fetchEntriesSeed,
+                                          byte[] fetchChainsSeed,
+                                          byte[] upsertEntriesSeed,
+                                          byte[] insertChainsSeed)
         throws CloudproofException {
 
         try (
@@ -63,6 +66,17 @@ public final class FindexCloud extends FindexBase {
             final Memory labelPointer = new Memory(label.length)) {
             labelPointer.write(0, label, 0, label.length);
 
+            byte[] additionsBytes = Leb128Writer.serializeMapOfSet(additions);
+            final Memory additionsPointer = new Memory(additionsBytes.length);
+            additionsPointer.write(0, additionsBytes, 0, additionsBytes.length);
+
+            byte[] deletionsBytes = Leb128Writer.serializeMapOfSet(deletions);
+            Memory deletionsPointer = null;
+            if (deletionsBytes.length > 0) {
+                deletionsPointer = new Memory(deletionsBytes.length);
+                deletionsPointer.write(0, deletionsBytes, 0, deletionsBytes.length);
+            }
+
             // Do not allocate memory. The Rust FFI function will directly
             // return after setting newKeywordsBufferSize to an upper bound on
             // the amount of memory to allocate.
@@ -71,27 +85,27 @@ public final class FindexCloud extends FindexBase {
 
             long start = System.currentTimeMillis();
             int ffiCode = INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
-                                                  token,
-                                                  labelPointer, label.length,
-                                                  indexedValuesToJson(additions),
-                                                  indexedValuesToJson(deletions),
-                                                  baseUrl);
+                token,
+                labelPointer, label.length,
+                additionsPointer, additionsBytes.length,
+                deletionsPointer, deletionsBytes.length,
+                baseUrl);
             FindexCallbackException.rethrowOnErrorCode(ffiCode, start, System.currentTimeMillis());
 
             if (ffiCode == 1) {
                 newKeywordsBuffer = new byte[newKeywordsBufferSize.getValue()];
                 unwrap(INSTANCE.h_upsert_cloud(newKeywordsBuffer, newKeywordsBufferSize,
-                                               token,
-                                               labelPointer, label.length,
-                                               indexedValuesToJson(additions),
-                                               indexedValuesToJson(deletions),
-                                               baseUrl));
+                    token,
+                    labelPointer, label.length,
+                    additionsPointer, additionsBytes.length,
+                    deletionsPointer, deletionsBytes.length,
+                    baseUrl));
             } else if (ffiCode != 0) {
                 unwrap(ffiCode);
             }
 
             byte[] newKeywordsBytes = Arrays.copyOfRange(newKeywordsBuffer, 0, newKeywordsBufferSize.getValue());
-            return  new Leb128Reader(newKeywordsBytes).readObject(UpsertResults.class);
+            return new Leb128Reader(newKeywordsBytes).readObject(UpsertResults.class);
         }
     }
 
@@ -110,59 +124,69 @@ public final class FindexCloud extends FindexBase {
 
     public static SearchResults search(SearchRequest request)
         throws CloudproofException {
-        return search(request.token, request.label, request.keywords, request.baseUrl);
+        return search(request.token, request.label, request.keywords, request.baseUrl, request.searchInterrupt);
     }
 
     public static SearchResults search(String token,
                                        byte[] label,
-                                       Set<Keyword> keyWords)
+                                       Set<Keyword> keywords)
         throws CloudproofException {
-        return search(token, label, keyWords, null);
+        // return search(token, label, keyWords, null);
+        return search(new SearchRequest(token, label).keywords(keywords));
+
     }
 
     public static SearchResults search(String token,
                                        byte[] label,
-                                       Set<Keyword> keyWords,
-                                       String baseUrl)
+                                       Set<Keyword> keywords,
+                                       String baseUrl,
+                                       SearchInterrupt interruptCallback)
         throws CloudproofException {
         //
         // Prepare outputs
         //
         // start with an arbitration buffer allocation size of 131072 (around 4096
         // indexedValues)
-        byte[] indexedValuesBuffer = new byte[131072];
-        IntByReference indexedValuesBufferSize = new IntByReference(indexedValuesBuffer.length);
+        byte[] searchResultsBuffer = new byte[131072];
+        IntByReference searchResultsBufferSize = new IntByReference(searchResultsBuffer.length);
 
         if (token == null) {
             throw new CloudproofException("Token cannot be null");
         }
-        try (final Memory labelPointer = new Memory(label.length)) {
-            labelPointer.write(0, label, 0, label.length);
 
-            String wordsJson = keywordsToJson(keyWords);
+        // wrap Interrupt callback
+        Interrupt wrappedInterrupt = new Interrupt(interruptCallback);
+
+        byte[] serializedKeywords = Leb128Writer.serializeCollection(keywords);
+
+        try (final Memory labelPointer = new Memory(label.length);
+            final Memory keywordsPointer = new Memory(serializedKeywords.length)) {
+
+            labelPointer.write(0, label, 0, label.length);
+            keywordsPointer.write(0, serializedKeywords, 0, serializedKeywords.length);
 
             // Indexes creation + insertion/update
             int ffiCode = INSTANCE.h_search_cloud(
-                indexedValuesBuffer, indexedValuesBufferSize,
+                searchResultsBuffer, searchResultsBufferSize,
                 token,
                 labelPointer, label.length,
-                wordsJson,
-                baseUrl);
+                keywordsPointer, serializedKeywords.length,
+                baseUrl,wrappedInterrupt );
             if (ffiCode != 0) {
                 // Retry with correct allocated size
-                indexedValuesBuffer = new byte[indexedValuesBufferSize.getValue()];
+                searchResultsBuffer = new byte[searchResultsBufferSize.getValue()];
                 ffiCode = INSTANCE.h_search_cloud(
-                    indexedValuesBuffer, indexedValuesBufferSize,
+                    searchResultsBuffer, searchResultsBufferSize,
                     token,
                     labelPointer, label.length,
-                    wordsJson,
-                    baseUrl);
+                    keywordsPointer, serializedKeywords.length,
+                    baseUrl,wrappedInterrupt );
                 if (ffiCode != 0) {
                     throw new CloudproofException(get_last_error(4095));
                 }
             }
 
-            byte[] indexedValuesBytes = Arrays.copyOfRange(indexedValuesBuffer, 0, indexedValuesBufferSize.getValue());
+            byte[] indexedValuesBytes = Arrays.copyOfRange(searchResultsBuffer, 0, searchResultsBufferSize.getValue());
 
             return new Leb128Reader(indexedValuesBytes).readObject(SearchResults.class);
         }
@@ -172,6 +196,13 @@ public final class FindexCloud extends FindexBase {
         private String token;
 
         private String baseUrl = findexCloudUrl();
+
+        protected SearchInterrupt searchInterrupt = new SearchInterrupt() {
+            @Override
+            public boolean notify(ProgressResults results) throws CloudproofException {
+                return false;
+            }
+        };
 
         public SearchRequest(String token, byte[] label) {
             this.token = token;

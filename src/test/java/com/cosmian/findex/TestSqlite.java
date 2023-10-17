@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,6 +20,7 @@ import com.cosmian.jna.findex.ffi.UpsertResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
+import com.cosmian.utils.CloudproofException;
 import com.cosmian.utils.Resources;
 
 public class TestSqlite {
@@ -36,6 +38,15 @@ public class TestSqlite {
         HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
         indexedValuesAndWords.put(new Location(userId).toIndexedValue(), keywords);
         return indexedValuesAndWords;
+    }
+
+    public static void printMap(String tableName,
+                                Map<byte[], byte[]> map) {
+        System.out.println(tableName + " size: " + map.size());
+        for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
+            System.out.println(tableName + ": uid: " + Base64.getEncoder().encodeToString(entry.getKey()) + " value: "
+                + Base64.getEncoder().encodeToString(entry.getValue()));
+        }
     }
 
     @Test
@@ -58,14 +69,23 @@ public class TestSqlite {
         Findex.upsert(new Findex.IndexRequest(key, label, db1).add(mapToIndex("John", 1)));
         Findex.upsert(new Findex.IndexRequest(key, label, db2).add(mapToIndex("John", 2)));
 
-        System.out
-            .println("After insertion: entry_table size: " + db1.getAllKeyValueItems("entry_table").size());
-        System.out
-            .println("After insertion: chain_table size: " + db1.getAllKeyValueItems("chain_table").size());
-        System.out
-            .println("After insertion: entry_table size: " + db2.getAllKeyValueItems("entry_table").size());
-        System.out
-            .println("After insertion: chain_table size: " + db2.getAllKeyValueItems("chain_table").size());
+        Map<byte[], byte[]> entries_1 = db1.getAllKeyValueItems("entry_table");
+        Map<byte[], byte[]> chains_1 = db1.getAllKeyValueItems("chain_table");
+        Map<byte[], byte[]> entries_2 = db2.getAllKeyValueItems("entry_table");
+        Map<byte[], byte[]> chains_2 = db2.getAllKeyValueItems("chain_table");
+
+        printMap("Entries 1", entries_1);
+        printMap("Entries 2", entries_2);
+        printMap("Chains 1", chains_1);
+        printMap("Chains 2", chains_2);
+        //
+        // Search
+        //
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println("Findex Search Sqlite through multi entry tables");
+        System.out.println("---------------------------------------");
+        System.out.println("");
 
         System.out.println("Searching with multiple entries values");
         MultiSqlite db = new MultiSqlite(Arrays.asList(db1, db2));
@@ -73,20 +93,23 @@ public class TestSqlite {
             Arrays.asList(
                 new Keyword("John")));
 
-        // Searching keywords without the correct entry tables number. The `fetchEntries` callback fails in the rust
+        // Searching keywords with an incorrect entry tables number: the `fetchEntries` callback fails in the rust
         // part
         // but the callback returns the correct amount of memory and then the rust part retries with this amount (and
         // finally succeeds).
-        SearchResults searchResults =
+        try {
             Findex.search(
                 key,
                 label,
                 keywords,
+                1, // should be 2 (since there are 2 entry tables)
                 db);
-        assertEquals(searchResults.getNumbers(), new HashSet<>(Arrays.asList(1L, 2L)));
+        } catch (CloudproofException e) {
+            assertTrue(e.getMessage().contains("buffer too small"));
+        }
 
         // This time, the given number of entry tables is correct, only one call to `fetchEntries`
-        searchResults =
+        SearchResults searchResults =
             Findex.search(
                 key,
                 label,
@@ -133,26 +156,31 @@ public class TestSqlite {
             //
             Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
             UpsertResults res = Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+            int entryTableSize = db.getAllKeyValueItems("entry_table").size();
+            int chainTableSize = db.getAllKeyValueItems("chain_table").size();
             assertEquals(583, res.getResults().size(), "wrong number of new upserted keywords");
+            assertEquals(583, entryTableSize, "invalid entry table items number");
+            assertEquals(618, chainTableSize, "invalid chain table items number");
             System.out.println("Upserted " + res.getResults().size() + " new keywords.");
             System.out
-                .println("After insertion: entry_table size: " + db.getAllKeyValueItems("entry_table").size());
+                .println("After insertion: entry_table size: " + entryTableSize);
             System.out
-                .println("After insertion: chain_table size: " + db.getAllKeyValueItems("chain_table").size());
+                .println("After insertion: chain_table size: " + chainTableSize);
 
             //
             // Upsert a new keyword
             //
             HashMap<IndexedValue, Set<Keyword>> newIndexedKeyword = new HashMap<>();
-            Set<Keyword> expectdeKeywords = new HashSet<>();
-            expectdeKeywords.add(new Keyword("test"));
-            newIndexedKeyword.put(new IndexedValue(new Location(new Long(1))), expectdeKeywords);
+            Set<Keyword> expectedKeywords = new HashSet<>();
+            expectedKeywords.add(new Keyword("test"));
+            newIndexedKeyword.put(new IndexedValue(new Location(new Long(1))), expectedKeywords);
             // It is returned the first time it is added.
-            Set<Keyword> newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
-            assertEquals(expectdeKeywords, newKeywords, "new keyword is not returned");
+            Set<Keyword> newKeywords =
+                Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
+            assertEquals(expectedKeywords, newKeywords, "new keyword is not returned");
             // It is *not* returned the second time it is added.
             newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
-            assert(newKeywords.isEmpty());
+            assert (newKeywords.isEmpty());
 
             //
             // Search
@@ -170,9 +198,33 @@ public class TestSqlite {
                 System.out.println("<== successfully found all original French locations");
             }
 
+            //
+            // Compact
+            //
+            System.out.println("");
+            System.out.println("---------------------------------------");
+            System.out.println("Findex Compact Sqlite");
+            System.out.println("---------------------------------------");
+            System.out.println("");
+
             // This compact should do nothing except changing the label since the users
             // table didn't change.
-            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
+            entryTableSize = db.getAllKeyValueItems("entry_table").size();
+            chainTableSize = db.getAllKeyValueItems("chain_table").size();
+            System.out
+                .println("Before first compact: entry_table size: " + entryTableSize);
+            System.out
+                .println("Before first compact: chain_table size: " + chainTableSize);
+            Findex.compact(key, key, label, "NewLabel".getBytes(), 1, db);
+            entryTableSize = db.getAllKeyValueItems("entry_table").size();
+            chainTableSize = db.getAllKeyValueItems("chain_table").size();
+            assertEquals(584, entryTableSize, "invalid entry table items number");
+            assertEquals(619, chainTableSize, "invalid chain table items number");
+            System.out
+                .println("After insertion: entry_table size: " + entryTableSize);
+            System.out
+                .println("After insertion: chain_table size: " + chainTableSize);
+
             {
                 // Search with old label
                 SearchResults searchResults =
@@ -182,7 +234,6 @@ public class TestSqlite {
             }
 
             {
-
                 // Search with new label and without user changes
                 SearchResults searchResults =
                     Findex.search(
@@ -191,15 +242,32 @@ public class TestSqlite {
                 System.out.println("<== successfully found all French locations with the new label");
             }
 
-            // Delete the user n°17 to test the compact indexes
+            //
+            // Compact
+            //
+            System.out.println("");
+            System.out.println("---------------------------------------");
+            System.out.println("Findex Re-Compact Sqlite");
+            System.out.println("---------------------------------------");
+            System.out.println("");
+
+            // Delete the user n°17 to test the compact indexedValuesAndWords
             db.deleteUser(17);
             expectedDbLocations.remove(new Long(17));
-            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
+
+            entryTableSize = db.getAllKeyValueItems("entry_table").size();
+            chainTableSize = db.getAllKeyValueItems("chain_table").size();
+            System.out
+                .println("Before 2nd compact: entry_table size: " + entryTableSize);
+            System.out
+                .println("Before 2nd compact: chain_table size: " + chainTableSize);
+
+            Findex.compact(key, key, "NewLabel".getBytes(), "NewLabel2".getBytes(), 1, db);
             {
                 // Search should return everyone but n°17
                 SearchResults searchResults =
                     Findex.search(
-                        new Findex.SearchRequest(key, "NewLabel".getBytes(), db).keywords(new String[] {"France"}));
+                        new Findex.SearchRequest(key, "NewLabel2".getBytes(), db).keywords(new String[] {"France"}));
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out
                     .println("<== successfully found all French locations after removing one and compacting");

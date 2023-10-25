@@ -43,7 +43,7 @@ public class TestBenchesCoverCrypt {
                 new PolicyAxisAttribute("CYBER", false)},
             false);
 
-        Policy policy = new Policy(30);
+        Policy policy = new Policy();
 
         policy.addAxis(hybridization);
         policy.addAxis(security);

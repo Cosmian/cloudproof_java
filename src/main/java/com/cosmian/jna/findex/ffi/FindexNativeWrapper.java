@@ -1,6 +1,5 @@
 package com.cosmian.jna.findex.ffi;
 
-import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
@@ -17,116 +16,85 @@ public interface FindexNativeWrapper extends Library {
                        IntByReference outputSize);
 
     /* Internal callbacks FFI */
-    interface FetchEntryCallback extends Callback {
-        int apply(Pointer output,
+    interface FetchCallback extends Callback {
+        int callback(Pointer output,
                   IntByReference outputLen,
                   Pointer uidsPtr,
-                  int uidsLength)
-            throws CloudproofException;
+                  int uidsLength);
     }
 
-    interface FetchChainCallback extends Callback {
-        int apply(Pointer output,
-                  IntByReference outputLen,
-                  Pointer uidsPtr,
-                  int uidsLength)
-            throws CloudproofException;
-    }
-
-    interface UpsertEntryCallback extends Callback {
-        int apply(Pointer outputs,
+    interface UpsertCallback extends Callback {
+        int callback(Pointer outputs,
                   IntByReference outputsLength,
                   Pointer oldValues,
                   int oldValuesLength,
                   Pointer newValues,
-                  int newValuesLength)
-            throws CloudproofException;
+                  int newValuesLength);
     }
 
-    interface InsertChainCallback extends Callback {
-        int apply(Pointer chains,
-                  int chainsLength)
-            throws CloudproofException;
+    interface InsertCallback extends Callback {
+        int callback(Pointer chains, int chainsLength);
     }
 
-    interface DeleteEntryCallback extends Callback {
-        int apply(Pointer entriesPtr,
-                  int entriesLen)
-            throws CloudproofException;
-    }
-
-    interface DeleteChainCallback extends Callback {
-        int apply(Pointer chainsPtr,
-                  int chainsLen)
-            throws CloudproofException;
+    interface DeleteCallback extends Callback {
+        int callback(Pointer entriesPtr, int entriesLen);
     }
 
     interface DumpTokensCallback extends Callback {
-        int apply(Pointer outputPtr,
-                  IntByReference outputLen)
-            throws CloudproofException;
+        int callback(Pointer outputPtr, IntByReference outputLen);
     }
 
     interface InterruptCallback extends Callback {
-        boolean apply(Pointer outputPtr,
-                      int outputLen)
-            throws CloudproofException;
+        boolean callback(Pointer outputPtr, int outputLen);
     }
 
-    interface FilterObsoleteLocationsCallback extends Callback {
-        int apply(Pointer outputLocationsPtr,
+    interface FilterLocationsCallback extends Callback {
+        int callback(Pointer outputLocationsPtr,
                   IntByReference outputLocationsLen,
                   Pointer locationsPtr,
-                  int locationsLen)
-            throws CloudproofException;
+                  int locationsLen);
     }
 
-    int h_upsert(byte[] newKeywordsBufferPtr,
-                 IntByReference newKeywordsBufferLen,
-                 Pointer KeyPtr,
-                 int KeyLen,
-                 Pointer labelPtr,
-                 int labelLen,
-                 Pointer additionsPtr,
-                 int additionsLen,
-                 Pointer deletionsPtr,
-                 int deletionsLen,
-                 int entryTableNumber,
-                 FetchEntryCallback fetchEntry,
-                 UpsertEntryCallback upsertEntry,
-                 InsertChainCallback insertChain);
+    int h_instantiate_with_ffi_backend(IntByReference handle,
+                                       Pointer keyPtr,
+                                       int keyLen,
+                                       Pointer labelPtr,
+                                       int labelLen,
+                                       int entryTableNumber,
+                                       FetchCallback fetchentry,
+                                       FetchCallback fetchChain,
+                                       UpsertCallback upsertEntry,
+                                       InsertCallback insertChain,
+                                       DeleteCallback deleteEntry,
+                                       DeleteCallback deleteChain,
+                                       DumpTokensCallback dumpTokens);
 
-    int h_compact(Pointer oldKeyPtr,
-                  int oldKeyLen,
+    int h_add(byte[] newKeywordsBufferPtr,
+                 IntByReference newKeywordsBufferLen,
+                 int handle,
+                 Pointer additionsPtr,
+                 int additionsLen);
+
+    int h_delete(byte[] newKeywordsBufferPtr,
+                 IntByReference newKeywordsBufferLen,
+                 int handle,
+                 Pointer deletionPtr,
+                 int deletionLen);
+
+    int h_compact(int handle,
                   Pointer newKeyPtr,
                   int newKeyLen,
-                  Pointer oldLabelPtr,
-                  int oldLabelLen,
                   Pointer newLabelPtr,
                   int newLabelLen,
-                  int nCompactToFull,
-                  int entryTableNumber,
-                  FetchEntryCallback fetchEntry,
-                  FetchChainCallback fetchChain,
-                  UpsertEntryCallback upsertEntry,
-                  InsertChainCallback insertChain,
-                  DeleteEntryCallback deleteEntry,
-                  DeleteChainCallback deleteChain,
-                  DumpTokensCallback dumpTokens,
-                  FilterObsoleteLocationsCallback filterObsoleteData);
+                  int numCompactToFull,
+                  FilterLocationsCallback filterObsoleteData);
 
     int h_search(byte[] searchResultsPtr,
                  IntByReference searchResultsLen,
-                 Pointer keyPtr,
-                 int keyLength,
-                 Pointer labelPtr,
-                 int labelLen,
+                 int handle,
                  Pointer keywordsPtr,
                  int keywordsLen,
-                 int entryTableNumber,
-                 InterruptCallback interrupt,
-                 FetchEntryCallback fetchEntry,
-                 FetchChainCallback fetchChain);
+                 InterruptCallback interrupt);
 
     int h_search_cloud(byte[] searchResultsPtr,
                        IntByReference searchResultsLen,

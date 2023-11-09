@@ -31,16 +31,15 @@ public class FindexCallbackException {
     }
 
     public static void rethrowOnErrorCode(int errorCode, long start, long end) throws CloudproofException {
-        if (errorCode != CALLBACK_ERROR_CODE_WHEN_THROWING) {
-            return;
-        }
+	    if (errorCode == CALLBACK_ERROR_CODE_WHEN_THROWING) {
+		    for (FindexCallbackException e : exceptions) {
+			    if (start <= e.timestamp  && e.timestamp <= end) {
+				    throw e.e;
+			    }
+		    }
 
-        for (FindexCallbackException e : exceptions) {
-            if (e.timestamp >= start && e.timestamp <= end) {
-                throw e.e;
-            }
-        }
-
-        throw new CloudproofException("Findex returned an error code " + errorCode + " reserved for exceptions but no exception was recorded during the callbacks.");
+		    throw new CloudproofException("Findex returned an error code " + errorCode
+				    + " reserved for exceptions but no exception was recorded during the callbacks.");
+	    }
     }
 }

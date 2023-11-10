@@ -267,7 +267,7 @@ public class TestNativeCoverCrypt {
     }
 
     public static Policy policy() throws CloudproofException {
-        return new Policy(20, // maximum number of creation of partition values
+        return new Policy(
             new PolicyAxis[] {
                 new PolicyAxis("Security Level",
                     new PolicyAxisAttribute[] {

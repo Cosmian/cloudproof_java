@@ -146,8 +146,7 @@ public interface CoverCryptWrapper extends Library {
     //
 
     int h_policy(byte[] policyBuffer,
-                 IntByReference policyBufferSize,
-                 int maxAttributeCreations);
+                 IntByReference policyBufferSize);
 
     int h_add_policy_axis(byte[] updatedPolicyBuffer,
                           IntByReference updatedPolicyBufferSize,

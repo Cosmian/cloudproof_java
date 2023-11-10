@@ -78,7 +78,7 @@ public class NonRegressionVector {
     }
 
     public static NonRegressionVector generate() throws JsonProcessingException, CloudproofException {
-        Policy policy = new Policy(100);
+        Policy policy = new Policy();
         policy.addAxis(new PolicyAxis("Security Level", new PolicyAxisAttribute[] {
             new PolicyAxisAttribute("Protected", false),
             new PolicyAxisAttribute("Low Secret", false),

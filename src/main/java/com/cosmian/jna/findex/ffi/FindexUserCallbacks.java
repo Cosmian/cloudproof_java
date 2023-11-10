@@ -8,7 +8,6 @@ import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValue;
 import com.cosmian.jna.findex.structs.EntryTableValues;
-import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;

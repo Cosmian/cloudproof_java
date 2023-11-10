@@ -31,20 +31,7 @@ public class Policy extends Ffi {
     public Policy() throws CloudproofException {
         byte[] policyBuffer = new byte[8192];
         IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
-        unwrap(instance.h_policy(policyBuffer, policyBufferSize, Integer.MAX_VALUE));
-        _bytes = Arrays.copyOfRange(policyBuffer, 0, policyBufferSize.getValue());
-    }
-
-    /**
-     * Instantiate an empty policy allowing the given max number of revocations of attributes
-     *
-     * @param maxAttributeCreations the maximum number of attribute creations allowed
-     * @throws CloudproofException if the policy buffer cannot be retrieved
-     */
-    public Policy(int maxAttributeCreations) throws CloudproofException {
-        byte[] policyBuffer = new byte[8192];
-        IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
-        unwrap(instance.h_policy(policyBuffer, policyBufferSize, maxAttributeCreations));
+        unwrap(instance.h_policy(policyBuffer, policyBufferSize));
         _bytes = Arrays.copyOfRange(policyBuffer, 0, policyBufferSize.getValue());
     }
 
@@ -52,14 +39,13 @@ public class Policy extends Ffi {
      * Constructs a Policy object with a specified limit on the number of attribute creations and a set of policy axes,
      * retrieves its policy buffer, and initializes its byte array.
      *
-     * @param maxAttributeCreations the maximum number of attribute creations allowed
      * @param axes the set of policy axes to be added to the policy
      * @throws CloudproofException if the policy buffer cannot be retrieved
      */
-    public Policy(int maxAttributeCreations, PolicyAxis[] axes) throws CloudproofException {
+    public Policy(PolicyAxis[] axes) throws CloudproofException {
         byte[] buffer = new byte[8192];
         IntByReference bufferSize = new IntByReference(buffer.length);
-        unwrap(instance.h_policy(buffer, bufferSize, maxAttributeCreations));
+        unwrap(instance.h_policy(buffer, bufferSize));
         _bytes = Arrays.copyOfRange(buffer, 0, bufferSize.getValue());
         bufferSize.setValue(buffer.length);
 

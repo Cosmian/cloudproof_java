@@ -13,7 +13,7 @@ services:
       - PGDATA=/tmp/postgres2
   kms:
     container_name: kms
-    image: ghcr.io/cosmian/kms:4.5.0
+    image: ghcr.io/cosmian/kms:4.9.0
     ports:
       - 9998:9998
     depends_on:
@@ -25,6 +25,6 @@ services:
       - 6379:6379
 
   findex_cloud:
-    image: ghcr.io/cosmian/findex_cloud:0.1.0
+    image: ghcr.io/cosmian/findex_cloud:0.3.1
     ports:
       - 8080:8080

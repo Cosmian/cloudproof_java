@@ -89,9 +89,11 @@ public class RedisUserDb extends RedisConnection implements FilterLocations {
      */
     public void flush() {
         Set<byte[]> keys = getAllKeys();
-        Jedis jedis = connect();
-	byte[][] keysToDelete = keys.toArray(new byte[keys.size()][]);
-        jedis.del(keysToDelete);
+	if (0 < keys.size()) {
+		byte[][] keysToDelete = keys.toArray(new byte[keys.size()][]);
+		Jedis jedis = connect();
+		jedis.del(keysToDelete);
+	}
     }
 
     /**

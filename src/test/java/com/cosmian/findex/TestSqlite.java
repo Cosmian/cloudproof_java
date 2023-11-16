@@ -153,7 +153,7 @@ public class TestSqlite {
         //
         // Prepare Sqlite tables and users
         //
-        try (SqliteRemovedUserDb db = new SqliteRemovedUserDb();
+        try (SqliteUserDb db = new SqliteUserDb();
                 SqliteEntryTable entryTable = new SqliteEntryTable();
                 SqliteChainTable chainTable = new SqliteChainTable();) {
 
@@ -271,7 +271,7 @@ public class TestSqlite {
 	byte[] label = IndexUtils.loadLabel();
 	UsersDataset[] datasets = IndexUtils.loadDatasets();
 	Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(datasets);
-	try (SqliteRemovedUserDb db = new SqliteRemovedUserDb();
+	try (SqliteUserDb db = new SqliteUserDb();
 		SqliteEntryTable entryTable = new SqliteEntryTable();
 		SqliteChainTable chainTable = new SqliteChainTable();) {
 	    Findex findex = new Findex();
@@ -290,7 +290,7 @@ public class TestSqlite {
 		Set<Long> expectedDbLocations)
 	throws Exception {
 
-	try (SqliteRemovedUserDb db = new SqliteRemovedUserDb(dbPath);
+	try (SqliteUserDb db = new SqliteUserDb(dbPath);
 		SqliteEntryTable entryTable = new SqliteEntryTable(dbPath);
 		SqliteChainTable chainTable = new SqliteChainTable(dbPath);)
 	{

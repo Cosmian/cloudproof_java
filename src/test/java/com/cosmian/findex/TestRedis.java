@@ -82,11 +82,13 @@ public class TestRedis {
             //
             Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
             KeywordSet res = findex.add(indexedValuesAndWords);
+	    int entryTableLength = entryTable.getAllKeys().size();
+	    int chainTableLength = chainTable.getAllKeys().size();
             assertEquals(583, res.getResults().size(), "wrong number of new upserted keywords");
-            System.out
-                .println("After insertion: entry_table size: " + entryTable.getAllKeys().size());
-            System.out
-                .println("After insertion: chain_table size: " + chainTable.getAllKeys().size());
+            assertEquals(583, entryTableLength, "wrong Entry Table length");
+            assertEquals(618, chainTableLength, "wrong Entry Table length");
+            System.out.println("After insertion: entry_table size: " + entryTableLength);
+            System.out.println("After insertion: chain_table size: " + chainTableLength);
 
             //
             // Upsert a new keyword
@@ -157,158 +159,158 @@ public class TestRedis {
 
     @Test
     public void testExceptions() throws Exception {
-        if (TestUtils.portAvailable(RedisEntryTable.redisHostname(), 6379)) {
-            throw new RuntimeException("Redis is down");
-        }
+	if (TestUtils.portAvailable(RedisEntryTable.redisHostname(), 6379)) {
+	    throw new RuntimeException("Redis is down");
+	}
 
-        System.out.println("");
-        System.out.println("---------------------------------------");
-        System.out.println("Findex Exceptions in Redis");
-        System.out.println("---------------------------------------");
-        System.out.println("");
+	System.out.println("");
+	System.out.println("---------------------------------------");
+	System.out.println("Findex Exceptions in Redis");
+	System.out.println("---------------------------------------");
+	System.out.println("");
 
-        //
-        // Recover key and label
-        //
-        byte[] key = IndexUtils.generateKey();
-        assertEquals(16, key.length);
-        byte[] label = IndexUtils.loadLabel();
+	//
+	// Recover key and label
+	//
+	byte[] key = IndexUtils.generateKey();
+	assertEquals(16, key.length);
+	byte[] label = IndexUtils.loadLabel();
 
-        //
-        // Build dataset with DB uids and words
-        //
-        UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
+	//
+	// Build dataset with DB uids and words
+	//
+	UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
 
-        //
-        // Prepare Redis tables and users
-        //
-        try (RedisUserDb db = new RedisUserDb();
-                RedisEntryTable entryTable = new RedisEntryTable();
-                RedisChainTable chainTable = new RedisChainTable();) {
+	//
+	// Prepare Redis tables and users
+	//
+	try (RedisUserDb db = new RedisUserDb();
+		RedisEntryTable entryTable = new RedisEntryTable();
+		RedisChainTable chainTable = new RedisChainTable();) {
 
 	    db.flush();
 	    entryTable.flush();
 	    chainTable.flush();
 
-            db.insertUsers(testFindexDataset);
+	    db.insertUsers(testFindexDataset);
 
-            Findex findex = new Findex();
-            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+	    Findex findex = new Findex();
+	    findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
 
-            Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
-            findex.add(indexedValuesAndWords);
+	    Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+	    findex.add(indexedValuesAndWords);
 
-            entryTable.shouldThrowInsideFetchEntries = true;
+	    entryTable.shouldThrowInsideFetchEntries = true;
 
             try {
                 findex.search(new String[] {"John"});
             } catch (CloudproofException e) {
-                assertEquals("'fetch' other error: 42: 42", e.getMessage());
+                assertEquals("Should throw inside fetch entries", e.getMessage());
                 return;
             }
 
-            throw new Exception("Should have throw");
-        }
+	    throw new Exception("Should have throw");
+	}
     }
 
     @Test
     public void testGraphUpsertAndSearchRedis() throws Exception {
-        if (TestUtils.portAvailable(RedisEntryTable.redisHostname(), 6379)) {
-            throw new RuntimeException("Redis is down");
-        }
+	if (TestUtils.portAvailable(RedisEntryTable.redisHostname(), 6379)) {
+	    throw new RuntimeException("Redis is down");
+	}
 
-        System.out.println("");
-        System.out.println("---------------------------------------");
-        System.out.println("Findex Graph Upsert Redis");
-        System.out.println("---------------------------------------");
-        System.out.println("");
+	System.out.println("");
+	System.out.println("---------------------------------------");
+	System.out.println("Findex Graph Upsert Redis");
+	System.out.println("---------------------------------------");
+	System.out.println("");
 
-        //
-        // Recover key and label
-        //
-        byte[] key = IndexUtils.generateKey();
-        assertEquals(16, key.length);
-        byte[] label = IndexUtils.loadLabel();
+	//
+	// Recover key and label
+	//
+	byte[] key = IndexUtils.generateKey();
+	assertEquals(16, key.length);
+	byte[] label = IndexUtils.loadLabel();
 
-        //
-        // Build dataset with DB uids and words
-        //
-        UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
-        Map<IndexedValue, Set<Keyword>> additions = IndexUtils.index(testFindexDataset);
-        // add auto-completion for keywords 'Martin', 'Martena'
-        additions.put(new IndexedValue(new NextKeyword("Mart")), new HashSet<>(
-            Arrays.asList(new Keyword("Mar"))));
-        additions.put(new IndexedValue(new NextKeyword("Marti")), new HashSet<>(
-            Arrays.asList(new Keyword("Mart"))));
-        additions.put(new IndexedValue(new NextKeyword("Marte")), new HashSet<>(
-            Arrays.asList(new Keyword("Mart"))));
-        additions.put(new IndexedValue(new NextKeyword("Martin")), new HashSet<>(
-            Arrays.asList(new Keyword("Marti"))));
-        additions.put(new IndexedValue(new NextKeyword("Marten")), new HashSet<>(
-            Arrays.asList(new Keyword("Marte"))));
-        additions.put(new IndexedValue(new NextKeyword("Martena")), new HashSet<>(
-            Arrays.asList(new Keyword("Marten"))));
+	//
+	// Build dataset with DB uids and words
+	//
+	UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
+	Map<IndexedValue, Set<Keyword>> additions = IndexUtils.index(testFindexDataset);
+	// add auto-completion for keywords 'Martin', 'Martena'
+	additions.put(new IndexedValue(new NextKeyword("Mart")), new HashSet<>(
+	    Arrays.asList(new Keyword("Mar"))));
+	additions.put(new IndexedValue(new NextKeyword("Marti")), new HashSet<>(
+	    Arrays.asList(new Keyword("Mart"))));
+	additions.put(new IndexedValue(new NextKeyword("Marte")), new HashSet<>(
+	    Arrays.asList(new Keyword("Mart"))));
+	additions.put(new IndexedValue(new NextKeyword("Martin")), new HashSet<>(
+	    Arrays.asList(new Keyword("Marti"))));
+	additions.put(new IndexedValue(new NextKeyword("Marten")), new HashSet<>(
+	    Arrays.asList(new Keyword("Marte"))));
+	additions.put(new IndexedValue(new NextKeyword("Martena")), new HashSet<>(
+	    Arrays.asList(new Keyword("Marten"))));
 
-        //
-        // Prepare Redis tables and users
-        //
-        try (RedisUserDb db = new RedisUserDb();
-                RedisEntryTable entryTable = new RedisEntryTable();
-                RedisChainTable chainTable = new RedisChainTable();) {
+	//
+	// Prepare Redis tables and users
+	//
+	try (RedisUserDb db = new RedisUserDb();
+		RedisEntryTable entryTable = new RedisEntryTable();
+		RedisChainTable chainTable = new RedisChainTable();) {
 
 	    db.flush();
 	    entryTable.flush();
 	    chainTable.flush();
 
-            db.insertUsers(testFindexDataset);
-            System.out.println("After insertion: data_table size: " + db.getAllKeys().size());
+	    db.insertUsers(testFindexDataset);
+	    System.out.println("After insertion: data_table size: " + db.getAllKeys().size());
 
-            Findex findex = new Findex();
-            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+	    Findex findex = new Findex();
+	    findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
 
-            //
-            // Upsert
-            //
-            findex.add(additions);
-            System.out.println("After insertion: entry_table size: " + entryTable.getAllKeys().size());
-            System.out.println("After insertion: chain_table size: " + chainTable.getAllKeys().size());
+	    //
+	    // Upsert
+	    //
+	    findex.add(additions);
+	    System.out.println("After insertion: entry_table size: " + entryTable.getAllKeys().size());
+	    System.out.println("After insertion: chain_table size: " + chainTable.getAllKeys().size());
 
-            //
-            // Search
-            //
-            System.out.println("");
-            System.out.println("---------------------------------------");
-            System.out.println("Findex Graph Search Redis");
-            System.out.println("---------------------------------------");
-            System.out.println("");
+	    //
+	    // Search
+	    //
+	    System.out.println("");
+	    System.out.println("---------------------------------------");
+	    System.out.println("Findex Graph Search Redis");
+	    System.out.println("---------------------------------------");
+	    System.out.println("");
 
-            {
-                SearchResults searchResults = findex.search(new String[] {"Mar"}, new Interrupt() {
-                        @Override
-                        public boolean interrupt(Map<Keyword, Set<IndexedValue>> results) throws CloudproofException {
-                            Keyword key_marti = new Keyword("Marti");
-                            Keyword key_marte = new Keyword("Marte");
-                            if (results.containsKey(key_marti)) {
-                                IndexedValue iv = results.get(key_marti).iterator().next();
-                                assertEquals(new Keyword("Martin"), iv.getWord());
-                            }
-                            if (results.containsKey(key_marte)) {
-                                IndexedValue iv = results.get(key_marte).iterator().next();
-                                assertEquals(new Keyword("Marten"), iv.getWord());
-                            }
-                            return true;
-                        }
-                    });
-                assertEquals(3, searchResults.numberOfUniqueLocations());
-                System.out.println("<== successfully found all original French locations");
-            }
+	    {
+		SearchResults searchResults = findex.search(new String[] {"Mar"}, new Interrupt() {
+			@Override
+			public boolean interrupt(Map<Keyword, Set<IndexedValue>> results) throws CloudproofException {
+			    Keyword key_marti = new Keyword("Marti");
+			    Keyword key_marte = new Keyword("Marte");
+			    if (results.containsKey(key_marti)) {
+				IndexedValue iv = results.get(key_marti).iterator().next();
+				assertEquals(new Keyword("Martin"), iv.getWord());
+			    }
+			    if (results.containsKey(key_marte)) {
+				IndexedValue iv = results.get(key_marte).iterator().next();
+				assertEquals(new Keyword("Marten"), iv.getWord());
+			    }
+			    return true;
+			}
+		    });
+		assertEquals(3, searchResults.numberOfUniqueLocations());
+		System.out.println("<== successfully found all original French locations");
+	    }
 
-            // delete all items
-            try (Jedis jedis = db.connect()) {
-                jedis.flushAll();
-            }
+	    // delete all items
+	    try (Jedis jedis = db.connect()) {
+		jedis.flushAll();
+	    }
 
-        }
+	}
     }
 
 }

@@ -20,16 +20,16 @@ import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
 
-public class SqliteRemovedUserDb implements FilterLocations, Closeable {
+public class SqliteUserDb implements FilterLocations, Closeable {
 
     final Connection connection;
 
-    public SqliteRemovedUserDb() throws SQLException {
+    public SqliteUserDb() throws SQLException {
         this.connection = DriverManager.getConnection("jdbc:sqlite::memory:");
         this.createTable();
     }
 
-    public SqliteRemovedUserDb(String url) throws SQLException {
+    public SqliteUserDb(String url) throws SQLException {
         this.connection = DriverManager.getConnection("jdbc:sqlite:" + url);
         this.createTable();
     }

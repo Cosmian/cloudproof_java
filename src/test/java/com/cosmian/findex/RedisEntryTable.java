@@ -92,8 +92,11 @@ public class RedisEntryTable extends RedisConnection implements EntryTableDataba
      */
     public void flush() {
         Set<byte[]> keys = getAllKeys();
-        Jedis jedis = connect();
-        jedis.del(keys.toArray(new byte[keys.size()][]));
+	if (0 < keys.size()) {
+		byte[][] keysToDelete = keys.toArray(new byte[keys.size()][]);
+		Jedis jedis = connect();
+		jedis.del(keysToDelete);
+	}
     }
 
     /**
@@ -117,13 +120,23 @@ public class RedisEntryTable extends RedisConnection implements EntryTableDataba
 
     @Override
     public List<Tuple<Uid32, EntryTableValue>> fetch(List<Uid32> uids) throws CloudproofException {
-        Jedis jedis = connect();
+        if (shouldThrowInsideFetchEntries) {
+            throw new CloudproofException("Should throw inside fetch entries");
+        }
 
         List<byte[]> keys = uids.stream().map((Uid32 uid) -> getKey(uid)).collect(Collectors.toList());
         byte[][] keysArray = keys.toArray(new byte[0][]);
-        List<byte[]> values = jedis.mget(keysArray);
 
         ArrayList<Tuple<Uid32, EntryTableValue>> keysAndValues = new ArrayList<>();
+
+	if (0 == keys.size()) {
+		return keysAndValues;
+	}
+
+        Jedis jedis = connect();
+        List<byte[]> values = jedis.mget(keysArray);
+	jedis.close();
+
         for (int i = 0; i < values.size(); i++) {
             Uid32 key = uids.get(i);
             byte[] value = values.get(i);
@@ -152,6 +165,7 @@ public class RedisEntryTable extends RedisConnection implements EntryTableDataba
                 rejected.put(entry.getKey(), new EntryTableValue(response.get(0)));
             }
         }
+	jedis.close();
         return rejected;
     }
 
@@ -161,5 +175,6 @@ public class RedisEntryTable extends RedisConnection implements EntryTableDataba
         for (Uid32 uid : uids) {
             jedis.del(getKey(uid));
         }
+	jedis.close();
     }
 }

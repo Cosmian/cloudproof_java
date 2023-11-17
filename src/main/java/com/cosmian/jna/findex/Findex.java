@@ -27,6 +27,8 @@ public final class Findex extends FindexBase {
 
     static int HANDLE;
 
+    // In case a custom backend is created, objects holding the callbacks need
+    // to be stored to prevent them from being garbage collected.
     FetchCallback entryFetcher;
     FetchCallback chainFetcher;
     UpsertCallback entryUpserter;
@@ -34,6 +36,10 @@ public final class Findex extends FindexBase {
     DeleteCallback entryDeleter;
     DeleteCallback chainDeleter;
     DumpTokensCallback entryDumper;
+
+    //----------------------------------------------------------------//
+    //                       Instantiation                            //
+    //----------------------------------------------------------------//
 
     public void instantiateCustomBackends(byte[] key,
             byte[] label,
@@ -68,6 +74,21 @@ public final class Findex extends FindexBase {
 				    chainDeleter,
 				    entryDumper));
 
+	    HANDLE = handle.getValue();
+    }
+
+    public void instantiateRestBackend(byte[] label, String token, String url)
+            throws CloudproofException
+    {
+	    final Memory labelPointer = new Memory(label.length);
+	    labelPointer.write(0, label, 0, label.length);
+
+	    IntByReference handle = new IntByReference();
+
+	    unwrap(System.currentTimeMillis(),
+		   INSTANCE.h_instantiate_with_rest_backend(handle,
+							    labelPointer, label.length,
+							    token, url));
 	    HANDLE = handle.getValue();
     }
 

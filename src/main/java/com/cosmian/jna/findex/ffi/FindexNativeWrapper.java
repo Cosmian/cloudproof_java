@@ -69,6 +69,12 @@ public interface FindexNativeWrapper extends Library {
                                        DeleteCallback deleteChain,
                                        DumpTokensCallback dumpTokens);
 
+    int h_instantiate_with_rest_backend(IntByReference handle,
+                                        Pointer labelPtr,
+                                        int labelLen,
+					String token,
+					String url);
+
     int h_add(byte[] newKeywordsBufferPtr,
                  IntByReference newKeywordsBufferLen,
                  int handle,
@@ -96,30 +102,9 @@ public interface FindexNativeWrapper extends Library {
                  int keywordsLen,
                  InterruptCallback interrupt);
 
-    int h_search_cloud(byte[] searchResultsPtr,
-                       IntByReference searchResultsLen,
-                       String token,
-                       Pointer labelPtr,
-                       int labelLen,
-                       Pointer keywordsPtr,
-                       int keywordsLen,
-                       String baseUrl,
-                       InterruptCallback interrupt);
-
-    int h_upsert_cloud(byte[] newKeywordsBufferPtr,
-                       IntByReference newKeywordsBufferLen,
-                       String token,
-                       Pointer labelPtr,
-                       int labelLen,
-                       Pointer additionsPtr,
-                       int additionsLen,
-                       Pointer deletionsPtr,
-                       int deletionsLen,
-                       String baseUrl);
-
     int h_generate_new_token(byte[] tokenPtr,
-                             IntByReference tokenLen,
-                             String indexIdPtr,
+			     IntByReference tokenLen,
+                             String indexId,
                              Pointer fetchEntriesSeedPtr,
                              int fetchEntriesSeedLen,
                              Pointer fetchChainsSeedPtr,
@@ -128,5 +113,4 @@ public interface FindexNativeWrapper extends Library {
                              int upsertEntriesSeedLen,
                              Pointer insertChainsSeedPtr,
                              int insertChainsSeedSize);
-
 }

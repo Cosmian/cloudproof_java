@@ -13,6 +13,15 @@ import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Pointer;
 
 public interface Interrupt extends InterruptCallback {
+    /**
+     * Function called at each recursion level of the search operation. It is
+     * fed with the results from the current recursion level. The search is
+     * interrupted is true is returned.
+     *
+     * @param intermediateResults a {@link Map} of {@link Keyword} to {@link Set} of {@link IndexedValue}
+     * @return true to interrupt the search
+     * @throws {@link CloudproofException} if anything goes wrong
+     */
     default boolean interrupt(Map<Keyword, Set<IndexedValue>> intermediateResults) throws CloudproofException {
         return false;
     }

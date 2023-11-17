@@ -12,6 +12,16 @@ import com.sun.jna.ptr.IntByReference;
 
 public interface FilterLocations extends FilterLocationsCallback {
 
+    /**
+     * Filter the given locations.
+     * <p>
+     * This operation is used during compact operations to detect obsolete
+     * indexed values.
+     *
+     * @param locations a {@link List} of {@link Location}
+     * @return the {@link List} of {@link Location} to keep in the index.
+     * @throws {@link CloudproofException} if anything goes wrong
+     */
     default List<Location> filter(List<Location> locations) throws CloudproofException {
         return locations;
     }

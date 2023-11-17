@@ -19,36 +19,36 @@ public interface ChainTableDatabase {
 
     /**
      * Fetch the Chain Table lines for the list of given {@link Uid32}. If a line does not exist, there should be no
-     * entry in the returned map.
+     * entry in the returned list.
      * <p>
-     * Implementation of this method is always required (to search, update or compact the index)
+     * Implementation of this method is always required (to search, update or compact the index).
      *
      * @param uids the unique {@link Uid32}s used as line id
      * @return a {@link Map} of {@link Uid32} to {@link ChainTableValue}
-     * @throws CloudproofException if anything goes wrong
+     * @throws {@link CloudproofException} if anything goes wrong
      */
     public List<Tuple<Uid32, ChainTableValue>> fetch(List<Uid32> uids) throws CloudproofException;
 
     /**
-     * Upsert the given lines into the Chain Table.
+     * Insert the given lines in the Chain Table.
      * <p>
-     * The {@link ChainTableValues} structure contains both the new value to be upserted and the previous value known at
-     * the time of fetch. To avoid concurrency issues, the new value of an existing {@link Uid32} must <b>not</b> be
-     * updated if the current value in the database does not match the previous value of the structure. In such a case,
-     * the {@link Uid32} and the <b>current</b> database value must be returned as part of the returned {@link Map}. *
-     * <p>
-     * Implementation of this method is only required to update or compact the index
-     * <p>
-     * See the Redis and Sqlite implementations for implementation examples
-     * <p>
+     * Implementation of this method is only required to perform additions,
+     * deletions or compact operations on the index.
      *
-     * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link ChainTableValues}
-     * @return a map of the {@link Uid32} that could not be updated and the current database value for the entry.
-     * @throws CloudproofException if anything goes wrong
+     * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link ChainTableValue}
+     * @throws {@link CloudproofException} if anything goes wrong
      */
     public void insert(Map<Uid32, ChainTableValue> uidsAndValues)
 	throws CloudproofException;
 
+    /**
+     * Delete the lines indexed by the given UIDs {@link Uid32} from the Chain Table.
+     * <p>
+     * Implementation of this method is only required to perform compact operations on the index.
+     *
+     * @param uids a {@link List} of {@link Uid32}
+     * @throws {@link CloudproofException} if anything goes wrong
+     */
     public void delete(List<Uid32> uids)
 	throws CloudproofException;
 

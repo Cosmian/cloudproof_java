@@ -9,6 +9,17 @@ import com.sun.jna.ptr.IntByReference;
 
 public final class RestToken extends FindexBase {
 
+	/**
+	 * Generate a new authentication token using the given callback seeds.
+	 *
+	 * @param indexId a {@link String} used to target the correct index in the server
+	 * @param fetchEntrySeed the seed used to authenticate the fetch callback to the Entry Table
+	 * @param fetchChainSeed the seed used to authenticate the fetch callback to the Chain Table
+	 * @param upsertEntrySeed the seed used to authenticate the upsert callback to the Entry Table
+	 * @param insertChainSeed the seed used to authenticate the insert callback to the Chain Table
+	 * @return a {@link String} representing the token
+	 * @throws {@link CloudproofException} if anything goes wrong
+	 */
 	public static String generateNewToken(String indexId, byte[] fetchEntrySeed, byte[] fetchChainSeed,
 			byte[] upsertEntrySeed, byte[] insertChainSeed) throws CloudproofException {
 

@@ -20,7 +20,7 @@ public interface Interrupt extends InterruptCallback {
      *
      * @param intermediateResults a {@link Map} of {@link Keyword} to {@link Set} of {@link IndexedValue}
      * @return true to interrupt the search
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     default boolean interrupt(Map<Keyword, Set<IndexedValue>> intermediateResults) throws CloudproofException {
         return false;

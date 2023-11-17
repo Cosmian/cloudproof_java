@@ -54,7 +54,6 @@ public class FindexBase {
      * Set the last error on the native lib
      *
      * @param error_msg the last error to set on the native lib
-     * @throws CloudproofException n case of native library error
      */
     public static void set_error(String error_msg) {
         FindexBase.INSTANCE.set_error(error_msg);

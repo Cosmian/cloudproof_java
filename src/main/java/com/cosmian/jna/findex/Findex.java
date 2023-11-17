@@ -53,7 +53,7 @@ public final class Findex extends FindexBase {
      * @param entryTableNumber the number of Entry Table used as backend
      * @param entryTable Entry Table implementation
      * @param chainTable Chain Table implementation
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public void instantiateCustomBackends(byte[] key,
             byte[] label,
@@ -101,7 +101,7 @@ public final class Findex extends FindexBase {
      * rotation
      * @param token token used for authentication to the Findex REST server
      * @param url URL of the Findex REST server
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public void instantiateRestBackend(byte[] label, String token, String url)
             throws CloudproofException
@@ -127,7 +127,7 @@ public final class Findex extends FindexBase {
      *
      * @param associations {@link Map} of {@link IndexedValue} to {@link Set} of {@link Keyword}
      * @return the {@link KeywordSet} of new keywords added to the index
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public KeywordSet add(Map<IndexedValue, Set<Keyword>> associations)
             throws CloudproofException
@@ -169,7 +169,7 @@ public final class Findex extends FindexBase {
      *
      * @param associations {@link Map} of {@link IndexedValue} to {@link Set} of {@link Keyword}
      * @return the {@link KeywordSet} of new keywords added to the index
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public KeywordSet deletion(Map<IndexedValue, Set<Keyword>> associations)
             throws CloudproofException
@@ -214,7 +214,7 @@ public final class Findex extends FindexBase {
      * @param keywords a {@link Set} of {@link Keyword} to search
      * @param interrupt an implementation of the {@link Interrupt} interface
      * @return the {@link SearchResults}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public SearchResults search(Set<Keyword> keywords, Interrupt interrupt) throws CloudproofException
     {
@@ -253,7 +253,7 @@ public final class Findex extends FindexBase {
      *
      * @param keywords a {@link Set} of {@link Keyword} to search
      * @return the {@link SearchResults}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public SearchResults search(Set<Keyword> keywords) throws CloudproofException {
         return search(keywords, new Interrupt() {});
@@ -264,7 +264,7 @@ public final class Findex extends FindexBase {
      *
      * @param keywords an array of {@link String} representing the keywords to search
      * @return the {@link SearchResults}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public SearchResults search(String[] keywords) throws CloudproofException {
 		return search(Stream.of(keywords).map(keyword -> new Keyword(keyword))
@@ -278,7 +278,7 @@ public final class Findex extends FindexBase {
      * @param keywords an array of {@link String} representing the keywords to search
      * @param interrupt an implementation of the {@link Interrupt} interface
      * @return the {@link SearchResults}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public SearchResults search(String[] keywords, Interrupt interrupt) throws CloudproofException {
 		return search(Stream.of(keywords).map(keyword -> new Keyword(keyword))
@@ -304,7 +304,7 @@ public final class Findex extends FindexBase {
      * @param newLabel label to use as replacement to the current Findex label.
      * @param numCompactToFull number of compact operation to run before going throught the entire Chain Table (on average).
      * @param filter implementation of the {@link FilterLocations} interface
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public void compact(byte[] newKey, byte[] newLabel, int numCompactToFull, FilterLocations filter)
 		    throws CloudproofException
@@ -334,7 +334,7 @@ public final class Findex extends FindexBase {
      * @param newKey key to use as replacement to the current Findex key.
      * @param newLabel label to use as replacement to the current Findex label.
      * @param numCompactToFull number of compact operation to run before going throught the entire Chain Table (on average).
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public void compact(byte[] newKey, byte[] newLabel, int numCompactToFull) throws CloudproofException {
         compact(newKey, newLabel, numCompactToFull, new FilterLocations() { });

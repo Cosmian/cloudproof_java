@@ -28,7 +28,7 @@ public interface EntryTableDatabase {
      * operation.
      *
      * @return the {@link Set} of all {@link Uid32}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public Set<Uid32> fetchAllUids() throws CloudproofException;
 
@@ -40,7 +40,7 @@ public interface EntryTableDatabase {
      *
      * @param uids the unique {@link Uid32}s used as line id
      * @return a {@link List} of {@link Tuple} of {@link Uid32} and {@link EntryTableValue}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public List<Tuple<Uid32, EntryTableValue>> fetch(List<Uid32> uids) throws CloudproofException;
 
@@ -59,7 +59,7 @@ public interface EntryTableDatabase {
      *
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link EntryTableValues}
      * @return a map of the {@link Uid32} that could not be updated and the current database value for the entry.
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> uidsAndValues)
 	throws CloudproofException;
@@ -68,7 +68,7 @@ public interface EntryTableDatabase {
      * Delete the lines with the given UIDs.
      *
      * @param uids a {@link List} of {@link Uid32}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public void delete(List<Uid32> uids) throws CloudproofException;
 

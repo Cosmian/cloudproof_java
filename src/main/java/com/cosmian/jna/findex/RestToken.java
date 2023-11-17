@@ -18,7 +18,7 @@ public final class RestToken extends FindexBase {
 	 * @param upsertEntrySeed the seed used to authenticate the upsert callback to the Entry Table
 	 * @param insertChainSeed the seed used to authenticate the insert callback to the Chain Table
 	 * @return a {@link String} representing the token
-	 * @throws {@link CloudproofException} if anything goes wrong
+	 * @throws CloudproofException if anything goes wrong
 	 */
 	public static String generateNewToken(String indexId, byte[] fetchEntrySeed, byte[] fetchChainSeed,
 			byte[] upsertEntrySeed, byte[] insertChainSeed) throws CloudproofException {

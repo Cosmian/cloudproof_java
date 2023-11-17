@@ -20,7 +20,7 @@ public interface FilterLocations extends FilterLocationsCallback {
      *
      * @param locations a {@link List} of {@link Location}
      * @return the {@link List} of {@link Location} to keep in the index.
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     default List<Location> filter(List<Location> locations) throws CloudproofException {
         return locations;

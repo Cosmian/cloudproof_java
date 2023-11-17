@@ -25,7 +25,7 @@ public interface ChainTableDatabase {
      *
      * @param uids the unique {@link Uid32}s used as line id
      * @return a {@link Map} of {@link Uid32} to {@link ChainTableValue}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public List<Tuple<Uid32, ChainTableValue>> fetch(List<Uid32> uids) throws CloudproofException;
 
@@ -36,7 +36,7 @@ public interface ChainTableDatabase {
      * deletions or compact operations on the index.
      *
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link ChainTableValue}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public void insert(Map<Uid32, ChainTableValue> uidsAndValues)
 	throws CloudproofException;
@@ -47,7 +47,7 @@ public interface ChainTableDatabase {
      * Implementation of this method is only required to perform compact operations on the index.
      *
      * @param uids a {@link List} of {@link Uid32}
-     * @throws {@link CloudproofException} if anything goes wrong
+     * @throws CloudproofException if anything goes wrong
      */
     public void delete(List<Uid32> uids)
 	throws CloudproofException;

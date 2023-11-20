@@ -3,13 +3,13 @@ package com.cosmian.jna.findex;
 import java.util.List;
 import java.util.Map;
 
+import com.cosmian.jna.findex.ffi.FFiUtils;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.DeleteCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.InsertCallback;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.ChainTableValue;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchCallback;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.InsertCallback;
-import com.cosmian.jna.findex.ffi.FFiUtils;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.DeleteCallback;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Pointer;
@@ -32,14 +32,14 @@ public interface ChainTableDatabase {
     /**
      * Insert the given lines in the Chain Table.
      * <p>
-     * Implementation of this method is only required to perform additions,
-     * deletions or compact operations on the index.
+     * Implementation of this method is only required to perform additions, deletions or compact operations on the
+     * index.
      *
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link ChainTableValue}
      * @throws CloudproofException if anything goes wrong
      */
     public void insert(Map<Uid32, ChainTableValue> uidsAndValues)
-	throws CloudproofException;
+        throws CloudproofException;
 
     /**
      * Delete the lines indexed by the given UIDs {@link Uid32} from the Chain Table.
@@ -50,7 +50,7 @@ public interface ChainTableDatabase {
      * @throws CloudproofException if anything goes wrong
      */
     public void delete(List<Uid32> uids)
-	throws CloudproofException;
+        throws CloudproofException;
 
     /**
      * Return the appropriate fetch callback (with input/output serialization).
@@ -58,9 +58,11 @@ public interface ChainTableDatabase {
     default FetchCallback fetchCallback() {
         return new FetchCallback() {
             @Override
-            public int callback(Pointer output, IntByReference outputLen, Pointer uidsPtr, int uidsLength)
-	    {
-		try {
+            public int callback(Pointer output,
+                                IntByReference outputLen,
+                                Pointer uidsPtr,
+                                int uidsLength) {
+                try {
                     byte[] uids = new byte[uidsLength];
                     uidsPtr.read(0, uids, 0, uidsLength);
                     List<Uid32> chainTableUids = Leb128Reader.deserializeCollection(Uid32.class, uids);
@@ -79,7 +81,8 @@ public interface ChainTableDatabase {
     default InsertCallback insertCallback() {
         return new InsertCallback() {
             @Override
-            public int callback(Pointer items, int itemsLength) {
+            public int callback(Pointer items,
+                                int itemsLength) {
                 try {
                     //
                     // Read `items` until `itemsLength`
@@ -112,7 +115,8 @@ public interface ChainTableDatabase {
     default DeleteCallback deleteCallback() {
         return new DeleteCallback() {
             @Override
-            public int callback(Pointer items, int itemsLength) {
+            public int callback(Pointer items,
+                                int itemsLength) {
                 try {
                     //
                     // Read `items` until `itemsLength`
@@ -134,7 +138,7 @@ public interface ChainTableDatabase {
                 } catch (CloudproofException e) {
                     return FindexCallbackException.record(e);
                 }
-	    }
-	};
+            }
+        };
     }
 }

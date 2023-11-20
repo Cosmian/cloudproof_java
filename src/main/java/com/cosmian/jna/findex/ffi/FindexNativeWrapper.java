@@ -18,41 +18,45 @@ public interface FindexNativeWrapper extends Library {
     /* Internal callbacks FFI */
     interface FetchCallback extends Callback {
         int callback(Pointer output,
-                  IntByReference outputLen,
-                  Pointer uidsPtr,
-                  int uidsLength);
+                     IntByReference outputLen,
+                     Pointer uidsPtr,
+                     int uidsLength);
     }
 
     interface UpsertCallback extends Callback {
         int callback(Pointer outputs,
-                  IntByReference outputsLength,
-                  Pointer oldValues,
-                  int oldValuesLength,
-                  Pointer newValues,
-                  int newValuesLength);
+                     IntByReference outputsLength,
+                     Pointer oldValues,
+                     int oldValuesLength,
+                     Pointer newValues,
+                     int newValuesLength);
     }
 
     interface InsertCallback extends Callback {
-        int callback(Pointer chains, int chainsLength);
+        int callback(Pointer chains,
+                     int chainsLength);
     }
 
     interface DeleteCallback extends Callback {
-        int callback(Pointer entriesPtr, int entriesLen);
+        int callback(Pointer entriesPtr,
+                     int entriesLen);
     }
 
     interface DumpTokensCallback extends Callback {
-        int callback(Pointer outputPtr, IntByReference outputLen);
+        int callback(Pointer outputPtr,
+                     IntByReference outputLen);
     }
 
     interface InterruptCallback extends Callback {
-        boolean callback(Pointer outputPtr, int outputLen);
+        boolean callback(Pointer outputPtr,
+                         int outputLen);
     }
 
     interface FilterLocationsCallback extends Callback {
         int callback(Pointer outputLocationsPtr,
-                  IntByReference outputLocationsLen,
-                  Pointer locationsPtr,
-                  int locationsLen);
+                     IntByReference outputLocationsLen,
+                     Pointer locationsPtr,
+                     int locationsLen);
     }
 
     int h_instantiate_with_ffi_backend(IntByReference handle,
@@ -61,7 +65,7 @@ public interface FindexNativeWrapper extends Library {
                                        Pointer labelPtr,
                                        int labelLen,
                                        int entryTableNumber,
-                                       FetchCallback fetchentry,
+                                       FetchCallback fetchEntry,
                                        FetchCallback fetchChain,
                                        UpsertCallback upsertEntry,
                                        InsertCallback insertChain,
@@ -72,14 +76,14 @@ public interface FindexNativeWrapper extends Library {
     int h_instantiate_with_rest_backend(IntByReference handle,
                                         Pointer labelPtr,
                                         int labelLen,
-					String token,
-					String url);
+                                        String token,
+                                        String url);
 
     int h_add(byte[] newKeywordsBufferPtr,
-                 IntByReference newKeywordsBufferLen,
-                 int handle,
-                 Pointer additionsPtr,
-                 int additionsLen);
+              IntByReference newKeywordsBufferLen,
+              int handle,
+              Pointer additionsPtr,
+              int additionsLen);
 
     int h_delete(byte[] newKeywordsBufferPtr,
                  IntByReference newKeywordsBufferLen,
@@ -103,7 +107,7 @@ public interface FindexNativeWrapper extends Library {
                  InterruptCallback interrupt);
 
     int h_generate_new_token(byte[] tokenPtr,
-			     IntByReference tokenLen,
+                             IntByReference tokenLen,
                              String indexId,
                              Pointer fetchEntriesSeedPtr,
                              int fetchEntriesSeedLen,

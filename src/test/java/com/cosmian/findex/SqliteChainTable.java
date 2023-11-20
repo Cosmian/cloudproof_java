@@ -12,14 +12,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.cosmian.jna.findex.ChainTableDatabase;
+import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.ChainTableValue;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
-import com.cosmian.jna.findex.serde.Tuple;
 
 public class SqliteChainTable implements ChainTableDatabase, Closeable {
 
@@ -85,7 +85,7 @@ public class SqliteChainTable implements ChainTableDatabase, Closeable {
     List<Tuple<Uid32, ChainTableValue>> fetchUids(List<Uid32> uids) throws SQLException {
         PreparedStatement pstmt = this.connection
             .prepareStatement(
-                    "SELECT uid, value FROM chain_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
+                "SELECT uid, value FROM chain_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
 
         int count = 1;
         for (Uid32 uid : uids) {
@@ -100,8 +100,8 @@ public class SqliteChainTable implements ChainTableDatabase, Closeable {
         ArrayList<Tuple<Uid32, ChainTableValue>> uidsAndValues = new ArrayList<>();
         while (rs.next()) {
             uidsAndValues.add(new Tuple<>(
-                        new Uid32(rs.getBytes("uid")),
-                        new ChainTableValue(rs.getBytes("value"))));
+                new Uid32(rs.getBytes("uid")),
+                new ChainTableValue(rs.getBytes("value"))));
         }
         return uidsAndValues;
     }
@@ -122,7 +122,7 @@ public class SqliteChainTable implements ChainTableDatabase, Closeable {
     void deleteUids(List<Uid32> uids) throws SQLException {
         PreparedStatement pstmt = this.connection
             .prepareStatement(
-                    "DELETE FROM chain_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
+                "DELETE FROM chain_table WHERE uid IN (" + questionMarks(uids.size()) + ")");
 
         int count = 1;
         for (Uid32 uid : uids) {
@@ -130,7 +130,7 @@ public class SqliteChainTable implements ChainTableDatabase, Closeable {
             count += 1;
         }
 
-	pstmt.execute();
+        pstmt.execute();
     }
 
     @Override

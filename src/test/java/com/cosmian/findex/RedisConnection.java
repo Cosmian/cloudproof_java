@@ -57,8 +57,7 @@ public abstract class RedisConnection implements Closeable {
     }
 
     /**
-     * Establish a connection, authenticating it if the instance was instantiated
-     * with a password.
+     * Establish a connection, authenticating it if the instance was instantiated with a password.
      *
      * @return the {@link Jedis} connection
      */
@@ -77,7 +76,8 @@ public abstract class RedisConnection implements Closeable {
      * @param uid the {@link Uid32} value of the key
      * @return key as prefix|number on 4 bytes|uid
      */
-    public static byte[] getKey(int number, byte[] uid) {
+    public static byte[] getKey(int number,
+                                byte[] uid) {
         byte[] numberBytes = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(number).array();
         byte[] result = Arrays.copyOf(STORAGE_PREFIX, STORAGE_PREFIX.length + numberBytes.length + uid.length);
         System.arraycopy(numberBytes, 0, result, STORAGE_PREFIX.length, numberBytes.length);

@@ -15,8 +15,7 @@ public interface FilterLocations extends FilterLocationsCallback {
     /**
      * Filter the given locations.
      * <p>
-     * This operation is used during compact operations to detect obsolete
-     * indexed values.
+     * This operation is used during compact operations to detect obsolete indexed values.
      *
      * @param locations a {@link List} of {@link Location}
      * @return the {@link List} of {@link Location} to keep in the index.
@@ -28,10 +27,9 @@ public interface FilterLocations extends FilterLocationsCallback {
 
     @Override
     default int callback(Pointer output,
-                     IntByReference outputSize,
-                     Pointer items,
-                     int itemsLength)
-    {
+                         IntByReference outputSize,
+                         Pointer items,
+                         int itemsLength) {
         try {
             //
             // Read `items` until `itemsLength`

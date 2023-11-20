@@ -97,11 +97,11 @@ public class RedisChainTable extends RedisConnection implements ChainTableDataba
      */
     public void flush() throws CloudproofException {
         Set<byte[]> keys = getAllKeys();
-	if (0 < keys.size()) {
-		byte[][] keysToDelete = keys.toArray(new byte[keys.size()][]);
-		Jedis jedis = connect();
-		jedis.del(keysToDelete);
-	}
+        if (0 < keys.size()) {
+            byte[][] keysToDelete = keys.toArray(new byte[keys.size()][]);
+            Jedis jedis = connect();
+            jedis.del(keysToDelete);
+        }
     }
 
     public static byte[] getKey(Uid32 uid) {
@@ -119,13 +119,13 @@ public class RedisChainTable extends RedisConnection implements ChainTableDataba
 
         ArrayList<Tuple<Uid32, ChainTableValue>> keysAndValues = new ArrayList<>();
 
-	if (0 == keys.size()) {
-		return keysAndValues;
-	}
+        if (0 == keys.size()) {
+            return keysAndValues;
+        }
 
         Jedis jedis = connect();
         List<byte[]> values = jedis.mget(keysArray);
-	jedis.close();
+        jedis.close();
 
         for (int i = 0; i < values.size(); i++) {
             Uid32 key = uids.get(i);
@@ -146,15 +146,15 @@ public class RedisChainTable extends RedisConnection implements ChainTableDataba
             tx.getSet(key, entry.getValue().getBytes());
         }
         tx.exec();
-	jedis.close();
+        jedis.close();
     }
 
     @Override
     public void delete(List<Uid32> uids) throws CloudproofException {
-	    Jedis jedis = connect();
-	    for (Uid32 uid : uids) {
-		    jedis.del(getKey(uid));
-	    }
-	jedis.close();
+        Jedis jedis = connect();
+        for (Uid32 uid : uids) {
+            jedis.del(getKey(uid));
+        }
+        jedis.close();
     }
 }

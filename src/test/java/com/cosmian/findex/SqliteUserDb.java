@@ -126,23 +126,23 @@ public class SqliteUserDb implements FilterLocations, Closeable {
         }
     }
 
-     @Override
-     public List<Location> filter(List<Location> locations) throws CloudproofException {
-	    System.out.println("Filtering " + locations.size() + " locations");
-         try {
-             List<Integer> ids = locations.stream()
-                 .map((Location location) -> (int) location.toNumber())
-                 .collect(Collectors.toList());
-             Set<Integer> knownIds = fetchUsersById(ids);
-             List<Location> res =  ids.stream()
-                 .filter((Integer id) -> knownIds.contains(id))
-                 .map((Integer id) -> new Location(id))
-                 .collect(Collectors.toList());
-	    System.out.println("Remaining " + res.size() + " locations");
-	    return res;
-         } catch (SQLException e) {
-             throw new CloudproofException("Failed list removed locations: " + e.toString());
-         }
-     }
+    @Override
+    public List<Location> filter(List<Location> locations) throws CloudproofException {
+        System.out.println("Filtering " + locations.size() + " locations");
+        try {
+            List<Integer> ids = locations.stream()
+                .map((Location location) -> (int) location.toNumber())
+                .collect(Collectors.toList());
+            Set<Integer> knownIds = fetchUsersById(ids);
+            List<Location> res = ids.stream()
+                .filter((Integer id) -> knownIds.contains(id))
+                .map((Integer id) -> new Location(id))
+                .collect(Collectors.toList());
+            System.out.println("Remaining " + res.size() + " locations");
+            return res;
+        } catch (SQLException e) {
+            throw new CloudproofException("Failed list removed locations: " + e.toString());
+        }
+    }
 
 }

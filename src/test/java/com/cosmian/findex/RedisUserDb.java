@@ -30,8 +30,7 @@ public class RedisUserDb extends RedisConnection implements FilterLocations {
     }
 
     /**
-     * Instantiate a Redis instance from an URI. Read the password from
-     * environment variables.
+     * Instantiate a Redis instance from an URI. Read the password from environment variables.
      *
      * @param uri the URI to the Redis server
      */
@@ -40,8 +39,7 @@ public class RedisUserDb extends RedisConnection implements FilterLocations {
     }
 
     /**
-     * Instantiate a Redis instance using the hostname, port and password passed as
-     * environment variables
+     * Instantiate a Redis instance using the hostname, port and password passed as environment variables
      */
     public RedisUserDb() {
         this(new JedisPool(redisHostname(), redisPort()), redisPassword());
@@ -89,11 +87,11 @@ public class RedisUserDb extends RedisConnection implements FilterLocations {
      */
     public void flush() {
         Set<byte[]> keys = getAllKeys();
-	if (0 < keys.size()) {
-		byte[][] keysToDelete = keys.toArray(new byte[keys.size()][]);
-		Jedis jedis = connect();
-		jedis.del(keysToDelete);
-	}
+        if (0 < keys.size()) {
+            byte[][] keysToDelete = keys.toArray(new byte[keys.size()][]);
+            Jedis jedis = connect();
+            jedis.del(keysToDelete);
+        }
     }
 
     /**

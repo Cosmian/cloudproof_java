@@ -92,11 +92,11 @@ public class RedisEntryTable extends RedisConnection implements EntryTableDataba
      */
     public void flush() {
         Set<byte[]> keys = getAllKeys();
-	if (0 < keys.size()) {
-		byte[][] keysToDelete = keys.toArray(new byte[keys.size()][]);
-		Jedis jedis = connect();
-		jedis.del(keysToDelete);
-	}
+        if (0 < keys.size()) {
+            byte[][] keysToDelete = keys.toArray(new byte[keys.size()][]);
+            Jedis jedis = connect();
+            jedis.del(keysToDelete);
+        }
     }
 
     /**
@@ -129,13 +129,13 @@ public class RedisEntryTable extends RedisConnection implements EntryTableDataba
 
         ArrayList<Tuple<Uid32, EntryTableValue>> keysAndValues = new ArrayList<>();
 
-	if (0 == keys.size()) {
-		return keysAndValues;
-	}
+        if (0 == keys.size()) {
+            return keysAndValues;
+        }
 
         Jedis jedis = connect();
         List<byte[]> values = jedis.mget(keysArray);
-	jedis.close();
+        jedis.close();
 
         for (int i = 0; i < values.size(); i++) {
             Uid32 key = uids.get(i);
@@ -157,15 +157,15 @@ public class RedisEntryTable extends RedisConnection implements EntryTableDataba
                 Arrays.asList(RedisConnection.getKey(PREFIX, entry.getKey().getBytes()));
             List<byte[]> args =
                 Arrays.asList(entry.getValue().getPrevious().getBytes(),
-                        entry.getValue().getNew().getBytes());
+                    entry.getValue().getNew().getBytes());
             @SuppressWarnings("unchecked")
             List<byte[]> response =
-            (List<byte[]>) jedis.evalsha(RedisEntryTable.this.conditionalUpsertSha, keys, args);
+                (List<byte[]>) jedis.evalsha(RedisEntryTable.this.conditionalUpsertSha, keys, args);
             if (response.size() > 0) {
                 rejected.put(entry.getKey(), new EntryTableValue(response.get(0)));
             }
         }
-	jedis.close();
+        jedis.close();
         return rejected;
     }
 
@@ -175,6 +175,6 @@ public class RedisEntryTable extends RedisConnection implements EntryTableDataba
         for (Uid32 uid : uids) {
             jedis.del(getKey(uid));
         }
-	jedis.close();
+        jedis.close();
     }
 }

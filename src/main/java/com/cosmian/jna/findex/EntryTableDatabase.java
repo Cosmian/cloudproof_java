@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Set;
 
 import com.cosmian.jna.findex.ffi.FFiUtils;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchCallback;
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.DeleteCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.DumpTokensCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertCallback;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.serde.Tuple;
 import com.cosmian.jna.findex.structs.EntryTableValue;
@@ -24,8 +24,7 @@ public interface EntryTableDatabase {
     /**
      * Fetch all the Entry Table Uids.
      * <p>
-     * Implementation of this method is only required for the compact
-     * operation.
+     * Implementation of this method is only required for the compact operation.
      *
      * @return the {@link Set} of all {@link Uid32}
      * @throws CloudproofException if anything goes wrong
@@ -62,7 +61,7 @@ public interface EntryTableDatabase {
      * @throws CloudproofException if anything goes wrong
      */
     public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> uidsAndValues)
-	throws CloudproofException;
+        throws CloudproofException;
 
     /**
      * Delete the lines with the given UIDs.
@@ -79,10 +78,9 @@ public interface EntryTableDatabase {
         return new FetchCallback() {
             @Override
             public int callback(Pointer output,
-                    IntByReference outputLen,
-                    Pointer uidsPtr,
-                    int uidsLength)
-	    {
+                                IntByReference outputLen,
+                                Pointer uidsPtr,
+                                int uidsLength) {
 
                 try {
                     byte[] uids = new byte[uidsLength];
@@ -100,7 +98,6 @@ public interface EntryTableDatabase {
         };
     }
 
-
     /**
      * Return the appropriate upsert callback (with input/output serialization).
      */
@@ -108,12 +105,11 @@ public interface EntryTableDatabase {
         return new UpsertCallback() {
             @Override
             public int callback(Pointer outputs,
-                    IntByReference outputsLength,
-                    Pointer oldValues,
-                    int oldValuesLength,
-                    Pointer newValues,
-                    int newValuesLength)
-	    {
+                                IntByReference outputsLength,
+                                Pointer oldValues,
+                                int oldValuesLength,
+                                Pointer newValues,
+                                int newValuesLength) {
                 try {
                     //
                     // Read `oldValues` until `oldValuesLength`
@@ -138,8 +134,9 @@ public interface EntryTableDatabase {
                     for (Map.Entry<Uid32, EntryTableValue> newValuesIter : newValuesMap.entrySet()) {
                         boolean optionalValueFound = false;
                         for (Map.Entry<Uid32, EntryTableValue> oldValuesIter : oldValuesMap.entrySet()) {
-                            if (newValuesIter.getKey().equals( oldValuesIter.getKey())) {
-                                EntryTableValues e = new EntryTableValues(oldValuesIter.getValue(), newValuesIter.getValue());
+                            if (newValuesIter.getKey().equals(oldValuesIter.getKey())) {
+                                EntryTableValues e =
+                                    new EntryTableValues(oldValuesIter.getValue(), newValuesIter.getValue());
                                 map.put(newValuesIter.getKey(), e);
                                 optionalValueFound = true;
                             }
@@ -165,7 +162,8 @@ public interface EntryTableDatabase {
     default DeleteCallback deleteCallback() {
         return new DeleteCallback() {
             @Override
-            public int callback(Pointer items, int itemsLength) {
+            public int callback(Pointer items,
+                                int itemsLength) {
                 try {
                     //
                     // Read `items` until `itemsLength`
@@ -195,7 +193,8 @@ public interface EntryTableDatabase {
     default DumpTokensCallback dumpTokenCallback() {
         return new DumpTokensCallback() {
             @Override
-            public int callback(Pointer uidsPointer, IntByReference uidsLen) {
+            public int callback(Pointer uidsPointer,
+                                IntByReference uidsLen) {
                 try {
                     //
                     // Select uids and values in EntryTable

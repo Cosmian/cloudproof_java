@@ -67,7 +67,8 @@ public final class TestUtils {
         }
     }
 
-    public static boolean portAvailable(String hostname, int port) {
+    public static boolean portAvailable(String hostname,
+                                        int port) {
         Logger logger = Logger.getLogger(TestUtils.class.getName());
         logger.fine("--------------Testing port " + port);
         Socket s = null;

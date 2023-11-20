@@ -10,6 +10,7 @@ import com.cosmian.rest.kmip.types.KeyCompressionType;
 import com.cosmian.rest.kmip.types.KeyFormatType;
 import com.cosmian.rest.kmip.types.ObjectType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * A Key Block object is a structure used to encapsulate all of the information that is closely associated with a
  * cryptographic key.

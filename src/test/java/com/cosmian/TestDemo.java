@@ -66,11 +66,11 @@ public class TestDemo {
         // export the private master key
         PrivateKey privateMasterKey =
             kmsClient.retrieveCoverCryptPrivateMasterKey(privateMasterKeyUniqueIdentifier);
-        byte[] _privateMasterKeyBytes = privateMasterKey.bytes();
+        /*byte[] privateMasterKeyBytes =*/ privateMasterKey.bytes();
         // export the public key
         PublicKey publicKey =
             kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyUniqueIdentifier);
-        byte[] _publicKeyBytes = publicKey.bytes();
+        /*byte[] _publicKeyBytes =*/ publicKey.bytes();
 
         byte[] protectedMkgData = "protectedMkgMessage".getBytes(StandardCharsets.UTF_8);
         String protectedMkgEncryptionPolicy = "Department::MKG && Security Level::Protected";
@@ -105,9 +105,9 @@ public class TestDemo {
 
         // as with the master keys, the user keys can be exported to be used with the
         // native library
-        PrivateKey confidentialMkgUserKey_ =
+        /*PrivateKey confidentialMkgUserKey_ =*/
             kmsClient.retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
-        PrivateKey topSecretMkgFinUserKey =
+        /*PrivateKey topSecretMkgFinUserKey =*/
             kmsClient.retrieveCoverCryptUserDecryptionKey(topSecretMkgFinUserKeyUid);
 
         // The confidential marketing user can successfully decrypt a low-security

@@ -29,9 +29,9 @@ public class TestConditionalUpsert {
     @Test
     public void testSqliteConditionalUpsert() throws Exception {
         System.out.println("Sqlite conditional upsert");
-        try (Sqlite db = new Sqlite()) {
+        try (SqliteEntryTable entryTable = new SqliteEntryTable()) {
             String tableName = "entry_table";
-            Statement stat = db.getConnection().createStatement();
+            Statement stat = entryTable.getConnection().createStatement();
             stat.execute("DROP TABLE IF EXISTS " + tableName + ";");
             stat.execute("CREATE TABLE " + tableName + " (uid BLOB PRIMARY KEY,value BLOB NOT NULL);");
 
@@ -60,7 +60,7 @@ public class TestConditionalUpsert {
             System.out.println(" .  Updated  Values: " + updatedValues.size());
 
             // insert originals
-            Map<Uid32, EntryTableValue> failed = db.upsertEntries(originalValues);
+            Map<Uid32, EntryTableValue> failed = entryTable.upsert(originalValues);
             assertEquals(0, failed.size());
 
             // the number of entries that should fail on update
@@ -91,7 +91,7 @@ public class TestConditionalUpsert {
             }
 
             // insert updated
-            failed = db.upsertEntries(updatedValues);
+            failed = entryTable.upsert(updatedValues);
             assertEquals(numOverlapFail, failed.size());
 
             // cleanup
@@ -105,14 +105,14 @@ public class TestConditionalUpsert {
     public void testRedisConditionalUpsert() throws Exception {
         System.out.println("Redis conditional upsert");
 
-        if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
+        if (TestUtils.portAvailable(RedisEntryTable.redisHostname(), 6379)) {
             throw new RuntimeException("Redis is down");
         }
 
-        try (Redis db = new Redis()) {
+        try (RedisEntryTable entryTable = new RedisEntryTable()) {
 
             // delete all items
-            try (Jedis jedis = db.getJedis()) {
+            try (Jedis jedis = entryTable.connect()) {
                 jedis.flushAll();
             }
 
@@ -141,7 +141,7 @@ public class TestConditionalUpsert {
             System.out.println(" .  Updated  Values: " + updatedValues.size());
 
             // insert originals
-            Map<Uid32, EntryTableValue> failed = db.upsertEntries(originalValues);
+            Map<Uid32, EntryTableValue> failed = entryTable.upsert(originalValues);
             assertEquals(0, failed.size());
 
             // the number of entries that should fail on update
@@ -172,12 +172,12 @@ public class TestConditionalUpsert {
             }
 
             // insert updated
-            failed = db.upsertEntries(updatedValues);
+            failed = entryTable.upsert(updatedValues);
             assertEquals(numOverlapFail, failed.size());
 
             // delete all items
             // delete all items
-            try (Jedis jedis = db.getJedis()) {
+            try (Jedis jedis = entryTable.connect()) {
                 jedis.flushAll();
             }
 

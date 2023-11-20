@@ -14,11 +14,11 @@ import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.utils.CloudproofException;
 import com.cosmian.utils.Leb128;
 
-public class ProgressResults implements Leb128Serializable {
+public class IntermediateResults implements Leb128Serializable {
 
     private Map<Keyword, Set<IndexedValue>> results;
 
-    public ProgressResults() {
+    public IntermediateResults() {
         this.results = new HashMap<>();
     }
 

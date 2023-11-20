@@ -10,11 +10,11 @@ import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.utils.CloudproofException;
 import com.cosmian.utils.Leb128;
 
-public class UpsertResults implements Leb128Serializable {
+public class KeywordSet implements Leb128Serializable {
 
     private Set<Keyword> results;
 
-    public UpsertResults() {
+    public KeywordSet() {
         this.results = new HashSet<>();
     }
 

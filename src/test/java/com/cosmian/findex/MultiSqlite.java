@@ -1,74 +1,62 @@
-/*
- *package com.cosmian.findex;
- *
- *import java.sql.SQLException;
- *import java.util.ArrayList;
- *import java.util.HashMap;
- *import java.util.List;
- *import java.util.Map;
- *import java.util.Set;
- *
- *import com.cosmian.jna.findex.Index;
- *import com.cosmian.jna.findex.serde.Tuple;
- *import com.cosmian.jna.findex.structs.ChainTableValue;
- *import com.cosmian.jna.findex.structs.EntryTableValue;
- *import com.cosmian.jna.findex.structs.EntryTableValues;
- *import com.cosmian.jna.findex.structs.Uid32;
- *import com.cosmian.utils.CloudproofException;
- *
- *public class MultiSqlite extends Index {
- *
- *    private final List<SqliteRemovedUserDb> dbList;
- *
- *    public MultiSqlite(List<SqliteRemovedUserDb> dbList) throws SQLException {
- *        this.dbList = dbList;
- *    }
- *
- *    @Override
- *    protected List<Tuple<Uid32, EntryTableValue>> fetchEntries(List<Uid32> uids) throws CloudproofException {
- *        List<Tuple<Uid32, EntryTableValue>> output = new ArrayList<Tuple<Uid32, EntryTableValue>>();
- *        for (SqliteRemovedUserDb sqlite : this.dbList) {
- *            List<Tuple<Uid32, EntryTableValue>> entries = sqlite.fetchEntries(uids);
- *            output.addAll(entries);
- *        }
- *
- *        return output;
- *    }
- *
- *    @Override
- *    protected Map<Uid32, ChainTableValue> fetchChains(List<Uid32> uids) throws CloudproofException {
- *        HashMap<Uid32, ChainTableValue> output = new HashMap<>();
- *        for (SqliteRemovedUserDb sqlite : this.dbList) {
- *            Map<Uid32, ChainTableValue> chains = sqlite.fetchChains(uids);
- *            output.putAll(chains);
- *        }
- *        return output;
- *    }
- *
- *    protected Set<Uid32> fetchAllEntryTableUids() throws CloudproofException {
- *        throw new CloudproofException("not implemented");
- *    }
- *
- *    @Override
- *    protected Map<Uid32, EntryTableValue> upsertEntries(Map<Uid32, EntryTableValues> uidsAndValues)
- *        throws CloudproofException {
- *        throw new CloudproofException("not implemented");
- *    }
- *
- *    @Override
- *    protected void insertChains(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException {
- *        throw new CloudproofException("not implemented");
- *    }
- *
- *    @Override
- *    protected void deleteEntries(List<Uid32> uids) throws CloudproofException {
- *        throw new CloudproofException("not implemented");
- *    }
- *
- *    @Override
- *    protected void deleteChains(List<Uid32> uids) throws CloudproofException {
- *        throw new CloudproofException("not implemented");
- *    }
- *
- *}
- */
+package com.cosmian.findex;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.cosmian.jna.findex.serde.Tuple;
+import com.cosmian.jna.findex.structs.EntryTableValue;
+import com.cosmian.jna.findex.structs.EntryTableValues;
+import com.cosmian.jna.findex.structs.Uid32;
+import com.cosmian.utils.CloudproofException;
+
+public class MultiSqlite extends SqliteEntryTable {
+
+	int selector;
+	final List<SqliteEntryTable> entryTableList;
+
+	public MultiSqlite(List<SqliteEntryTable> dbList) throws SQLException {
+		if (dbList.isEmpty()) {
+			throw new SQLException("No Entry Table given");
+		} else {
+
+			this.entryTableList = dbList;
+			this.selector = 0;
+		}
+	}
+
+	public void selectTable(int tableNumber) throws CloudproofException {
+		if (this.entryTableList.size() <= tableNumber) {
+			throw new CloudproofException("Entry Table number out of range");
+		} else {
+			this.selector = tableNumber;
+		}
+	}
+
+	@Override
+	public List<Tuple<Uid32, EntryTableValue>> fetch(List<Uid32> uids) throws CloudproofException {
+		List<Tuple<Uid32, EntryTableValue>> output = new ArrayList<Tuple<Uid32, EntryTableValue>>();
+		for (SqliteEntryTable entryTable : this.entryTableList) {
+			List<Tuple<Uid32, EntryTableValue>> entries = entryTable.fetch(uids);
+			output.addAll(entries);
+		}
+		return output;
+	}
+
+	@Override
+	public Set<Uid32> fetchAllUids() throws CloudproofException {
+		return entryTableList.get(selector).fetchAllUids();
+	}
+
+	@Override
+	public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> modifications) throws CloudproofException {
+		return entryTableList.get(selector).upsert(modifications);
+	}
+
+	@Override
+	public void delete(List<Uid32> uids) throws CloudproofException {
+		entryTableList.get(selector).delete(uids);
+	}
+}

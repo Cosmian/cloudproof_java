@@ -28,10 +28,8 @@ public class TestSqlite {
         TestUtils.initLogging();
     }
 
-    public static HashMap<IndexedValue, Set<Keyword>> mapToIndex(String word,
-                                                                 int userId) {
-        Set<Keyword> keywords = new HashSet<>(
-            Arrays.asList(new Keyword(word)));
+    public static HashMap<IndexedValue, Set<Keyword>> mapToIndex(String word, int userId) {
+        Set<Keyword> keywords = new HashSet<>(Arrays.asList(new Keyword(word)));
 
         HashMap<IndexedValue, Set<Keyword>> indexedValuesAndWords = new HashMap<>();
         indexedValuesAndWords.put(new Location(userId).toIndexedValue(), keywords);
@@ -47,83 +45,64 @@ public class TestSqlite {
         }
     }
 
-    //@Test
-    //public void testMultiFetchEntryValues() throws Exception {
-        //System.out.println("");
-        //System.out.println("---------------------------------------");
-        //System.out.println("Findex Multi Fetch Entries");
-        //System.out.println("---------------------------------------");
-        //System.out.println("");
+    @Test
+    public void testMultiFetchEntryValues() throws Exception {
+	System.out.println("");
+	System.out.println("---------------------------------------");
+	System.out.println("Findex Multi Fetch Entries");
+	System.out.println("---------------------------------------");
+	System.out.println("");
 
-        ////
-        //// Generate key and label
-        ////
-        //byte[] key = IndexUtils.loadKey();
-        //byte[] label = IndexUtils.loadLabel();
+	//
+	// Generate key and label
+	//
+	SqliteEntryTable entryTable1 = new SqliteEntryTable("target/entry_table_1");
+	SqliteEntryTable entryTable2 = new SqliteEntryTable("target/entry_table_2");
+	SqliteChainTable chainTable = new SqliteChainTable("target/chain_table");
 
-        //Sqlite db1 = new Sqlite();
-        //Sqlite db2 = new Sqlite();
+	entryTable1.flush();
+	entryTable2.flush();
+	chainTable.flush();
 
-        //Findex findex_1 = new Findex();
-        //findex_1.instantiateCustomBackends(key, label, 1, db1);
+	MultiSqlite compositeEntryTable = new MultiSqlite(Arrays.asList( entryTable1, entryTable2 ));
 
-        //Findex findex_2 = new Findex();
-        //findex_2.instantiateCustomBackends(key, label, 1, db2);
+	byte[] key = IndexUtils.loadKey();
+	byte[] label = IndexUtils.loadLabel();
 
-        //findex_1.upsert(new Findex.IndexRequest(label, db1).add(mapToIndex("John", 1)));
-        //findex_2.upsert(new Findex.IndexRequest(label, db2).add(mapToIndex("John", 2)));
+	Findex findex = new Findex();
+	findex.instantiateCustomBackends(key, label, 2, compositeEntryTable, chainTable);
 
-        //Map<byte[], byte[]> entries_1 = db1.getAllKeyValueItems("entry_table");
-        //Map<byte[], byte[]> chains_1 = db1.getAllKeyValueItems("chain_table");
-        //Map<byte[], byte[]> entries_2 = db2.getAllKeyValueItems("entry_table");
-        //Map<byte[], byte[]> chains_2 = db2.getAllKeyValueItems("chain_table");
+	compositeEntryTable.selectTable(0);
+	findex.add(mapToIndex("John", 1));
 
-        //printMap("Entries 1", entries_1);
-        //printMap("Entries 2", entries_2);
-        //printMap("Chains 1", chains_1);
-        //printMap("Chains 2", chains_2);
+	compositeEntryTable.selectTable(1);
+	findex.add(mapToIndex("John", 2));
 
-        ////
-        //// Search
-        ////
-        //System.out.println("");
-        //System.out.println("---------------------------------------");
-        //System.out.println("Findex Search Sqlite through multi entry tables");
-        //System.out.println("---------------------------------------");
-        //System.out.println("");
+	long entryTable1Length = entryTable1.fetchAllUids().size();
+	long entryTable2Length = entryTable2.fetchAllUids().size();
+	long chainTableLength = chainTable.fetchAllUids().size();
+	System.out.println("Entry Table 1 length: " + entryTable1Length);
+	System.out.println("Entry Table 2 length: " + entryTable2Length);
+	System.out.println("Chain Table length: " + chainTableLength);
+	assertEquals(1, entryTable1Length);
+	assertEquals(1, entryTable2Length);
+	assertEquals(2, chainTableLength);
 
-        //System.out.println("Searching with multiple entries values");
-        //MultiSqlite db = new MultiSqlite(Arrays.asList(db1, db2));
-        //Set<Keyword> keywords = new HashSet<>(
-            //Arrays.asList(
-                //new Keyword("John")));
+	//
+	// Search
+	//
+	System.out.println("");
+	System.out.println("---------------------------------------");
+	System.out.println("Findex Search Sqlite through multi entry tables");
+	System.out.println("---------------------------------------");
+	System.out.println("");
 
-        //// Searching keywords with an incorrect entry tables number: the `fetchEntries` callback fails in the rust
-        //// part
-        //// but the callback returns the correct amount of memory and then the rust part retries with this amount (and
-        //// finally succeeds).
-        //try {
-            //Findex.search(
-                //key,
-                //label,
-                //keywords,
-                //1, // should be 2 (since there are 2 entry tables)
-                //db);
-        //} catch (CloudproofException e) {
-            //assertTrue(e.getMessage().contains("buffer too small"));
-        //}
-
-        //// This time, the given number of entry tables is correct, only one call to `fetchEntries`
-        //SearchResults searchResults =
-            //Findex.search(
-                //key,
-                //label,
-                //keywords,
-                //2,
-                //db);
-
-        //assertEquals(searchResults.getNumbers(), new HashSet<>(Arrays.asList(1L, 2L)));
-    //}
+	System.out.println("Searching with multiple entries values");
+	Set<Keyword> keywords = new HashSet<>(Arrays.asList(new Keyword("John")));
+	SearchResults searchResults = findex.search(keywords);
+	assertEquals(searchResults.getNumbers(), new HashSet<>(Arrays.asList(1L, 2L)));
+	System.out.println("<== successfully found all original French locations");
+    }
 
     @Test
     public void testUpsertAndSearchSqlite() throws Exception {

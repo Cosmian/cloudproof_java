@@ -56,6 +56,7 @@ public class FFiUtils {
                                                                                                                IntByReference outputSize)
         throws CloudproofException {
         byte[] uidsAndValuesBytes = Leb128Writer.serializeListOfTuples(list);
+        // System.out.println("listOfTuplesToOutputPointer: uidsAndValuesBytes" + Arrays.toString(uidsAndValuesBytes));
         if (outputSize.getValue() < uidsAndValuesBytes.length) {
             outputSize.setValue(uidsAndValuesBytes.length);
             return 1;

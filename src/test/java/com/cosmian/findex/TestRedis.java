@@ -1,7 +1,6 @@
 package com.cosmian.findex;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,10 +13,9 @@ import org.junit.jupiter.api.Test;
 
 import com.cosmian.TestUtils;
 import com.cosmian.jna.findex.Findex;
-import com.cosmian.jna.findex.ffi.FindexUserCallbacks.SearchProgress;
-import com.cosmian.jna.findex.ffi.ProgressResults;
+import com.cosmian.jna.findex.Interrupt;
+import com.cosmian.jna.findex.ffi.KeywordSet;
 import com.cosmian.jna.findex.ffi.SearchResults;
-import com.cosmian.jna.findex.ffi.UpsertResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
@@ -35,7 +33,7 @@ public class TestRedis {
 
     @Test
     public void testUpsertAndSearchRedis() throws Exception {
-        if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
+        if (TestUtils.portAvailable(RedisEntryTable.redisHostname(), 6379)) {
             throw new RuntimeException("Redis is down");
         }
 
@@ -65,39 +63,45 @@ public class TestRedis {
         //
         // Prepare Redis tables and users
         //
-        try (Redis db = new Redis()) {
-            // delete all items
-            try (Jedis jedis = db.getJedis()) {
-                jedis.flushAll();
-            }
+        try (RedisUserDb db = new RedisUserDb();
+            RedisEntryTable entryTable = new RedisEntryTable();
+            RedisChainTable chainTable = new RedisChainTable();) {
+            db.flush();
+            entryTable.flush();
+            chainTable.flush();
+
             db.insertUsers(testFindexDataset);
-            System.out
-                .println("After insertion: data_table size: " + db.getAllKeys(Redis.DATA_TABLE_INDEX).size());
+            System.out.println("After insertion: data_table size: " + chainTable.getAllKeys().size());
+
+            Findex findex = new Findex();
+            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
 
             //
             // Upsert
             //
             Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
-            UpsertResults res = Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+            KeywordSet res = findex.add(indexedValuesAndWords);
+            int entryTableLength = entryTable.getAllKeys().size();
+            int chainTableLength = chainTable.getAllKeys().size();
             assertEquals(583, res.getResults().size(), "wrong number of new upserted keywords");
-            System.out
-                .println("After insertion: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
-            System.out
-                .println("After insertion: chain_table size: " + db.getAllKeys(Redis.CHAIN_TABLE_INDEX).size());
+            assertEquals(583, entryTableLength, "wrong Entry Table length");
+            assertEquals(618, chainTableLength, "wrong Entry Table length");
+            System.out.println("After insertion: entry_table size: " + entryTableLength);
+            System.out.println("After insertion: chain_table size: " + chainTableLength);
 
             //
             // Upsert a new keyword
             //
             HashMap<IndexedValue, Set<Keyword>> newIndexedKeyword = new HashMap<>();
-            Set<Keyword> expectdeKeywords = new HashSet<>();
-            expectdeKeywords.add(new Keyword("test"));
-            newIndexedKeyword.put(new IndexedValue(new Location("ici")), expectdeKeywords);
+            Set<Keyword> expectedKeywords = new HashSet<>();
+            expectedKeywords.add(new Keyword("test"));
+            newIndexedKeyword.put(new IndexedValue(new Location("ici")), expectedKeywords);
             // It is returned the first time it is added.
-            Set<Keyword> newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
-            assertEquals(expectdeKeywords, newKeywords, "new keyword is not returned");
+            Set<Keyword> newKeywords = findex.add(newIndexedKeyword).getResults();
+            assertEquals(expectedKeywords, newKeywords, "new keyword is not returned");
             // It is *not* returned the second time it is added.
-            newKeywords = Findex.upsert(new Findex.IndexRequest(key, label, db).add(newIndexedKeyword)).getResults();
-            assert(newKeywords.isEmpty());
+            newKeywords = findex.add(newIndexedKeyword).getResults();
+            assert (newKeywords.isEmpty());
 
             //
             // Search
@@ -109,75 +113,52 @@ public class TestRedis {
             System.out.println("");
 
             {
-                SearchResults searchResults =
-                    Findex.search(
-                        key,
-                        label,
-                        new HashSet<>(Arrays.asList(new Keyword("France"))),
-                        db);
+                SearchResults searchResults = findex.search(new String[] {"France"});
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out.println("<== successfully found all original French locations");
             }
 
             // This compact should do nothing except changing the label since the users
             // table didn't change.
-            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
+            findex.compact(key, "NewLabel".getBytes(), 1);
             System.out
-                .println("After first compact: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
+                .println("After first compact: entry_table size: " + entryTable.getAllKeys().size());
             System.out
-                .println("After first compact: chain_table size: " + db.getAllKeys(Redis.CHAIN_TABLE_INDEX).size());
-
-            {
-                // Search with old label
-                SearchResults searchResults =
-                    Findex.search(
-                        key,
-                        label,
-                        new HashSet<>(Arrays.asList(new Keyword("France"))),
-                        db);
-                assertTrue(searchResults.get(new Keyword("France")).isEmpty());
-                System.out.println("<== successfully compacted and changed the label");
-            }
+                .println("After first compact: chain_table size: " + chainTable.getAllKeys().size());
 
             {
                 // Search with new label and without user changes
-                SearchResults searchResults = Findex.search(
-                    key,
-                    "NewLabel".getBytes(),
-                    new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    db);
+                SearchResults searchResults = findex.search(new String[] {"France"});
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out.println("<== successfully found all French locations with the new label");
             }
 
+            //
+            // Compact
+            //
+            System.out.println("");
+            System.out.println("---------------------------------------");
+            System.out.println("Findex Re-Compact Sqlite");
+            System.out.println("---------------------------------------");
+            System.out.println("");
+
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
             expectedDbLocations.remove(new Long(17));
-            Findex.compact(key, key, "NewLabel".getBytes(), 1, db);
+            findex.compact(key, "NewLabel2".getBytes(), 1, db);
             {
                 // Search should return everyone but n°17
-                SearchResults searchResults = Findex.search(
-                    key,
-                    "NewLabel".getBytes(),
-                    new HashSet<>(Arrays.asList(new Keyword("France"))),
-                    db);
+                SearchResults searchResults = findex.search(new String[] {"France"});
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
                 System.out
                     .println("<== successfully found all French locations after removing one and compacting");
             }
-
-            // delete all items
-            try (Jedis jedis = db.getJedis()) {
-                jedis.flushAll();
-            }
-
         }
     }
 
-
     @Test
     public void testExceptions() throws Exception {
-        if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
+        if (TestUtils.portAvailable(RedisEntryTable.redisHostname(), 6379)) {
             throw new RuntimeException("Redis is down");
         }
 
@@ -202,20 +183,26 @@ public class TestRedis {
         //
         // Prepare Redis tables and users
         //
-        try (Redis db = new Redis()) {
-            // delete all items
-            try (Jedis jedis = db.getJedis()) {
-                jedis.flushAll();
-            }
+        try (RedisUserDb db = new RedisUserDb();
+            RedisEntryTable entryTable = new RedisEntryTable();
+            RedisChainTable chainTable = new RedisChainTable();) {
+
+            db.flush();
+            entryTable.flush();
+            chainTable.flush();
+
             db.insertUsers(testFindexDataset);
 
-            Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
-            Findex.upsert(new Findex.IndexRequest(key, label, db).add(indexedValuesAndWords));
+            Findex findex = new Findex();
+            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
 
-            db.shouldThrowInsideFetchEntries = true;
+            Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
+            findex.add(indexedValuesAndWords);
+
+            entryTable.shouldThrowInsideFetchEntries = true;
 
             try {
-                Findex.search(new Findex.SearchRequest(key, label, db).keywords(new String[] { "John" }));
+                findex.search(new String[] {"John"});
             } catch (CloudproofException e) {
                 assertEquals("Should throw inside fetch entries", e.getMessage());
                 return;
@@ -227,7 +214,7 @@ public class TestRedis {
 
     @Test
     public void testGraphUpsertAndSearchRedis() throws Exception {
-        if (TestUtils.portAvailable(Redis.redisHostname(), 6379)) {
+        if (TestUtils.portAvailable(RedisEntryTable.redisHostname(), 6379)) {
             throw new RuntimeException("Redis is down");
         }
 
@@ -266,23 +253,26 @@ public class TestRedis {
         //
         // Prepare Redis tables and users
         //
-        try (Redis db = new Redis()) {
-            // delete all items
-            try (Jedis jedis = db.getJedis()) {
-                jedis.flushAll();
-            }
+        try (RedisUserDb db = new RedisUserDb();
+            RedisEntryTable entryTable = new RedisEntryTable();
+            RedisChainTable chainTable = new RedisChainTable();) {
+
+            db.flush();
+            entryTable.flush();
+            chainTable.flush();
+
             db.insertUsers(testFindexDataset);
-            System.out
-                .println("After insertion: data_table size: " + db.getAllKeys(Redis.DATA_TABLE_INDEX).size());
+            System.out.println("After insertion: data_table size: " + db.getAllKeys().size());
+
+            Findex findex = new Findex();
+            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
 
             //
             // Upsert
             //
-            Findex.upsert(key, label, additions, new HashMap<>(), db);
-            System.out
-                .println("After insertion: entry_table size: " + db.getAllKeys(Redis.ENTRY_TABLE_INDEX).size());
-            System.out
-                .println("After insertion: chain_table size: " + db.getAllKeys(Redis.CHAIN_TABLE_INDEX).size());
+            findex.add(additions);
+            System.out.println("After insertion: entry_table size: " + entryTable.getAllKeys().size());
+            System.out.println("After insertion: chain_table size: " + chainTable.getAllKeys().size());
 
             //
             // Search
@@ -294,33 +284,28 @@ public class TestRedis {
             System.out.println("");
 
             {
-                Findex.SearchRequest request = new Findex.SearchRequest(key, label, db)
-                    .keywords(new String[] {"Mar"})
-                    .searchProgress(new SearchProgress() {
-                        @Override
-                        public boolean notify(ProgressResults results) throws CloudproofException {
-                            Map<Keyword, Set<IndexedValue>> indexedValuesByKeywords = results.getResults();
-                            Keyword key_marti = new Keyword("Marti");
-                            Keyword key_marte = new Keyword("Marte");
-                            if (indexedValuesByKeywords.containsKey(key_marti)) {
-                                IndexedValue iv = indexedValuesByKeywords.get(key_marti).iterator().next();
-                                assertEquals(new Keyword("Martin"), iv.getWord());
-                            }
-                            if (indexedValuesByKeywords.containsKey(key_marte)) {
-                                IndexedValue iv = indexedValuesByKeywords.get(key_marte).iterator().next();
-                                assertEquals(new Keyword("Marten"), iv.getWord());
-                            }
-                            return true;
+                SearchResults searchResults = findex.search(new String[] {"Mar"}, new Interrupt() {
+                    @Override
+                    public boolean interrupt(Map<Keyword, Set<IndexedValue>> results) throws CloudproofException {
+                        Keyword key_marti = new Keyword("Marti");
+                        Keyword key_marte = new Keyword("Marte");
+                        if (results.containsKey(key_marti)) {
+                            IndexedValue iv = results.get(key_marti).iterator().next();
+                            assertEquals(new Keyword("Martin"), iv.getWord());
                         }
-                    });
-
-                SearchResults searchResults = Findex.search(request);
+                        if (results.containsKey(key_marte)) {
+                            IndexedValue iv = results.get(key_marte).iterator().next();
+                            assertEquals(new Keyword("Marten"), iv.getWord());
+                        }
+                        return true;
+                    }
+                });
                 assertEquals(3, searchResults.numberOfUniqueLocations());
                 System.out.println("<== successfully found all original French locations");
             }
 
             // delete all items
-            try (Jedis jedis = db.getJedis()) {
+            try (Jedis jedis = db.connect()) {
                 jedis.flushAll();
             }
 

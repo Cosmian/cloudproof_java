@@ -68,7 +68,7 @@ public class Leb128 {
         int actualLength = is.read(buffer);
         if (actualLength != length) {
             throw new IOException(
-                "Error reading a byte array of " + length + " bytes: only " + actualLength + " bytes were read !");
+                "Error reading a byte array of " + length + " bytes: only " + actualLength + " bytes were read!");
         }
         return buffer;
     }

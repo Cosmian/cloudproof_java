@@ -2,12 +2,9 @@ package com.cosmian.jna.findex;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Base64;
-import java.util.Base64.Encoder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,8 +14,6 @@ import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.ToIndexedValue;
 import com.cosmian.utils.CloudproofException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Native;
 import com.sun.jna.ptr.IntByReference;
 
@@ -56,72 +51,12 @@ public class FindexBase {
     }
 
     /**
-     * The Findex cloud server hostname from the COSMIAN_FINDEX_CLOUD_BASE_URL environment variable. Defaults to
-     * localhost if not found.
-     *
-     * @return the hostname
-     */
-    public static String findexCloudUrl() {
-        String v = System.getenv("COSMIAN_FINDEX_CLOUD_BASE_URL");
-        if (v == null) {
-            return "http://localhost:8080";
-        }
-        return v;
-    }
-
-    /**
      * Set the last error on the native lib
      *
      * @param error_msg the last error to set on the native lib
-     * @throws CloudproofException n case of native library error
      */
-    public static void set_error(String error_msg) throws CloudproofException {
-        unwrap(FindexBase.INSTANCE.set_error(error_msg));
-    }
-
-    protected static String indexedValuesToJson(Map<IndexedValue, Set<Keyword>> indexedValuesAndWords)
-        throws CloudproofException {
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
-        Encoder encoder = Base64.getEncoder();
-        HashMap<String, String[]> indexedValuesAndWordsString = new HashMap<>();
-        for (Entry<IndexedValue, Set<Keyword>> entry : indexedValuesAndWords.entrySet()) {
-            String[] words = new String[entry.getValue().size()];
-            int i = 0;
-            for (Keyword word : entry.getValue()) {
-                words[i++] = encoder.encodeToString(word.getBytes());
-            }
-            indexedValuesAndWordsString.put(
-                encoder.encodeToString(entry.getKey().getBytes()),
-                words);
-        }
-
-        String indexedValuesAndWordsJson;
-        try {
-            indexedValuesAndWordsJson = mapper.writeValueAsString(indexedValuesAndWordsString);
-        } catch (JsonProcessingException e) {
-            throw new CloudproofException("Invalid indexed values and words", e);
-        }
-        return indexedValuesAndWordsJson;
-    }
-
-    protected static String keywordsToJson(Set<Keyword> keyWords) throws CloudproofException {
-        // For the JSON strings
-        ObjectMapper mapper = new ObjectMapper();
-
-        // Findex words
-        Base64.Encoder encoder = Base64.getEncoder();
-        String[] wordsString = new String[keyWords.size()];
-        int i = 0;
-        for (Keyword keyword : keyWords) {
-            wordsString[i++] = encoder.encodeToString(keyword.getBytes());
-        }
-
-        try {
-            return mapper.writeValueAsString(wordsString);
-        } catch (JsonProcessingException e) {
-            throw new CloudproofException("Invalid words", e);
-        }
+    public static void set_error(String error_msg) {
+        FindexBase.INSTANCE.set_error(error_msg);
     }
 
     /**
@@ -132,21 +67,21 @@ public class FindexBase {
      * @param start the start timestamp of the FFI call (used for callback exception handling)
      * @throws CloudproofException in case of native library error
      */
-    protected static void unwrap(int errorCode, long start) throws CloudproofException {
-        FindexCallbackException.rethrowOnErrorCode(errorCode, start, System.currentTimeMillis());
-
-        unwrap(errorCode);
-    }
-
-    /**
-     * If the result of the last FFI call is in Error, recover the last error from the native code and throw an
-     * exception wrapping it.
-     *
-     * @param errorCode the result of the FFI call
-     * @throws CloudproofException in case of native library error
-     */
-    protected static void unwrap(int errorCode) throws CloudproofException {
+    protected static void unwrap(long start,
+                                 int errorCode)
+        throws CloudproofException { // Parameters are evaluated
+        // left to right:
+        // accepting the time
+        // parameter first
+        // allows getting the
+        // current time before
+        // evaluating the
+        // expression resulting
+        // in the error code
+        // when both are passed
+        // as arguments.
         if (errorCode != 0) {
+            FindexCallbackException.rethrowOnErrorCode(errorCode, start, System.currentTimeMillis());
             throw new CloudproofException(get_last_error(4095));
         }
     }

@@ -6,8 +6,6 @@ import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserSecretKeyTestVector {
-    static final CoverCrypt coverCrypt = new CoverCrypt();
-
     @JsonProperty("access_policy")
     private String accessPolicy;
 
@@ -26,7 +24,7 @@ public class UserSecretKeyTestVector {
                                                    Policy policy,
                                                    String userPolicy)
         throws CloudproofException {
-        byte[] key = coverCrypt.generateUserPrivateKey(masterSecretKey,
+        byte[] key = CoverCrypt.generateUserPrivateKey(masterSecretKey,
             userPolicy, policy);
         UserSecretKeyTestVector userKey = new UserSecretKeyTestVector();
         userKey.accessPolicy = userPolicy;

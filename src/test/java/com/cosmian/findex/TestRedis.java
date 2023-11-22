@@ -73,8 +73,7 @@ public class TestRedis {
             db.insertUsers(testFindexDataset);
             System.out.println("After insertion: data_table size: " + chainTable.getAllKeys().size());
 
-            Findex findex = new Findex();
-            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+            Findex findex = new Findex(key, label, 1, entryTable, chainTable);
 
             //
             // Upsert
@@ -193,8 +192,7 @@ public class TestRedis {
 
             db.insertUsers(testFindexDataset);
 
-            Findex findex = new Findex();
-            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+            Findex findex = new Findex(key, label, 1, entryTable, chainTable);
 
             Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
             findex.add(indexedValuesAndWords);
@@ -264,8 +262,7 @@ public class TestRedis {
             db.insertUsers(testFindexDataset);
             System.out.println("After insertion: data_table size: " + db.getAllKeys().size());
 
-            Findex findex = new Findex();
-            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+            Findex findex = new Findex(key, label, 1, entryTable, chainTable);
 
             //
             // Upsert

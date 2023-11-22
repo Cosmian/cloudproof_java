@@ -50,8 +50,7 @@ public class TestFindexCloud {
         String token = RestToken.generateNewToken(index.publicId, index.fetchEntriesKey, index.fetchChainsKey,
             index.upsertEntriesKey, index.insertChainsKey);
 
-        Findex findex = new Findex();
-        findex.instantiateRestBackend(label.getBytes(), token, baseUrl);
+        Findex findex = new Findex(label, token, baseUrl);
 
         System.out.println("");
         System.out.println("---------------------------------------");

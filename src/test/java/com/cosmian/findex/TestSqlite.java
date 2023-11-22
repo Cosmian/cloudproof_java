@@ -69,8 +69,7 @@ public class TestSqlite {
 	byte[] key = IndexUtils.loadKey();
 	byte[] label = IndexUtils.loadLabel();
 
-	Findex findex = new Findex();
-	findex.instantiateCustomBackends(key, label, 2, compositeEntryTable, chainTable);
+	Findex findex = new Findex(key, label, 2, compositeEntryTable, chainTable);
 
 	compositeEntryTable.selectTable(0);
 	findex.add(mapToIndex("John", 1));
@@ -142,8 +141,7 @@ public class TestSqlite {
 
             db.insert(testFindexDataset);
 
-            Findex findex = new Findex();
-            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+	    Findex findex = new Findex(key, label, 1, entryTable, chainTable);
 
             //
             // Upsert
@@ -253,8 +251,7 @@ public class TestSqlite {
 	try (SqliteUserDb db = new SqliteUserDb();
 		SqliteEntryTable entryTable = new SqliteEntryTable();
 		SqliteChainTable chainTable = new SqliteChainTable();) {
-	    Findex findex = new Findex();
-	    findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+	    Findex findex = new Findex(key, label, 1, entryTable, chainTable);
 	    for (int i = 0; i < 100; i++) {
 		findex.add(indexedValuesAndWords);
 	    }
@@ -281,8 +278,7 @@ public class TestSqlite {
 	    System.out
 		.println("Before insertion: chain_table size: " + initialChainTableSize);
 
-	    Findex findex = new Findex();
-	    findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+	    Findex findex = new Findex(key, label, 1, entryTable, chainTable);
 
 	    //
 	    // Search
@@ -397,12 +393,11 @@ public class TestSqlite {
 	//
 	// Upsert
 	//
-	Findex findex = new Findex();
-	findex.instantiateCustomBackends(key,
-					 label,
-					 1,
-					 new SqliteEntryTable("./target/sqlite.db"),
-					 new SqliteChainTable("./target/sqlite.db"));
+	Findex findex = new Findex(key,
+				   label,
+				   1,
+				   new SqliteEntryTable("./target/sqlite.db"),
+				   new SqliteChainTable("./target/sqlite.db"));
 	findex.add(indexedValuesAndWords);
     }
 }

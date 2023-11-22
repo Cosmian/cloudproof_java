@@ -59,11 +59,11 @@ public final class Findex extends FindexBase {
      * @param chainTable Chain Table implementation
      * @throws CloudproofException if anything goes wrong
      */
-    public void instantiateCustomBackends(byte[] key,
-                                          byte[] label,
-                                          int entryTableNumber,
-                                          EntryTableDatabase entryTable,
-                                          ChainTableDatabase chainTable)
+    public Findex(byte[] key,
+                  byte[] label,
+		  int entryTableNumber,
+		  EntryTableDatabase entryTable,
+		  ChainTableDatabase chainTable)
         throws CloudproofException {
         final Memory keyPointer = new Memory(key.length);
         final Memory labelPointer = new Memory(label.length);
@@ -95,6 +95,28 @@ public final class Findex extends FindexBase {
     }
 
     /**
+     * Instantiate Findex using a custom backend.
+     * <p>
+     * The implementation of both the Entry Table and the Chain Table passed as arguments is used in to manipulate the
+     * index.
+     *
+     * @param key Findex key used to encrypt the index
+     * @param label a public label used to allow compact operation without key rotation
+     * @param entryTableNumber the number of Entry Table used as backend
+     * @param entryTable Entry Table implementation
+     * @param chainTable Chain Table implementation
+     * @throws CloudproofException if anything goes wrong
+     */
+    public Findex(byte[] key,
+                  String label,
+		  int entryTableNumber,
+		  EntryTableDatabase entryTable,
+		  ChainTableDatabase chainTable)
+        throws CloudproofException {
+	this(key, label.getBytes(), entryTableNumber, entryTable, chainTable);
+    }
+
+    /**
      * Instantiate Findex using a REST backend.
      * <p>
      * All manipulation of indexes is delegated to a server implementing the Findex REST API.
@@ -104,9 +126,9 @@ public final class Findex extends FindexBase {
      * @param url URL of the Findex REST server
      * @throws CloudproofException if anything goes wrong
      */
-    public void instantiateRestBackend(byte[] label,
-                                       String token,
-                                       String url)
+    public Findex(byte[] label,
+                  String token,
+		  String url)
         throws CloudproofException {
         final Memory labelPointer = new Memory(label.length);
         labelPointer.write(0, label, 0, label.length);
@@ -118,6 +140,23 @@ public final class Findex extends FindexBase {
                 labelPointer, label.length,
                 token, url));
         HANDLE = handle.getValue();
+    }
+
+    /**
+     * Instantiate Findex using a REST backend.
+     * <p>
+     * All manipulation of indexes is delegated to a server implementing the Findex REST API.
+     *
+     * @param label a public label used to allow compact operation without key rotation
+     * @param token token used for authentication to the Findex REST server
+     * @param url URL of the Findex REST server
+     * @throws CloudproofException if anything goes wrong
+     */
+    public Findex(String label,
+                  String token,
+		  String url)
+        throws CloudproofException {
+	this(label.getBytes(), token, url);
     }
 
     // ----------------------------------------------------------------//

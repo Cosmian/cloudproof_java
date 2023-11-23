@@ -2,7 +2,7 @@
 
 ![workflow](https://github.com/Cosmian/cloudproof_java/actions/workflows/maven.yml/badge.svg)
 
-The Cloudproof Java library provides a Java-friendly API to [Cosmian's Cloudproof Encryption](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/).
+The Cloudproof Java library provides a Java-friendly API to [Cosmian's Cloudproof Encryption](https://docs.cosmian.com/).
 
 Cloudproof Encryption secures data repositories and applications in the cloud with advanced application-level encryption and encrypted search.
 
@@ -37,7 +37,7 @@ securely be outsourced without compromising usability.
 
 ## Getting started
 
-Please [check the online documentation](https://docs.cosmian.com/cloudproof_encryption/use_cases_benefits/) for details on using the CloudProof APIs
+Please [check the online documentation](https://docs.cosmian.com/) for details on using the CloudProof APIs
 
 In addition, please have a look at the following tests for implementation examples:
 

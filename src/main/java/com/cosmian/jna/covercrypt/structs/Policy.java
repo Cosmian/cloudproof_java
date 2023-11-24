@@ -31,7 +31,7 @@ public class Policy extends Ffi {
     public Policy() throws CloudproofException {
         byte[] policyBuffer = new byte[8192];
         IntByReference policyBufferSize = new IntByReference(policyBuffer.length);
-        unwrap(instance.h_policy(policyBuffer, policyBufferSize));
+        unwrap(INSTANCE.h_policy(policyBuffer, policyBufferSize));
         _bytes = Arrays.copyOfRange(policyBuffer, 0, policyBufferSize.getValue());
     }
 
@@ -45,12 +45,12 @@ public class Policy extends Ffi {
     public Policy(PolicyAxis[] axes) throws CloudproofException {
         byte[] buffer = new byte[8192];
         IntByReference bufferSize = new IntByReference(buffer.length);
-        unwrap(instance.h_policy(buffer, bufferSize));
+        unwrap(INSTANCE.h_policy(buffer, bufferSize));
         _bytes = Arrays.copyOfRange(buffer, 0, bufferSize.getValue());
         bufferSize.setValue(buffer.length);
 
         for (int i = 0; i < axes.length; i++) {
-            unwrap(instance.h_add_policy_axis(buffer, bufferSize, _bytes, _bytes.length,
+            unwrap(INSTANCE.h_add_policy_axis(buffer, bufferSize, _bytes, _bytes.length,
                 axes[i].toString() + "\0"));
             _bytes = Arrays.copyOfRange(buffer, 0, bufferSize.getValue());
             bufferSize.setValue(buffer.length);
@@ -66,7 +66,7 @@ public class Policy extends Ffi {
     public void addAxis(PolicyAxis axis) throws CloudproofException {
         byte[] updatedPolicy = new byte[8192];
         IntByReference updatePolicySize = new IntByReference(updatedPolicy.length);
-        unwrap(instance.h_add_policy_axis(updatedPolicy, updatePolicySize, this._bytes, this._bytes.length,
+        unwrap(INSTANCE.h_add_policy_axis(updatedPolicy, updatePolicySize, this._bytes, this._bytes.length,
             axis.toString() + "\0"));
         _bytes = Arrays.copyOfRange(updatedPolicy, 0, updatePolicySize.getValue());
     }
@@ -123,7 +123,7 @@ public class Policy extends Ffi {
         byte[] updatedPolicyBuffer = new byte[8192];
         IntByReference updatedPolicyBufferSize = new IntByReference(updatedPolicyBuffer.length);
         for (String attr : attributes) {
-            unwrap(instance.h_rotate_attribute(updatedPolicyBuffer, updatedPolicyBufferSize, _bytes,
+            unwrap(INSTANCE.h_rotate_attribute(updatedPolicyBuffer, updatedPolicyBufferSize, _bytes,
                 _bytes.length, attr));
             _bytes = Arrays.copyOfRange(updatedPolicyBuffer, 0, updatedPolicyBufferSize.getValue());
             updatedPolicyBufferSize.setValue(updatedPolicyBuffer.length);

@@ -19,7 +19,6 @@ import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
-import com.cosmian.jna.findex.structs.NextKeyword;
 import com.cosmian.utils.CloudproofException;
 
 import redis.clients.jedis.Jedis;
@@ -235,17 +234,17 @@ public class TestRedis {
         UsersDataset[] testFindexDataset = IndexUtils.loadDatasets();
         Map<IndexedValue, Set<Keyword>> additions = IndexUtils.index(testFindexDataset);
         // add auto-completion for keywords 'Martin', 'Martena'
-        additions.put(new IndexedValue(new NextKeyword("Mart")), new HashSet<>(
+        additions.put(new Keyword("Mart").toIndexedValue(), new HashSet<>(
             Arrays.asList(new Keyword("Mar"))));
-        additions.put(new IndexedValue(new NextKeyword("Marti")), new HashSet<>(
+        additions.put(new Keyword("Marti").toIndexedValue(), new HashSet<>(
             Arrays.asList(new Keyword("Mart"))));
-        additions.put(new IndexedValue(new NextKeyword("Marte")), new HashSet<>(
+        additions.put(new Keyword("Marte").toIndexedValue(), new HashSet<>(
             Arrays.asList(new Keyword("Mart"))));
-        additions.put(new IndexedValue(new NextKeyword("Martin")), new HashSet<>(
+        additions.put(new Keyword("Martin").toIndexedValue(), new HashSet<>(
             Arrays.asList(new Keyword("Marti"))));
-        additions.put(new IndexedValue(new NextKeyword("Marten")), new HashSet<>(
+        additions.put(new Keyword("Marten").toIndexedValue(), new HashSet<>(
             Arrays.asList(new Keyword("Marte"))));
-        additions.put(new IndexedValue(new NextKeyword("Martena")), new HashSet<>(
+        additions.put(new Keyword("Martena").toIndexedValue(), new HashSet<>(
             Arrays.asList(new Keyword("Marten"))));
 
         //
@@ -288,11 +287,11 @@ public class TestRedis {
                         Keyword key_marte = new Keyword("Marte");
                         if (results.containsKey(key_marti)) {
                             IndexedValue iv = results.get(key_marti).iterator().next();
-                            assertEquals(new Keyword("Martin"), iv.getWord());
+                            assertEquals(new Keyword("Martin"), iv.getKeyword());
                         }
                         if (results.containsKey(key_marte)) {
                             IndexedValue iv = results.get(key_marte).iterator().next();
-                            assertEquals(new Keyword("Marten"), iv.getWord());
+                            assertEquals(new Keyword("Marten"), iv.getKeyword());
                         }
                         return true;
                     }

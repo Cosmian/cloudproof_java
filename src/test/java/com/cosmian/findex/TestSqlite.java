@@ -142,7 +142,7 @@ public class TestSqlite {
             entryTable.flush();
             chainTable.flush();
 
-            Findex findex = new Findex(key, label, 1, entryTable, chainTable);
+            Findex findex = new Findex(key, label, entryTable, chainTable);
 
             //
             // Upsert
@@ -261,7 +261,7 @@ public class TestSqlite {
 	try (SqliteUserDb db = new SqliteUserDb();
 		SqliteEntryTable entryTable = new SqliteEntryTable();
 		SqliteChainTable chainTable = new SqliteChainTable();) {
-	    Findex findex = new Findex(key, label, 1, entryTable, chainTable);
+	    Findex findex = new Findex(key, label, entryTable, chainTable);
 	    for (int i = 0; i < 100; i++) {
 		findex.add(indexedValuesAndWords);
 	    }
@@ -288,7 +288,7 @@ public class TestSqlite {
 	    System.out
 		.println("Before insertion: chain_table size: " + initialChainTableSize);
 
-	    Findex findex = new Findex(key, label, 1, entryTable, chainTable);
+	    Findex findex = new Findex(key, label, entryTable, chainTable);
 
 	    //
 	    // Search
@@ -405,7 +405,6 @@ public class TestSqlite {
 	//
 	Findex findex = new Findex(key,
 				   label,
-				   1,
 				   new SqliteEntryTable("./target/sqlite.db"),
 				   new SqliteChainTable("./target/sqlite.db"));
 	findex.add(indexedValuesAndWords);

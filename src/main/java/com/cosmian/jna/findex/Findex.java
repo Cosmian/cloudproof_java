@@ -117,6 +117,46 @@ public final class Findex extends FindexBase {
     }
 
     /**
+     * Instantiate Findex using a custom backend.
+     * <p>
+     * The implementation of both the Entry Table and the Chain Table passed as arguments is used in to manipulate the
+     * index.
+     *
+     * @param key Findex key used to encrypt the index
+     * @param label a public label used to allow compact operation without key rotation
+     * @param entryTable Entry Table implementation
+     * @param chainTable Chain Table implementation
+     * @throws CloudproofException if anything goes wrong
+     */
+    public Findex(byte[] key,
+                  String label,
+		  EntryTableDatabase entryTable,
+		  ChainTableDatabase chainTable)
+        throws CloudproofException {
+	this(key, label.getBytes(), 1, entryTable, chainTable);
+    }
+
+    /**
+     * Instantiate Findex using a custom backend.
+     * <p>
+     * The implementation of both the Entry Table and the Chain Table passed as arguments is used in to manipulate the
+     * index.
+     *
+     * @param key Findex key used to encrypt the index
+     * @param label a public label used to allow compact operation without key rotation
+     * @param entryTable Entry Table implementation
+     * @param chainTable Chain Table implementation
+     * @throws CloudproofException if anything goes wrong
+     */
+    public Findex(byte[] key,
+                  byte[] label,
+		  EntryTableDatabase entryTable,
+		  ChainTableDatabase chainTable)
+        throws CloudproofException {
+	this(key, label, 1, entryTable, chainTable);
+    }
+
+    /**
      * Instantiate Findex using a REST backend.
      * <p>
      * All manipulation of indexes is delegated to a server implementing the Findex REST API.

@@ -333,10 +333,6 @@ public final class Findex extends FindexBase {
     // Compact //
     // ----------------------------------------------------------------//
 
-    /// `nCompactToFull`: if you compact the indexes every night
-    /// this is the number of days to wait before be sure that a big portion of the
-    /// indexes were checked.
-    /// (see the coupon problem to understand why it's not 100% sure)
     /**
      * Compact the index.
      * <p>
@@ -371,6 +367,26 @@ public final class Findex extends FindexBase {
      * Compact the index.
      * <p>
      * At least one of the Findex key or label needs to be changed during this operation.
+     *
+     * @param newKey key to use as replacement to the current Findex key.
+     * @param newLabel label to use as replacement to the current Findex label.
+     * @param numCompactToFull number of compact operation to run before going through the entire Chain Table (on
+     *            average).
+     * @param filter implementation of the {@link FilterLocations} interface
+     * @throws CloudproofException if anything goes wrong
+     */
+    public void compact(byte[] newKey,
+                        String newLabel,
+                        int numCompactToFull,
+                        FilterLocations filter)
+        throws CloudproofException {
+	compact(newKey, newLabel.getBytes(), numCompactToFull, filter);
+    }
+
+    /**
+     * Compact the index.
+     * <p>
+     * At least one of the Findex key or label needs to be changed during this operation.
      * <p>
      * No filter is applied on the list of locations collected during the compact operation.
      *
@@ -386,5 +402,23 @@ public final class Findex extends FindexBase {
         throws CloudproofException {
         compact(newKey, newLabel, numCompactToFull, new FilterLocations() {
         });
+    }
+
+    /**
+     * Compact the index.
+     * <p>
+     * At least one of the Findex key or label needs to be changed during this operation.
+     *
+     * @param newKey key to use as replacement to the current Findex key.
+     * @param newLabel label to use as replacement to the current Findex label.
+     * @param numCompactToFull number of compact operation to run before going through the entire Chain Table (on
+     *            average).
+     * @throws CloudproofException if anything goes wrong
+     */
+    public void compact(byte[] newKey,
+                        String newLabel,
+                        int numCompactToFull)
+        throws CloudproofException {
+	compact(newKey, newLabel.getBytes(), numCompactToFull, new FilterLocations() {});
     }
 }

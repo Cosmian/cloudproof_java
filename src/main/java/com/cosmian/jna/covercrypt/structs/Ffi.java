@@ -23,7 +23,7 @@ public class Ffi {
      */
     public static int unwrap(int result) throws CloudproofException {
         if (result != 0) {
-            throw new CloudproofException("haha: " + result + get_last_error(4096));
+            throw new CloudproofException(get_last_error(4096));
         }
         return result;
     }

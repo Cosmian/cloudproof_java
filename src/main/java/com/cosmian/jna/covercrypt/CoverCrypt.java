@@ -30,7 +30,7 @@ public final class CoverCrypt extends Ffi {
         throws CloudproofException {
         IntByReference cacheHandle = new IntByReference();
         byte[] policyBytes = policy.getBytes();
-        unwrap(instance.h_create_encryption_cache(cacheHandle, policyBytes, policyBytes.length, publicKeyBytes,
+        unwrap(INSTANCE.h_create_encryption_cache(cacheHandle, policyBytes, policyBytes.length, publicKeyBytes,
             publicKeyBytes.length));
         return cacheHandle.getValue();
     }
@@ -42,7 +42,7 @@ public final class CoverCrypt extends Ffi {
      * @throws CloudproofException on Rust lib errors
      */
     public static void destroyEncryptionCache(int cacheHandle) throws CloudproofException {
-        unwrap(instance.h_destroy_encryption_cache(cacheHandle));
+        unwrap(INSTANCE.h_destroy_encryption_cache(cacheHandle));
     }
 
     /**
@@ -142,16 +142,18 @@ public final class CoverCrypt extends Ffi {
         byte[] headerBytesBuffer = new byte[8192];
         IntByReference headerBytesBufferSize = new IntByReference(headerBytesBuffer.length);
 
-        int ffiCode = instance.h_encrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
+        int ffiCode = INSTANCE.h_encrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
             headerBytesBuffer, headerBytesBufferSize, cacheHandle, encryptionPolicy, authenticationDataBuffer,
             authenticationDataLength, headerMetadataBuffer, headerMetadataLength);
 
-        if (ffiCode != 0) {
+        if (ffiCode == 1) {
             // retry using correct allocation size for the header
             headerBytesBuffer = new byte[headerBytesBufferSize.getValue()];
-            unwrap(instance.h_encrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
+            unwrap(INSTANCE.h_encrypt_header_using_cache(symmetricKeyBuffer, symmetricKeyBufferSize,
                 headerBytesBuffer, headerBytesBufferSize, cacheHandle, encryptionPolicy, authenticationDataBuffer,
                 authenticationDataLength, headerMetadataBuffer, headerMetadataLength));
+        } else {
+            unwrap(ffiCode);
         }
 
         return new EncryptedHeader(Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
@@ -255,7 +257,7 @@ public final class CoverCrypt extends Ffi {
         byte[] headerBytesBuffer = new byte[8192 + headerMetadataLength];
         IntByReference headerBytesBufferSize = new IntByReference(headerBytesBuffer.length);
 
-        int ffiCode = instance.h_encrypt_header(
+        int ffiCode = INSTANCE.h_encrypt_header(
             symmetricKeyBuffer, symmetricKeyBufferSize,
             headerBytesBuffer, headerBytesBufferSize,
             policy.getBytes(), policy.getBytes().length,
@@ -264,10 +266,10 @@ public final class CoverCrypt extends Ffi {
             headerMetadataBuffer, headerMetadataLength,
             authenticationDataBuffer, authenticationDataLength);
 
-        if (ffiCode != 0) {
+        if (ffiCode == 1) {
             // retry with a correct allocation size for the encrypted header
             headerBytesBuffer = new byte[headerBytesBufferSize.getValue()];
-            unwrap(instance.h_encrypt_header(
+            unwrap(INSTANCE.h_encrypt_header(
                 symmetricKeyBuffer, symmetricKeyBufferSize,
                 headerBytesBuffer, headerBytesBufferSize,
                 policy.getBytes(), policy.getBytes().length,
@@ -275,6 +277,8 @@ public final class CoverCrypt extends Ffi {
                 encryptionPolicy,
                 headerMetadataBuffer, headerMetadataLength,
                 authenticationDataBuffer, authenticationDataLength));
+        } else {
+            unwrap(ffiCode);
         }
 
         return new EncryptedHeader(Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
@@ -286,8 +290,8 @@ public final class CoverCrypt extends Ffi {
     // -----------------------------------------------
 
     /**
-     * Create a decryption cache that can be used with {@link #decryptHeaderUsingCache(int, byte[], Optional)}.
-     * The cache speeds up the decryption of the header. WARN: the cache MUST be destroyed after use with
+     * Create a decryption cache that can be used with {@link #decryptHeaderUsingCache(int, byte[], Optional)}. The
+     * cache speeds up the decryption of the header. WARN: the cache MUST be destroyed after use with
      * {@link #destroyDecryptionCache(int)}
      *
      * @param userDecryptionKeyBytes the public key bytes to cache
@@ -297,7 +301,7 @@ public final class CoverCrypt extends Ffi {
      */
     public static int createDecryptionCache(byte[] userDecryptionKeyBytes) throws CloudproofException {
         IntByReference cacheHandle = new IntByReference();
-        unwrap(instance.h_create_decryption_cache(cacheHandle, userDecryptionKeyBytes, userDecryptionKeyBytes.length));
+        unwrap(INSTANCE.h_create_decryption_cache(cacheHandle, userDecryptionKeyBytes, userDecryptionKeyBytes.length));
         return cacheHandle.getValue();
     }
 
@@ -309,7 +313,7 @@ public final class CoverCrypt extends Ffi {
      * @throws CloudproofException in case of other errors
      */
     public static void destroyDecryptionCache(int cacheHandle) throws CloudproofException {
-        unwrap(instance.h_destroy_decryption_cache(cacheHandle));
+        unwrap(INSTANCE.h_destroy_decryption_cache(cacheHandle));
     }
 
     /**
@@ -346,22 +350,24 @@ public final class CoverCrypt extends Ffi {
             authenticationDataBuffer = new byte[] {};
         }
 
-        int ffiCode = instance.h_decrypt_header_using_cache(
+        int ffiCode = INSTANCE.h_decrypt_header_using_cache(
             symmetricKeyBuffer, symmetricKeyBufferSize,
             headerMetadataBuffer, headerMetadataBufferSize,
             encryptedHeaderBytes, encryptedHeaderBytes.length,
             authenticationDataBuffer, authenticationDataLength,
             cacheHandle);
 
-        if (ffiCode != 0) {
+        if (ffiCode == 1) {
             // retry with correct allocation size for the header metadata
             headerMetadataBuffer = new byte[headerMetadataBufferSize.getValue()];
-            unwrap(instance.h_decrypt_header_using_cache(
+            unwrap(INSTANCE.h_decrypt_header_using_cache(
                 symmetricKeyBuffer, symmetricKeyBufferSize,
                 headerMetadataBuffer, headerMetadataBufferSize,
                 encryptedHeaderBytes, encryptedHeaderBytes.length,
                 authenticationDataBuffer, authenticationDataLength,
                 cacheHandle));
+        } else {
+            unwrap(ffiCode);
         }
 
         return new DecryptedHeader(Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
@@ -402,22 +408,24 @@ public final class CoverCrypt extends Ffi {
             authenticationDataBuffer = new byte[] {};
         }
 
-        int ffiCode = instance.h_decrypt_header(
+        int ffiCode = INSTANCE.h_decrypt_header(
             symmetricKeyBuffer, symmetricKeyBufferSize,
             headerMetadataBuffer, headerMetadataBufferSize,
             encryptedHeaderBytes, encryptedHeaderBytes.length,
             authenticationDataBuffer, authenticationDataLength,
             userDecryptionKeyBytes, userDecryptionKeyBytes.length);
 
-        if (ffiCode != 0) {
+        if (ffiCode == 1) {
             // retry with the correct allocation size for the header metadata
             headerMetadataBuffer = new byte[headerMetadataBufferSize.getValue()];
-            unwrap(instance.h_decrypt_header(
+            unwrap(INSTANCE.h_decrypt_header(
                 symmetricKeyBuffer, symmetricKeyBufferSize,
                 headerMetadataBuffer, headerMetadataBufferSize,
                 encryptedHeaderBytes, encryptedHeaderBytes.length,
                 authenticationDataBuffer, authenticationDataLength,
                 userDecryptionKeyBytes, userDecryptionKeyBytes.length));
+        } else {
+            unwrap(ffiCode);
         }
 
         return new DecryptedHeader(Arrays.copyOfRange(symmetricKeyBuffer, 0, symmetricKeyBufferSize.getValue()),
@@ -430,7 +438,7 @@ public final class CoverCrypt extends Ffi {
      * @return the overhead bytes
      */
     public static int symmetricEncryptionOverhead() {
-        return instance.h_symmetric_encryption_overhead();
+        return INSTANCE.h_symmetric_encryption_overhead();
     }
 
     /**
@@ -449,7 +457,7 @@ public final class CoverCrypt extends Ffi {
         throws CloudproofException {
 
         // Ciphertext OUT
-        byte[] ciphertextBuffer = new byte[instance.h_symmetric_encryption_overhead() + clearText.length];
+        byte[] ciphertextBuffer = new byte[INSTANCE.h_symmetric_encryption_overhead() + clearText.length];
         IntByReference ciphertextBufferSize = new IntByReference(ciphertextBuffer.length);
 
         // Authenticated data
@@ -463,7 +471,7 @@ public final class CoverCrypt extends Ffi {
             authenticationDataBuffer = new byte[] {};
         }
 
-        unwrap(instance.h_dem_encrypt(
+        unwrap(INSTANCE.h_dem_encrypt(
             ciphertextBuffer, ciphertextBufferSize,
             symmetricKey, symmetricKey.length,
             authenticationDataBuffer, authenticationDataLength,
@@ -502,7 +510,7 @@ public final class CoverCrypt extends Ffi {
             authenticationDataBuffer = new byte[] {};
         }
 
-        unwrap(instance.h_dem_decrypt(
+        unwrap(INSTANCE.h_dem_decrypt(
             clearTextBuffer, clearTextBufferSize,
             symmetricKey, symmetricKey.length,
             authenticationDataBuffer, authenticationDataLength,
@@ -527,16 +535,18 @@ public final class CoverCrypt extends Ffi {
         byte[] masterPublicKeyBuffer = new byte[8 * 1024];
         IntByReference masterPublicKeyBufferSize = new IntByReference(masterPublicKeyBuffer.length);
 
-        int ffiCode = instance.h_generate_master_keys(masterPrivateKeyBuffer, masterPrivateKeyBufferSize,
+        int ffiCode = INSTANCE.h_generate_master_keys(masterPrivateKeyBuffer, masterPrivateKeyBufferSize,
             masterPublicKeyBuffer, masterPublicKeyBufferSize, policy.getBytes(), policy.getBytes().length);
 
-        if (ffiCode != 0) {
+        if (ffiCode == 1) {
             // Retry with correct allocated size
             masterPrivateKeyBuffer = new byte[masterPrivateKeyBufferSize.getValue()];
             masterPublicKeyBuffer = new byte[masterPublicKeyBufferSize.getValue()];
-            unwrap(instance.h_generate_master_keys(masterPrivateKeyBuffer, masterPrivateKeyBufferSize,
+            unwrap(INSTANCE.h_generate_master_keys(masterPrivateKeyBuffer, masterPrivateKeyBufferSize,
                 masterPublicKeyBuffer, masterPublicKeyBufferSize, policy.getBytes(),
                 policy.getBytes().length));
+        } else {
+            unwrap(ffiCode);
         }
 
         return new MasterKeys(Arrays.copyOfRange(masterPrivateKeyBuffer, 0, masterPrivateKeyBufferSize.getValue()),
@@ -561,15 +571,17 @@ public final class CoverCrypt extends Ffi {
         byte[] userPrivateKeyBuffer = new byte[8192];
         IntByReference userPrivateKeyBufferSize = new IntByReference(userPrivateKeyBuffer.length);
 
-        int ffiCode = instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
+        int ffiCode = INSTANCE.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize,
             masterPrivateKey, masterPrivateKey.length, userPolicy, policy.getBytes(),
             policy.getBytes().length);
 
-        if (ffiCode != 0) {
+        if (ffiCode == 1) {
             // Retry with the correct allocated size
             userPrivateKeyBuffer = new byte[userPrivateKeyBufferSize.getValue()];
-            unwrap(instance.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize, masterPrivateKey,
+            unwrap(INSTANCE.h_generate_user_secret_key(userPrivateKeyBuffer, userPrivateKeyBufferSize, masterPrivateKey,
                 masterPrivateKey.length, userPolicy, policy.getBytes(), policy.getBytes().length));
+        } else {
+            unwrap(ffiCode);
         }
 
         return Arrays.copyOfRange(userPrivateKeyBuffer, 0, userPrivateKeyBufferSize.getValue());
@@ -623,7 +635,7 @@ public final class CoverCrypt extends Ffi {
             new byte[8192 + headerMetadataLength + plaintext.length + 2 * CoverCrypt.symmetricEncryptionOverhead()];
         IntByReference ciphertextSize = new IntByReference(ciphertext.length);
 
-        unwrap(instance.h_hybrid_encrypt(ciphertext, ciphertextSize, policy.getBytes(), policy.getBytes().length,
+        unwrap(INSTANCE.h_hybrid_encrypt(ciphertext, ciphertextSize, policy.getBytes(), policy.getBytes().length,
             publicKeyBytes, publicKeyBytes.length, encryptionPolicy, plaintext, plaintext.length, headerMetadataBuffer,
             headerMetadataLength, authenticationDataBuffer, authenticationDataLength));
 
@@ -663,17 +675,18 @@ public final class CoverCrypt extends Ffi {
             authenticationDataBuffer = new byte[] {};
         }
 
-        int ffiCode = instance.h_hybrid_decrypt(plaintext, plaintextSize, headerMetadata, headerMetadataSize,
+        int ffiCode = INSTANCE.h_hybrid_decrypt(plaintext, plaintextSize, headerMetadata, headerMetadataSize,
             ciphertext, ciphertext.length, authenticationDataBuffer, authenticationDataLength, userDecryptionKeyBytes,
             userDecryptionKeyBytes.length);
 
-        if (ffiCode != 0) {
+        if (ffiCode == 1) {
             // retry with correct allocation size for the header metadata
             headerMetadata = new byte[headerMetadataSize.getValue()];
-            unwrap(instance.h_hybrid_decrypt(plaintext, plaintextSize, headerMetadata, headerMetadataSize, ciphertext,
+            unwrap(INSTANCE.h_hybrid_decrypt(plaintext, plaintextSize, headerMetadata, headerMetadataSize, ciphertext,
                 ciphertext.length, authenticationDataBuffer, authenticationDataLength, userDecryptionKeyBytes,
                 userDecryptionKeyBytes.length));
-
+        } else {
+            unwrap(ffiCode);
         }
 
         return new DecryptedData(

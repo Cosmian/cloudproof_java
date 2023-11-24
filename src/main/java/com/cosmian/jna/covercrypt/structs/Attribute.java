@@ -2,6 +2,7 @@ package com.cosmian.jna.covercrypt.structs;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+
 import com.cosmian.rest.kmip.types.VendorAttribute;
 import com.cosmian.utils.CloudproofException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,7 +13,7 @@ public class Attribute extends Ffi {
 
     public Attribute(String attribute) throws CloudproofException {
         attribute += "\0";
-        unwrap(instance.h_validate_boolean_expression(attribute));
+        unwrap(INSTANCE.h_validate_boolean_expression(attribute));
         _attribute = attribute;
     }
 

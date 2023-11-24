@@ -69,17 +69,10 @@ public class FindexBase {
      */
     protected static void unwrap(long start,
                                  int errorCode)
-        throws CloudproofException { // Parameters are evaluated
-        // left to right:
-        // accepting the time
-        // parameter first
-        // allows getting the
-        // current time before
-        // evaluating the
-        // expression resulting
-        // in the error code
-        // when both are passed
-        // as arguments.
+        throws CloudproofException {
+        // Parameters are evaluated left to right:
+        // accepting the time parameter first allows getting the current time before evaluating the expression resulting
+        // in the error code when both are passed as arguments.
         if (errorCode != 0) {
             FindexCallbackException.rethrowOnErrorCode(errorCode, start, System.currentTimeMillis());
             throw new CloudproofException(get_last_error(4095));

@@ -9,7 +9,7 @@ public class AccessPolicy extends Ffi {
     private String _booleanExpression;
 
     public AccessPolicy(String booleanExpression) throws CloudproofException {
-        unwrap(instance.h_validate_boolean_expression(booleanExpression));
+        unwrap(INSTANCE.h_validate_boolean_expression(booleanExpression));
         _booleanExpression = booleanExpression;
     }
 

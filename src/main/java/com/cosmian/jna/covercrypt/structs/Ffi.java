@@ -10,7 +10,7 @@ import com.sun.jna.ptr.IntByReference;
 
 public class Ffi {
 
-    protected static final CoverCryptWrapper instance = (CoverCryptWrapper) Native.load("cloudproof",
+    protected static final CoverCryptWrapper INSTANCE = (CoverCryptWrapper) Native.load("cloudproof",
         CoverCryptWrapper.class);
 
     /**
@@ -23,7 +23,7 @@ public class Ffi {
      */
     public static int unwrap(int result) throws CloudproofException {
         if (result != 0) {
-            throw new CloudproofException(get_last_error(4096));
+            throw new CloudproofException("haha: " + result + get_last_error(4096));
         }
         return result;
     }
@@ -51,7 +51,7 @@ public class Ffi {
         }
         byte[] output = new byte[max_len];
         IntByReference outputSize = new IntByReference(output.length);
-        int err = instance.h_get_error(output, outputSize);
+        int err = INSTANCE.h_get_error(output, outputSize);
         if (err == 0) {
             return "FFI error: "
                 + new String(Arrays.copyOfRange(output, 0, outputSize.getValue()), StandardCharsets.UTF_8);
@@ -67,7 +67,7 @@ public class Ffi {
      * @throws CloudproofException n case of native library error
      */
     public void set_error(String error_msg) throws CloudproofException {
-        unwrap(instance.h_set_error(error_msg + "\0"));
+        unwrap(INSTANCE.h_set_error(error_msg + "\0"));
     }
 
 }

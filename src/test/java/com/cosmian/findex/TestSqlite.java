@@ -6,19 +6,23 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.cosmian.TestUtils;
+import com.cosmian.jna.findex.FilterLocations;
 import com.cosmian.jna.findex.Findex;
 import com.cosmian.jna.findex.ffi.SearchResults;
 import com.cosmian.jna.findex.ffi.KeywordSet;
 import com.cosmian.jna.findex.structs.IndexedValue;
 import com.cosmian.jna.findex.structs.Keyword;
 import com.cosmian.jna.findex.structs.Location;
+import com.cosmian.utils.CloudproofException;
 import com.cosmian.utils.Resources;
 
 public class TestSqlite {
@@ -69,8 +73,7 @@ public class TestSqlite {
 	byte[] key = IndexUtils.loadKey();
 	byte[] label = IndexUtils.loadLabel();
 
-	Findex findex = new Findex();
-	findex.instantiateCustomBackends(key, label, 2, compositeEntryTable, chainTable);
+	Findex findex = new Findex(key, label, 2, compositeEntryTable, chainTable);
 
 	compositeEntryTable.selectTable(0);
 	findex.add(mapToIndex("John", 1));
@@ -132,18 +135,14 @@ public class TestSqlite {
         //
         // Prepare Sqlite tables and users
         //
-        try (SqliteUserDb db = new SqliteUserDb();
-                SqliteEntryTable entryTable = new SqliteEntryTable();
-                SqliteChainTable chainTable = new SqliteChainTable();) {
+        try (SqliteEntryTable entryTable = new SqliteEntryTable();
+             SqliteChainTable chainTable = new SqliteChainTable();) {
 
             //db.flush();
-	    entryTable.flush();
-	    chainTable.flush();
+            entryTable.flush();
+            chainTable.flush();
 
-            db.insert(testFindexDataset);
-
-            Findex findex = new Findex();
-            findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+            Findex findex = new Findex(key, label, 1, entryTable, chainTable);
 
             //
             // Upsert
@@ -198,7 +197,7 @@ public class TestSqlite {
             System.out.println("Before first compact: entry_table size: " + entryTableSize);
             System.out.println("Before first compact: chain_table size: " + chainTableSize);
 
-            findex.compact(key, "NewLabel".getBytes(), 1, db);
+            findex.compact(key, "NewLabel", 1);
 
             entryTableSize = entryTable.fetchAllUids().size();
             chainTableSize = chainTable.fetchAllUids().size();
@@ -220,7 +219,7 @@ public class TestSqlite {
             System.out.println("");
 
             // Delete the user n°17 to test the compact indexedValuesAndWords
-            db.deleteUser(17);
+            Set<Location> filteredLocations = new HashSet<Location>(Arrays.asList( new Location(17)));
             expectedDbLocations.remove(new Long(17));
 
             entryTableSize = entryTable.fetchAllUids().size();
@@ -228,12 +227,21 @@ public class TestSqlite {
             System.out.println("Before 2nd compact: entry_table size: " + entryTableSize);
             System.out.println("Before 2nd compact: chain_table size: " + chainTableSize);
 
-            findex.compact(key, "NewLabel2".getBytes(), 1, db);
+
+            findex.compact(key, "NewLabel2", 1, new FilterLocations() {
+                    @Override
+                    public List<Location> filter(List<Location> locations)
+                    throws CloudproofException {
+                        return locations.stream().filter((Location location) -> !filteredLocations.contains(location))
+                                .collect(Collectors.toList());
+                    }
+            });
+
             {
                 // Search should return everyone but n°17
                 SearchResults searchResults = findex.search(new String[] { "France"});
                 assertEquals(expectedDbLocations, searchResults.getNumbers());
-		System.out.println("<== successfully found all French locations after removing one and compacting");
+                System.out.println("<== successfully found all French locations after removing one and compacting");
             }
         }
     }
@@ -253,8 +261,7 @@ public class TestSqlite {
 	try (SqliteUserDb db = new SqliteUserDb();
 		SqliteEntryTable entryTable = new SqliteEntryTable();
 		SqliteChainTable chainTable = new SqliteChainTable();) {
-	    Findex findex = new Findex();
-	    findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+	    Findex findex = new Findex(key, label, 1, entryTable, chainTable);
 	    for (int i = 0; i < 100; i++) {
 		findex.add(indexedValuesAndWords);
 	    }
@@ -281,8 +288,7 @@ public class TestSqlite {
 	    System.out
 		.println("Before insertion: chain_table size: " + initialChainTableSize);
 
-	    Findex findex = new Findex();
-	    findex.instantiateCustomBackends(key, label, 1, entryTable, chainTable);
+	    Findex findex = new Findex(key, label, 1, entryTable, chainTable);
 
 	    //
 	    // Search
@@ -397,12 +403,11 @@ public class TestSqlite {
 	//
 	// Upsert
 	//
-	Findex findex = new Findex();
-	findex.instantiateCustomBackends(key,
-					 label,
-					 1,
-					 new SqliteEntryTable("./target/sqlite.db"),
-					 new SqliteChainTable("./target/sqlite.db"));
+	Findex findex = new Findex(key,
+				   label,
+				   1,
+				   new SqliteEntryTable("./target/sqlite.db"),
+				   new SqliteChainTable("./target/sqlite.db"));
 	findex.add(indexedValuesAndWords);
     }
 }

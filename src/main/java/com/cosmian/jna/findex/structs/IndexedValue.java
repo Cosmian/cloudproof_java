@@ -32,7 +32,7 @@ public class IndexedValue extends Leb128ByteArray implements ToIndexedValue {
             this.bytes, 1, location.getBytes().length);
     }
 
-    public IndexedValue(NextKeyword keyword) {
+    public IndexedValue(Keyword keyword) {
         super(new byte[keyword.getBytes().length + 1]);
         this.bytes[0] = WORD_BYTE;
         System.arraycopy(
@@ -55,9 +55,9 @@ public class IndexedValue extends Leb128ByteArray implements ToIndexedValue {
         throw new CloudproofException("IndexValue is not a location");
     }
 
-    public NextKeyword getWord() throws CloudproofException {
+    public Keyword getKeyword() throws CloudproofException {
         if (isWord()) {
-            return new NextKeyword(Arrays.copyOfRange(this.bytes, 1, this.bytes.length));
+            return new Keyword(Arrays.copyOfRange(this.bytes, 1, this.bytes.length));
         }
         throw new CloudproofException("IndexValue is not a next keyword");
     }

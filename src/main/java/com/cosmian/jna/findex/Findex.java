@@ -34,6 +34,8 @@ public final class Findex extends FindexBase {
 
     UpsertCallback entryUpserter;
 
+    InsertCallback entryInserter;
+
     InsertCallback chainInserter;
 
     DeleteCallback entryDeleter;
@@ -74,6 +76,7 @@ public final class Findex extends FindexBase {
         entryFetcher = entryTable.fetchCallback();
         chainFetcher = chainTable.fetchCallback();
         entryUpserter = entryTable.upsertCallback();
+        entryInserter = entryTable.insertCallback();
         chainInserter = chainTable.insertCallback();
         entryDeleter = entryTable.deleteCallback();
         chainDeleter = chainTable.deleteCallback();
@@ -86,6 +89,7 @@ public final class Findex extends FindexBase {
             entryFetcher,
             chainFetcher,
             entryUpserter,
+            entryInserter,
             chainInserter,
             entryDeleter,
             chainDeleter,

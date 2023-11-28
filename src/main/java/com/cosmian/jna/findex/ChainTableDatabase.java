@@ -38,8 +38,7 @@ public interface ChainTableDatabase {
      * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link ChainTableValue}
      * @throws CloudproofException if anything goes wrong
      */
-    public void insert(Map<Uid32, ChainTableValue> uidsAndValues)
-        throws CloudproofException;
+    public void insert(Map<Uid32, ChainTableValue> uidsAndValues) throws CloudproofException;
 
     /**
      * Delete the lines indexed by the given UIDs {@link Uid32} from the Chain Table.
@@ -49,8 +48,7 @@ public interface ChainTableDatabase {
      * @param uids a {@link List} of {@link Uid32}
      * @throws CloudproofException if anything goes wrong
      */
-    public void delete(List<Uid32> uids)
-        throws CloudproofException;
+    public void delete(List<Uid32> uids) throws CloudproofException;
 
     /**
      * Return the appropriate fetch callback (with input/output serialization).

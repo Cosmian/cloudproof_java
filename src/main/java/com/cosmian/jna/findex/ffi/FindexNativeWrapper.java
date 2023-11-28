@@ -68,6 +68,7 @@ public interface FindexNativeWrapper extends Library {
                                        FetchCallback fetchEntry,
                                        FetchCallback fetchChain,
                                        UpsertCallback upsertEntry,
+                                       InsertCallback insertEntry,
                                        InsertCallback insertChain,
                                        DeleteCallback deleteEntry,
                                        DeleteCallback deleteChain,

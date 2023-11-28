@@ -19,6 +19,7 @@ import com.cosmian.utils.CloudproofException;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Transaction;
 
 public class RedisEntryTable extends RedisConnection implements EntryTableDatabase {
 
@@ -167,6 +168,18 @@ public class RedisEntryTable extends RedisConnection implements EntryTableDataba
         }
         jedis.close();
         return rejected;
+    }
+
+    @Override
+    public void insert(Map<Uid32, EntryTableValue> uidsAndValues) throws CloudproofException {
+        Jedis jedis = connect();
+        Transaction tx = jedis.multi();
+        for (Entry<Uid32, EntryTableValue> entry : uidsAndValues.entrySet()) {
+            byte[] key = RedisConnection.getKey(PREFIX, entry.getKey().getBytes());
+            tx.getSet(key, entry.getValue().getBytes());
+        }
+        tx.exec();
+        jedis.close();
     }
 
     @Override

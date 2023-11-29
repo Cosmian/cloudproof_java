@@ -70,7 +70,7 @@ public interface EntryTableDatabase {
      * Implementation of this method is only required to perform additions, deletions or compact operations on the
      * index.
      *
-     * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link ChainTableValue}
+     * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link EntryTableValue}
      * @throws CloudproofException if anything goes wrong
      */
     public void insert(Map<Uid32, EntryTableValue> uidsAndValues) throws CloudproofException;

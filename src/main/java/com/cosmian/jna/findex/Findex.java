@@ -62,15 +62,13 @@ public final class Findex extends FindexBase {
      * @throws CloudproofException if anything goes wrong
      */
     public Findex(byte[] key,
-                  byte[] label,
-		  int entryTableNumber,
-		  EntryTableDatabase entryTable,
-		  ChainTableDatabase chainTable)
+                  String label,
+                  int entryTableNumber,
+                  EntryTableDatabase entryTable,
+                  ChainTableDatabase chainTable)
         throws CloudproofException {
         final Memory keyPointer = new Memory(key.length);
-        final Memory labelPointer = new Memory(label.length);
         keyPointer.write(0, key, 0, key.length);
-        labelPointer.write(0, label, 0, label.length);
         IntByReference handle = new IntByReference();
 
         entryFetcher = entryTable.fetchCallback();
@@ -82,9 +80,9 @@ public final class Findex extends FindexBase {
         chainDeleter = chainTable.deleteCallback();
         entryDumper = entryTable.dumpTokenCallback();
 
-        unwrap(System.currentTimeMillis(), INSTANCE.h_instantiate_with_ffi_backend(handle,
+        unwrap(System.currentTimeMillis(), INSTANCE.h_instantiate_with_custom_interface(handle,
             keyPointer, key.length,
-            labelPointer, label.length,
+            label,
             entryTableNumber,
             entryFetcher,
             chainFetcher,
@@ -106,58 +104,16 @@ public final class Findex extends FindexBase {
      *
      * @param key Findex key used to encrypt the index
      * @param label a public label used to allow compact operation without key rotation
-     * @param entryTableNumber the number of Entry Table used as backend
      * @param entryTable Entry Table implementation
      * @param chainTable Chain Table implementation
      * @throws CloudproofException if anything goes wrong
      */
     public Findex(byte[] key,
                   String label,
-		  int entryTableNumber,
-		  EntryTableDatabase entryTable,
-		  ChainTableDatabase chainTable)
+                  EntryTableDatabase entryTable,
+                  ChainTableDatabase chainTable)
         throws CloudproofException {
-	this(key, label.getBytes(), entryTableNumber, entryTable, chainTable);
-    }
-
-    /**
-     * Instantiate Findex using a custom backend.
-     * <p>
-     * The implementation of both the Entry Table and the Chain Table passed as arguments is used in to manipulate the
-     * index.
-     *
-     * @param key Findex key used to encrypt the index
-     * @param label a public label used to allow compact operation without key rotation
-     * @param entryTable Entry Table implementation
-     * @param chainTable Chain Table implementation
-     * @throws CloudproofException if anything goes wrong
-     */
-    public Findex(byte[] key,
-                  String label,
-		  EntryTableDatabase entryTable,
-		  ChainTableDatabase chainTable)
-        throws CloudproofException {
-	this(key, label.getBytes(), 1, entryTable, chainTable);
-    }
-
-    /**
-     * Instantiate Findex using a custom backend.
-     * <p>
-     * The implementation of both the Entry Table and the Chain Table passed as arguments is used in to manipulate the
-     * index.
-     *
-     * @param key Findex key used to encrypt the index
-     * @param label a public label used to allow compact operation without key rotation
-     * @param entryTable Entry Table implementation
-     * @param chainTable Chain Table implementation
-     * @throws CloudproofException if anything goes wrong
-     */
-    public Findex(byte[] key,
-                  byte[] label,
-		  EntryTableDatabase entryTable,
-		  ChainTableDatabase chainTable)
-        throws CloudproofException {
-	this(key, label, 1, entryTable, chainTable);
+        this(key, label, 1, entryTable, chainTable);
     }
 
     /**
@@ -167,22 +123,19 @@ public final class Findex extends FindexBase {
      *
      * @param label a public label used to allow compact operation without key rotation
      * @param token token used for authentication to the Findex REST server
-     * @param url URL of the Findex REST server
+     * @param entryUrl URL of the Findex Entry Table REST server
+     * @param chainUrl URL of the Findex Chain Table REST server
      * @throws CloudproofException if anything goes wrong
      */
-    public Findex(byte[] label,
+    public Findex(String label,
                   String token,
-		  String url)
+                  String entryUrl,
+                  String chainUrl)
         throws CloudproofException {
-        final Memory labelPointer = new Memory(label.length);
-        labelPointer.write(0, label, 0, label.length);
-
         IntByReference handle = new IntByReference();
 
         unwrap(System.currentTimeMillis(),
-            INSTANCE.h_instantiate_with_rest_backend(handle,
-                labelPointer, label.length,
-                token, url));
+            INSTANCE.h_instantiate_with_rest_interface(handle, label, token, entryUrl, chainUrl));
         HANDLE = handle.getValue();
     }
 
@@ -198,9 +151,13 @@ public final class Findex extends FindexBase {
      */
     public Findex(String label,
                   String token,
-		  String url)
+                  String url)
         throws CloudproofException {
-	this(label.getBytes(), token, url);
+        IntByReference handle = new IntByReference();
+
+        unwrap(System.currentTimeMillis(),
+            INSTANCE.h_instantiate_with_rest_interface(handle, label, token, url, url));
+        HANDLE = handle.getValue();
     }
 
     // ----------------------------------------------------------------//
@@ -353,8 +310,7 @@ public final class Findex extends FindexBase {
     public SearchResults search(String[] keywords) throws CloudproofException {
         return search(Stream.of(keywords).map(keyword -> new Keyword(keyword))
             .collect(Collectors.toCollection(HashSet::new)),
-            new Interrupt() {
-            });
+            new Interrupt() {});
     }
 
     /**
@@ -384,47 +340,24 @@ public final class Findex extends FindexBase {
      *
      * @param newKey key to use as replacement to the current Findex key.
      * @param newLabel label to use as replacement to the current Findex label.
-     * @param numCompactToFull number of compact operation to run before going through the entire Chain Table (on
-     *            average).
-     * @param filter implementation of the {@link FilterLocations} interface
-     * @throws CloudproofException if anything goes wrong
-     */
-    public void compact(byte[] newKey,
-                        byte[] newLabel,
-                        int numCompactToFull,
-                        FilterLocations filter)
-        throws CloudproofException {
-        final Memory newKeyPtr = new Memory(newKey.length);
-        newKeyPtr.write(0, newKey, 0, newKey.length);
-        final Memory newLabelPtr = new Memory(newLabel.length);
-        newLabelPtr.write(0, newLabel, 0, newLabel.length);
-
-        long start = System.currentTimeMillis();
-        unwrap(start, INSTANCE.h_compact(HANDLE,
-            newKeyPtr, newKey.length,
-            newLabelPtr, newLabel.length,
-            numCompactToFull,
-            filter));
-    }
-
-    /**
-     * Compact the index.
-     * <p>
-     * At least one of the Findex key or label needs to be changed during this operation.
-     *
-     * @param newKey key to use as replacement to the current Findex key.
-     * @param newLabel label to use as replacement to the current Findex label.
-     * @param numCompactToFull number of compact operation to run before going through the entire Chain Table (on
-     *            average).
-     * @param filter implementation of the {@link FilterLocations} interface
+     * @param compactingRate minimal portion of the index to compact
+     * @param dataFilter implementation of the {@link DataFilter} interface
      * @throws CloudproofException if anything goes wrong
      */
     public void compact(byte[] newKey,
                         String newLabel,
-                        int numCompactToFull,
-                        FilterLocations filter)
+                        double compactingRate,
+                        DataFilter dataFilter)
         throws CloudproofException {
-	compact(newKey, newLabel.getBytes(), numCompactToFull, filter);
+        final Memory newKeyPtr = new Memory(newKey.length);
+        newKeyPtr.write(0, newKey, 0, newKey.length);
+
+        long start = System.currentTimeMillis();
+        unwrap(start, INSTANCE.h_compact(HANDLE,
+            newKeyPtr, newKey.length,
+            newLabel,
+            compactingRate,
+            dataFilter));
     }
 
     /**
@@ -436,16 +369,32 @@ public final class Findex extends FindexBase {
      *
      * @param newKey key to use as replacement to the current Findex key.
      * @param newLabel label to use as replacement to the current Findex label.
-     * @param numCompactToFull number of compact operation to run before going through the entire Chain Table (on
+     * @param compactingRate number of compact operation to run before going through the entire Chain Table (on
      *            average).
      * @throws CloudproofException if anything goes wrong
      */
     public void compact(byte[] newKey,
-                        byte[] newLabel,
-                        int numCompactToFull)
+                        String newLabel,
+                        double compactingRate)
         throws CloudproofException {
-        compact(newKey, newLabel, numCompactToFull, new FilterLocations() {
-        });
+        compact(newKey, newLabel, compactingRate, new DataFilter() {});
+    }
+
+    /**
+     * Compact the index.
+     * <p>
+     * At least one of the Findex key or label needs to be changed during this operation.
+     *
+     * @param newKey key to use as replacement to the current Findex key.
+     * @param newLabel label to use as replacement to the current Findex label.
+     * @param dataFilter implementation of the {@link DataFilter} interface
+     * @throws CloudproofException if anything goes wrong
+     */
+    public void compact(byte[] newKey,
+                        String newLabel,
+                        DataFilter dataFilter)
+        throws CloudproofException {
+        compact(newKey, newLabel, 1, dataFilter);
     }
 
     /**
@@ -460,9 +409,8 @@ public final class Findex extends FindexBase {
      * @throws CloudproofException if anything goes wrong
      */
     public void compact(byte[] newKey,
-                        String newLabel,
-                        int numCompactToFull)
+                        String newLabel)
         throws CloudproofException {
-	compact(newKey, newLabel.getBytes(), numCompactToFull, new FilterLocations() {});
+        compact(newKey, newLabel, 1, new DataFilter() {});
     }
 }

@@ -7,14 +7,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import com.cosmian.jna.findex.FilterLocations;
+import com.cosmian.jna.findex.DataFilter;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.utils.CloudproofException;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-public class RedisUserDb extends RedisConnection implements FilterLocations {
+public class RedisUserDb extends RedisConnection implements DataFilter {
 
     static final int PREFIX = 3;
 

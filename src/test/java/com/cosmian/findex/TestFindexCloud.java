@@ -76,7 +76,7 @@ public class TestFindexCloud {
         System.out.println("");
 
         SearchResults searchResults = findex.search(new String[] {"Doe"});
-        assertEquals(new HashSet<>(Arrays.asList(new Long(1337), new Long(42))), searchResults.getNumbers());
+        assertEquals(new HashSet<>(Arrays.asList(1337, 42)), searchResults.getNumbers());
     }
 
     public static class Index {

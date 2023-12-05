@@ -2,7 +2,7 @@ package com.cosmian.jna.findex;
 
 import java.util.List;
 
-import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FilterLocationsCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.DataFilterCallback;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.serde.Leb128Writer;
 import com.cosmian.jna.findex.structs.Location;
@@ -10,7 +10,7 @@ import com.cosmian.utils.CloudproofException;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
-public interface FilterLocations extends FilterLocationsCallback {
+public interface DataFilter extends DataFilterCallback {
 
     /**
      * Filter the given locations.

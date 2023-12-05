@@ -63,8 +63,8 @@ public class IndexUtils {
         return Base64.getDecoder().decode(Resources.load_resource("findex/key.b64"));
     }
 
-    public static byte[] loadLabel() throws IOException {
-        return Resources.load_resource_as_bytes("findex/label");
+    public static String loadLabel() throws IOException {
+        return Resources.load_resource("findex/label");
     }
 
     public static UsersDataset[] loadDatasets() throws IOException, CloudproofException {

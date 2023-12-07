@@ -404,8 +404,6 @@ public final class Findex extends FindexBase {
      *
      * @param newKey key to use as replacement to the current Findex key.
      * @param newLabel label to use as replacement to the current Findex label.
-     * @param numCompactToFull number of compact operation to run before going through the entire Chain Table (on
-     *            average).
      * @throws CloudproofException if anything goes wrong
      */
     public void compact(byte[] newKey,

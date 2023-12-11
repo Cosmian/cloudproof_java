@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Support of Findex v6
 - Use persistent instance in Findex without cloud
 - Overload Findex constructor to simplify instantiation
+- Covercrypt edit policy capability
 
 ## [6.0.0] - 2023-06-01
 

@@ -21,4 +21,7 @@ public class Keyword extends Leb128ByteArray {
         super(string.getBytes(StandardCharsets.UTF_8));
     }
 
+    public IndexedValue toIndexedValue() {
+        return new IndexedValue(this);
+    }
 }

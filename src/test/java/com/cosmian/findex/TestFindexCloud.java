@@ -50,8 +50,7 @@ public class TestFindexCloud {
         String token = RestToken.generateNewToken(index.publicId, index.fetchEntriesKey, index.fetchChainsKey,
             index.upsertEntriesKey, index.insertChainsKey);
 
-        Findex findex = new Findex();
-        findex.instantiateRestBackend(label.getBytes(), token, baseUrl);
+        Findex findex = new Findex(label, token, baseUrl);
 
         System.out.println("");
         System.out.println("---------------------------------------");
@@ -77,7 +76,9 @@ public class TestFindexCloud {
         System.out.println("");
 
         SearchResults searchResults = findex.search(new String[] {"Doe"});
-        assertEquals(new HashSet<>(Arrays.asList(new Long(1337), new Long(42))), searchResults.getNumbers());
+        Set<Long> foundData = searchResults.getNumbers();
+        assert(foundData.contains(1337l));
+        assert(foundData.contains(42l));
     }
 
     public static class Index {

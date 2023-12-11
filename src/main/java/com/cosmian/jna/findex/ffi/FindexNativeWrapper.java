@@ -52,32 +52,32 @@ public interface FindexNativeWrapper extends Library {
                          int outputLen);
     }
 
-    interface FilterLocationsCallback extends Callback {
+    interface DataFilterCallback extends Callback {
         int callback(Pointer outputLocationsPtr,
                      IntByReference outputLocationsLen,
                      Pointer locationsPtr,
                      int locationsLen);
     }
 
-    int h_instantiate_with_ffi_backend(IntByReference handle,
-                                       Pointer keyPtr,
-                                       int keyLen,
-                                       Pointer labelPtr,
-                                       int labelLen,
-                                       int entryTableNumber,
-                                       FetchCallback fetchEntry,
-                                       FetchCallback fetchChain,
-                                       UpsertCallback upsertEntry,
-                                       InsertCallback insertChain,
-                                       DeleteCallback deleteEntry,
-                                       DeleteCallback deleteChain,
-                                       DumpTokensCallback dumpTokens);
+    int h_instantiate_with_custom_interface(IntByReference handle,
+                                            Pointer keyPtr,
+                                            int keyLen,
+                                            String label,
+                                            int entryTableNumber,
+                                            FetchCallback fetchEntry,
+                                            FetchCallback fetchChain,
+                                            UpsertCallback upsertEntry,
+                                            InsertCallback insertEntry,
+                                            InsertCallback insertChain,
+                                            DeleteCallback deleteEntry,
+                                            DeleteCallback deleteChain,
+                                            DumpTokensCallback dumpTokens);
 
-    int h_instantiate_with_rest_backend(IntByReference handle,
-                                        Pointer labelPtr,
-                                        int labelLen,
-                                        String token,
-                                        String url);
+    int h_instantiate_with_rest_interface(IntByReference handle,
+                                          String label,
+                                          String token,
+                                          String entryUrl,
+                                          String chainUrl);
 
     int h_add(byte[] newKeywordsBufferPtr,
               IntByReference newKeywordsBufferLen,
@@ -94,10 +94,9 @@ public interface FindexNativeWrapper extends Library {
     int h_compact(int handle,
                   Pointer newKeyPtr,
                   int newKeyLen,
-                  Pointer newLabelPtr,
-                  int newLabelLen,
-                  int numCompactToFull,
-                  FilterLocationsCallback filterObsoleteData);
+                  String newLabel,
+                  double numCompactToFull,
+                  DataFilterCallback filterObsoleteData);
 
     int h_search(byte[] searchResultsPtr,
                  IntByReference searchResultsLen,

@@ -9,6 +9,7 @@ import com.cosmian.jna.findex.ffi.FFiUtils;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.DeleteCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.DumpTokensCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.FetchCallback;
+import com.cosmian.jna.findex.ffi.FindexNativeWrapper.InsertCallback;
 import com.cosmian.jna.findex.ffi.FindexNativeWrapper.UpsertCallback;
 import com.cosmian.jna.findex.serde.Leb128Reader;
 import com.cosmian.jna.findex.serde.Tuple;
@@ -62,6 +63,17 @@ public interface EntryTableDatabase {
      */
     public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> uidsAndValues)
         throws CloudproofException;
+
+    /**
+     * Insert the given lines in the Chain Table.
+     * <p>
+     * Implementation of this method is only required to perform additions, deletions or compact operations on the
+     * index.
+     *
+     * @param uidsAndValues a {@link Map} of {@link Uid32} to {@link EntryTableValue}
+     * @throws CloudproofException if anything goes wrong
+     */
+    public void insert(Map<Uid32, EntryTableValue> uidsAndValues) throws CloudproofException;
 
     /**
      * Delete the lines with the given UIDs.
@@ -149,6 +161,40 @@ public interface EntryTableDatabase {
 
                     Map<Uid32, EntryTableValue> failedEntries = upsert(map);
                     return FFiUtils.mapToOutputPointer(failedEntries, outputs, outputsLength);
+                } catch (CloudproofException e) {
+                    return FindexCallbackException.record(e);
+                }
+            }
+        };
+    }
+
+    /**
+     * Return the appropriate insert callback (with input/output serialization).
+     */
+    default InsertCallback insertCallback() {
+        return new InsertCallback() {
+            @Override
+            public int callback(Pointer items,
+                                int itemsLength) {
+                try {
+                    //
+                    // Read `items` until `itemsLength`
+                    //
+                    byte[] itemsBytes = new byte[itemsLength];
+                    items.read(0, itemsBytes, 0, itemsLength);
+
+                    //
+                    // Deserialize the chain table items
+                    //
+                    Map<Uid32, EntryTableValue> uidsAndValues =
+                        Leb128Reader.deserializeMap(Uid32.class, EntryTableValue.class, itemsBytes);
+
+                    //
+                    // Insert in database
+                    //
+                    insert(uidsAndValues);
+
+                    return 0;
                 } catch (CloudproofException e) {
                     return FindexCallbackException.record(e);
                 }

@@ -15,12 +15,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.cosmian.jna.findex.FilterLocations;
+import com.cosmian.jna.findex.DataFilter;
 import com.cosmian.jna.findex.structs.Location;
 import com.cosmian.jna.findex.structs.Uid32;
 import com.cosmian.utils.CloudproofException;
 
-public class SqliteUserDb implements FilterLocations, Closeable {
+public class SqliteUserDb implements DataFilter, Closeable {
 
     final Connection connection;
 

@@ -22,7 +22,6 @@ public class Keyword extends Leb128ByteArray {
     }
 
     public IndexedValue toIndexedValue() {
-	    return new IndexedValue(this);
+        return new IndexedValue(this);
     }
-
 }

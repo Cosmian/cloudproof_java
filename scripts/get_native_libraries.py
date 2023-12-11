@@ -64,4 +64,4 @@ def download_native_libraries(version: str) -> bool:
 if __name__ == '__main__':
     RET = download_native_libraries('v2.4.0')
     if RET is False and getenv('GITHUB_ACTIONS'):
-        download_native_libraries('last_build/fix/ffi_unwrap_return_code')
+        download_native_libraries('last_build/fix/rename_findex_traits')

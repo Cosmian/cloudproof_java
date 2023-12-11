@@ -47,7 +47,7 @@ public class TestRedis {
         //
         byte[] key = IndexUtils.generateKey();
         assertEquals(16, key.length);
-        byte[] label = IndexUtils.loadLabel();
+        String label = IndexUtils.loadLabel();
 
         //
         // Recover test vectors
@@ -72,7 +72,7 @@ public class TestRedis {
             db.insertUsers(testFindexDataset);
             System.out.println("After insertion: data_table size: " + chainTable.getAllKeys().size());
 
-            Findex findex = new Findex(key, label, 1, entryTable, chainTable);
+            Findex findex = new Findex(key, label, entryTable, chainTable);
 
             //
             // Upsert
@@ -118,7 +118,7 @@ public class TestRedis {
 
             // This compact should do nothing except changing the label since the users
             // table didn't change.
-            findex.compact(key, "NewLabel".getBytes(), 1);
+            findex.compact(key, "NewLabel");
             System.out
                 .println("After first compact: entry_table size: " + entryTable.getAllKeys().size());
             System.out
@@ -142,8 +142,8 @@ public class TestRedis {
 
             // Delete the user n°17 to test the compact indexes
             db.deleteUser(17);
-            expectedDbLocations.remove(new Long(17));
-            findex.compact(key, "NewLabel2".getBytes(), 1, db);
+            expectedDbLocations.remove(17l);
+            findex.compact(key, "NewLabel2", db);
             {
                 // Search should return everyone but n°17
                 SearchResults searchResults = findex.search(new String[] {"France"});
@@ -171,7 +171,7 @@ public class TestRedis {
         //
         byte[] key = IndexUtils.generateKey();
         assertEquals(16, key.length);
-        byte[] label = IndexUtils.loadLabel();
+        String label = IndexUtils.loadLabel();
 
         //
         // Build dataset with DB uids and words
@@ -191,7 +191,7 @@ public class TestRedis {
 
             db.insertUsers(testFindexDataset);
 
-            Findex findex = new Findex(key, label, 1, entryTable, chainTable);
+            Findex findex = new Findex(key, label, entryTable, chainTable);
 
             Map<IndexedValue, Set<Keyword>> indexedValuesAndWords = IndexUtils.index(testFindexDataset);
             findex.add(indexedValuesAndWords);
@@ -226,7 +226,7 @@ public class TestRedis {
         //
         byte[] key = IndexUtils.generateKey();
         assertEquals(16, key.length);
-        byte[] label = IndexUtils.loadLabel();
+        String label = IndexUtils.loadLabel();
 
         //
         // Build dataset with DB uids and words
@@ -261,7 +261,7 @@ public class TestRedis {
             db.insertUsers(testFindexDataset);
             System.out.println("After insertion: data_table size: " + db.getAllKeys().size());
 
-            Findex findex = new Findex(key, label, 1, entryTable, chainTable);
+            Findex findex = new Findex(key, label, entryTable, chainTable);
 
             //
             // Upsert

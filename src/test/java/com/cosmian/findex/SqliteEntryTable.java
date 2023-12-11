@@ -155,6 +155,19 @@ public class SqliteEntryTable implements EntryTableDatabase, Closeable {
         return failed;
     }
 
+    void insertEntry(Map<Uid32, EntryTableValue> uidsAndValues) throws SQLException {
+        PreparedStatement pstmt = connection
+            .prepareStatement("INSERT INTO entry_table (uid, value) VALUES (?,?)");
+
+        for (Entry<Uid32, EntryTableValue> entry : uidsAndValues.entrySet()) {
+            pstmt.setBytes(1, entry.getKey().getBytes());
+            pstmt.setBytes(2, entry.getValue().getBytes());
+            pstmt.addBatch();
+        }
+
+        pstmt.executeBatch();
+    }
+
     public void deleteUids(List<Uid32> uids) throws SQLException {
         PreparedStatement pstmt = this.connection
             .prepareStatement(
@@ -195,11 +208,20 @@ public class SqliteEntryTable implements EntryTableDatabase, Closeable {
     }
 
     @Override
+    public void insert(Map<Uid32, EntryTableValue> uidsAndValues) throws CloudproofException {
+        try {
+            insertEntry(uidsAndValues);
+        } catch (SQLException e) {
+            throw new CloudproofException("error in Entry Table insert: ", e);
+        }
+    }
+
+    @Override
     public void delete(List<Uid32> uids) throws CloudproofException {
         try {
             deleteUids(uids);
         } catch (SQLException e) {
-            throw new CloudproofException("error in Entry Table upsert: ", e);
+            throw new CloudproofException("error in Entry Table delete: ", e);
         }
     }
 }

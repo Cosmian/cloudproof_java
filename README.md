@@ -105,6 +105,7 @@ From the version 5.0.0, `cloudproof_java` depends on [cloudproof_rust](https://g
 |----------|------------|---------------------|
 | 5.0.0    | 4.3.3      | 1.0.0               |
 | 6.0.0    | 4.3.3      | 2.0.1               |
+| 7.0.0    | 4.10.0     | 2.4.0               |
 
 ## Using in Java projects
 

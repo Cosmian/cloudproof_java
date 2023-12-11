@@ -14,49 +14,50 @@ import com.cosmian.utils.CloudproofException;
 
 public class MultiSqlite extends SqliteEntryTable {
 
-	int selector;
-	final List<SqliteEntryTable> entryTableList;
+    int selector;
 
-	public MultiSqlite(List<SqliteEntryTable> dbList) throws SQLException {
-		if (dbList.isEmpty()) {
-			throw new SQLException("No Entry Table given");
-		} else {
+    final List<SqliteEntryTable> entryTableList;
 
-			this.entryTableList = dbList;
-			this.selector = 0;
-		}
-	}
+    public MultiSqlite(List<SqliteEntryTable> dbList) throws SQLException {
+        if (dbList.isEmpty()) {
+            throw new SQLException("No Entry Table given");
+        } else {
 
-	public void selectTable(int tableNumber) throws CloudproofException {
-		if (this.entryTableList.size() <= tableNumber) {
-			throw new CloudproofException("Entry Table number out of range");
-		} else {
-			this.selector = tableNumber;
-		}
-	}
+            this.entryTableList = dbList;
+            this.selector = 0;
+        }
+    }
 
-	@Override
-	public List<Tuple<Uid32, EntryTableValue>> fetch(List<Uid32> uids) throws CloudproofException {
-		List<Tuple<Uid32, EntryTableValue>> output = new ArrayList<Tuple<Uid32, EntryTableValue>>();
-		for (SqliteEntryTable entryTable : this.entryTableList) {
-			List<Tuple<Uid32, EntryTableValue>> entries = entryTable.fetch(uids);
-			output.addAll(entries);
-		}
-		return output;
-	}
+    public void selectTable(int tableNumber) throws CloudproofException {
+        if (this.entryTableList.size() <= tableNumber) {
+            throw new CloudproofException("Entry Table number out of range");
+        } else {
+            this.selector = tableNumber;
+        }
+    }
 
-	@Override
-	public Set<Uid32> fetchAllUids() throws CloudproofException {
-		return entryTableList.get(selector).fetchAllUids();
-	}
+    @Override
+    public List<Tuple<Uid32, EntryTableValue>> fetch(List<Uid32> uids) throws CloudproofException {
+        List<Tuple<Uid32, EntryTableValue>> output = new ArrayList<Tuple<Uid32, EntryTableValue>>();
+        for (SqliteEntryTable entryTable : this.entryTableList) {
+            List<Tuple<Uid32, EntryTableValue>> entries = entryTable.fetch(uids);
+            output.addAll(entries);
+        }
+        return output;
+    }
 
-	@Override
-	public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> modifications) throws CloudproofException {
-		return entryTableList.get(selector).upsert(modifications);
-	}
+    @Override
+    public Set<Uid32> fetchAllUids() throws CloudproofException {
+        return entryTableList.get(selector).fetchAllUids();
+    }
 
-	@Override
-	public void delete(List<Uid32> uids) throws CloudproofException {
-		entryTableList.get(selector).delete(uids);
-	}
+    @Override
+    public Map<Uid32, EntryTableValue> upsert(Map<Uid32, EntryTableValues> modifications) throws CloudproofException {
+        return entryTableList.get(selector).upsert(modifications);
+    }
+
+    @Override
+    public void delete(List<Uid32> uids) throws CloudproofException {
+        entryTableList.get(selector).delete(uids);
+    }
 }

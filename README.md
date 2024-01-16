@@ -1,6 +1,6 @@
 # Cloudproof Java Library
 
-![workflow](https://github.com/Cosmian/cloudproof_java/actions/workflows/maven.yml/badge.svg)
+![workflow](https://github.com/Cosmian/cloudproof_java/actions/workflows/ci.yml/badge.svg)
 
 The Cloudproof Java library provides a Java-friendly API to [Cosmian's Cloudproof Encryption](https://docs.cosmian.com/).
 
@@ -106,6 +106,7 @@ From the version 5.0.0, `cloudproof_java` depends on [cloudproof_rust](https://g
 | 5.0.0    | 4.3.3      | 1.0.0               |
 | 6.0.0    | 4.3.3      | 2.0.1               |
 | 7.0.0    | 4.10.0     | 2.4.0               |
+| 7.1.0    | 4.11.0     | 2.4.0               |
 
 ## Using in Java projects
 

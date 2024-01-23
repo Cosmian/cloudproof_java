@@ -13,7 +13,7 @@ services:
       - PGDATA=/tmp/postgres2
   kms:
     container_name: kms
-    image: ghcr.io/cosmian/kms:feat-rsa_key_pair_generation
+    image: ghcr.io/cosmian/kms:4.11.1
     ports:
       - 9998:9998
     depends_on:

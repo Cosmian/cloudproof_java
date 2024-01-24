@@ -49,7 +49,7 @@ jobs:
   build_in_docker:
     services:
       kms:
-        image: ghcr.io/cosmian/kms:4.11.1
+        image: ghcr.io/cosmian/kms:4.11.2
         ports:
           - 9998:9998
       findex_cloud:
@@ -161,7 +161,7 @@ jobs:
     with:
       branch: develop
       target: wasm32-unknown-unknown
-      kms-version: 4.11.1
+      kms-version: 4.11.2
       findex-cloud-version: 0.3.1
       copy_fresh_build: false
       copy_regression_files: |
@@ -172,9 +172,9 @@ jobs:
     needs: build_in_docker
     uses: Cosmian/reusable_workflows/.github/workflows/cloudproof_python.yml@develop
     with:
-      branch: develop
+      branch: feature/support_kms_4_11
       target: x86_64-unknown-linux-gnu
-      kms-version: 4.11.1
+      kms-version: 4.11.2
       findex-cloud-version: 0.3.1
       copy_fresh_build: false
       copy_regression_files: |

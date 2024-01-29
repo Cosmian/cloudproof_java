@@ -86,18 +86,9 @@ key is half hybridized).
 
 ## Versions Correspondence
 
-This library uses the 2 native libraries CoverCrypt and Findex for performance and safe implementation reasons.
+This library uses [cloudproof_rust](https://github.com/Cosmian/cloudproof_rust) for both CoverCrypt and Findex FFI interface.
 
 This table shows the compatible versions of the various components
-
-| This lib | KMS Server | CoverCrypt | Findex |
-|----------|------------|------------|--------|
-| 3.0.0    | 4.0.1      | 8.0.1      | 1.0.1  |
-| 3.0.2    | 4.0.1      | 8.0.1      | 2.0.0  |
-| 3.0.3    | 4.0.1      | 8.0.2      | 2.0.0  |
-| 4.0.0    | 4.2.0      | 10.0.0     | 2.0.1  |
-| 4.0.1    | 4.2.0      | 10.0.0     | 2.0.1  |
-| 4.1.0    | 4.2.0      | 10.0.0     | 2.1.0  |
 
 From the version 5.0.0, `cloudproof_java` depends on [cloudproof_rust](https://github.com/Cosmian/cloudproof_rust) which wraps the interfaces of `CoverCrypt` and `Findex`.
 
@@ -107,6 +98,7 @@ From the version 5.0.0, `cloudproof_java` depends on [cloudproof_rust](https://g
 | 6.0.0    | 4.3.3      | 2.0.1               |
 | 7.0.0    | 4.10.0     | 2.4.0               |
 | 7.1.0    | 4.11.0     | 2.4.0               |
+| 7.2.0    | 4.11.3     | 2.4.0               |
 
 ## Using in Java projects
 

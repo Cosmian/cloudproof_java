@@ -51,7 +51,7 @@ public interface ChainTableDatabase {
     public void delete(List<Uid32> uids) throws CloudproofException;
 
     /**
-     * Return the appropriate fetch callback (with input/output serialization).
+     * @return the appropriate fetch callback (with input/output serialization).
      */
     default FetchCallback fetchCallback() {
         return new FetchCallback() {
@@ -74,7 +74,7 @@ public interface ChainTableDatabase {
     }
 
     /**
-     * Return the appropriate insert callback (with input/output serialization).
+     * @return the appropriate insert callback (with input/output serialization).
      */
     default InsertCallback insertCallback() {
         return new InsertCallback() {
@@ -108,7 +108,7 @@ public interface ChainTableDatabase {
     }
 
     /**
-     * Return the appropriate delete callback (with input/output serialization).
+     * @return the appropriate delete callback (with input/output serialization).
      */
     default DeleteCallback deleteCallback() {
         return new DeleteCallback() {

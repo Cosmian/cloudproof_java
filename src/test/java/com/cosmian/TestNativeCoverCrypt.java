@@ -128,11 +128,7 @@ public class TestNativeCoverCrypt {
 
         // Rotate attributes
         String encryptionPolicy = "Department::FIN && Security Level::Confidential";
-        String[] attributes = new String[] {"Department::FIN", "Security Level::Confidential"};
-        policy.rotateAttributes(attributes);
-
-        // Must refresh the master keys after an attributes rotation
-        masterKeys = CoverCrypt.generateMasterKeys(policy);
+        masterKeys.rekeyMasterKeys(encryptionPolicy, policy);
 
         // Now generate the header which contains the ABE encryption of the randomly
         // generated AES key.

@@ -119,17 +119,6 @@ public class Policy extends Ffi {
         throw new CloudproofException("No policy available in the vendor attributes");
     }
 
-    public void rotateAttributes(String[] attributes) throws CloudproofException {
-        byte[] updatedPolicyBuffer = new byte[8192];
-        IntByReference updatedPolicyBufferSize = new IntByReference(updatedPolicyBuffer.length);
-        for (String attr : attributes) {
-            unwrap(INSTANCE.h_rotate_attribute(updatedPolicyBuffer, updatedPolicyBufferSize, _bytes,
-                _bytes.length, attr));
-            _bytes = Arrays.copyOfRange(updatedPolicyBuffer, 0, updatedPolicyBufferSize.getValue());
-            updatedPolicyBufferSize.setValue(updatedPolicyBuffer.length);
-        }
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == this)

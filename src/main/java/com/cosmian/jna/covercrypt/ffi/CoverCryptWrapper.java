@@ -141,6 +141,18 @@ public interface CoverCryptWrapper extends Library {
                          byte[] userDecryptionKeyBuffer,
                          int userDecryptionKeyLength);
 
+    int h_rekey_master_keys(byte[] updatedMsk,
+                            IntByReference updatedMskSize,
+                            byte[] updatedMpk,
+                            IntByReference updatedMpkSize,
+                            byte[] currentMsk,
+                            int currentMskLength,
+                            byte[] currentMpk,
+                            int currentMpkLength,
+                            String accessPolicy,
+                            byte[] policyBytes,
+                            int policyBytesSize);
+
     //
     // Policy APIs
     //
@@ -153,12 +165,6 @@ public interface CoverCryptWrapper extends Library {
                           byte[] currentPolicyBuffer,
                           int currentPolicyBufferSize,
                           String axis);
-
-    int h_rotate_attribute(byte[] updatedPolicyBuffer,
-                           IntByReference updatedPolicyBufferSize,
-                           byte[] currentPolicyBuffer,
-                           int currentPolicyBufferSize,
-                           String attribute);
 
     int h_validate_boolean_expression(String booleanExpression);
 

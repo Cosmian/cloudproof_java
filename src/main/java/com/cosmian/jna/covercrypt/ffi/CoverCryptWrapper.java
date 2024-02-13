@@ -153,6 +153,14 @@ public interface CoverCryptWrapper extends Library {
                             byte[] policyBytes,
                             int policyBytesSize);
 
+    int h_prune_master_secret_key(byte[] updatedMsk,
+                                 IntByReference updatedMskSize,
+                                 byte[] currentMsk,
+                                 int currentMskLength,
+                                 String accessPolicy,
+                                 byte[] policyBytes,
+                                 int policyBytesSize);
+
     //
     // Policy APIs
     //

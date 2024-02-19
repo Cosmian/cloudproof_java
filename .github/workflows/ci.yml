@@ -49,7 +49,7 @@ jobs:
   build_in_docker:
     services:
       kms:
-        image: ghcr.io/cosmian/kms:4.11.3
+        image: ghcr.io/cosmian/kms:feature-covercrypt_rekey
         ports:
           - 9998:9998
       findex_cloud:

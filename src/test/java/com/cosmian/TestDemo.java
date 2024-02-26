@@ -153,8 +153,8 @@ public class TestDemo {
             .retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
 
         // Now rotate the MKG attribute - all active keys will be rekeyed
-        kmsClient.rotateCoverCryptAttributes(privateMasterKeyUniqueIdentifier,
-            new String[] {"Department::MKG"});
+        kmsClient.rekeyCoverCryptAccessPolicy(privateMasterKeyUniqueIdentifier, 
+            "Department::MKG");
 
         // Retrieve the rekeyed public key from the KMS
         PublicKey rekeyedPublicKey = kmsClient

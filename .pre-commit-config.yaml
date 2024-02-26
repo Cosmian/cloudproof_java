@@ -32,7 +32,7 @@ repos:
           - markdown
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.38.0
+    rev: v0.39.0
     hooks:
       - id: markdownlint-fix
         args: [--disable=MD004, --disable=MD013, --disable=MD024, --disable=MD041]
@@ -50,7 +50,7 @@ repos:
         args: [--mapping, '2', --sequence, '4', --offset, '2']
 
   - repo: https://github.com/crate-ci/typos
-    rev: v1.17.2
+    rev: typos-v0.10.21
     hooks:
       - id: typos
 
@@ -63,7 +63,7 @@ repos:
       - id: remove-tabs
 
   - repo: https://github.com/sirosen/texthooks
-    rev: 0.6.3
+    rev: 0.6.4
     hooks:
       - id: fix-smartquotes
       - id: fix-ligatures
@@ -108,7 +108,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 24.2.0
     hooks:
       - id: black
         # avoid clash with `double-quote-string-fixer`

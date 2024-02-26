@@ -5,11 +5,11 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 import com.cosmian.jna.covercrypt.structs.AccessPolicy;
-import com.cosmian.jna.covercrypt.structs.Attribute;
 import com.cosmian.jna.covercrypt.structs.Policy;
 import com.cosmian.rest.abe.data.DataToEncrypt;
 import com.cosmian.rest.abe.data.DecryptedData;
 import com.cosmian.rest.kmip.Kmip;
+import com.cosmian.rest.kmip.data_structures.RekeyAction;
 import com.cosmian.rest.kmip.objects.PrivateKey;
 import com.cosmian.rest.kmip.objects.PublicKey;
 import com.cosmian.rest.kmip.operations.Create;
@@ -585,29 +585,26 @@ public class KmsClient {
     }
 
     /**
-     * Rotate the given policy attributes. This will rekey in the KMS:
+     * Rekey the given access policy. This will rekey in the KMS:
      * <ul>
      * <li>the Master Keys</li>
      * <li>all User Decryption Keys that contain one of these attributes in their
      * policy and are not rotated.</li>
      * </ul>
-     * Non Rekeyed User Decryption Keys cannot decrypt ata encrypted with the
+     * Non Rekeyed User Decryption Keys cannot decrypt data encrypted with the
      * rekeyed Master Public Key and the given
      * attributes. <br>
      * Rekeyed User Decryption Keys however will be able to decrypt data encrypted
      * by the previous Master Public Key and
      * the rekeyed one. <br>
-     * Note: there is a limit on the number of revocations that can be performed
-     * which is set in the {@link Policy} when
-     * Master Keys are created
      *
      * @param privateMasterKeyUniqueIdentifier the UID of the private master key
-     * @param policyAttributes                 the array of CoverCrypt attributes
+     * @param accessPolicy                      accessPolicy to rekey e.g. "Department::MKG && Security Level::Confidential"
      * @return the Master Public Key UID
      * @throws CloudproofException if the revocation fails
      */
-    public String rotateCoverCryptAttributes(String privateMasterKeyUniqueIdentifier,
-            String[] policyAttributes)
+    public String rekeyCoverCryptAccessPolicy(String privateMasterKeyUniqueIdentifier,
+            String accessPolicy)
             throws CloudproofException {
         try {
 
@@ -615,7 +612,7 @@ public class KmsClient {
                     Optional.of(CryptographicAlgorithm.CoverCrypt));
             attributes.keyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
             attributes.vendorAttributes(Optional
-                    .of(new VendorAttribute[] { Attribute.toVendorAttribute(policyAttributes) }));
+                    .of(new VendorAttribute[] { new RekeyAction().rekeyAccessPolicy(accessPolicy).toVendorAttribute() }));
             ReKeyKeyPair request = new ReKeyKeyPair(Optional.of(privateMasterKeyUniqueIdentifier),
                     Optional.empty(),
                     Optional.empty(),

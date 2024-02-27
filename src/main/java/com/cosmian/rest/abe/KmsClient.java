@@ -584,12 +584,26 @@ public class KmsClient {
         }
     }
 
+    private String processCoverCryptRekeyRequest(String privateMasterKeyUniqueIdentifier, RekeyAction action) throws CloudproofException {
+        Attributes attributes = new Attributes(ObjectType.Private_Key,
+                Optional.of(CryptographicAlgorithm.CoverCrypt));
+        attributes.keyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
+        attributes.vendorAttributes(Optional
+                .of(new VendorAttribute[] { action.toVendorAttribute() }));
+        ReKeyKeyPair request = new ReKeyKeyPair(Optional.of(privateMasterKeyUniqueIdentifier),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(attributes), Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.empty());
+        ReKeyKeyPairResponse response = this.kmip.reKeyKeyPair(request);
+        return response.getPublicKeyUniqueIdentifier();
+    }
+
     /**
      * Rekey the given access policy. This will rekey in the KMS:
      * <ul>
      * <li>the Master Keys</li>
-     * <li>all User Decryption Keys that contain one of these attributes in their
-     * policy and are not rotated.</li>
+     * <li>any User Key associated to the access policy</li>
      * </ul>
      * Non Rekeyed User Decryption Keys cannot decrypt data encrypted with the
      * rekeyed Master Public Key and the given
@@ -607,23 +621,155 @@ public class KmsClient {
             String accessPolicy)
             throws CloudproofException {
         try {
-
-            Attributes attributes = new Attributes(ObjectType.Private_Key,
-                    Optional.of(CryptographicAlgorithm.CoverCrypt));
-            attributes.keyFormatType(Optional.of(KeyFormatType.CoverCryptSecretKey));
-            attributes.vendorAttributes(Optional
-                    .of(new VendorAttribute[] { new RekeyAction().rekeyAccessPolicy(accessPolicy).toVendorAttribute() }));
-            ReKeyKeyPair request = new ReKeyKeyPair(Optional.of(privateMasterKeyUniqueIdentifier),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.of(attributes), Optional.empty(), Optional.empty(), Optional.empty(),
-                    Optional.empty());
-            ReKeyKeyPairResponse response = this.kmip.reKeyKeyPair(request);
-            return response.getPublicKeyUniqueIdentifier();
-        } catch (CloudproofException e) {
-            throw e;
+            return processCoverCryptRekeyRequest(
+                privateMasterKeyUniqueIdentifier,
+                new RekeyAction().rekeyAccessPolicy(accessPolicy)
+            );
         } catch (Exception e) {
-            String err = "Revocation of CoverCrypt policy attributes failed: "
+            String err = "Rekeying of CoverCrypt access policy failed: "
+                    + e.getMessage() + "  " + e.getClass();
+            logger.severe(err);
+            throw new CloudproofException(err, e);
+        }
+    }
+
+    /**
+     * Prune the given access policy. This will rekey in the KMS:
+     * <ul>
+     * <li>the Master Keys</li>
+     * <li>any User Key associated to the access policy</li>
+     * </ul>
+     * This operation will permanently remove access to old ciphers for the pruned access policy.<br>
+     *
+     * @param privateMasterKeyUniqueIdentifier the UID of the private master key
+     * @param accessPolicy the access policy to prune
+     * @return the Master Public Key UID
+     * @throws CloudproofException if the revocation fails
+     */
+    public String pruneCoverCryptAccessPolicy(String privateMasterKeyUniqueIdentifier,
+            String accessPolicy)
+            throws CloudproofException {
+        try {
+            return processCoverCryptRekeyRequest(
+                privateMasterKeyUniqueIdentifier,
+                new RekeyAction().pruneAccessPolicy(accessPolicy)
+            );
+        } catch (Exception e) {
+            String err = "Pruning of CoverCrypt access policy failed: "
+                    + e.getMessage() + "  " + e.getClass();
+            logger.severe(err);
+            throw new CloudproofException(err, e);
+        }
+    }
+
+    /**
+     * Remove an attribute from a keypair's policy.
+     * Permanently removes the ability to encrypt new messages and decrypt all existing ciphers associated
+     * with this attribute.
+     * This will rekey in the KMS:
+     * <ul>
+     * <li>the Master Keys</li>
+     * <li>any User Key associated to the attribute</li>
+     * </ul>
+     *
+     * @param privateMasterKeyUniqueIdentifier the UID of the private master key
+     * @param attribute to remove e.g. "Department::HR"
+     * @return the Master Public Key UID
+     * @throws CloudproofException if the revocation fails
+     */
+    public String removeCoverCryptAttribute(String privateMasterKeyUniqueIdentifier,
+            String attribute)
+            throws CloudproofException {
+        try {
+            return processCoverCryptRekeyRequest(
+                privateMasterKeyUniqueIdentifier,
+                new RekeyAction().removeAttribute(attribute)
+            );
+        } catch (Exception e) {
+            String err = "Pruning of CoverCrypt access policy failed: "
+                    + e.getMessage() + "  " + e.getClass();
+            logger.severe(err);
+            throw new CloudproofException(err, e);
+        }
+    }
+
+    /**
+     * Disable an attribute from a keypair's policy.
+     * Prevents the encryption of new messages for this attribute while keeping the ability to decrypt existing ciphers.
+     * This will rekey in the KMS:
+     * <ul>
+     * <li>the Master Public Key</li>
+     * </ul>
+     *
+     * @param privateMasterKeyUniqueIdentifier the UID of the private master key
+     * @param attribute to disable e.g. "Department::HR"
+     * @return the Master Public Key UID
+     * @throws CloudproofException if the revocation fails
+     */
+    public String disableCoverCryptAttribute(String privateMasterKeyUniqueIdentifier,
+            String attribute)
+            throws CloudproofException {
+        try {
+            return processCoverCryptRekeyRequest(
+                privateMasterKeyUniqueIdentifier,
+                new RekeyAction().disableAttribute(attribute)
+            );
+        } catch (Exception e) {
+            String err = "Pruning of CoverCrypt access policy failed: "
+                    + e.getMessage() + "  " + e.getClass();
+            logger.severe(err);
+            throw new CloudproofException(err, e);
+        }
+    }
+
+    /**
+     * Add a new attribute to a keypair's policy.
+     * This will rekey in the KMS:
+     * <ul>
+     * <li>the Master Keys</li>
+     * </ul>
+     *
+     * @param privateMasterKeyUniqueIdentifier the UID of the private master key
+     * @param attribute to add e.g. "Department::HR"
+     * @param isHybridized hint for encryption
+     * @return the Master Public Key UID
+     * @throws CloudproofException if the revocation fails
+     */
+    public String addCoverCryptAttribute(String privateMasterKeyUniqueIdentifier,
+            String attribute, boolean isHybridized)
+            throws CloudproofException {
+        try {
+            return processCoverCryptRekeyRequest(
+                privateMasterKeyUniqueIdentifier,
+                new RekeyAction().addAttribute(attribute, isHybridized)
+            );
+        } catch (Exception e) {
+            String err = "Pruning of CoverCrypt access policy failed: "
+                    + e.getMessage() + "  " + e.getClass();
+            logger.severe(err);
+            throw new CloudproofException(err, e);
+        }
+    }
+
+    /**
+     * Rename an attribute in a keypair's policy.
+     *
+     * @param privateMasterKeyUniqueIdentifier the UID of the private master key
+     * @param attribute to rename e.g. "Department::HR"
+     * @param newName the new name for the attribute
+     * @return the Master Public Key UID
+     * @throws CloudproofException if the revocation fails
+     */
+    public String renameCoverCryptAttribute(String privateMasterKeyUniqueIdentifier,
+            String attribute, String newName)
+            throws CloudproofException {
+        try {
+            return processCoverCryptRekeyRequest(
+                privateMasterKeyUniqueIdentifier,
+                new RekeyAction().renameAttribute(attribute, newName)
+            );
+        } catch (Exception e) {
+            String err = "Pruning of CoverCrypt access policy failed: "
                     + e.getMessage() + "  " + e.getClass();
             logger.severe(err);
             throw new CloudproofException(err, e);

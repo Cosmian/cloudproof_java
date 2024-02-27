@@ -237,6 +237,10 @@ public class TestDemo {
         byte[] topSecretMarketingCT = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier, topSecretMkgData,
             "Department::Marketing && Security Level::Top Secret");
 
+        // The new message is readable by existing marketing user keys
+        DecryptedData topSecretMarketing_ = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, topSecretMarketingCT);
+        assert Arrays.equals(topSecretMkgData, topSecretMarketing_.getPlaintext());
+
         // -------------------------------------------
         // Add attributes
         // -------------------------------------------
@@ -257,6 +261,41 @@ public class TestDemo {
         // The new user can decrypt the R&D message
         DecryptedData protectedRd_ = kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
         assert Arrays.equals(protectedRdData, protectedRd_.getPlaintext());
+
+        // -------------------------------------------
+        // Disable attributes
+        // -------------------------------------------
+
+        kmsClient.disableCoverCryptAttribute(privateMasterKeyUniqueIdentifier, "Department::R&D");
+
+        // Disabled attributes can no longer be used to encrypt data
+        // New data encryption for `Department::R&D` will fail
+        try {
+            kmsClient.coverCryptEncrypt(
+                publicMasterKeyUniqueIdentifier,
+                protectedRdData,
+                "Department::R&D && Security Level::Protected"
+            );
+        } catch (CloudproofException e) {
+            // ==> fine, the user is not able to encrypt
+        }
+
+        // Decryption of old R&D ciphertext is still possible
+        DecryptedData protectedRd__ = kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
+        assert Arrays.equals(protectedRdData, protectedRd__.getPlaintext());
+
+        // -------------------------------------------
+        // Remove attributes
+        // -------------------------------------------
+
+        kmsClient.removeCoverCryptAttribute(privateMasterKeyUniqueIdentifier, "Department::R&D");
+
+        // Removed attributes can no longer be used to encrypt or decrypt
+        try {
+            kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
+        } catch (CloudproofException e) {
+            // ==> fine, the user is not able to decrypt
+        }
     }
 
     @Test

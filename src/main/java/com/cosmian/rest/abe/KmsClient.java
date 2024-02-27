@@ -599,7 +599,7 @@ public class KmsClient {
      * the rekeyed one. <br>
      *
      * @param privateMasterKeyUniqueIdentifier the UID of the private master key
-     * @param accessPolicy                      accessPolicy to rekey e.g. "Department::MKG && Security Level::Confidential"
+     * @param accessPolicy the access policy to rekey
      * @return the Master Public Key UID
      * @throws CloudproofException if the revocation fails
      */

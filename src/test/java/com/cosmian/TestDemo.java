@@ -234,12 +234,13 @@ public class TestDemo {
             "Department::MKG", "Marketing");
 
         // Encrypt data with the renamed attribute
-        byte[] topSecretMarketingCT = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier, topSecretMkgData,
+        byte[] topSecretMarketingData = "topSecretMarketingMessage".getBytes(StandardCharsets.UTF_8);
+        byte[] topSecretMarketingCT = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier, topSecretMarketingData,
             "Department::Marketing && Security Level::Top Secret");
 
-        // The new message is readable by existing marketing user keys
-        DecryptedData topSecretMarketing_ = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, topSecretMarketingCT);
-        assert Arrays.equals(topSecretMkgData, topSecretMarketing_.getPlaintext());
+        // New "Marketing" message is readable by existing "MKG" user keys
+        DecryptedData topSecretMarketing = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, topSecretMarketingCT);
+        assert Arrays.equals(topSecretMarketingData, topSecretMarketing.getPlaintext());
 
         // -------------------------------------------
         // Add attributes
@@ -280,7 +281,7 @@ public class TestDemo {
             // ==> fine, the user is not able to encrypt
         }
 
-        // Decryption of old R&D ciphertext is still possible
+        // Decryption of R&D ciphertext is still possible
         DecryptedData protectedRd__ = kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
         assert Arrays.equals(protectedRdData, protectedRd__.getPlaintext());
 

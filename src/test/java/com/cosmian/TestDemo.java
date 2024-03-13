@@ -133,14 +133,14 @@ public class TestDemo {
 
         // As expected, the top-secret marketing financial user can successfully decrypt
         // all messages
-        DecryptedData protectedMkg_ = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, protectedMkgCT);
-        assert Arrays.equals(protectedMkgData, protectedMkg_.getPlaintext());
+        DecryptedData protectedMkg2 = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, protectedMkgCT);
+        assert Arrays.equals(protectedMkgData, protectedMkg2.getPlaintext());
 
-        DecryptedData topSecretMkg_ = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, topSecretMkgCT);
-        assert Arrays.equals(topSecretMkgData, topSecretMkg_.getPlaintext());
+        DecryptedData topSecretMkg = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, topSecretMkgCT);
+        assert Arrays.equals(topSecretMkgData, topSecretMkg.getPlaintext());
 
-        DecryptedData protectedFin_ = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, protectedFinCT);
-        assert Arrays.equals(protectedFinData, protectedFin_.getPlaintext());
+        DecryptedData protectedFin = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, protectedFinCT);
+        assert Arrays.equals(protectedFinData, protectedFin.getPlaintext());
 
         // -------------------------------------------
         // Rekey access policy
@@ -179,14 +179,14 @@ public class TestDemo {
         assert !Arrays.equals(oldConfidentialMkgUserKey.bytes(), rekeyedConfidentialMkgUserKey.bytes());
 
         // Decrypting the "old" `protected marketing` message
-        DecryptedData protectedMkg__ =
+        DecryptedData protectedMkg3 =
             CoverCrypt.decrypt(rekeyedConfidentialMkgUserKey.bytes(), protectedMkgCT, Optional.empty());
-        assert Arrays.equals(protectedMkgData, protectedMkg__.getPlaintext());
+        assert Arrays.equals(protectedMkgData, protectedMkg3.getPlaintext());
 
         // Decrypting the "new" `confidential marketing` message
-        DecryptedData confidentialMkg__ =
+        DecryptedData confidentialMkg =
             CoverCrypt.decrypt(rekeyedConfidentialMkgUserKey.bytes(), confidentialMkgCT, Optional.empty());
-        assert Arrays.equals(confidentialMkgData, confidentialMkg__.getPlaintext());
+        assert Arrays.equals(confidentialMkgData, confidentialMkg.getPlaintext());
 
         // Decrypting the messages with the NON rekeyed key
         // However, the old, non-rekeyed confidential marketing user key can still
@@ -222,9 +222,9 @@ public class TestDemo {
         }
 
         // Pruned keys will only be able to decrypt ciphers generated after the last rekey operation.
-        confidentialMkg__ =
+        DecryptedData confidentialMkg4 =
             kmsClient.coverCryptDecrypt(confidentialMkgUserKeyUid, confidentialMkgCT);
-        assert Arrays.equals(confidentialMkgData, confidentialMkg__.getPlaintext());
+        assert Arrays.equals(confidentialMkgData, confidentialMkg4.getPlaintext());
 
         // -------------------------------------------
         // Rename attributes
@@ -260,8 +260,8 @@ public class TestDemo {
         );
 
         // The new user can decrypt the R&D message
-        DecryptedData protectedRd_ = kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
-        assert Arrays.equals(protectedRdData, protectedRd_.getPlaintext());
+        DecryptedData protectedRd = kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
+        assert Arrays.equals(protectedRdData, protectedRd.getPlaintext());
 
         // -------------------------------------------
         // Disable attributes
@@ -282,8 +282,8 @@ public class TestDemo {
         }
 
         // Decryption of R&D ciphertext is still possible
-        DecryptedData protectedRd__ = kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
-        assert Arrays.equals(protectedRdData, protectedRd__.getPlaintext());
+        DecryptedData protectedRd2 = kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
+        assert Arrays.equals(protectedRdData, protectedRd2.getPlaintext());
 
         // -------------------------------------------
         // Remove attributes

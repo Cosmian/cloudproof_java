@@ -76,12 +76,13 @@ public class TestBenchesCoverCrypt {
     }
 
     private byte[][] generateUserDecryptionKeys(byte[] msk,
-                                                Policy policy)
+                                                Policy policy,
+                                                String[] accessPolicies)
         throws CloudproofException {
-        return IntStream.range(0, classicAccessPolicies().length)
+        return IntStream.range(0, accessPolicies.length)
             .mapToObj(i -> {
                 try {
-                    return CoverCrypt.generateUserPrivateKey(msk, classicAccessPolicies()[i], policy);
+                    return CoverCrypt.generateUserPrivateKey(msk, accessPolicies[i], policy);
                 } catch (CloudproofException e) {
                     e.printStackTrace();
                     throw new RuntimeException("User decryption key generation");
@@ -139,6 +140,9 @@ public class TestBenchesCoverCrypt {
                                                   String accessPolicy)
         throws NoSuchAlgorithmException, CloudproofException {
 
+
+        System.out.println("Access Policy " + accessPolicy);
+
         int nb_occurrences = 10000;
         int encryptionCacheHandle = CoverCrypt.createEncryptionCache(policy, masterKeys.getPublicKey());
         int decryptionCacheHandle = CoverCrypt.createDecryptionCache(userDecryptionKey);
@@ -185,8 +189,6 @@ public class TestBenchesCoverCrypt {
 
         Policy policy = policy();
         MasterKeys masterKeys = CoverCrypt.generateMasterKeys(policy);
-        byte[][] userDecryptionKeys = generateUserDecryptionKeys(masterKeys.getPrivateKey(),
-            policy);
 
         System.out.println("");
         System.out.println("Classic encryption");
@@ -194,6 +196,8 @@ public class TestBenchesCoverCrypt {
         System.out.println("");
 
         String[] accessPolicies = classicAccessPolicies();
+        byte[][] userDecryptionKeys = generateUserDecryptionKeys(masterKeys.getPrivateKey(),
+            policy, accessPolicies);
         for (int partitionNumber = 0; partitionNumber < accessPolicies.length; partitionNumber++) {
             System.out.print("Number of partitions: " + String.valueOf(partitionNumber + 1) + ": ");
             benchHeaderEncryptionDecryptionWithCache(policy, masterKeys, userDecryptionKeys[partitionNumber],
@@ -206,6 +210,8 @@ public class TestBenchesCoverCrypt {
         System.out.println("");
 
         accessPolicies = hybridizedAccessPolicies();
+        userDecryptionKeys = generateUserDecryptionKeys(masterKeys.getPrivateKey(),
+            policy, accessPolicies);
         for (int partitionNumber = 0; partitionNumber < accessPolicies.length; partitionNumber++) {
             System.out.print("Number of partitions: " + String.valueOf(partitionNumber + 1) + ": ");
             benchHeaderEncryptionDecryptionWithCache(policy, masterKeys, userDecryptionKeys[partitionNumber],

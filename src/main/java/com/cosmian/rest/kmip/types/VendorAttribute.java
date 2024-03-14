@@ -40,6 +40,9 @@ public class VendorAttribute implements KmipStruct {
     public static final String VENDOR_ATTR_COVER_CRYPT_ACCESS_POLICY = "cover_crypt_access_policy";
 
     @JsonIgnore
+    public static final String VENDOR_ATTR_COVER_CRYPT_REKEY_ACTION = "cover_crypt_rekey_action";
+
+    @JsonIgnore
     @Deprecated
     public static final String VENDOR_ATTR_ABE_HEADER_UID = "abe_header_uid";
 

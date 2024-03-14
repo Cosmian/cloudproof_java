@@ -4,12 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.cosmian.jna.covercrypt.CoverCrypt;
 import com.cosmian.jna.covercrypt.structs.Policy;
 import com.cosmian.rest.abe.KmsClient;
 import com.cosmian.rest.abe.data.DecryptedData;
@@ -235,5 +238,135 @@ public class TestKmsCoverCrypt {
         byte[] headerMetadata_ = decryptedData.getHeaderMetaData();
         assertArrayEquals(protected_fin_data, plaintext_);
         assertArrayEquals(headerMetaData, headerMetadata_);
+    }
+
+    @Test
+    public void testLocalEncryptServerDecrypt() throws Exception {
+
+        System.out.println("");
+        System.out.println("---------------------------------------");
+        System.out.println(" Hybrid Crypto Test Local Encrypt + Server Decrypt");
+        System.out.println("---------------------------------------");
+        System.out.println("");
+
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            throw new RuntimeException("No KMS Server available");
+        }
+
+        // The data we want to encrypt/decrypt
+        byte[] plaintext = "This is a test message".getBytes(StandardCharsets.UTF_8);
+
+        // A unique ID associated with this message. The unique id is used to
+        // authenticate the message in the AES encryption scheme.
+        // Typically this will be a hash of the content if it is unique, a unique
+        // filename or a database unique key
+        byte[] uid = MessageDigest.getInstance("SHA-256").digest(plaintext);
+
+        Policy policy = TestNativeCoverCrypt.policy();
+
+        KmsClient kmsClient = new KmsClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
+
+        String[] ids = kmsClient.createCoverCryptMasterKeyPair(policy);
+
+        String privateMasterKeyId = ids[0];
+        String publicMasterKeyId = ids[1];
+        PublicKey publicKey = kmsClient.retrieveCoverCryptPublicMasterKey(publicMasterKeyId);
+
+        // User decryption key Confidential, FIN
+        String userKeyId = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyConfidential(),
+            privateMasterKeyId);
+
+        //
+        // Local Encryption
+        //
+
+        System.out.println("Local Encryption");
+
+        // The encryption policy attributes that will be used to encrypt the content.
+        // Attributes must exist in the policy associated with the Public Key
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
+        byte[] ciphertext = CoverCrypt.encrypt(policy, publicKey.bytes(), encryptionPolicy, plaintext, Optional.of(uid),
+            Optional.empty());
+
+        //
+        // Local Decryption
+        //
+
+        System.out.println("Local Decryption");
+
+        PrivateKey userKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userKeyId);
+        DecryptedData res = CoverCrypt.decrypt(userKey.bytes(), ciphertext, Optional.of(uid));
+        assertArrayEquals(plaintext, res.getPlaintext());
+        assertArrayEquals(new byte[] {}, res.getHeaderMetaData());
+
+        //
+        // KMS Decryption
+        //
+
+        System.out.println("KMS Decryption");
+
+        byte[] data_kms = kmsClient.coverCryptDecrypt(userKeyId, ciphertext, uid).getPlaintext();
+        assertArrayEquals(plaintext, data_kms);
+    }
+
+    @Test
+    public void testServerEncryptLocalDecrypt() throws Exception {
+
+        System.out.println("");
+        System.out.println("------------------------------------------------------");
+        System.out.println(" Hybrid Crypto Test Server Encrypt + Local Decrypt    ");
+        System.out.println("------------------------------------------------------");
+        System.out.println("");
+
+        if (!TestUtils.serverAvailable(TestUtils.kmsServerUrl())) {
+            throw new RuntimeException("No KMS Server available");
+        }
+
+        // The data we want to encrypt/decrypt
+        byte[] plaintext = new byte[] {1, 2, 3, 4, 5, 6};
+
+        // A unique ID associated with this message. The unique id is used to
+        // authenticate the message in the AES encryption scheme.
+        // Typically this will be a hash of the content if it is unique, a unique
+        // filename or a database unique key
+        byte[] uid = MessageDigest.getInstance("SHA-256").digest(plaintext);
+
+        Policy policy = TestNativeCoverCrypt.policy();
+
+        KmsClient kmsClient = new KmsClient(TestUtils.kmsServerUrl(), TestUtils.apiKey());
+
+        String[] ids = kmsClient.createCoverCryptMasterKeyPair(policy);
+
+        String privateMasterKeyId = ids[0];
+        String publicMasterKeyId = ids[1];
+
+        // User decryption key Confidential, FIN
+        String userKeyId = kmsClient.createCoverCryptUserDecryptionKey(accessPolicyConfidential(), privateMasterKeyId);
+
+        //
+        // Server Encryption
+        //
+
+        // The encryption policy attributes that will be used to encrypt the content.
+        // Attributes must exist in the policy associated with the Public Key
+        String encryptionPolicy = "Department::FIN && Security Level::Confidential";
+        byte[] ciphertext = kmsClient.coverCryptEncrypt(publicMasterKeyId, plaintext, encryptionPolicy, uid);
+
+        //
+        // KMS Decryption
+        //
+        DecryptedData data_kms = kmsClient.coverCryptDecrypt(userKeyId, ciphertext, uid);
+        assertArrayEquals(plaintext, data_kms.getPlaintext());
+        assertArrayEquals(new byte[] {}, data_kms.getHeaderMetaData());
+
+        //
+        // Local Decryption
+        //
+
+        PrivateKey userKey = kmsClient.retrieveCoverCryptUserDecryptionKey(userKeyId);
+        DecryptedData res = CoverCrypt.decrypt(userKey.bytes(), ciphertext, Optional.of(uid));
+        assertArrayEquals(plaintext, res.getPlaintext());
+        assertArrayEquals(new byte[] {}, res.getHeaderMetaData());
+
     }
 }

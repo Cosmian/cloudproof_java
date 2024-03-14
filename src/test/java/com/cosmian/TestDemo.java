@@ -133,28 +133,28 @@ public class TestDemo {
 
         // As expected, the top-secret marketing financial user can successfully decrypt
         // all messages
-        DecryptedData protectedMkg_ = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, protectedMkgCT);
-        assert Arrays.equals(protectedMkgData, protectedMkg_.getPlaintext());
+        DecryptedData protectedMkg2 = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, protectedMkgCT);
+        assert Arrays.equals(protectedMkgData, protectedMkg2.getPlaintext());
 
-        DecryptedData topSecretMkg_ = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, topSecretMkgCT);
-        assert Arrays.equals(topSecretMkgData, topSecretMkg_.getPlaintext());
+        DecryptedData topSecretMkg = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, topSecretMkgCT);
+        assert Arrays.equals(topSecretMkgData, topSecretMkg.getPlaintext());
 
-        DecryptedData protectedFin_ = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, protectedFinCT);
-        assert Arrays.equals(protectedFinData, protectedFin_.getPlaintext());
+        DecryptedData protectedFin = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, protectedFinCT);
+        assert Arrays.equals(protectedFinData, protectedFin.getPlaintext());
 
         // -------------------------------------------
-        // Attributes rotation
+        // Rekey access policy
         // -------------------------------------------
 
-        // Before rotating attributes, let us make a local copy of the current
+        // Before rekeying, let us make a local copy of the current
         // `confidential marketing` user to show
-        // what happens to non-refreshed keys after the attribute rotation.
+        // what happens to non-refreshed keys after the operation.
         PrivateKey oldConfidentialMkgUserKey = kmsClient
             .retrieveCoverCryptUserDecryptionKey(confidentialMkgUserKeyUid);
 
-        // Now rotate the MKG attribute - all active keys will be rekeyed
-        kmsClient.rotateCoverCryptAttributes(privateMasterKeyUniqueIdentifier,
-            new String[] {"Department::MKG"});
+        // Now rekey all active keys with access to MKG
+        kmsClient.rekeyCoverCryptAccessPolicy(privateMasterKeyUniqueIdentifier,
+            "Department::MKG");
 
         // Retrieve the rekeyed public key from the KMS
         PublicKey rekeyedPublicKey = kmsClient
@@ -179,14 +179,14 @@ public class TestDemo {
         assert !Arrays.equals(oldConfidentialMkgUserKey.bytes(), rekeyedConfidentialMkgUserKey.bytes());
 
         // Decrypting the "old" `protected marketing` message
-        DecryptedData protectedMkg__ =
+        DecryptedData protectedMkg3 =
             CoverCrypt.decrypt(rekeyedConfidentialMkgUserKey.bytes(), protectedMkgCT, Optional.empty());
-        assert Arrays.equals(protectedMkgData, protectedMkg__.getPlaintext());
+        assert Arrays.equals(protectedMkgData, protectedMkg3.getPlaintext());
 
         // Decrypting the "new" `confidential marketing` message
-        DecryptedData confidentialMkg__ =
+        DecryptedData confidentialMkg =
             CoverCrypt.decrypt(rekeyedConfidentialMkgUserKey.bytes(), confidentialMkgCT, Optional.empty());
-        assert Arrays.equals(confidentialMkgData, confidentialMkg__.getPlaintext());
+        assert Arrays.equals(confidentialMkgData, confidentialMkg.getPlaintext());
 
         // Decrypting the messages with the NON rekeyed key
         // However, the old, non-rekeyed confidential marketing user key can still
@@ -208,6 +208,95 @@ public class TestDemo {
             // ==> fine, the user is not able to decrypt
         }
 
+        // -------------------------------------------
+        // Prune access policy
+        // -------------------------------------------
+
+        kmsClient.pruneCoverCryptAccessPolicy(privateMasterKeyUniqueIdentifier, "Department::MKG");
+
+        // Decrypting previous marketing ciphers will no longer be possible.
+        try {
+            kmsClient.coverCryptDecrypt(confidentialMkgUserKeyUid, protectedMkgCT);
+        } catch (CloudproofException e) {
+            // ==> fine, the user is not able to decrypt
+        }
+
+        // Pruned keys will only be able to decrypt ciphers generated after the last rekey operation.
+        DecryptedData confidentialMkg4 =
+            kmsClient.coverCryptDecrypt(confidentialMkgUserKeyUid, confidentialMkgCT);
+        assert Arrays.equals(confidentialMkgData, confidentialMkg4.getPlaintext());
+
+        // -------------------------------------------
+        // Rename attributes
+        // -------------------------------------------
+
+        kmsClient.renameCoverCryptAttribute(privateMasterKeyUniqueIdentifier,
+            "Department::MKG", "Marketing");
+
+        // Encrypt data with the renamed attribute
+        byte[] topSecretMarketingData = "topSecretMarketingMessage".getBytes(StandardCharsets.UTF_8);
+        byte[] topSecretMarketingCT = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier, topSecretMarketingData,
+            "Department::Marketing && Security Level::Top Secret");
+
+        // New "Marketing" message is readable by existing "MKG" user keys
+        DecryptedData topSecretMarketing = kmsClient.coverCryptDecrypt(topSecretMkgFinUserKeyUid, topSecretMarketingCT);
+        assert Arrays.equals(topSecretMarketingData, topSecretMarketing.getPlaintext());
+
+        // -------------------------------------------
+        // Add attributes
+        // -------------------------------------------
+
+        kmsClient.addCoverCryptAttribute(privateMasterKeyUniqueIdentifier, "Department::R&D", false);
+
+        // Encrypt a new message for the newly created attribute
+        byte[] protectedRdData = "protectedRdMessage".getBytes(StandardCharsets.UTF_8);
+        byte[] protectedRdCT = kmsClient.coverCryptEncrypt(publicMasterKeyUniqueIdentifier, protectedRdData,
+            "Department::R&D && Security Level::Protected");
+
+        // Create a new user key
+        String confidentialRdFinUserKeyUid = kmsClient.createCoverCryptUserDecryptionKey(
+            "(Department::R&D || Department::FIN) && Security Level::Confidential",
+            privateMasterKeyUniqueIdentifier
+        );
+
+        // The new user can decrypt the R&D message
+        DecryptedData protectedRd = kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
+        assert Arrays.equals(protectedRdData, protectedRd.getPlaintext());
+
+        // -------------------------------------------
+        // Disable attributes
+        // -------------------------------------------
+
+        kmsClient.disableCoverCryptAttribute(privateMasterKeyUniqueIdentifier, "Department::R&D");
+
+        // Disabled attributes can no longer be used to encrypt data
+        // New data encryption for `Department::R&D` will fail
+        try {
+            kmsClient.coverCryptEncrypt(
+                publicMasterKeyUniqueIdentifier,
+                protectedRdData,
+                "Department::R&D && Security Level::Protected"
+            );
+        } catch (CloudproofException e) {
+            // ==> fine, the user is not able to encrypt
+        }
+
+        // Decryption of R&D ciphertext is still possible
+        DecryptedData protectedRd2 = kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
+        assert Arrays.equals(protectedRdData, protectedRd2.getPlaintext());
+
+        // -------------------------------------------
+        // Remove attributes
+        // -------------------------------------------
+
+        kmsClient.removeCoverCryptAttribute(privateMasterKeyUniqueIdentifier, "Department::R&D");
+
+        // Removed attributes can no longer be used to encrypt or decrypt
+        try {
+            kmsClient.coverCryptDecrypt(confidentialRdFinUserKeyUid, protectedRdCT);
+        } catch (CloudproofException e) {
+            // ==> fine, the user is not able to decrypt
+        }
     }
 
     @Test

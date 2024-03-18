@@ -1,5 +1,6 @@
 package com.cosmian.rest.kmip;
 
+import com.cosmian.rest.kmip.data_structures.ByteString;
 import com.cosmian.rest.kmip.data_structures.KeyBlock;
 import com.cosmian.rest.kmip.data_structures.KeyValue;
 import com.cosmian.rest.kmip.data_structures.KeyWrappingData;
@@ -21,6 +22,8 @@ public class KmipUtils {
         byte[] bytes;
         if (keyMaterialContent instanceof byte[]) {
             bytes = (byte[]) keyMaterialContent;
+        } else if (keyMaterialContent instanceof ByteString) {
+            bytes = ((ByteString) keyMaterialContent).getByteString();
         } else if (keyMaterialContent instanceof TransparentSymmetricKey) {
             bytes = ((TransparentSymmetricKey) keyMaterialContent).getKey();
         } else {

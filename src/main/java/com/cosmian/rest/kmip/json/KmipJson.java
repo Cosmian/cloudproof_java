@@ -44,7 +44,8 @@ public class KmipJson {
         return classes.toArray(new Class<?>[classes.size()]);
     }
 
-    public static Class<?>[] type_parameters_for_super_class(Class<?> clazz, Class<?> super_class) {
+    public static Class<?>[] type_parameters_for_super_class(Class<?> clazz,
+                                                             Class<?> super_class) {
         ResolvedType resolved_type = type_resolver.resolve(clazz);
         List<Class<?>> classes = resolved_type.typeParametersFor(super_class).stream().map((ResolvedType e) -> {
             return e.getErasedType();
@@ -52,7 +53,9 @@ public class KmipJson {
         return classes.toArray(new Class<?>[classes.size()]);
     }
 
-    public static <E> E deserialize_value(Class<E> clazz, JsonNode node, DeserializationContext context)
+    public static <E> E deserialize_value(Class<E> clazz,
+                                          JsonNode node,
+                                          DeserializationContext context)
         throws IllegalArgumentException, IOException {
         try {
             return deserializer_from_class(clazz).deserialize(node, context);
@@ -102,8 +105,11 @@ public class KmipJson {
     }
 
     @SuppressWarnings("unchecked")
-    public static void serialize_value(String tag, Object value, JsonGenerator generator,
-        SerializerProvider serializers) throws IllegalArgumentException {
+    public static void serialize_value(String tag,
+                                       Object value,
+                                       JsonGenerator generator,
+                                       SerializerProvider serializers)
+        throws IllegalArgumentException {
         try {
             if (value instanceof Enum<?>) {
                 new KmipEnumSerializer((Class<Enum<?>>) value.getClass(), tag).serialize((Enum<?>) value, generator,

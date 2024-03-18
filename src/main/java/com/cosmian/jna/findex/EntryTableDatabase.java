@@ -84,7 +84,7 @@ public interface EntryTableDatabase {
     public void delete(List<Uid32> uids) throws CloudproofException;
 
     /**
-     * Return the appropriate fetch callback (with input/output serialization).
+     * @return the appropriate fetch callback (with input/output serialization).
      */
     default FetchCallback fetchCallback() {
         return new FetchCallback() {
@@ -111,7 +111,7 @@ public interface EntryTableDatabase {
     }
 
     /**
-     * Return the appropriate upsert callback (with input/output serialization).
+     * @return the appropriate upsert callback (with input/output serialization).
      */
     default UpsertCallback upsertCallback() {
         return new UpsertCallback() {
@@ -169,7 +169,7 @@ public interface EntryTableDatabase {
     }
 
     /**
-     * Return the appropriate insert callback (with input/output serialization).
+     * @return the appropriate insert callback (with input/output serialization).
      */
     default InsertCallback insertCallback() {
         return new InsertCallback() {
@@ -203,7 +203,7 @@ public interface EntryTableDatabase {
     }
 
     /**
-     * Return the appropriate upsert callback (with input/output serialization).
+     * @return the appropriate upsert callback (with input/output serialization).
      */
     default DeleteCallback deleteCallback() {
         return new DeleteCallback() {

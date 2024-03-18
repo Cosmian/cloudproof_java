@@ -14,8 +14,8 @@ Cloudproof Encryption secures data repositories and applications in the cloud wi
 - [Benchmarks](#benchmarks)
 - [Versions Correspondence](#versions-correspondence)
 - [Using in Java projects](#using-in-java-projects)
-  * [Download required native libraries](#download-required-native-libraries)
-  * [Building the native libraries on your own](#building-the-native-libraries-on-your-own)
+  - [Download required native libraries](#download-required-native-libraries)
+  - [Building the native libraries on your own](#building-the-native-libraries-on-your-own)
 
 <!-- tocstop -->
 
@@ -28,12 +28,12 @@ The library is available under a dual licensing scheme Affero GPL/v3 and commerc
 The library is based on:
 
 - [CoverCrypt](https://github.com/Cosmian/cover_crypt) algorithm which allows
-creating ciphertexts for a set of attributes and issuing user keys with access
-policies over these attributes. `CoverCrypt` offers Post-Quantum resistance.
+  creating ciphertexts for a set of attributes and issuing user keys with access
+  policies over these attributes. `CoverCrypt` offers Post-Quantum resistance.
 
 - [Findex](https://github.com/Cosmian/findex) which is a cryptographic protocol designed to securely make search queries on
-an untrusted cloud server. Thanks to its encrypted indexes, large databases can
-securely be outsourced without compromising usability.
+  an untrusted cloud server. Thanks to its encrypted indexes, large databases can
+  securely be outsourced without compromising usability.
 
 ## Getting started
 
@@ -93,12 +93,13 @@ This table shows the compatible versions of the various components
 From the version 5.0.0, `cloudproof_java` depends on [cloudproof_rust](https://github.com/Cosmian/cloudproof_rust) which wraps the interfaces of `CoverCrypt` and `Findex`.
 
 | This lib | KMS Server | Cloudproof Rust lib |
-|----------|------------|---------------------|
+| -------- | ---------- | ------------------- |
 | 5.0.0    | 4.3.3      | 1.0.0               |
 | 6.0.0    | 4.3.3      | 2.0.1               |
 | 7.0.0    | 4.10.0     | 2.4.0               |
 | 7.1.0    | 4.11.0     | 2.4.0               |
 | 7.2.0    | 4.11.3     | 2.4.0               |
+| 8.0.\*   | 4.13.3     | 3.0.0               |
 
 ## Using in Java projects
 

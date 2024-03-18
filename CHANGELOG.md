@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [8.0.1] - 2024-03-18
+
+### Miscellaneous Tasks
+
+- Refresh GPG signing key
+
 ## [8.0.0] - 2024-03-13
 
 ### Features
